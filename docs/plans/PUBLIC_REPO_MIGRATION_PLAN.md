@@ -1035,8 +1035,9 @@ Current local status:
 
 - package metadata, console script, CI/release workflow, changelog, ADRs, design
   docs, and contracts are present;
-- `rack run --all` passes locally with `L0_public_cli`,
-  `L3_public_workflows`, and `L99_signoff`;
+- `L0_public_cli` and `L3_public_workflows` pass locally; `L99_signoff`
+  intentionally remains red for the existing command/interface design-doc
+  backlog that must be closed before release;
 - built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
@@ -1045,5 +1046,8 @@ Current local status:
   tests for project parameters, `VariantName`, sanitization, traversal
   rejection, and path separator normalization; the shared API design doc is
   `docs/design/api/output-path-templates.html`;
+- the shared resolver is also exercised at L3 against the public Hydroscope
+  `PrjPcb` fixture so real project parameters can drive release-style output
+  folders;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers.

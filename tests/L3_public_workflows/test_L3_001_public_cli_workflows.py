@@ -8,6 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from altium_cruncher.output_path_templates import resolve_output_relative_path
+from altium_monkey.altium_design import AltiumDesign
+
 
 def _project_root() -> Path:
     """Find the repository root from this test file."""
@@ -77,6 +80,23 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
     )
     assert len(netlist_payload["components"]) >= 100
     assert len(netlist_payload["nets"]) >= 100
+
+
+def test_output_path_template_uses_public_project_parameters() -> None:
+    """Resolve a release-style output folder from a real public PrjPcb fixture."""
+    design = AltiumDesign.from_prjpcb(HYDROSCOPE_PROJECT)
+    assert design.project is not None
+
+    resolved = resolve_output_relative_path(
+        "'releases/' + PCB_VERSION + '/' + CCA_PART_NUMBER + ' - ' + "
+        "PCB_TITLE + ' - ' + VariantName",
+        design.project.parameters,
+        variant_name="A",
+    )
+
+    assert str(resolved) == (
+        "releases/A/TZ-SB-0001 - Sonic Density Sensor Mainboard - A"
+    )
 
 
 def test_library_extract_split_merge_commands_use_public_fixtures(tmp_path: Path) -> None:
