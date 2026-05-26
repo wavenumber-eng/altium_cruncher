@@ -238,24 +238,43 @@ Required tests:
 ## Shared Output Naming Requirements
 
 Commands that create files should share one output-naming resolver instead of
-hard-coding filename patterns in each command.
+hard-coding filename patterns in each command. This should cover both filename
+templates and output-folder path templates.
 
 Required behavior:
 
 - apply to output-producing commands including `svg`, `sch-svg`, `pcb-svg`,
   `netlist`, `bom`, `pnp`, and the planned `jlc` meta command;
-- support a config-controlled filename template with stable placeholders such
-  as command name, project stem, source stem, variant, layer, view name, output
-  kind, and extension;
-- allow placeholders to read `PrjPcb` project parameters so company/project
-  metadata can control generated filenames;
+- support config-controlled filename and output-folder templates with stable
+  placeholders such as command name, project stem, source stem, variant, layer,
+  view name, output kind, and extension;
+- support an expression form that can concatenate fixed string fragments and
+  `PrjPcb` project parameters into one resolved relative folder path or file
+  name;
+- allow placeholders or expression terms to read `PrjPcb` project parameters
+  so company/project metadata can control generated paths;
+- reserve `VariantName` as the runtime token for the currently processed
+  variant, including base/vanilla variant handling;
+- use Altium OutJob release path expressions as reference material. For
+  example, the inspected `job.OutJob` composes paths from literals plus
+  project parameters such as `Revision`, `RevisionMinor`, `PartNumberPCB`,
+  `PartNumberPCBA`, and `Title`;
 - define behavior for missing project parameters, with either explicit fallback
   text or a clear validation error based on config;
+- default generated template results to relative paths rooted under the
+  command output root; absolute paths should require explicit command/config
+  opt-in if they are ever supported;
 - sanitize generated filenames consistently across Windows, macOS, and Linux;
 - include the resolved output names in machine-readable manifests when a
   command emits a manifest;
+- implement this as common code with focused unit tests rather than duplicating
+  string replacement logic in each command;
 - document this once in a shared design document and reference it from each
-  command design doc that supports configurable naming.
+  command design doc that supports configurable naming;
+- include contract tests for literal-only templates, parameter substitution,
+  mixed literal/parameter expressions, `VariantName`, missing parameters,
+  invalid path characters, path traversal rejection, and cross-platform path
+  separator normalization.
 
 ## SVG Command Family
 

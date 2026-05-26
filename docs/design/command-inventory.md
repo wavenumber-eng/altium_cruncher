@@ -45,10 +45,14 @@ Shared output naming requirements:
   than command-local naming rules;
 - the shared resolver applies to `svg`, `sch-svg`, `pcb-svg`, `netlist`, `bom`,
   `pnp`, and the planned `jlc` command;
-- filename templates should support stable placeholders and `PrjPcb` project
-  parameters;
-- missing parameter behavior, filename sanitization, and manifest reporting of
-  resolved output names must be documented and tested.
+- filename and output-folder templates should support stable placeholders,
+  fixed string fragments, `PrjPcb` project parameters, and the runtime
+  `VariantName` token for the current processed variant;
+- the resolver should return safe relative paths by default and reject path
+  traversal;
+- missing parameter behavior, filename/path sanitization, cross-platform
+  separator normalization, and manifest reporting of resolved output names must
+  be documented and tested.
 
 SVG command family notes:
 
