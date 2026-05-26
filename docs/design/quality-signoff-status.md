@@ -11,6 +11,9 @@ Last updated: 2026-05-25
 - `pytest` passes locally.
 - `rack run --all` passes locally.
 - build, `twine check`, and built-wheel install smoke pass locally.
+- Direct `pipx` smoke was not run because `pipx` is not installed in the local
+  shell; the venv install smoke verifies equivalent generated console scripts
+  through PATH.
 
 ## Pyright Backlog
 
