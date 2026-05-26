@@ -1039,13 +1039,17 @@ Current local status:
 
 - package metadata, console script, CI/release workflow, changelog, ADRs, design
   docs, and contracts are present;
-- `L0_public_cli` and `L3_public_workflows` pass locally; `L99_signoff`
-  intentionally remains red for the existing command/interface design-doc
-  backlog that must be closed before release;
+- `rack run --all` passes locally with `L0_public_cli`,
+  `L3_public_workflows`, and `L99_signoff`: 33 passed, 1 optional native
+  parity skip;
+- full `pytest` with the EasyEDA extra passes locally: 108 passed, 2 skipped;
 - built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
-  backlog item rather than a hard release gate for this bootstrap slice;
+  backlog item rather than a hard release gate for this bootstrap slice, with
+  current findings in existing typed-dynamic modules;
+- CLI command design docs and grouped API/interface design docs now satisfy
+  the L99 documentation signoff checks;
 - shared output path/name expression resolver is implemented with focused L0
   tests for project parameters, `VariantName`, sanitization, traversal
   rejection, and path separator normalization; the shared API design doc is
@@ -1056,5 +1060,8 @@ Current local status:
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
+- L3 now covers the Hydroscope public workflows, the minimized cricket-node
+  `pcb-layer-step` bottom-layer fixture, and the Hydroscope `megamaid`
+  showcase workflow;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers.
