@@ -1,6 +1,6 @@
 # Altium Cruncher Public Repo Migration Plan
 
-Status: planning
+Status: bootstrap in progress
 Last updated: 2026-05-25
 
 ## Goal
@@ -248,6 +248,7 @@ Preferred shape:
 ## Migration Phases
 
 1. Design and inventory only.
+   - Status: substantially complete for the first public bootstrap.
    - Create the migration plan.
    - Inventory commands, tests, fixtures, private dependencies, and command
      outputs.
@@ -255,26 +256,34 @@ Preferred shape:
      `ezeda_monkey` imports that need to become public package dependencies.
 
 2. Bootstrap the public repo.
+   - Status: initial local bootstrap complete; awaiting push/CI.
    - Add packaging, source layout, Rack tests, CI, project hygiene files, and
      a minimal CLI skeleton.
    - Add the initial versioning/tagging/release-policy ADR before the first
      package release.
 
 3. Migrate stable commands.
+   - Status: current stable command modules copied from private `toolz` and
+     smoke-tested against Hydroscope for the first public slice.
    - Move commands one family at a time.
    - Add manifest entries, tests, and docs as each command lands.
 
 4. Add command parity gates.
+   - Status: initial manifest/help checks, `L3_public_workflows`, and
+     `L99_signoff` are wired; stricter coverage enforcement remains.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install smoke.
 
 5. Wire into `wn-hw`.
+   - Status: not started; documented as a first-release blocker.
    - Add standalone `altium_cruncher` as a cloned dependency.
    - Update workspace scripts/configuration.
    - Ensure setup/update exposes the console executable path.
    - Add a workspace installer smoke test for both console script names.
 
 6. Remove from `toolz`.
+   - Status: blocked until public repo is pushed, CI is green, and app/workspace
+     consumers are migrated.
    - Delete the private `toolz/altium_cruncher` package only after the public
      repo has equivalent command coverage for the selected public command set.
    - Leave a short tombstone pointing to the public repo if useful.
@@ -291,3 +300,14 @@ The first migration slice is complete when:
 - at least one stable command is migrated with fixture-backed coverage;
 - the command inventory clearly states which commands remain private,
   deferred, or blocked.
+
+Current local status:
+
+- package metadata, console scripts, CI/release workflow drafts, ADRs, design
+  docs, and contracts are present;
+- `rack run --all` passes locally with `L0_public_cli`,
+  `L3_public_workflows`, and `L99_signoff`;
+- built-wheel install smoke passes locally and verifies both console script
+  names through PATH inside a clean venv;
+- `wn-hw` setup/update integration and public GitHub CI remain the major first
+  release blockers.
