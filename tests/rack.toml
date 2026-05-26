@@ -1,0 +1,38 @@
+[rack]
+name = "Altium Cruncher Public Tests"
+version = "1.0"
+description = "Rack test suite for the standalone altium-cruncher public package"
+default_lane = "fast"
+
+[strata]
+order = [
+    "L0_public_cli",
+]
+default_enabled = [
+    "L0_public_cli",
+]
+
+[concerns.cli]
+description = "Installed CLI behavior and command registration"
+
+[concerns.contracts]
+description = "Public machine-readable contracts"
+
+[concerns.release]
+description = "Package release smoke checks"
+
+[lanes.fast]
+description = "Default smoke lane for package and command registration"
+
+[lanes.full]
+description = "Full package-local test lane"
+
+[lanes.strict]
+description = "Release-signoff lane with package build and contract checks"
+
+[dependencies]
+python_packages = [
+    "pytest",
+    "pytest-json-report",
+    "wn-rack",
+]

@@ -1,0 +1,38 @@
+name = "Public CLI"
+order = 0
+description = "Smoke tests for the standalone public CLI package and command manifest"
+enabled = true
+concerns = ["cli", "contracts", "release"]
+
+objectives = [
+    "The package exposes the expected public version string",
+    "The CLI can start through the installed console entry point",
+    "The public command manifest stays aligned with help output",
+]
+
+[dependencies]
+strata = []
+note = "This is the first standalone Rack stratum; broader command parity tests will move into additional strata as public fixtures are curated."
+
+[[subtests]]
+id = "L0_001"
+file = "test_L0_001_cli_smoke.py"
+name = "CLI Smoke"
+description = "Validate version/help startup and public command-manifest visibility"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "contract"
+test_cases = "../../contracts/command_manifest.v0.json"
+
+[subtests.code_under_test]
+module = "altium_cruncher._cli"
+
+[subtests.objectives]
+cli_startup = "CLI entry point starts without optional EasyEDA dependencies"
+manifest_alignment = "Manifest commands remain visible in help output"
+
+[subtests.approach]
+subprocess_cli = "Invoke the package command through the current Python environment"
+
+[subtests.test_functions]
+test_cli_version_command = "Version subcommand reports the package version"
+test_cli_help_lists_manifest_commands = "Root help lists each command declared in the manifest"

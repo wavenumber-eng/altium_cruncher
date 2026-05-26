@@ -22,6 +22,8 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
       - name: Run tests
         run: uv run --extra test pytest
+      - name: Run Rack smoke lane
+        run: uv run --extra test rack run
       - name: Run signoff
         run: uv run --extra test python scripts/py_signoff.py --root .
       - name: Build package

@@ -7,4 +7,5 @@ dist/
 build/
 *.egg-info/
 output/
+rack_results/
 *.pyc

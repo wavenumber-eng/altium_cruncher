@@ -69,19 +69,27 @@ cross-platform packaging.
 Run package-local tests:
 
 ```powershell
-uv run pytest
+uv run --extra test pytest
+```
+
+Run the Rack smoke lane:
+
+```powershell
+uv run --extra test rack run
 ```
 
 Run signoff:
 
 ```powershell
-uv run python scripts\py_signoff.py --root .
+uv run --extra test python scripts\py_signoff.py --root .
 ```
 
-This repository is being moved toward `wn-rack` test strata with an
-`L99_signoff` lane. Signoff policy will cover command manifests, public command
-tests, PEP 257-style docstrings, architecture/design documentation, JSON/config
-contracts, and package build/install smoke.
+This repository uses `wn-rack` for test strata. The first public stratum is
+`L0_public_cli`; additional command parity and `L99_signoff` strata will be
+added as the public fixtures and release policy are finalized. Signoff policy
+will cover command manifests, public command tests, PEP 257-style docstrings,
+architecture/design documentation, JSON/config contracts, and package
+build/install smoke.
 
 ## Architecture Docs
 
