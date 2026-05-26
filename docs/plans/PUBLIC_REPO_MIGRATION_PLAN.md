@@ -309,5 +309,7 @@ Current local status:
   `L3_public_workflows`, and `L99_signoff`;
 - built-wheel install smoke passes locally and verifies both console script
   names through PATH inside a clean venv;
+- `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
+  backlog item rather than a hard release gate for this bootstrap slice;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers.

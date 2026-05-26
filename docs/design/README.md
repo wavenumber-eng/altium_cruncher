@@ -12,4 +12,5 @@ Current design notes:
 - `command-inventory.md` - migrated command list and coverage status.
 - `dependency-audit.md` - private workspace dependency references to address
   during the standalone migration.
+- `quality-signoff-status.md` - current release-gate status and pyright backlog.
 - `wn-hw-installer-integration.md` - setup/update executable path contract.
