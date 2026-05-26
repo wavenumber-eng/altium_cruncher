@@ -1,6 +1,6 @@
 # EasyEDA Monkey Public Repo Plan
 
-Status: planned prerequisite
+Status: public repo bootstrap pushed; GitHub Actions run creation blocked
 Last updated: 2026-05-26
 
 ## Goal
@@ -22,7 +22,19 @@ package once that package has the same quality and release shape as this repo.
 
 The first official `altium-cruncher` release should not treat EasyEDA import
 commands as complete until `easyeda-monkey` has a public package with passing
-signoff and redistributable fixtures.
+signoff, redistributable fixtures, and verified GitHub CI/release automation.
+
+Current EasyEDA status:
+
+- public repo is bootstrapped and pushed:
+  <https://github.com/wavenumber-eng/easyeda_monkey>;
+- current pushed head at time of this plan update: `d310fd3`;
+- local Windows release-equivalent gates pass;
+- GitHub lists `CI` and `Publish` workflows as active, but creates no runs for
+  pushes to `main`;
+- manual `CI` workflow dispatch fails with GitHub HTTP 500;
+- blocker is tracked at
+  <https://github.com/wavenumber-eng/easyeda_monkey/issues/1>.
 
 Allowed interim behavior in `altium-cruncher`:
 
@@ -87,7 +99,7 @@ policy. It should match the date-based Wavenumber package policy:
 
 - normal release: `YYYY.M.D`;
 - supplemental build release: `YYYY.M.D.N`;
-- annotated release tags: `v<version>`;
+- annotated release tags: `easyeda-monkey/v<version>`;
 - changelog entry required for each release;
 - public APIs, CLI flags, config formats, and JSON output formats are
   compatibility surfaces.
@@ -102,6 +114,7 @@ Required local and CI gates:
 - `pytest` for the full test suite;
 - `wn-rack` strata with `rack run --all`;
 - `ruff check .`;
+- `pyright src/py tests`;
 - Python signoff script with zero unwaived findings;
 - package build via `python -m build`;
 - `twine check dist/*`;
@@ -177,27 +190,27 @@ public package exists.
 
 ## Migration Phases
 
-1. Inventory and design.
+1. Inventory and design. COMPLETE for initial public bootstrap.
    - Audit current `toolz` EasyEDA code, tests, fixtures, and private imports.
    - Write versioning/release ADR.
    - Write design docs for core input formats and conversion interfaces.
 
-2. Bootstrap public repo.
+2. Bootstrap public repo. COMPLETE locally and pushed.
    - Add packaging, source layout, README, license, contributing docs,
      templates, CI, release workflow, Rack, and signoff.
    - Add minimal import/version/build/install tests.
 
-3. Move core EasyEDA package code.
+3. Move core EasyEDA package code. COMPLETE for parser package slice.
    - Port parser and model code first.
    - Remove private `toolz` assumptions.
    - Add parser and contract fixtures.
 
-4. Move conversion behavior.
+4. Move conversion behavior. DEFERRED.
    - Add symbol conversion tests.
    - Add footprint conversion tests.
    - Add stable output checks where practical.
 
-5. Publish `easyeda-monkey`.
+5. Publish `easyeda-monkey`. BLOCKED.
    - Run local and GitHub signoff.
    - Configure PyPI Trusted Publishing.
    - Use this release to validate the GitHub/PyPI CI/CD path end to end before
@@ -212,6 +225,8 @@ public package exists.
 ## Open Questions
 
 - Which existing EasyEDA fixtures can be redistributed?
+- Why is GitHub Actions not creating runs or accepting manual dispatch for the
+  bootstrapped public repo?
 - Should `easyeda-monkey` expose only library APIs, or also a small standalone
   diagnostic CLI?
 - Which output contracts should be stable in the first release versus marked

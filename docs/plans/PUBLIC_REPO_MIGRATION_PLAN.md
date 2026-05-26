@@ -264,7 +264,8 @@ Preferred shape:
      `ezeda_monkey` imports that need to become public package dependencies.
 
 2. Stand up `easyeda-monkey`.
-   - Status: planned prerequisite before official `altium-cruncher` release.
+   - Status: public repo bootstrap pushed; GitHub Actions run creation blocked
+     by <https://github.com/wavenumber-eng/easyeda_monkey/issues/1>.
    - Bootstrap the public `easyeda-monkey` repo with the same docs, tests,
      Rack strata, signoff, CI, and release workflow requirements as
      `altium-cruncher`.
@@ -272,11 +273,12 @@ Preferred shape:
      Actions, release tags, changelog enforcement, PyPI Trusted Publishing, and
      clean install smoke before relying on the same path for
      `altium-cruncher`.
-   - Inventory and migrate redistributable EasyEDA fixtures.
-   - Publish `easyeda-monkey` only after its own public signoff passes.
+   - Initial parser fixtures and tests are migrated and pass locally.
+   - Publish `easyeda-monkey` only after its own public GitHub signoff passes.
 
 3. Bootstrap the public repo.
-   - Status: initial local bootstrap complete; awaiting push/CI.
+   - Status: initial local bootstrap complete; awaiting next push/CI after
+     EasyEDA CI blocker is understood.
    - Add packaging, source layout, Rack tests, CI, project hygiene files, and
      a minimal CLI skeleton.
    - Add the initial versioning/tagging/release-policy ADR before the first
