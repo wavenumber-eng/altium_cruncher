@@ -401,6 +401,66 @@ Required follow-up:
 - add or confirm design-doc and manifest coverage so L99 treats the command as
   intentionally public and release-owned.
 
+## Extract Command
+
+`extract` stays in the first public command set. It is the command-line wrapper
+around the core Altium Monkey extraction APIs and should be tested with the same
+discipline as the underlying extraction logic.
+
+Current behavior to preserve:
+
+- `.SchDoc` input extracts symbols to split and/or combined `SchLib` output;
+- `.PcbDoc` input extracts embedded footprints to split and/or combined
+  `PcbLib` output;
+- `.PrjPcb` input fans out schematic extraction under `schlib/` and PCB
+  extraction under `pcblib/`;
+- no file argument auto-detects a project or a single PCB document from the
+  working directory;
+- `--split`, `--combined`, `--output`, and `--debug` remain supported.
+
+Required parity sources:
+
+- SchDoc extraction behavior should track the promoted Altium Monkey tests in
+  `toolz-tests/suites/altium_monkey/tests/L5_sch_tools/test_L5_002_extract_symbols.py`;
+- focused public API behavior should also cover
+  `toolz/altium_monkey/tests/test_schdoc_symbol_extractor.py`;
+- PcbDoc footprint extraction behavior should track
+  `toolz-tests/suites/altium_monkey/tests/L7_pcb_comprehensive_interop/test_L7_006_pcbdoc_footprint_extraction.py`;
+- synthesized extraction and recombine coverage should track
+  `toolz-tests/suites/altium_monkey/tests/L7_pcb_comprehensive_interop/test_L7_007_pcbdoc_extract_synthesized.py`;
+- CLI parity expectations should track
+  `toolz-tests/suites/altium_monkey/tests/L6_pcb_foundation/test_L6_052_pcbdoc_cpp_cli_extract_parity.py`
+  where applicable to the public Python CLI.
+
+Fixture plan:
+
+- copy the required fixture subset from `C:\eli\wn_test_corpus` only after
+  proprietary-information review;
+- initial SchDoc candidate fixture root:
+  `C:\eli\wn_test_corpus\altium\extract_symbols`;
+- initial PcbDoc candidate fixture roots include
+  `C:\eli\wn_test_corpus\altium\common\pcbdoc_synthesized\case121__pcbdoc_extract_1`
+  and any other extraction cases selected from the Altium Monkey promoted
+  surface;
+- restructure copied fixtures into the public `input/`, `reference_output/`,
+  and transient `output/` convention;
+- do not check in private-only corpus fixtures until they have been explicitly
+  cleared for public redistribution.
+
+Required tests:
+
+- command help and manifest coverage;
+- `.SchDoc` split extraction produces the expected symbol-file set;
+- `.SchDoc` combined extraction reparses as a valid `SchLib`;
+- `.PcbDoc` combined extraction reparses as a valid `PcbLib`;
+- `.PcbDoc` split extraction produces the expected footprint-file set and each
+  split file reparses;
+- `.PrjPcb` extraction creates both `schlib/` and `pcblib/` output folders when
+  the project contains both source types;
+- selected golden/reference checks compare against cleared reference output
+  using the same semantic comparisons as the underlying Altium Monkey tests,
+  not byte-for-byte output unless the format is intentionally stable.
+
 ## Deferred Commands
 
 `pcblib-footprint-3d` is broken and should not be migrated into the first public
@@ -423,6 +483,17 @@ Some newer commands convert EasyEDA designs and currently depend on private
 
 Do not allow these commands to make the public `altium_cruncher` package depend
 on private modules.
+
+Current command status:
+
+- `easyeda-import` is a work-in-progress candidate public command for
+  generating Altium library artifacts from EasyEDA/LCSC component data;
+- `easyeda-review` is a work-in-progress development review command for
+  fixture-wide EasyEDA-vs-Altium schematic comparison;
+- `easyeda-footprint-review` is a work-in-progress development review command
+  for fixture-wide EasyEDA-vs-Altium footprint comparison;
+- none of these commands should be treated as release-owned until they have
+  been audited and covered with fixture-backed tests.
 
 The intended direction is to move `ezeda_monkey` out of `toolz` into its own
 public repository at <https://github.com/wavenumber-eng/easyeda_monkey> and
@@ -467,6 +538,25 @@ Current release policy for `altium_cruncher`:
 4. add two `altium-cruncher` lanes after linking:
    - base install verifies clear missing-dependency behavior;
    - EasyEDA extra install verifies real workflows against public fixtures.
+
+EasyEDA command audit requirements:
+
+- run each command from the standalone CLI, not only from direct Python helpers;
+- verify saved JSON input paths first so tests do not depend on live API
+  availability;
+- verify live API/cache behavior separately as an optional or network-marked
+  path;
+- prove `easyeda-import` writes a reparseable `SchLib`, writes reports, and
+  writes preview artifacts when requested;
+- prove `easyeda-import --footprint` or `--full` writes a reparseable `PcbLib`
+  and footprint report;
+- prove the review commands either generate deterministic HTML/SVG review
+  artifacts from fixtures or explicitly demote them to dev/deferred status;
+- keep all EasyEDA fixtures under the standard `input/`, `reference_output/`,
+  and transient `output/` convention;
+- L99 should fail if an EasyEDA command is public in the manifest without
+  command docs, help tests, fixture-backed behavior tests, and optional-extra
+  install coverage.
 
 ## AI Skill / Assistant Workflow
 

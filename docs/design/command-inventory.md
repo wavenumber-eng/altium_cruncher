@@ -17,10 +17,10 @@ This inventory records the command set migrated from the private
 | `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy, and source selection. |
 | `pnp` | public | `L3_public_workflows` | Pick-and-place output. |
 | `netlist` | public | `L3_public_workflows` | Key command. Keep current netlist JSON behavior for Altium schematic/project documents. |
-| `extract` | public | `L3_public_workflows` | SchDoc/PcbDoc extraction workflows. |
-| `easyeda-import` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
-| `easyeda-review` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
-| `easyeda-footprint-review` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
+| `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc extraction workflows must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
+| `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
+| `easyeda-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
+| `easyeda-footprint-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
 | `split` | public | `L3_public_workflows` | SchLib/PcbLib split workflows. |
 | `merge` | public | `L3_public_workflows` | SchLib/PcbLib merge workflows. |
 | `megamaid` | public | pytest | Project decomposition workflow, including Hydroscope embedded images/models. |
@@ -82,6 +82,32 @@ Netlist notes:
 - keep `--no-indexes`;
 - treat the command as a first-class machine-consumable output surface in
   design docs and L99 command coverage.
+
+Extract notes:
+
+- `extract` stays in the first public command set;
+- tests should mirror the Altium Monkey extraction tests rather than only
+  checking that files exist;
+- SchDoc extraction should cover split and combined `SchLib` output from
+  cleared `extract_symbols` fixtures;
+- PcbDoc extraction should cover split and combined `PcbLib` output from
+  cleared PcbDoc extraction fixtures;
+- `.PrjPcb` extraction should prove both `schlib/` and `pcblib/` fanout when a
+  project contains both source types;
+- fixtures copied from `C:\eli\wn_test_corpus` require proprietary-information
+  review before check-in.
+
+EasyEDA command notes:
+
+- `easyeda-import`, `easyeda-review`, and `easyeda-footprint-review` remain
+  work in progress until audited;
+- `easyeda-import` is the likely public command, but it needs tests proving
+  saved JSON input, optional API/cache behavior, generated `SchLib`, generated
+  `PcbLib` when requested, reports, and preview artifacts;
+- the review commands were built for development review and may need to become
+  dev-only or deferred if they are not stable enough for public CLI support;
+- no EasyEDA command should be release-owned until the `easyeda-monkey` optional
+  extra lane runs fixture-backed command tests.
 
 Deferred command notes:
 
