@@ -33,6 +33,7 @@ FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
 IsProjectConflictPreventionWarningsEnabled=1
 ConstraintManagerFlow=0
+IsVirtualBomDocumentRemoved=0
 OutputPath=
 LogFolderPath=
 ManagedProjectGUID=
@@ -122,7 +123,7 @@ UniqueId=3A66A376-C1A9-4095-8A44-70EBE7768152
 Description=B4
 AllowFabrication=1
 ParameterCount=0
-VariationCount=20
+VariationCount=27
 Variation1=Designator=R26_1|UniqueId=\ZZVAIJMZ\MIIPWUVA|Kind=1|AlternatePart==Value
 ParamVariation1=ParameterName=Comment|VariantValue==Value
 ParamDesignator1=R26_1
@@ -151,6 +152,13 @@ Variation17=Designator=R2_4|UniqueId=\UAEOCNHG\KBPXURIA|Kind=1|AlternatePart=
 Variation18=Designator=R18_4|UniqueId=\UAEOCNHG\HNFLVAVK|Kind=1|AlternatePart=
 Variation19=Designator=R21_4|UniqueId=\UAEOCNHG\JVIIKTEO|Kind=1|AlternatePart=
 Variation20=Designator=R24_4|UniqueId=\UAEOCNHG\YWMGRAWG|Kind=1|AlternatePart=
+Variation21=Designator=R14_4|UniqueId=\UAEOCNHG\YIYBTQXR|Kind=1|AlternatePart=
+Variation22=Designator=R15_4|UniqueId=\UAEOCNHG\JCBDYALE|Kind=1|AlternatePart=
+Variation23=Designator=R16_4|UniqueId=\UAEOCNHG\SGXTGQNR|Kind=1|AlternatePart=
+Variation24=Designator=R8_4|UniqueId=\UAEOCNHG\NSZANQMQ|Kind=1|AlternatePart=
+Variation25=Designator=R9_4|UniqueId=\UAEOCNHG\SJJOXDXW|Kind=1|AlternatePart=
+Variation26=Designator=R10_4|UniqueId=\UAEOCNHG\HSENMDHV|Kind=1|AlternatePart=
+Variation27=Designator=R25_4|UniqueId=\UAEOCNHG\XAPRFAFV|Kind=1|AlternatePart=
 ParamVariationCount=4
 
 [Parameter1]
@@ -697,36 +705,11 @@ OutputName12=Web Review Data
 OutputDocumentPath12=
 OutputVariantName12=
 OutputDefault12=0
-OutputType13=Ansoft Neutral
-OutputName13=Ansoft Neutral (AutoPCB)
+OutputType13=AnsysEDB
+OutputName13=Ansys EDB
 OutputDocumentPath13=
 OutputVariantName13=
 OutputDefault13=0
-OutputType14=HyperLynx
-OutputName14=HyperLynx (AutoPCB)
-OutputDocumentPath14=
-OutputVariantName14=
-OutputDefault14=0
-OutputType15=MathWorks
-OutputName15=MathWorks (AutoPCB)
-OutputDocumentPath15=
-OutputVariantName15=
-OutputDefault15=0
-OutputType16=Orcad v7 Capture Design
-OutputName16=Orcad v7 Capture Design (AutoSCH)
-OutputDocumentPath16=
-OutputVariantName16=
-OutputDefault16=0
-OutputType17=P-CAD ASCII
-OutputName17=P-CAD ASCII (AutoPCB)
-OutputDocumentPath17=
-OutputVariantName17=
-OutputDefault17=0
-OutputType18=P-CAD V16 Schematic Design
-OutputName18=P-CAD V16 Schematic Design (AutoSCH)
-OutputDocumentPath18=
-OutputVariantName18=
-OutputDefault18=0
 
 [OutputGroup10]
 Name=PostProcess Outputs

@@ -20,7 +20,7 @@
   <!ATTLIST GROUP GroupText CDATA #IMPLIED>
   <!ELEMENT ROWS (ROW*)>
   <!ELEMENT ROW EMPTY>
-  <!ATTLIST ROW Comment CDATA #IMPLIED>
+  <!ATTLIST ROW Name CDATA #IMPLIED>
   <!ATTLIST ROW Description CDATA #IMPLIED>
   <!ATTLIST ROW LibRef CDATA #IMPLIED>
   <!ATTLIST ROW Quantity CDATA #IMPLIED>
@@ -31,358 +31,358 @@
     <BAND Index="0" Caption="" />
   </BANDS>
   <COLUMNS>
-    <COLUMN Name="Comment" Caption="Comment" Index="0" BandIndex="0" RowIndex="0" ColIndex="0" Width="120" />
+    <COLUMN Name="Name" Caption="Name" Index="0" BandIndex="0" RowIndex="0" ColIndex="0" Width="120" />
     <COLUMN Name="Description" Caption="Description" Index="1" BandIndex="0" RowIndex="0" ColIndex="1" Width="120" />
     <COLUMN Name="LibRef" Caption="LibRef" Index="2" BandIndex="0" RowIndex="0" ColIndex="2" Width="120" />
     <COLUMN Name="Quantity" Caption="Quantity" Index="3" BandIndex="0" RowIndex="0" ColIndex="3" Width="120" />
     <COLUMN Name="Designator" Caption="Designator" Index="4" BandIndex="0" RowIndex="0" ColIndex="4" Width="100" />
   </COLUMNS>
   <ROWS>
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_4" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_1" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_2" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_3" />
-    <ROW Comment="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_4" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_1" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_2" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_3" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_4" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_1" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_2" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_3" />
-    <ROW Comment="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_4" />
-    <ROW Comment="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_1" />
-    <ROW Comment="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_2" />
-    <ROW Comment="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_3" />
-    <ROW Comment="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_4" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_1" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_2" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_3" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_4" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_1" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_2" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_3" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_4" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_1" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_2" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_3" />
-    <ROW Comment="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_4" />
-    <ROW Comment="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_1" />
-    <ROW Comment="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_2" />
-    <ROW Comment="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_3" />
-    <ROW Comment="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_4" />
-    <ROW Comment="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_1" />
-    <ROW Comment="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_2" />
-    <ROW Comment="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_3" />
-    <ROW Comment="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_4" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_1" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_2" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_3" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_4" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_1" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_2" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_3" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_4" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_1" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_2" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_3" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_4" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_1" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_2" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_3" />
-    <ROW Comment="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_4" />
-    <ROW Comment="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_1" />
-    <ROW Comment="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_2" />
-    <ROW Comment="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_3" />
-    <ROW Comment="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_4" />
-    <ROW Comment="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_1" />
-    <ROW Comment="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_2" />
-    <ROW Comment="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_3" />
-    <ROW Comment="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_4" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_1" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_2" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_3" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_4" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_1" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_2" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_3" />
-    <ROW Comment="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_4" />
-    <ROW Comment="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_1" />
-    <ROW Comment="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_2" />
-    <ROW Comment="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_3" />
-    <ROW Comment="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_4" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_1" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_2" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_3" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_4" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_1" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_2" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_3" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_4" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_1" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_2" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_3" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_4" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_1" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_2" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_3" />
-    <ROW Comment="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_4" />
-    <ROW Comment="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_1" />
-    <ROW Comment="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_2" />
-    <ROW Comment="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_3" />
-    <ROW Comment="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_4" />
-    <ROW Comment="WAGO 2601-1103" Description="3 Position Wire to Board Terminal Block Horizontal with Board 0.137&quot; (3.50mm) Through Hole" LibRef="2601-1103" Quantity="1" Designator="J1" />
-    <ROW Comment="WAGO 2601-1103" Description="3 Position Wire to Board Terminal Block Horizontal with Board 0.137&quot; (3.50mm) Through Hole" LibRef="2601-1103" Quantity="1" Designator="J4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_4" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_1" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_2" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_3" />
-    <ROW Comment="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_4" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_1" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_2" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_3" />
-    <ROW Comment="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_4" />
-    <ROW Comment="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_1" />
-    <ROW Comment="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_2" />
-    <ROW Comment="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_3" />
-    <ROW Comment="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R5_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R6_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R7_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R8_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R9_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R10_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R11_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R12_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R13_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R14_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R15_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/8W JUMP 0805 SMD" LibRef="ERJ-6GEY0R00V" Quantity="1" Designator="R16_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R2_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R3_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R17_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R18_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R21_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R22_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R23_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R25_4" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_1" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_2" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_3" />
+    <ROW Name="0Ω" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R26_4" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_1" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_2" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_3" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R19_4" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_1" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_2" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_3" />
+    <ROW Name="5.1kΩ" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R20_4" />
+    <ROW Name="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_1" />
+    <ROW Name="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_2" />
+    <ROW Name="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_3" />
+    <ROW Name="10kΩ" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4_4" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_1" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_2" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_3" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C1_4" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_1" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_2" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_3" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C2_4" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_1" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_2" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_3" />
+    <ROW Name="18pF" Description="CAP CER 18PF 100V C0G/NP0 0603" LibRef="GCM1885C2A180JA16D" Quantity="1" Designator="C3_4" />
+    <ROW Name="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_1" />
+    <ROW Name="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_2" />
+    <ROW Name="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_3" />
+    <ROW Name="100kΩ" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R1_4" />
+    <ROW Name="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_1" />
+    <ROW Name="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_2" />
+    <ROW Name="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_3" />
+    <ROW Name="20021121-00010T4LF" Description="Connector Header Surface Mount 10 position 0.050&quot; (1.27mm)" LibRef="20021121-00010T4LF" Quantity="1" Designator="J6_4" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_1" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_2" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_3" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M5_4" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_1" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_2" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_3" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M6_4" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_1" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_2" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_3" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M7_4" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_1" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_2" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_3" />
+    <ROW Name="9774080360R" Description="ROUND STANDOFF M3X0.5 STEEL 8MM" LibRef="9774080360R" Quantity="1" Designator="M8_4" />
+    <ROW Name="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_1" />
+    <ROW Name="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_2" />
+    <ROW Name="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_3" />
+    <ROW Name="B2B-PH-SM4-TBT(LF)(SN)" Description="JST 2MM Vertical 2 Pin" LibRef="B2B-PH-SM4-TBT(LF)(SN)" Quantity="1" Designator="J2_4" />
+    <ROW Name="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_1" />
+    <ROW Name="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_2" />
+    <ROW Name="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_3" />
+    <ROW Name="BZX84B16-7-F" Description="DIODE ZENER 16V 300MW SOT23" LibRef="BZX84B16-7-F" Quantity="1" Designator="D7_4" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_1" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_2" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_3" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW1_4" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_1" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_2" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_3" />
+    <ROW Name="FSM4JSMATR" Description="SWITCH TACTILE SPST-NO 0.05A 24V" LibRef="FSM4JSMATR" Quantity="1" Designator="SW2_4" />
+    <ROW Name="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_1" />
+    <ROW Name="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_2" />
+    <ROW Name="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_3" />
+    <ROW Name="GT-USB-7082B" Description="USB-C Vertical - USB2.0 Pinout" LibRef="GT-USB-7082B" Quantity="1" Designator="J5_4" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_1" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_2" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_3" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P1_4" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_1" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_2" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_3" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P2_4" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_1" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_2" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_3" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P3_4" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_1" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_2" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_3" />
+    <ROW Name="H2184-05" Description="PC Pin Terminal Connector Through Hole Gold 0.070&quot; (1.78mm) Dia" LibRef="H2184-05" Quantity="1" Designator="P4_4" />
+    <ROW Name="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_1" />
+    <ROW Name="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_2" />
+    <ROW Name="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_3" />
+    <ROW Name="PZ254-2-05-S" Description="250V 3A Standing paste Policy 2.5mm 260℃@5S 6mm 10P -40℃~+105℃ 2.54mm Double Row Black 2.54mm 2x5P SMD,P=2.54mm  Pin Headers ROHS" LibRef="PZ254-2-05-S" Quantity="1" Designator="J3_4" />
+    <ROW Name="WAGO 2601-1103" Description="3 Position Wire to Board Terminal Block Horizontal with Board 0.137&quot; (3.50mm) Through Hole" LibRef="2601-1103" Quantity="1" Designator="J1" />
+    <ROW Name="WAGO 2601-1103" Description="3 Position Wire to Board Terminal Block Horizontal with Board 0.137&quot; (3.50mm) Through Hole" LibRef="2601-1103" Quantity="1" Designator="J4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D1_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D2_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D3_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D4_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D5_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D6_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D8_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D9_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D10_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D11_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D12_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D13_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D14_4" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_1" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_2" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_3" />
+    <ROW Name="WS2813A-V2" Description="SMD5050 RGB LEDs(Built-in IC) ROHS" LibRef="WS2813A-V2" Quantity="1" Designator="D15_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP1_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP2_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP3_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP4_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP5_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP6_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP7_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP8_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP9_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP10_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP11_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP12_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP13_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP14_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP15_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP16_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP17_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP18_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP19_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP20_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP21_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP22_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP23_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP24_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP25_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP26_4" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_1" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_2" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_3" />
+    <ROW Name="YZ209315103P-01" Description="Brass 12V -40℃~+85℃ 1P Spring loaded pin (POGO PIN) 10.3mm 50mΩ 10,000 times 7mm 2A Gold Pogo Pin Spring Probe Connector ROHS" LibRef="YZ209315103P-01" Quantity="1" Designator="TP27_4" />
+    <ROW Name="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_1" />
+    <ROW Name="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_2" />
+    <ROW Name="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_3" />
+    <ROW Name="ZXMP4A16GTA" Description="MOSFET P-CH 40V 6.4A SOT223" LibRef="ZXMP4A16GTA" Quantity="1" Designator="Q1_4" />
   </ROWS>
 </GRID>

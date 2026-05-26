@@ -222,8 +222,8 @@
     <ROW Name="100pF" Description="CAP CER 100PF 50V NP0 0603" LibRef="CGA3E2C0G1H101J080AE" Quantity="1" Designator="C40" />
     <ROW Name="120" Description="RES 120 OHM 1/4W 1% 1206 SMD" LibRef="ERJ-8ENF1200V" Quantity="1" Designator="R39" />
     <ROW Name="220µF" Description="CAP ALUM 220UF 25V 20% SMD" LibRef="EEE-FK1E221P" Quantity="1" Designator="C2" />
-    <ROW Name="5110" Description="0603 Solid High Current Jumper" LibRef="" Quantity="1" Designator="J3" />
-    <ROW Name="5110" Description="0603 Solid High Current Jumper" LibRef="" Quantity="1" Designator="J4" />
+    <ROW Name="5110" Description="0603 Solid High Current Jumper" LibRef="5110" Quantity="1" Designator="J3" />
+    <ROW Name="5110" Description="0603 Solid High Current Jumper" LibRef="5110" Quantity="1" Designator="J4" />
     <ROW Name="10000pF" Description="CAP CER 10000PF 50V C0G 0603" LibRef="CGA3E2C0G1H103J080AA" Quantity="1" Designator="C22" />
     <ROW Name="10000pF" Description="CAP CER 10000PF 50V C0G 0603" LibRef="CGA3E2C0G1H103J080AA" Quantity="1" Designator="C23" />
     <ROW Name="10000pF" Description="CAP CER 10000PF 50V C0G 0603" LibRef="CGA3E2C0G1H103J080AA" Quantity="1" Designator="C30" />
@@ -232,7 +232,7 @@
     <ROW Name="10000pF" Description="CAP CER 10000PF 50V C0G 0603" LibRef="CGA3E2C0G1H103J080AA" Quantity="1" Designator="C39" />
     <ROW Name="1437164" Description="Circular Metric Connectors SACC-CI-M12MS- 4CON-L180 THR" LibRef="1437164" Quantity="1" Designator="J1" />
     <ROW Name="1551448" Description="Flush-type connector SACC-CI-M12FS-5CON-L180-THR 1551448 Phoenix Contact" LibRef="1551448" Quantity="1" Designator="J2" />
-    <ROW Name="1552269" Description="Circular Metric Connectors SACC-DSI-FSD -4CON-PG9/0,5 SCO" LibRef="" Quantity="1" Designator="J5" />
+    <ROW Name="1552269" Description="Circular Metric Connectors SACC-DSI-FSD -4CON-PG9/0,5 SCO" LibRef="1552269" Quantity="1" Designator="J5" />
     <ROW Name="AP2111MPG-13" Description="IC USB SWITCH 2.45A CURR 8MSOP" LibRef="AP2111MPG-13" Quantity="1" Designator="U28" />
     <ROW Name="B240A-13-F" Description="DIODE SCHOTTKY 40V 2A SMA" LibRef="B240A-13-F" Quantity="1" Designator="D4" />
     <ROW Name="BAT54JFILM" Description="DIODE SCHOTTKY 40V 300MA SOD323" LibRef="BAT54JFILM" Quantity="1" Designator="D2" />
@@ -256,15 +256,15 @@
     <ROW Name="IP4234CZ6,125" Description="IC USB2.0 ESD PROTECTION SOT457" LibRef="IP4234CZ6,125" Quantity="1" Designator="D10" />
     <ROW Name="IP4234CZ6,125" Description="IC USB2.0 ESD PROTECTION SOT457" LibRef="IP4234CZ6,125" Quantity="1" Designator="D13" />
     <ROW Name="IS42S32800J-6BLI" Description="IC DRAM 256M PARALLEL 90TFBGA" LibRef="IS42S32800J-6BLI" Quantity="1" Designator="U23" />
-    <ROW Name="ISL3176EIUZ-T" Description="IC TXRX RS422/485 20MBPS 10MSOP" LibRef="" Quantity="1" Designator="U12" />
-    <ROW Name="LMP8640MK-T/NOPB" Description="IC OPAMP CURR SENSE 6SOT" LibRef="" Quantity="1" Designator="U5" />
+    <ROW Name="ISL3176EIUZ-T" Description="IC TXRX RS422/485 20MBPS 10MSOP" LibRef="ISL3176EIUZ-T" Quantity="1" Designator="U12" />
+    <ROW Name="LMP8640MK-T/NOPB" Description="IC OPAMP CURR SENSE 6SOT" LibRef="LMP8640MK-T/NOPB" Quantity="1" Designator="U5" />
     <ROW Name="LMR33630BDDAR" Description="SIMPLE SWITCHER® 3.8V to 36V, 3A Synchronous Buck Converter With Ultra-Low EMI 8-SO PowerPAD -40 to 125" LibRef="LMR33630BDDAR" Quantity="1" Designator="U1" />
     <ROW Name="LMR33630BDDAR" Description="SIMPLE SWITCHER® 3.8V to 36V, 3A Synchronous Buck Converter With Ultra-Low EMI 8-SO PowerPAD -40 to 125" LibRef="LMR33630BDDAR" Quantity="1" Designator="U3" />
     <ROW Name="LPC43S57JET256E" Description="ARM Microcontrollers - MCU CortexM0/4 32bit 1MB Cortex-M4/M0" LibRef="LPC43S57JET256E" Quantity="1" Designator="U19" />
     <ROW Name="MCP810T-270I/TT" Description="IC SUPERVISOR 2.70V HIGH SOT23" LibRef="MCP810T-270I/TT" Quantity="1" Designator="U2" />
     <ROW Name="MUSBRA511R0" Description="CONN RCPT USB2.0 TYPEA 4POS PCB" LibRef="MUSBRA511R0" Quantity="1" Designator="J13" />
-    <ROW Name="NPPN101BFCN-RC" Description="CONN RECEPT 2MM SINGLE STR 10POS" LibRef="" Quantity="1" Designator="J7" />
-    <ROW Name="NPPN101BFCN-RC" Description="CONN RECEPT 2MM SINGLE STR 10POS" LibRef="" Quantity="1" Designator="J8" />
+    <ROW Name="NPPN101BFCN-RC" Description="CONN RECEPT 2MM SINGLE STR 10POS" LibRef="NPPN101BFCN-RC" Quantity="1" Designator="J7" />
+    <ROW Name="NPPN101BFCN-RC" Description="CONN RECEPT 2MM SINGLE STR 10POS" LibRef="NPPN101BFCN-RC_11-20" Quantity="1" Designator="J8" />
     <ROW Name="OPA322AIDBVT" Description="IC OPAMP GP 20MHZ RRO SOT23-5" LibRef="OPA322AIDBVT" Quantity="1" Designator="U7" />
     <ROW Name="OPA322AIDBVT" Description="IC OPAMP GP 20MHZ RRO SOT23-5" LibRef="OPA322AIDBVT" Quantity="1" Designator="U8" />
     <ROW Name="OPA322AIDBVT" Description="IC OPAMP GP 20MHZ RRO SOT23-5" LibRef="OPA322AIDBVT" Quantity="1" Designator="U9" />
@@ -274,24 +274,23 @@
     <ROW Name="PC TEST POINT MINIATURE SMT" Description="PC TEST POINT MINIATURE SMT" LibRef="5015" Quantity="1" Designator="TP4" />
     <ROW Name="PC TEST POINT MINIATURE SMT" Description="PC TEST POINT MINIATURE SMT" LibRef="5015" Quantity="1" Designator="TP5" />
     <ROW Name="PC TEST POINT MINIATURE SMT" Description="PC TEST POINT MINIATURE SMT" LibRef="5015" Quantity="1" Designator="TP6" />
-    <ROW Name="PEC11R-4215K-S0024" Description="Encoders 15mm SHAFT w/SWITCH" LibRef="" Quantity="1" Designator="ENC1" />
+    <ROW Name="PEC11R-4215K-S0024" Description="Encoders 15mm SHAFT w/SWITCH" LibRef="PEC11R-4215K-S0024" Quantity="1" Designator="ENC1" />
     <ROW Name="PESD1CAN,215" Description="TVS DIODE 24VWM 70VC SOT23" LibRef="PESD1CAN,215" Quantity="1" Designator="D6" />
     <ROW Name="PRTR5V0U2X,215" Description="TVS DIODE 5.5VWM SOT143B" LibRef="PRTR5V0U2X,215" Quantity="1" Designator="U21" />
     <ROW Name="PRTR5V0U2X,215" Description="TVS DIODE 5.5VWM SOT143B" LibRef="PRTR5V0U2X,215" Quantity="1" Designator="U22" />
-    <ROW Name="SB0037A" Description="SB0037 Temp Controller Raw PCB Rev A" LibRef="SB0037A" Quantity="1" Designator="PCB1" />
     <ROW Name="SDINBDG4-8G-I1" Description="eMMC eMMC seq 300/40 IOPs 7800/8000" LibRef="SDINBDG4-8G-I1" Quantity="1" Designator="U24" />
-    <ROW Name="SM712.TCT" Description="TVS DIODE 12VWM/7VWM SOT23" LibRef="" Quantity="1" Designator="U10" />
-    <ROW Name="SM712.TCT" Description="TVS DIODE 12VWM/7VWM SOT23" LibRef="" Quantity="1" Designator="U11" />
+    <ROW Name="SM712.TCT" Description="TVS DIODE 12VWM/7VWM SOT23" LibRef="SM712.TCT" Quantity="1" Designator="U10" />
+    <ROW Name="SM712.TCT" Description="TVS DIODE 12VWM/7VWM SOT23" LibRef="SM712.TCT" Quantity="1" Designator="U11" />
     <ROW Name="SMBJ5.0A" Description="TVS 5.0 VOLT 600 WATT UNI-DIR SM" LibRef="SMBJ5.0A" Quantity="1" Designator="D12" />
     <ROW Name="SMCJ15A" Description="DIODE TVS 15V 1500W UNI 5% SMC" LibRef="SMCJ15A" Quantity="1" Designator="D1" />
     <ROW Name="SN65HVD230DR" Description="CAN Interface IC STANDBY MODE" LibRef="SN65HVD230DR" Quantity="1" Designator="U17" />
     <ROW Name="SN74AHC1G04DBVR" Description="IC SINGLE INVERTER GATE SOT23-5" LibRef="SN74AHC1G04DBVR" Quantity="1" Designator="U16" />
     <ROW Name="SN74HC244DWR" Description="IC BUFF/DVR TRI-ST DUAL 20SOIC" LibRef="SN74HC244DWR" Quantity="1" Designator="U15" />
-    <ROW Name="TLV3201AIDBVR" Description="Single high speed, low power comparator 5-SOT-23 -40 to 125" LibRef="" Quantity="1" Designator="U6" />
+    <ROW Name="TLV3201AIDBVR" Description="Single high speed, low power comparator 5-SOT-23 -40 to 125" LibRef="TLV3201AIDBVR" Quantity="1" Designator="U6" />
     <ROW Name="TPS1H200AQDGNRQ1" Description="SINGLE CHANNEL HIGH SIDE POWER S" LibRef="TPS1H200AQDGNRQ1" Quantity="1" Designator="U13" />
-    <ROW Name="UCC27531DBVT" Description="IC GATE DRVR IGBT/MOSFET SOT23-6" LibRef="" Quantity="1" Designator="U4" />
+    <ROW Name="UCC27531DBVT" Description="IC GATE DRVR IGBT/MOSFET SOT23-6" LibRef="UCC27531DBVT" Quantity="1" Designator="U4" />
     <ROW Name="W25Q128JVSIMTR" Description="IC FLASH 128M SPI 133MHZ 8SOIC" LibRef="W25Q128JVSIMTR" Quantity="1" Designator="U25" />
     <ROW Name="XF2M-6015-1AH" Description="CONN FPC 60POS 0.50MM R/A" LibRef="XF2M-6015-1AH" Quantity="1" Designator="J11" />
-    <ROW Name="ZXMN4A06GTA" Description="Trans MOSFET N-CH 40V 7A 4-Pin(3+Tab) SOT-223 T/R" LibRef="" Quantity="1" Designator="Q1" />
+    <ROW Name="ZXMN4A06GTA" Description="Trans MOSFET N-CH 40V 7A 4-Pin(3+Tab) SOT-223 T/R" LibRef="ZXMN4A06GTA" Quantity="1" Designator="Q1" />
   </ROWS>
 </GRID>

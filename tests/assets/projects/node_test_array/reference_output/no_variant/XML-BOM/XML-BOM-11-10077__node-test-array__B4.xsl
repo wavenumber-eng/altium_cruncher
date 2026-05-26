@@ -23,8 +23,8 @@
           <xsl:for-each select="/GRID/ROWS/ROW">
             <tr valign="top">
               <td align="left">
-                <xsl:value-of select="@Comment" />
-                <xsl:if test="@Comment[.='']">&#160;</xsl:if>
+                <xsl:value-of select="@Name" />
+                <xsl:if test="@Name[.='']">&#160;</xsl:if>
               </td>
               <td align="left">
                 <xsl:value-of select="@Description" />

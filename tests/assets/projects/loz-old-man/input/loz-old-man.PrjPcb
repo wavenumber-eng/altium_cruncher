@@ -45,6 +45,7 @@ CrossRefPorts=3
 CrossRefCrossSheets=1
 CrossRefSheetEntries=0
 CrossRefFollowFromMainSettings=1
+CurrentVariant=A
 
 [Preferences]
 PrefsVaultGUID=
@@ -344,9 +345,24 @@ UniqueId=2F88A09C-21E5-4474-ADE4-B2DACD197D4F
 Description=A
 AllowFabrication=0
 ParameterCount=0
-VariationCount=1
+VariationCount=2
 Variation1=Designator=R62|UniqueId=\ELGOJRZM\KBOZRQAH|Kind=1|AlternatePart=
-ParamVariationCount=0
+Variation2=Designator=R6|UniqueId=\QVGDIRQY\GLBRJAJW|Kind=0|AlternatePart==Value
+ParamVariation1=ParameterName=Description|VariantValue=RES 10k  OHM 1/10W 1% 0603 SMD
+ParamDesignator1=R6
+ParamVariation2=ParameterName=Manufacturer Part Number|VariantValue=ERJ-3EKF1002V
+ParamDesignator2=R6
+ParamVariation3=ParameterName=Resistance (Ohms)|VariantValue=10k
+ParamDesignator3=R6
+ParamVariation4=ParameterName=Substitution Notes|VariantValue=10 , ±1% , 0603 , AEC-Q200
+ParamDesignator4=R6
+ParamVariation5=ParameterName=Sort Value|VariantValue=
+ParamDesignator5=R6
+ParamVariation6=ParameterName=Value|VariantValue=10k
+ParamDesignator6=R6
+ParamVariation7=ParameterName=Comment|VariantValue==Value
+ParamDesignator7=R6
+ParamVariationCount=7
 
 [SearchPath1]
 Path=.\libraries\pcb\*.*
@@ -1072,6 +1088,36 @@ OutputName13=Ansys EDB
 OutputDocumentPath13=
 OutputVariantName13=
 OutputDefault13=0
+OutputType14=Ansoft Neutral
+OutputName14=Ansoft Neutral (AutoPCB)
+OutputDocumentPath14=
+OutputVariantName14=
+OutputDefault14=0
+OutputType15=HyperLynx
+OutputName15=HyperLynx (AutoPCB)
+OutputDocumentPath15=
+OutputVariantName15=
+OutputDefault15=0
+OutputType16=MathWorks
+OutputName16=MathWorks (AutoPCB)
+OutputDocumentPath16=
+OutputVariantName16=
+OutputDefault16=0
+OutputType17=Orcad v7 Capture Design
+OutputName17=Orcad v7 Capture Design (AutoSCH)
+OutputDocumentPath17=
+OutputVariantName17=
+OutputDefault17=0
+OutputType18=P-CAD ASCII
+OutputName18=P-CAD ASCII (AutoPCB)
+OutputDocumentPath18=
+OutputVariantName18=
+OutputDefault18=0
+OutputType19=P-CAD V16 Schematic Design
+OutputName19=P-CAD V16 Schematic Design (AutoSCH)
+OutputDocumentPath19=
+OutputVariantName19=
+OutputDefault19=0
 
 [OutputGroup10]
 Name=PostProcess Outputs

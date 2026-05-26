@@ -1034,8 +1034,12 @@ Preferred shape:
      root help points to command-specific help.
    - Active execution slice: BOM/PnP shared normalization, rich JSON config,
      JLC paired output, fixture notes, and oracle-backed tests are committed.
-     Next work is command-by-command review, starting with core
-     `altium-monkey` PnP oracle parity before continuing to extract/IntLib.
+     Next work is blocked on the upstream `altium-monkey==2026.5.26` PnP
+     position-mode release. Altium Monkey will own the Altium-compatible
+     PNP-METRIC placement calculation and the explicit `component-origin`
+     alternate mode; after that release, `altium-cruncher` should consume the
+     public package and remove any local assumptions about placement centers
+     before continuing to extract/IntLib.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 
@@ -1111,8 +1115,10 @@ Current local status:
 - BOM/PnP oracle tests now exercise `node_test_array` and `loz-old-man`:
   raw BOM JSON is checked against Altium XML-BOM designators and key fields,
   normalized PnP JSON is checked against Altium PNP-METRIC side/rotation/core
-  coordinates with explicit known coordinate exceptions, and paired JLC
-  BOM/CPL generation is checked;
+  coordinates. Current known coordinate exceptions are expected to be retired
+  after `altium-cruncher` consumes `altium-monkey==2026.5.26`, where
+  `altium-pick-place` is the documented default and `component-origin` is the
+  explicit alternate mode. Paired JLC BOM/CPL generation is checked;
 - fixture layout notes live in `docs/design/test-assets.html` and
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;

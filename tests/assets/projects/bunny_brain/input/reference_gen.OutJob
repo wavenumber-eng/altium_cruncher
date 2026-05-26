@@ -18,7 +18,7 @@ RevisionNamingSchemeGUID=
 Name=reference_gen.OutJob
 Description=
 TargetOutputMedium=REFERENCE_FILES
-VariantName=[No Variations]
+VariantName=B4
 VariantScope=1
 CurrentConfigurationName=
 TargetPrinter=Microsoft Print to PDF
@@ -34,7 +34,7 @@ OutputEnabled1=0
 OutputEnabled1_OutputMedium1=0
 OutputDefault1=0
 Configuration1_Name1=OutputConfigurationParameter1
-Configuration1_Item1=Record=IPC2581View|IPC2581Version=B|MeasurementSystem=Metric|FloatingPointPrecision=6|IsWiseSupport=False|MergeNetTieNets=False|OEMDesignNumberRef=DesignItemID|DifferentFootprints=True|DocumentPath=cricket-node-hw__B.PcbDoc
+Configuration1_Item1=Record=IPC2581View|IPC2581Version=B|MeasurementSystem=Metric|FloatingPointPrecision=6|IsWiseSupport=False|MergeNetTieNets=False|OEMDesignNumberRef=DesignItemID|DifferentFootprints=True|DocumentPath=node-test-array__B4.PcbDoc
 OutputType2=Gerber
 OutputName2=GERBER
 OutputCategory2=Fabrication
@@ -44,7 +44,7 @@ OutputEnabled2=0
 OutputEnabled2_OutputMedium1=0
 OutputDefault2=0
 Configuration2_Name1=OutputConfigurationParameter1
-Configuration2_Item1=Record=GerberView|EmbeddedApertures=True|FlashPadShapes=True|GenerateDRCRulesFile=False|GenerateReliefShapes=True|GenerateReports=False|GerberUnit=Metric|NumberOfDecimals=4|OptimizeChangeLocationCommands=True|OriginPosition=Relative|OutputFormat=Different|Plot.Set=SerializeLayerHash.Version~2,ClassName~TPlotLayerStateArray,16777217~1,16777218~1,16777219~1,16777220~1,16777221~1,16777222~1,16777223~1,16777224~1,16777225~1,16777226~1,16777227~1,16777228~1,16777229~1,16777230~1,16777231~1,16777232~1,16777233~1,16777234~1,16777235~1,16777236~1,16777237~1,16777238~1,16777239~1,16777240~1,16777241~1,16777242~1,16777243~1,16777244~1,16777245~1,16777246~1,16777247~1,16842751~1,16842753~1,16842754~1,16842755~1,16842756~1,16842757~1,16842758~1,16842759~1,16842760~1,16842761~1,16842762~1,16842763~1,16842764~1,16842765~1,16842766~1,16842767~1,16842768~1,16973830~1,16973831~1,16973832~1,16973833~1,16973834~1,16973835~1,16973836~1,16973837~1,16973838~1,16973848~1,16973849~1,16908289~1,16908290~1,16908291~1,16908292~1,16908293~1,16908294~1,16908295~1,16908296~1,16908297~1,16908298~1,16908299~1,16908300~1,16908301~1,16908302~1,16908303~1,16908304~1,16908305~1,16908306~1,16908307~1,16908308~1,16908309~1,16908310~1,16908311~1,16908312~1,16908313~1,16908314~1,16908315~1,16908316~1,16908317~1,16908318~1,16908319~1,16908320~1|SoftwareArcs=False|Sorted=False|DocumentPath=cricket-node-hw__B.PcbDoc
+Configuration2_Item1=Record=GerberView|EmbeddedApertures=True|FlashPadShapes=True|GenerateDRCRulesFile=False|GenerateReliefShapes=True|GenerateReports=False|GerberUnit=Metric|NumberOfDecimals=4|OptimizeChangeLocationCommands=True|OriginPosition=Relative|OutputFormat=Different|Plot.Set=SerializeLayerHash.Version~2,ClassName~TPlotLayerStateArray,16777217~1,16777218~1,16777219~1,16777220~1,16777221~1,16777222~1,16777223~1,16777224~1,16777225~1,16777226~1,16777227~1,16777228~1,16777229~1,16777230~1,16777231~1,16777232~1,16777233~1,16777234~1,16777235~1,16777236~1,16777237~1,16777238~1,16777239~1,16777240~1,16777241~1,16777242~1,16777243~1,16777244~1,16777245~1,16777246~1,16777247~1,16842751~1,16842753~1,16842754~1,16842755~1,16842756~1,16842757~1,16842758~1,16842759~1,16842760~1,16842761~1,16842762~1,16842763~1,16842764~1,16842765~1,16842766~1,16842767~1,16842768~1,16973830~1,16973831~1,16973832~1,16973833~1,16973834~1,16973835~1,16973836~1,16973837~1,16973838~1,16973848~1,16973849~1,16908289~1,16908290~1,16908291~1,16908292~1,16908293~1,16908294~1,16908295~1,16908296~1,16908297~1,16908298~1,16908299~1,16908300~1,16908301~1,16908302~1,16908303~1,16908304~1,16908305~1,16908306~1,16908307~1,16908308~1,16908309~1,16908310~1,16908311~1,16908312~1,16908313~1,16908314~1,16908315~1,16908316~1,16908317~1,16908318~1,16908319~1,16908320~1|SoftwareArcs=False|Sorted=False|DocumentPath=node-test-array__B4.PcbDoc
 OutputType3=NC Drill
 OutputName3=NC_DRILL
 OutputCategory3=Fabrication
@@ -54,7 +54,7 @@ OutputEnabled3=0
 OutputEnabled3_OutputMedium1=0
 OutputDefault3=0
 Configuration3_Name1=OutputConfigurationParameter1
-Configuration3_Item1=Record=DrillView|Units=Metric|NumberOfDecimals=4|NumberOfUnits=4|OptimizeChangeLocationCommands=False|OriginPosition=Relative|ZeroesMode=SuppressTrailingZeroes|GenerateBoardEdgeRout=True|GenerateDrilledSlotsG85=False|GenerateEIADrillFile=False|GenerateSeparatePlatedNonPlatedFiles=True|GenerateSeparateViaTypeFiles=False|GenerateToolsByDrillSymbols=False|BoardEdgeRoutToolDia=2000000|DocumentPath=cricket-node-hw__B.PcbDoc
+Configuration3_Item1=Record=DrillView|Units=Metric|NumberOfDecimals=4|NumberOfUnits=4|OptimizeChangeLocationCommands=False|OriginPosition=Relative|ZeroesMode=SuppressTrailingZeroes|GenerateBoardEdgeRout=True|GenerateDrilledSlotsG85=False|GenerateEIADrillFile=False|GenerateSeparatePlatedNonPlatedFiles=True|GenerateSeparateViaTypeFiles=False|GenerateToolsByDrillSymbols=False|BoardEdgeRoutToolDia=2000000|DocumentPath=node-test-array__B4.PcbDoc
 OutputType4=ODB
 OutputName4=ODB++
 OutputCategory4=Fabrication
@@ -64,7 +64,7 @@ OutputEnabled4=0
 OutputEnabled4_OutputMedium1=0
 OutputDefault4=0
 Configuration4_Name1=OutputConfigurationParameter1
-Configuration4_Item1=Record=ODBView|ExportPositivePlaneLayers=False|GenerateDRCRulesFile=False|IncludeUnconnectedMidLayerPads=False|ObjsInsideBoardOutlineOnly=False|ODBProfileLayer=-1000|PlotTopLayerPlot=True|PlotBottomLayerPlot=True|PlotTopOverlayPlot=True|PlotBottomOverlayPlot=True|PlotTopPastePlot=True|PlotBottomPastePlot=True|PlotTopSolderPlot=True|PlotBottomSolderPlot=True|PlotKeepOutLayerPlot=True|DocumentPath=cricket-node-hw__B.PcbDoc
+Configuration4_Item1=Record=ODBView|ExportPositivePlaneLayers=False|GenerateDRCRulesFile=False|IncludeUnconnectedMidLayerPads=False|ObjsInsideBoardOutlineOnly=False|ODBProfileLayer=-1000|PlotTopLayerPlot=True|PlotBottomLayerPlot=True|PlotTopOverlayPlot=True|PlotBottomOverlayPlot=True|PlotTopPastePlot=True|PlotBottomPastePlot=True|PlotTopSolderPlot=True|PlotBottomSolderPlot=True|PlotKeepOutLayerPlot=True|DocumentPath=node-test-array__B4.PcbDoc
 OutputType5=Pick Place
 OutputName5=PNP-METRIC
 OutputCategory5=Assembly
@@ -74,7 +74,7 @@ OutputEnabled5=1
 OutputEnabled5_OutputMedium1=1
 OutputDefault5=0
 Configuration5_Name1=OutputConfigurationParameter1
-Configuration5_Item1=Record=PickPlaceView|Units=Metric|GenerateCSVFormat=True|GenerateTextFormat=False|ShowUnits=False|Separator=.|YFlip=False|DifferentFootprints=False|ExcludeFilterParam=False|IncludeVariations=False|IncludeStandardNoBOM=False|Filter= |FilterActive=False|DocumentPath=cricket-node-hw__B.PcbDoc
+Configuration5_Item1=Record=PickPlaceView|Units=Metric|GenerateCSVFormat=True|GenerateTextFormat=False|ShowUnits=False|Separator=.|YFlip=False|DifferentFootprints=False|ExcludeFilterParam=False|IncludeVariations=False|IncludeStandardNoBOM=False|Filter= |FilterActive=False|DocumentPath=node-test-array__B4.PcbDoc
 OutputType6=WireListNetlist
 OutputName6=NETLIST
 OutputCategory6=Netlist
@@ -84,7 +84,7 @@ OutputEnabled6=1
 OutputEnabled6_OutputMedium1=2
 OutputDefault6=0
 Configuration6_Name1=OutputConfigurationParameter1
-Configuration6_Item1=|Units=Imperial|GenerateCSVFormat=False|GenerateTextFormat=True|ShowUnits=False|Separator=.|ExcludeFilterParam=False|IncludeVariations=False|IncludeStandardNoBOM=False|Filter= |FilterActive=False|YFlip=False|DifferentFootprints=False|DocumentPath=cricket-node-hw__B.PcbDoc
+Configuration6_Item1=|Units=Imperial|GenerateCSVFormat=False|GenerateTextFormat=True|ShowUnits=False|Separator=.|ExcludeFilterParam=False|IncludeVariations=False|IncludeStandardNoBOM=False|Filter= |FilterActive=False|YFlip=False|DifferentFootprints=False|DocumentPath=node-test-array__B4.PcbDoc
 OutputType7=BOM_PartType
 OutputName7=CSV-BOM
 OutputCategory7=Report
@@ -129,11 +129,11 @@ Configuration8_Name6=VisibleOrder_Flat
 Configuration8_Item6=Comment=120|Description=120|LibRef=120|Quantity=120|Designator=100
 
 [PublishSettings]
-OutputFilePath1=C:\eli\agent-worktrees\altium_cruncher\tests\assets\projects\bunny_brain\reference_output\no_variant\
+OutputFilePath1=C:\eli\agent-worktrees\altium_cruncher\tests\assets\projects\node_test_array\reference_output\VariantName\
 ReleaseManaged1=0
-OutputBasePath1=..\reference_output\no_variant\
-OutputPathMedia1=
-OutputPathMediaValue1=
+OutputBasePath1=..\reference_output\
+OutputPathMedia1==VariantName
+OutputPathMediaValue1==VariantName
 OutputPathOutputer1=[Output Name]
 OutputPathOutputerPrefix1=
 OutputPathOutputerValue1=
@@ -144,7 +144,7 @@ OutputFileNameSpecial1=
 OpenOutput1=0
 
 [GeneratedFilesSettings]
-RelativeOutputPath1=C:\eli\agent-worktrees\altium_cruncher\tests\assets\projects\bunny_brain\reference_output\no_variant\
+RelativeOutputPath1=C:\eli\agent-worktrees\altium_cruncher\tests\assets\projects\node_test_array\reference_output\VariantName\
 OpenOutputs1=0
 AddToProject1=0
 TimestampFolder1=0
