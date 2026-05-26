@@ -8,7 +8,7 @@ from datetime import date
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
 
-__version__ = "2026.5.25"
+__version__ = "2026.5.26"
 
 _DISTRIBUTION_NAME = "altium-cruncher"
 _VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$")

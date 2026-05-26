@@ -1,7 +1,7 @@
 # Altium Cruncher Public Repo Migration Plan
 
 Status: bootstrap in progress
-Last updated: 2026-05-25
+Last updated: 2026-05-26
 
 ## Goal
 
@@ -303,7 +303,7 @@ The first migration slice is complete when:
 
 Current local status:
 
-- package metadata, console script, CI/release workflow drafts, ADRs, design
+- package metadata, console script, CI/release workflow, changelog, ADRs, design
   docs, and contracts are present;
 - `rack run --all` passes locally with `L0_public_cli`,
   `L3_public_workflows`, and `L99_signoff`;

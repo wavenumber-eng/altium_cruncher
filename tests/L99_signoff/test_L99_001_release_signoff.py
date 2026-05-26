@@ -22,8 +22,8 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.5.25"
-EXPECTED_RELEASE_DATE = date(2026, 5, 25)
+EXPECTED_VERSION = "2026.5.26"
+EXPECTED_RELEASE_DATE = date(2026, 5, 26)
 
 
 def test_version_contract_matches_date_based_release() -> None:
@@ -37,7 +37,7 @@ def test_version_contract_matches_date_based_release() -> None:
     assert (version.major, version.minor, version.patch, version.build) == (
         2026,
         5,
-        25,
+        26,
         None,
     )
     assert version.release_date == EXPECTED_RELEASE_DATE
@@ -60,6 +60,13 @@ def test_cli_emits_package_version() -> None:
         assert completed.returncode == 0, completed.stderr
         assert completed.stdout.strip() == cli_version_text()
         assert completed.stdout.startswith("altium-cruncher ")
+
+
+def test_changelog_mentions_package_version() -> None:
+    """Verify that release notes mention the current package version."""
+    changelog = (PACKAGE_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    assert f"## {EXPECTED_VERSION}" in changelog
 
 
 def test_python_signoff_does_not_regress() -> None:

@@ -4,7 +4,7 @@ requires-python = ">=3.11, <3.13"
 
 [[package]]
 name = "altium-cruncher"
-version = "2026.5.25"
+version = "2026.5.26"
 source = { editable = "." }
 dependencies = [
     { name = "altium-monkey" },

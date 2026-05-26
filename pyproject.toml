@@ -1,6 +1,6 @@
 [project]
 name = "altium-cruncher"
-version = "2026.5.25"
+version = "2026.5.26"
 description = "Cross-platform Altium CLI utilities built on public altium-monkey"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -51,6 +51,7 @@ include = [
     "src/py/altium_cruncher/**",
     "scripts/**",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE",
     "CONTRIBUTING.md",
     "docs/**",

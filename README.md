@@ -108,6 +108,7 @@ documentation, JSON/config contracts, and package build/install smoke.
 
 ## Release Policy
 
-The first ADR will define versioning, tagging, release, and traceability. The
-intended release workflow is GitHub Actions plus PyPI Trusted Publishing/OIDC.
-Local Twine upload is fallback only.
+Versioning, tagging, release, and traceability are defined in
+`docs/adrs/ADR-0001-versioning-tagging-release-policy.md`. The intended
+release workflow is GitHub Actions plus PyPI Trusted Publishing/OIDC. Local
+Twine upload is fallback only.
