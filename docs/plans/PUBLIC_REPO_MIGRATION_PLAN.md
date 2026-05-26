@@ -990,6 +990,9 @@ Preferred shape:
    - Shared CLI help polish is required before first public release: version in
      help output, readable whitespace, alphabetical command ordering, and clear
      command-specific help guidance.
+   - Active execution slice: implement the shared output path/name expression
+     resolver first, with focused unit tests, so SVG, netlist, BOM, PnP, and
+     the planned JLC command can adopt one common output naming contract.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 
@@ -1038,5 +1041,8 @@ Current local status:
   script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
   backlog item rather than a hard release gate for this bootstrap slice;
+- shared output path/name expression resolver is implemented with focused L0
+  tests for project parameters, `VariantName`, sanitization, traversal
+  rejection, and path separator normalization;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers.

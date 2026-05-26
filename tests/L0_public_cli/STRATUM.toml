@@ -38,3 +38,33 @@ subprocess_cli = "Invoke the package command through the current Python environm
 test_cli_version_command = "Version subcommand reports the package version"
 test_cli_help_lists_manifest_commands = "Root help lists each command declared in the manifest"
 test_cli_command_help_starts_for_manifest_commands = "Each manifest command starts and prints command-level help"
+
+[[subtests]]
+id = "L0_002"
+file = "test_L0_002_output_path_templates.py"
+name = "Output Path Templates"
+description = "Validate shared output folder and filename template resolution"
+concerns = ["contracts", "release"]
+test_case_type = "contract"
+test_cases = "../../docs/plans/PUBLIC_REPO_MIGRATION_PLAN.md"
+
+[subtests.code_under_test]
+module = "altium_cruncher.output_path_templates"
+
+[subtests.objectives]
+path_expressions = "Resolve literals, project parameters, and runtime VariantName tokens"
+path_safety = "Generated paths stay relative and sanitize unsafe filename characters"
+command_reuse = "Provide one resolver for output-producing command modules"
+
+[subtests.approach]
+unit_resolution = "Exercise the resolver directly with deterministic public fixture-style parameters"
+
+[subtests.test_functions]
+test_concat_expression_builds_release_folder_from_project_parameters = "Altium-style concatenation expressions produce release folder names"
+test_variant_name_token_resolves_current_processed_variant = "VariantName resolves to the current processed variant"
+test_brace_template_supports_command_tokens_and_project_parameters = "Brace templates support command tokens and project parameters"
+test_output_name_rejects_path_separators = "Filename-only helper rejects path separators"
+test_missing_parameter_can_raise_or_resolve_empty = "Missing project parameters have explicit policy"
+test_relative_output_path_sanitizes_invalid_filename_characters = "Unsafe filename characters are sanitized"
+test_relative_output_path_rejects_absolute_and_traversal_paths = "Absolute paths and traversal are rejected"
+test_relative_output_path_normalizes_backslashes = "Windows separators normalize to relative path parts"
