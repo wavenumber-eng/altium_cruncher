@@ -12,7 +12,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # macOS CI is deferred until wn-geometer publishes a wheel compatible
+        # with the hosted macOS runner tag. v2026.5.25 currently provides a
+        # macosx_26_0_arm64 wheel, while GitHub's macos-latest runner is
+        # macOS 15 arm64.
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.12"]
 
     steps:

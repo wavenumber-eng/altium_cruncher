@@ -296,7 +296,8 @@ The first migration slice is complete when:
 - `pipx install` can expose the CLI from a built wheel;
 - `wn-hw` setup/update can expose the CLI executable without a manual PATH fix;
 - Rack tests run from the standalone repo;
-- CI runs on Windows, macOS, and Linux;
+- CI runs on Windows and Linux; macOS CI is deferred until the `wn-geometer`
+  mac wheel tag matches available GitHub-hosted runners;
 - at least one stable command is migrated with fixture-backed coverage;
 - the command inventory clearly states which commands remain private,
   deferred, or blocked.
