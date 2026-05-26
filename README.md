@@ -71,6 +71,7 @@ The current migrated command set includes:
 - `pcblib-footprint-3d`
 - `bom`
 - `pnp`
+- `jlc`
 - `netlist`
 - `extract`
 - `easyeda-import`
@@ -120,7 +121,7 @@ documentation, JSON/config contracts, and package build/install tests.
   design notes.
 - `docs/design/index.html` is the master design-doc entry point used by humans
   and signoff tooling.
-- `contracts/` stores stable schemas and conformance examples for public JSON
+- `docs/contracts/` stores stable schemas and conformance examples for public JSON
   or config formats.
 
 ## Release Policy

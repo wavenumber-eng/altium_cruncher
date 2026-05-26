@@ -11,7 +11,7 @@ from pathlib import Path
 from altium_cruncher._version import __version__, cli_version_text
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
-_MANIFEST_PATH = _PROJECT_ROOT / "contracts" / "command_manifest.v0.json"
+_MANIFEST_PATH = _PROJECT_ROOT / "docs" / "contracts" / "command_manifest.v0.json"
 
 
 def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:

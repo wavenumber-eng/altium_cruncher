@@ -1,0 +1,11 @@
+Output: XML-BOM
+Type  : BOM
+From  : Variant [[No Variations]] of Project [bunny_brain_D.PrjPcb]
+   Generated File[XML-BOM-bunny_brain_D.xml]
+   Generated File[XML-BOM-bunny_brain_D.xsl]
+
+
+Files Generated   : 2
+Documents Printed : 0
+
+Finished Output Generation At 1:59:27 PM On 5/26/2026

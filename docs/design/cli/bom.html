@@ -1,18 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>bom command</title><link rel="stylesheet" href="../styles.css"></head>
-<body data-doc-kind="cli-design" data-command="bom" data-config-contract="planned">
+<body data-doc-kind="cli-design" data-command="bom" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
 <main>
 <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
-<header><p class="status">CLI command design</p><h1>bom</h1><p class="lede">Exports bill-of-materials data from Altium schematic or project inputs. The command now uses the shared BOM/PnP normalization layer for canonical aliases, grouped JSON, and JLC BOM rows while the richer JSON config contract is being designed.</p></header>
+<header><p class="status">CLI command design</p><h1>bom</h1><p class="lede">Exports bill-of-materials data from Altium schematic or project inputs. The command uses the shared BOM/PnP normalization layer for canonical aliases, grouped JSON/CSV/XLSX, configurable DNP handling, optional PCB line items, and JLC BOM rows.</p></header>
 <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher bom project.PrjPcb --format json -o output/bom
 altium-cruncher bom schematic.SchDoc --format xlsx
 altium-cruncher bom project.PrjPcb --variant B4
 altium-cruncher bom project.PrjPcb --format grouped-json
-altium-cruncher bom project.PrjPcb --format jlc-csv</code></pre></section>
-<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. <code>--format</code> selects <code>csv</code>, <code>json</code>, <code>generic-json</code>, <code>grouped-json</code>, <code>jlc-csv</code>, or <code>xlsx</code>. <code>--variant</code> and <code>--all-variants</code> select variant processing. <code>-o</code> selects the output directory.</p></section>
-<section id="output"><h2>Output</h2><p>Output is written under the selected output directory using the input stem. <code>generic-json</code> includes the legacy flat table, raw components, and normalized canonical records. <code>grouped-json</code> emits grouped line items. <code>jlc-csv</code> emits <code>Comment</code>, <code>Designator</code>, <code>Footprint</code>, and <code>JLCPCB Part #</code>. Planned output includes raw JSON every run, grouped XLSX, config-driven aliases, DNP policy, and optional PCB line-item support.</p></section>
-<section id="tests"><h2>Tests</h2><p>Current L3 coverage verifies BOM JSON generation on Hydroscope. Unit tests cover alias resolution, grouped BOM lines, natural designator sorting, raw JSON, and JLC BOM rows. Planned BOM parity tests use <code>node_test_array</code> for hierarchy, variants, DNP handling, and field aliasing.</p></section>
+altium-cruncher bom project.PrjPcb --format jlc-csv
+altium-cruncher bom --write-config bom.config
+altium-cruncher bom project.PrjPcb --config bom.config</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. <code>--format</code> selects one legacy output format and overrides multi-output config mode. <code>--config</code> loads <code>docs/contracts/bom_pnp_config.v1.schema.json</code>-shaped JSON; if omitted, <code>bom.config</code> in the working directory is used when present. <code>--write-config</code> writes a default editable config. <code>--variant</code> and <code>--all-variants</code> override config variant policy. <code>-o</code> is the legacy output directory or the config output root.</p></section>
+<section id="output"><h2>Output</h2><p>Legacy output is written under the selected output directory using the input stem. Config output uses <code>dir_template</code> and <code>name_template</code> with project parameters plus <code>Command</code>, <code>OutputKind</code>, <code>SourceName</code>, <code>SourceStem</code>, and <code>VariantName</code> tokens. Configured BOM outputs include <code>raw-json</code>, <code>legacy-json</code>, <code>grouped-json</code>, <code>grouped-csv</code>, <code>grouped-xlsx</code>, and <code>jlc-csv</code>.</p></section>
+<section id="tests"><h2>Tests</h2><p>Current L3 coverage verifies BOM JSON generation on Hydroscope. Unit tests cover alias resolution, config parsing, grouped BOM lines, natural designator sorting, raw JSON, grouped table rows, XLSX generation, and JLC BOM rows. Planned BOM parity tests use <code>node_test_array</code> for hierarchy, variants, DNP handling, and field aliasing.</p></section>
 </main>
 </body>
 </html>

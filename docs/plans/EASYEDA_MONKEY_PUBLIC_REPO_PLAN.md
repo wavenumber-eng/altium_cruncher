@@ -94,7 +94,7 @@ Once that flow works, mirror the corrected release automation back into
   possible;
 - `docs/adrs/` for architecture decisions;
 - `docs/design/` for interface, data-flow, command/API, and format design;
-- `contracts/` for stable JSON/config schemas and conformance examples.
+- `docs/contracts/` for stable JSON/config schemas and conformance examples.
 
 The first ADR should define versioning, tagging, release, and compatibility
 policy. It should match the date-based package policy:
@@ -130,7 +130,7 @@ Required signoff policy:
   `docs/design/api/` with rationale, purpose, test requirements, working
   definition, and Rack test ownership;
 - stable JSON/config formats have schemas or contract examples under
-  `contracts/`;
+  `docs/contracts/`;
 - contract conformance tests exercise those schemas/examples;
 - no imports from private `toolz`, private worktrees, or machine-local paths;
 - no checked-in machine-local fixture paths;

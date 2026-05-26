@@ -32,7 +32,9 @@ class InterfaceDoc:
 PACKAGE_ROOT = _project_root()
 SOURCE_ROOT = PACKAGE_ROOT / "src" / "py" / "altium_cruncher"
 DESIGN_ROOT = PACKAGE_ROOT / "docs" / "design"
-INTERFACE_MANIFEST = PACKAGE_ROOT / "contracts" / "interface_design_manifest.v0.json"
+INTERFACE_MANIFEST = (
+    PACKAGE_ROOT / "docs" / "contracts" / "interface_design_manifest.v0.json"
+)
 
 
 def _is_dataclass_decorator(decorator: ast.expr) -> bool:

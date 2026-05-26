@@ -1,0 +1,4 @@
+Layer Pairs Export File for PCB: C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\input\node-test-array__B4.PcbDoc
+LayersSetName=Top_Bot_Plated_Thru_Holes|DrillFile=node-test-array__b4-roundholes-plated.txt|DrillLayers=gtl,gbl
+LayersSetName=Top_Bot_Plated_Slot_Holes|DrillFile=node-test-array__b4-slotholes-plated.txt|DrillLayers=gtl,gbl
+LayersSetName=Top_Bot_NonPlated_Thru_Holes|DrillFile=node-test-array__b4-roundholes-nonplated.txt|DrillLayers=gtl,gbl

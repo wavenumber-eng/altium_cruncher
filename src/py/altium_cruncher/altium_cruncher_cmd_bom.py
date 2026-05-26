@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import json
 import logging
 from pathlib import Path
+from typing import Protocol
 import zipfile
 from xml.sax.saxutils import escape
 
@@ -14,15 +15,34 @@ from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
 )
+from altium_cruncher.bom_pnp_cli_common import (
+    configured_output_root,
+    load_optional_bom_pnp_config,
+    project_parameters_from_design,
+    warn_for_unknown_variants,
+    write_config_template,
+)
 from altium_cruncher.bom_pnp_model import (
+    BOM_GROUPED_DEFAULT_COLUMNS,
+    BOM_PNP_DEFAULT_CONFIG_NAME,
+    BomPnpConfig,
+    GroupedBomLine,
     JLC_BOM_COLUMNS,
+    NormalizedBomComponent,
     bom_raw_payload,
+    configured_output_file,
     designator_sort_key,
+    filter_bom_components,
     group_bom_components,
+    grouped_bom_table_rows,
     grouped_bom_payload,
     jlc_bom_rows,
+    make_pcb_line_item,
     normalize_bom_components,
+    select_variant_names,
 )
+from altium_cruncher.output_path_templates import TemplateValue
+from altium_cruncher.simple_xlsx import write_xlsx_table
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +55,23 @@ BOM_FIXED_COLUMNS = [
     "Sheet",
     "DNP",
 ]
+
+
+class _BomDesign(Protocol):
+    """Protocol for the AltiumDesign methods used by configured BOM output."""
+
+    def to_bom(self, variant: str | None = None) -> list[dict]:
+        """Return schematic-sourced BOM dictionaries."""
+        ...
+
+    def to_pnp(
+        self,
+        variant: str | None = None,
+        units: str = "mm",
+        exclude_no_bom: bool = False,
+    ) -> Sequence[object]:
+        """Return PCB-sourced placement entries."""
+        ...
 
 
 def _bom_parameter_columns(bom: list[dict]) -> list[str]:
@@ -93,9 +130,16 @@ def _write_named_rows_csv(
 
 def _bom_output_extension(output_format: str) -> str:
     """Return the file extension for a BOM output format."""
-    if output_format in {"json", "generic-json", "grouped-json"}:
+    json_formats = {
+        "json",
+        "raw-json",
+        "generic-json",
+        "legacy-json",
+        "grouped-json",
+    }
+    if output_format in json_formats:
         return "json"
-    if output_format == "xlsx":
+    if output_format in {"xlsx", "grouped-xlsx"}:
         return "xlsx"
     return "csv"
 
@@ -113,7 +157,13 @@ def _write_bom_output(
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(bom, f, indent=2)
         return
-    if output_format == "generic-json":
+    if output_format == "raw-json":
+        normalized = normalize_bom_components(bom)
+        payload = bom_raw_payload(normalized, source=source, variant=variant)
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+        return
+    if output_format in {"generic-json", "legacy-json"}:
         payload = _generic_bom_payload(bom, source=source, variant=variant)
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
@@ -125,6 +175,23 @@ def _write_bom_output(
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
         return
+    if output_format == "grouped-csv":
+        normalized = normalize_bom_components(bom)
+        lines = group_bom_components(normalized)
+        rows = grouped_bom_table_rows(lines)
+        _write_named_rows_csv(output_file, BOM_GROUPED_DEFAULT_COLUMNS, rows)
+        return
+    if output_format == "grouped-xlsx":
+        normalized = normalize_bom_components(bom)
+        lines = group_bom_components(normalized)
+        rows = grouped_bom_table_rows(lines)
+        write_xlsx_table(
+            output_file,
+            columns=BOM_GROUPED_DEFAULT_COLUMNS,
+            rows=rows,
+            sheet_name="BOM",
+        )
+        return
     if output_format == "jlc-csv":
         normalized = normalize_bom_components(bom)
         lines = group_bom_components(normalized)
@@ -135,6 +202,153 @@ def _write_bom_output(
         _write_bom_xlsx(output_file, bom)
         return
     _write_bom_csv(output_file, bom)
+
+
+def _configured_bom_artifacts(
+    output_root: Path,
+    raw_bom: list[dict],
+    *,
+    config: BomPnpConfig,
+    source: Path,
+    variant: str | None,
+    project_parameters: Mapping[str, TemplateValue],
+    output_kinds: Sequence[str] | None = None,
+    command: str = "bom",
+) -> list[Path]:
+    """Write all configured BOM artifacts and return their paths."""
+    kinds = tuple(output_kinds or config.bom_outputs)
+    components = normalize_bom_components(raw_bom, config.field_aliases)
+    components = filter_bom_components(components, include_dnp=config.include_dnp)
+    pcb_line = make_pcb_line_item(
+        config,
+        project_parameters,
+        variant_name=variant,
+    )
+    if pcb_line is not None:
+        components.append(pcb_line)
+    lines = group_bom_components(
+        components,
+        group_fields=config.bom_group_fields,
+        split_dnp=config.split_dnp,
+        prefix_order=config.prefix_order,
+    )
+    written: list[Path] = []
+    for output_kind in kinds:
+        output_file = configured_output_file(
+            output_root,
+            config,
+            source=source,
+            command=command,
+            output_kind=output_kind,
+            extension=_bom_output_extension(output_kind),
+            project_parameters=project_parameters,
+            variant_name=variant,
+        )
+        _write_configured_bom_artifact(
+            output_file,
+            output_kind,
+            raw_bom=raw_bom,
+            components=components,
+            lines=lines,
+            config=config,
+            source=source,
+            variant=variant,
+        )
+        written.append(output_file)
+    return written
+
+
+def _write_configured_bom_artifact(
+    output_file: Path,
+    output_kind: str,
+    *,
+    raw_bom: list[dict],
+    components: Sequence[NormalizedBomComponent],
+    lines: Sequence[GroupedBomLine],
+    config: BomPnpConfig,
+    source: Path,
+    variant: str | None,
+) -> None:
+    """Write one configured BOM artifact."""
+    if output_kind == "raw-json":
+        payload = bom_raw_payload(components, source=source, variant=variant)
+        output_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return
+    if output_kind == "legacy-json":
+        payload = _generic_bom_payload(raw_bom, source=source, variant=variant)
+        output_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return
+    if output_kind == "grouped-json":
+        payload = grouped_bom_payload(lines, source=source, variant=variant)
+        output_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return
+    if output_kind == "grouped-csv":
+        rows = grouped_bom_table_rows(
+            lines,
+            fields=config.bom_output_fields,
+            dnp_placement=config.dnp_placement,
+        )
+        _write_named_rows_csv(output_file, config.bom_output_fields, rows)
+        return
+    if output_kind == "grouped-xlsx":
+        rows = grouped_bom_table_rows(
+            lines,
+            fields=config.bom_output_fields,
+            dnp_placement=config.dnp_placement,
+        )
+        write_xlsx_table(
+            output_file,
+            columns=config.bom_output_fields,
+            rows=rows,
+            sheet_name="BOM",
+        )
+        return
+    if output_kind == "jlc-csv":
+        rows = jlc_bom_rows(lines, include_dnp=config.include_dnp)
+        _write_named_rows_csv(output_file, JLC_BOM_COLUMNS, rows)
+        return
+    raise ValueError(f"Unsupported configured BOM output: {output_kind}")
+
+
+def _entry_field(entry: object, name: str) -> object:
+    """Read one field from a mapping or object-like entry."""
+    if isinstance(entry, Mapping):
+        return entry.get(name)
+    return getattr(entry, name, None)
+
+
+def _pnp_entry_to_bom_dict(entry: object) -> dict[str, object]:
+    """Convert a placement entry into PCB-sourced BOM-like component data."""
+    parameters = _entry_field(entry, "parameters")
+    if not isinstance(parameters, Mapping):
+        parameters = {}
+    return {
+        "designator": str(_entry_field(entry, "designator") or ""),
+        "value": str(_entry_field(entry, "comment") or ""),
+        "footprint": str(_entry_field(entry, "footprint") or ""),
+        "library_ref": "",
+        "description": str(_entry_field(entry, "description") or ""),
+        "sheet": "",
+        "parameters": {str(key): str(value) for key, value in parameters.items()},
+        "dnp": False,
+    }
+
+
+def _bom_from_configured_source(
+    design: _BomDesign,
+    config: BomPnpConfig,
+    *,
+    variant: str | None,
+) -> list[dict]:
+    """Return BOM rows from the selected configured data source."""
+    if config.bom_source_mode == "pcb":
+        pnp_entries = design.to_pnp(
+            variant=variant,
+            units="mm",
+            exclude_no_bom=True,
+        )
+        return [_pnp_entry_to_bom_dict(entry) for entry in pnp_entries]
+    return design.to_bom(variant=variant)
 
 
 def _generic_bom_payload(
@@ -302,6 +516,13 @@ def cmd_bom(args) -> int:
     """
     from altium_monkey.altium_design import AltiumDesign
 
+    write_config = getattr(args, "write_config", None)
+    if write_config is not None:
+        config_path = write_config_template(write_config)
+        log.info("Wrote BOM/PnP config template: %s", config_path)
+        if not getattr(args, "file", None):
+            return 0
+
     # Determine input file
     input_file: Path | None = None
 
@@ -337,50 +558,59 @@ def cmd_bom(args) -> int:
     else:
         log.info("No variants defined in project")
 
-    # Determine output directory
-    output_dir = _resolve_output_dir(args.output, "bom")
+    config, config_path = load_optional_bom_pnp_config(getattr(args, "config", None))
+    config_mode = config_path is not None and getattr(args, "format", None) is None
+    variants_to_process = select_variant_names(
+        available_variants,
+        config,
+        cli_variant=getattr(args, "variant", None),
+        cli_all_variants=getattr(args, "all_variants", False),
+    )
+    warn_for_unknown_variants(log, variants_to_process, available_variants)
 
-    # Determine which variants to process
-    all_variants = getattr(args, "all_variants", False)
-    variant = getattr(args, "variant", None)
-
-    if all_variants and available_variants:
-        variants_to_process = [None] + available_variants  # None = base (no variant)
-    elif variant:
-        if variant not in available_variants:
-            log.warning(
-                f"Variant '{variant}' not found in project (available: {', '.join(available_variants) or 'none'})"
-            )
-        variants_to_process = [variant]
-    else:
-        variants_to_process = [None]  # No variant filtering
-
-    # Get output format
-    output_format = getattr(args, "format", "csv")
+    output_format = getattr(args, "format", None) or "csv"
+    project_parameters = project_parameters_from_design(design)
+    output_dir = (
+        configured_output_root(args.output)
+        if config_mode
+        else _resolve_output_dir(args.output, "bom")
+    )
 
     files_written = 0
     for var in variants_to_process:
-        bom = design.to_bom(variant=var)
+        bom = _bom_from_configured_source(design, config, variant=var)
 
-        # Determine output filename
-        base_name = input_file.stem
-        ext = _bom_output_extension(output_format)
-        if var:
-            output_file = output_dir / f"{base_name}_{var}_bom.{ext}"
+        if config_mode:
+            written = _configured_bom_artifacts(
+                output_dir,
+                bom,
+                config=config,
+                source=input_file,
+                variant=var,
+                project_parameters=project_parameters,
+            )
+            files_written += len(written)
+            output_names = ", ".join(path.name for path in written)
         else:
-            output_file = output_dir / f"{base_name}_bom.{ext}"
+            base_name = input_file.stem
+            ext = _bom_output_extension(output_format)
+            if var:
+                output_file = output_dir / f"{base_name}_{var}_bom.{ext}"
+            else:
+                output_file = output_dir / f"{base_name}_bom.{ext}"
 
-        _write_bom_output(
-            output_file,
-            bom,
-            output_format=output_format,
-            source=input_file,
-            variant=var,
-        )
+            _write_bom_output(
+                output_file,
+                bom,
+                output_format=output_format,
+                source=input_file,
+                variant=var,
+            )
+            files_written += 1
+            output_names = output_file.name
 
         variant_name = var or "base"
-        log.info(f"BOM ({variant_name}): {len(bom)} components -> {output_file.name}")
-        files_written += 1
+        log.info("BOM (%s): %s components -> %s", variant_name, len(bom), output_names)
 
         # Count DNP components
         dnp_count = sum(1 for c in bom if c["dnp"])
@@ -398,7 +628,8 @@ def register_parser(subparsers):
         help="generate BOM from Altium schematic documents (CSV, JSON, or XLSX)",
         description="Generate Bill of Materials (BOM) from Altium SchDoc or PrjPcb files. "
         "CSV/XLSX formats include parameters as columns; JSON preserves nested structure. "
-        "jlc-csv writes JLCPCB BOM upload columns from grouped line items.",
+        "Config-driven runs can emit raw JSON, grouped tables, and JLCPCB BOM "
+        "upload columns in one invocation.",
         epilog="Examples:\n"
         "  altium-cruncher bom project.PrjPcb\n"
         "  altium-cruncher bom schematic.SchDoc\n"
@@ -410,6 +641,8 @@ def register_parser(subparsers):
         "  altium-cruncher bom project.PrjPcb --format grouped-json\n"
         "  altium-cruncher bom project.PrjPcb --format jlc-csv\n"
         "  altium-cruncher bom project.PrjPcb --format xlsx  # XLSX output\n"
+        "  altium-cruncher bom --write-config bom.config\n"
+        "  altium-cruncher bom project.PrjPcb --config bom.config\n"
         "  altium-cruncher bom project.PrjPcb -o output_dir/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -421,9 +654,33 @@ def register_parser(subparsers):
     )
     bom_parser.add_argument(
         "--format",
-        choices=["csv", "json", "generic-json", "grouped-json", "jlc-csv", "xlsx"],
-        default="csv",
-        help="output format (default: csv)",
+        choices=[
+            "csv",
+            "json",
+            "raw-json",
+            "generic-json",
+            "legacy-json",
+            "grouped-json",
+            "grouped-csv",
+            "grouped-xlsx",
+            "jlc-csv",
+            "xlsx",
+        ],
+        default=None,
+        help="single output format; overrides multi-output config mode",
+    )
+    bom_parser.add_argument(
+        "--config",
+        type=Path,
+        help="BOM/PnP JSON config (default: ./bom.config if present)",
+    )
+    bom_parser.add_argument(
+        "--write-config",
+        nargs="?",
+        const=Path(BOM_PNP_DEFAULT_CONFIG_NAME),
+        type=Path,
+        metavar="PATH",
+        help="write a default BOM/PnP config template",
     )
     bom_parser.add_argument(
         "--variant", type=str, help="filter by specific variant name"

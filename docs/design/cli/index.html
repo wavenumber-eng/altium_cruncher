@@ -17,7 +17,7 @@
     <p class="status">CLI command design index</p>
     <h1>Altium Cruncher CLI</h1>
     <p class="lede">
-      Public commands are listed in <code>contracts/command_manifest.v0.json</code>
+      Public commands are listed in <code>docs/contracts/command_manifest.v0.json</code>
       and must have matching design documents. This index is the human-readable
       command map and the signoff anchor for command documentation.
     </p>
@@ -68,17 +68,23 @@
         <td>None</td>
         <td>Generate footprint 3D preview artifacts.</td>
       </tr>
-      <tr data-command="bom" data-design-doc="cli/bom.html" data-config-contract="none">
+      <tr data-command="bom" data-design-doc="cli/bom.html" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
         <td><code>bom</code></td>
         <td><a href="bom.html">bom.html</a></td>
-        <td>None</td>
+        <td>Shared BOM/PnP config contract</td>
         <td>Export bill-of-materials data.</td>
       </tr>
-      <tr data-command="pnp" data-design-doc="cli/pnp.html" data-config-contract="none">
+      <tr data-command="pnp" data-design-doc="cli/pnp.html" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
         <td><code>pnp</code></td>
         <td><a href="pnp.html">pnp.html</a></td>
-        <td>None</td>
+        <td>Shared BOM/PnP config contract</td>
         <td>Export pick-and-place data.</td>
+      </tr>
+      <tr data-command="jlc" data-design-doc="cli/jlc.html" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
+        <td><code>jlc</code></td>
+        <td><a href="jlc.html">jlc.html</a></td>
+        <td>Shared BOM/PnP config contract</td>
+        <td>Generate paired JLCPCB BOM and CPL upload files.</td>
       </tr>
       <tr data-command="netlist" data-design-doc="cli/netlist.html" data-config-contract="none">
         <td><code>netlist</code></td>

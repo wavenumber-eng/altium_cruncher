@@ -1,0 +1,569 @@
+Wire List
+
+<<< Component List >>>
+1µF                             C1             C0402_0.55MM_HD
+0.1µF                           C2             C0402_0.55MM_HD
+0.1µF                           C3             C0402_0.55MM_HD
+1µF                             C4             C0402_0.55MM_HD
+0.1µF                           C5             C0402_0.55MM_HD
+0.1µF                           C6             C0402_0.55MM_HD
+0.1µF                           C8             C0402_0.55MM_HD
+0.1µF                           C9             C0402_0.55MM_HD
+1µF                             C10            C0402_0.55MM_HD
+0.1µF                           C11            C0402_0.55MM_HD
+0.1µF                           C12            C0402_0.55MM_HD
+1µF                             C13            C0402_0.55MM_HD
+0.1µF                           C14            C0402_0.55MM_HD
+0.1µF                           C15            C0402_0.55MM_HD
+0.1µF                           C16            C0402_0.55MM_HD
+0.1µF                           C17            C0402_0.55MM_HD
+1µF                             C18            C0402_0.55MM_HD
+0.1µF                           C19            C0402_0.55MM_HD
+0.1µF                           C20            C0402_0.55MM_HD
+0.1µF                           C21            C0402_0.55MM_HD
+4.7µF                           C22            C0603_1.00MM_MD
+0.1µF                           C23            C0402_0.55MM_HD
+10µF                            C24            C0603_0.90MM_MD
+4.7µF                           C25            C0603_1.00MM_MD
+0.1µF                           C26            C0402_0.55MM_HD
+0.1µF                           C27            C0402_0.55MM_HD
+12pF                            C28            C0402_0.55MM_MD
+12pF                            C29            C0402_0.55MM_MD
+9.5pF                           C30            PERFECT_0402
+9.5pF                           C31            PERFECT_0402
+APT1608CGCK                     D1             LED_0603 - GREEN
+BAT760-7                        D2             D_SOD-323_P
+PCB Fiducial                    F1             Fiducial 1mm - 2mm
+PCB Fiducial                    F2             Fiducial 1mm - 2mm
+PCB Fiducial                    F3             Fiducial 1mm - 2mm
+PCB Fiducial                    F4             Fiducial 1mm - 2mm
+Micromod 2222 Card Edge Fingers J1             MICROMOD-CARD--M2--2222
+ACML-0402HC-221-T               L1             C0402_HD
+2.2µH 1.5A                      L2             L_NRH3012
+PCB-10004-D                     PCB1           
+1k                              R1             R0603_0.55MM_HD
+10k                             R2             R0603_0.55MM_MD
+10k                             R3             R0603_0.55MM_HD
+33                              R4             R0603_0.55MM_HD
+33                              R5             R0603_0.55MM_HD
+0                               R6             R0402_0.40MM_HD
+10k                             R7             R0603_0.55MM_HD
+20k                             R8             R0603_0.55MM_HD
+10k                             R9             R0603_0.55MM_HD
+SMT_TEST                        TP1            SMT_TP - 20
+SMT_TEST                        TP2            SMT_TP - 20
+SMT_TEST                        TP3            SMT_TP - 20
+SMT_TEST                        TP4            SMT_TP - 20
+SMT_TEST                        TP5            SMT_TP - 20
+SMT_TEST                        TP6            SMT_TP - 20
+SMT_TEST                        TP7            SMT_TP - 20
+SMT_TEST                        TP8            SMT_TP - 20
+SMT_TEST                        TP9            SMT_TP - 20
+SMT_TEST                        TP10           SMT_TP - 20
+MCXN947VDFT                     U1             VFBGA184
+APS6408L-3OBM-BA                U2             BGA24C100P5X5_600X800X120
+32.768kHz                       X1             XTAL_3215
+24MHz                           Y1             ECS-1637B
+
+<<< Wire List >>>
+
+  NODE  REFERENCE  PIN #   PIN NAME       PIN TYPE    PART VALUE
+
+[00152] VREFO
+        C16        2       1              PASSIVE     0.1µF
+        C17        2       1              PASSIVE     0.1µF
+        TP5        1       1              PASSIVE     SMT_TEST
+        U1         U4      ANA_7/VREFI/VREPASSIVE     MCXN947VDFT
+
+[00151] VDDA
+        C18        1       1              PASSIVE     1µF
+        C19        2       1              PASSIVE     0.1µF
+        L1         2       2              PASSIVE     ACML-0402HC-221-T
+        U1         R4      VDD_ANA        PASSIVE     MCXN947VDFT
+        U1         R5      VREFH          PASSIVE     MCXN947VDFT
+
+[00150] VDD_VBAT
+        C20        2       1              PASSIVE     0.1µF
+        D2         2       K              PASSIVE     BAT760-7
+        J1         72      RTC_3V         PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         T17     VDD_BAT        PASSIVE     MCXN947VDFT
+
+[00149] VDD_SYS
+        C21        2       1              PASSIVE     0.1µF
+        U1         N14     VDD_SYS/VOUT_SYPASSIVE     MCXN947VDFT
+
+[00148] VDD_CORE
+        C13        1       1              PASSIVE     1µF
+        C14        2       1              PASSIVE     0.1µF
+        C15        2       1              PASSIVE     0.1µF
+        C24        2       1              PASSIVE     10µF
+        C27        2       1              PASSIVE     0.1µF
+        L2         1       1              PASSIVE     2.2µH 1.5A
+        U1         K6      VDD_LDO_CORE   PASSIVE     MCXN947VDFT
+        U1         K10     VDD_CORE_1     PASSIVE     MCXN947VDFT
+        U1         L11     VDD_CORE_2     PASSIVE     MCXN947VDFT
+
+[00147] USB1_P
+        J1         35      USBHOST_D+     PASSIVE     Micromod 2222 Card Edge Fingers
+        R5         1       1              PASSIVE     33
+
+[00146] USB1_N
+        J1         37      USBHOST_D-     PASSIVE     Micromod 2222 Card Edge Fingers
+        R4         1       1              PASSIVE     33
+
+[00145] USB0_P
+        J1         3       USB_D+         PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         T15     USB0_DP/WUU0_INPASSIVE     MCXN947VDFT
+
+[00144] USB0_N
+        J1         5       USB_D-         PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         T14     USB0_DM/WUU0_INPASSIVE     MCXN947VDFT
+
+[00143] SWIO
+        J1         23      SWDIO          PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         A17     P0_0/TMS/SWDIO/PASSIVE     MCXN947VDFT
+
+[00142] SWCLK
+        J1         21      SWDCK          PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         A16     P0_1/TCLK/SWCLKPASSIVE     MCXN947VDFT
+
+[00141] RESET-b
+        J1         6       !RESET!        PASSIVE     Micromod 2222 Card Edge Fingers
+        R6         1       1              PASSIVE     0
+        U1         F3      RESET_b        PASSIVE     MCXN947VDFT
+
+[00140] PIO1-3/CAN-RX
+        J1         41      CAN-RX         PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B4      P1_3/TSI0_CH3/APASSIVE     MCXN947VDFT
+
+[00139] PIO1-2/CAN-TX
+        J1         43      CAN-TX         PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         C4      P1_2/TSI0_CH2/APASSIVE     MCXN947VDFT
+
+[00138] PIO1-1/FC3-TX
+        J1         22      TX2            PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         C5      P1_1/TSI0_CH1/APASSIVE     MCXN947VDFT
+
+[00137] PIO1-0/FC3-RX
+        J1         20      RX2            PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         C6      P1_0/TSI0_CH0/APASSIVE     MCXN947VDFT
+
+[00136] P4-21
+        TP10       1       1              PASSIVE     SMT_TEST
+        U1         T11     P4_21/OPAMP2_INPASSIVE     MCXN947VDFT
+
+[00135] P4-13/FC2-TX
+        J1         17      TX1            PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         T7      P4_13/OPAMP0_INPASSIVE     MCXN947VDFT
+
+[00134] P4-12/FC2-RX
+        J1         19      RX1            PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         T6      P4_12/OPAMP0_INPASSIVE     MCXN947VDFT
+
+[00133] P4-3/DAC1
+        J1         10      D0             PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         U1      P4_3/DAC1_OUT/APASSIVE     MCXN947VDFT
+
+[00132] P4-2/DAC0
+        J1         38      A1             PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         T1      P4_2/DAC0_OUT/APASSIVE     MCXN947VDFT
+
+[00131] P4-0
+        J1         15      CTS1           PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         P1      P4_0/TRIG_IN6/FPASSIVE     MCXN947VDFT
+
+[00130] P3-19/GREEN-LED
+        R1         2       2              PASSIVE     1k
+        U1         K17     P3_19/FC7_P6/CTPASSIVE     MCXN947VDFT
+
+[00129] P3-17/SAI1-TX-FS
+        J1         52      AUD_LRCLK      PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         K15     P3_17/FC8_P3/CTPASSIVE     MCXN947VDFT
+
+[00128] P3-16/SAI1-TX-BCLK
+        J1         50      AUD_BCLK       PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         J15     P3_16/FC8_P2/CTPASSIVE     MCXN947VDFT
+
+[00127] P3-5/LPSPI7-CS
+        J1         55      SPI_!CS!       PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         G14     P3_5/FC7_P3/CT_PASSIVE     MCXN947VDFT
+
+[00126] P3-4/LPSPI7-MISO
+        J1         61      SPI_SDI        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         F14     P3_4/FC7_P2/CT_PASSIVE     MCXN947VDFT
+
+[00125] P3-3/LPSPI7-SCK
+        J1         57      SPI_SCK        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         D16     P3_3/FC7_P1/CT4PASSIVE     MCXN947VDFT
+
+[00124] P3-2/LPSPI7-MOSI
+        J1         59      SPI_SDO        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         D15     P3_2/FC7_P0/CT4PASSIVE     MCXN947VDFT
+
+[00123] P2-7/SD-D2
+        J1         68      SDIO_DATA2     PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         L2      P2_7/TRIG_IN5/FPASSIVE     MCXN947VDFT
+
+[00122] P2-6/SD-D3
+        J1         70      SPI_!CS1!/SDIO_PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         K2      P2_6/TRIG_IN4/FPASSIVE     MCXN947VDFT
+
+[00121] P2-5/SD-CMD
+        J1         62      SPI_SDO1/SDIO_CPASSIVE     Micromod 2222 Card Edge Fingers
+        U1         K1      P2_5/TRIG_OUT3/PASSIVE     MCXN947VDFT
+
+[00120] P2-4/SD-CLK
+        J1         60      SPI_SCK1/SDIO_CPASSIVE     Micromod 2222 Card Edge Fingers
+        U1         K3      P2_4/FC9_P0/SDHPASSIVE     MCXN947VDFT
+
+[00119] P2-3/SD-D0
+        J1         64      SPI_SDI1/SDIO_DPASSIVE     Micromod 2222 Card Edge Fingers
+        U1         J3      P2_3/FC9_P1/SDHPASSIVE     MCXN947VDFT
+
+[00118] P2-2/SD-D1
+        J1         66      SDIO_DATA1     PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         H3      P2_2/CLKOUT/FC9PASSIVE     MCXN947VDFT
+
+[00117] P2-1
+        J1         47      PWM1           PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         H1      P2_1/TRACE_CLK/PASSIVE     MCXN947VDFT
+
+[00116] P1-21/MCLK
+        J1         58      AUD_MCLK       PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         L5      P1_21/ADC1_A21/PASSIVE     MCXN947VDFT
+        U1         M4      P1_23/ADC1_A23/PASSIVE     MCXN947VDFT
+
+[00115] P1-19
+        J1         8       G11            PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         G5      P1_19/ADC1_A19/PASSIVE     MCXN947VDFT
+
+[00114] P1-18
+        J1         13      RTS1           PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         G4      P1_18/ADC1_A18/PASSIVE     MCXN947VDFT
+
+[00113] P1-12
+        J1         67      G8             PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         D1      P1_13/TSI0_CH22PASSIVE     MCXN947VDFT
+        U1         D2      P1_12/TSI0_CH21PASSIVE     MCXN947VDFT
+
+[00112] P1-11
+        J1         69      G7/BUS7        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         D3      P1_11/TSI0_CH20PASSIVE     MCXN947VDFT
+
+[00111] P1-10
+        J1         71      G6/BUS6        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         C3      P1_10/TSI0_CH19PASSIVE     MCXN947VDFT
+        U1         E4      P1_15/TSI0_CH24PASSIVE     MCXN947VDFT
+
+[00110] P1-9
+        J1         73      G5/BUS5        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B1      P1_9/TSI0_CH18/PASSIVE     MCXN947VDFT
+        U1         D4      P1_14/TSI0_CH23PASSIVE     MCXN947VDFT
+
+[00109] P1-8
+        J1         48      G4/BUS4        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         A1      P1_8/TSI0_CH17/PASSIVE     MCXN947VDFT
+        U1         K5      P1_20/ADC1_A20/PASSIVE     MCXN947VDFT
+
+[00108] P1-7
+        J1         46      G3/BUS3        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         A2      P1_7/TSI0_CH7/APASSIVE     MCXN947VDFT
+
+[00107] P1-6
+        J1         44      G2/BUS2        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B2      P1_6/TSI0_CH6/APASSIVE     MCXN947VDFT
+
+[00106] P1-5
+        J1         42      G1/BUS1        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B3      P1_5/TSI0_CH5/APASSIVE     MCXN947VDFT
+
+[00105] P1-4
+        J1         40      G0/BUS0        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         A4      P1_4/TSI0_CH4/APASSIVE     MCXN947VDFT
+
+[00104] P0-25/FC1-I2C-SCL
+        J1         53      I2C_SCL1       PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         A6      P0_25/ADC0_B17/PASSIVE     MCXN947VDFT
+
+[00103] P0-24/FC1-I2C-SDA
+        J1         51      I2C_SDA1       PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B6      P0_24/ADC0_B16/PASSIVE     MCXN947VDFT
+
+[00102] P0-20
+        J1         18      D1/CAM_TRIG    PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         C8      P0_20/TSI0_CH15PASSIVE     MCXN947VDFT
+
+[00101] P0-17/FC0-I2C-SCL
+        J1         14      I2C_SCL        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         A10     P0_17/TSI0_CH12PASSIVE     MCXN947VDFT
+
+[00100] P0-16/FC0-I2C-SDA
+        J1         12      I2C_SDA        PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B10     P0_16/TSI0_CH11PASSIVE     MCXN947VDFT
+
+[00099] P0-14
+        J1         54      AUD_IN/CAM_PCLKPASSIVE     Micromod 2222 Card Edge Fingers
+        U1         E11     P0_14/ADC0_B14/PASSIVE     MCXN947VDFT
+        U1         M1      P2_9/TRACE_DATAPASSIVE     MCXN947VDFT
+
+[00098] P0-11
+        J1         65      G9/ADC_D-/CAM_HPASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B11     P0_11/ADC0_B11/PASSIVE     MCXN947VDFT
+
+[00097] P0-10
+        J1         63      G10/ADC_D+/CAM_PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B12     P0_10/ADC0_B10/PASSIVE     MCXN947VDFT
+
+[00096] P0-6
+        J1         11      !BOOT!         PASSIVE     Micromod 2222 Card Edge Fingers
+        J1         56      AUD_OUT/CAM_MCLPASSIVE     Micromod 2222 Card Edge Fingers
+        R9         1       1              PASSIVE     10k
+        U1         C14     P0_6/TSI0_CH10/PASSIVE     MCXN947VDFT
+        U1         M2      P2_8/TRACE_DATAPASSIVE     MCXN947VDFT
+
+[00095] P0-5
+        TP6        1       1              PASSIVE     SMT_TEST
+        U1         A14     P0_5/TSI0_CH9/EPASSIVE     MCXN947VDFT
+
+[00094] P0-4/CTIMER0-MAT2
+        J1         32      PWM0           PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B14     P0_4/TSI0_CH8/EPASSIVE     MCXN947VDFT
+
+[00093] P0-2
+        J1         16      I2C_!INT!      PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         B16     P0_2/TDO/SWO/FCPASSIVE     MCXN947VDFT
+
+[00034] NetTP9_1
+        TP9        1       1              PASSIVE     SMT_TEST
+        U1         T10     P4_20/OPAMP2_INPASSIVE     MCXN947VDFT
+
+[00033] NetTP8_1
+        TP8        1       1              PASSIVE     SMT_TEST
+        U1         T4      P4_7/CT_INP19/EPASSIVE     MCXN947VDFT
+
+[00032] NetTP7_1
+        TP7        1       1              PASSIVE     SMT_TEST
+        U1         A12     P0_9/ADC0_B9/FCPASSIVE     MCXN947VDFT
+
+[00031] NetTP4_1
+        TP4        1       1              PASSIVE     SMT_TEST
+        U1         P11     USB1_ID        PASSIVE     MCXN947VDFT
+
+[00030] NetTP3_1
+        TP3        1       1              PASSIVE     SMT_TEST
+        U2         C2      RFU            PASSIVE     APS6408L-3OBM-BA
+
+[00029] NetTP2_1
+        TP2        1       1              PASSIVE     SMT_TEST
+        U1         T3      ANA_5/ADC1_B0  PASSIVE     MCXN947VDFT
+
+[00028] NetTP1_1
+        TP1        1       1              PASSIVE     SMT_TEST
+        U1         T2      ANA_4/ADC1_A0  PASSIVE     MCXN947VDFT
+
+[00027] NetR7_1
+        R7         1       1              PASSIVE     10k
+        R8         2       2              PASSIVE     20k
+        U1         U14     USB1_VBUS      PASSIVE     MCXN947VDFT
+
+[00026] NetR6_2
+        R6         2       2              PASSIVE     0
+        U2         A4      R\E\S\E\T\\    INPUT       APS6408L-3OBM-BA
+
+[00025] NetR5_2
+        R5         2       2              PASSIVE     33
+        U1         R13     USB1_DP        PASSIVE     MCXN947VDFT
+
+[00024] NetR4_2
+        R4         2       2              PASSIVE     33
+        U1         R14     USB1_DM        PASSIVE     MCXN947VDFT
+
+[00023] NetJ1_4
+        J1         4       3.3V_EN        PASSIVE     Micromod 2222 Card Edge Fingers
+        R2         1       1              PASSIVE     10k
+
+[00022] NetD1_A
+        D1         A       A              PASSIVE     APT1608CGCK
+        R1         1       1              PASSIVE     1k
+
+[00021] NetC31_1
+        C31        1       1              PASSIVE     9.5pF
+        U1         U17     P5_1/XTAL32K/ADPASSIVE     MCXN947VDFT
+        X1         1       inp            PASSIVE     32.768kHz
+
+[00020] NetC30_1
+        C30        1       1              PASSIVE     9.5pF
+        U1         U16     P5_0/EXTAL32K/APASSIVE     MCXN947VDFT
+        X1         2       out            PASSIVE     32.768kHz
+
+[00019] NetC29_1
+        C29        1       1              PASSIVE     12pF
+        U1         F2      P1_31/EXTAL48M/PASSIVE     MCXN947VDFT
+        Y1         1       1              PASSIVE     24MHz
+
+[00018] NetC28_1
+        C28        1       1              PASSIVE     12pF
+        U1         F1      P1_30/XTAL48M/TPASSIVE     MCXN947VDFT
+        Y1         3       3              PASSIVE     24MHz
+
+[00017] GND
+        C1         2       1              PASSIVE     1µF
+        C2         1       1              PASSIVE     0.1µF
+        C3         1       1              PASSIVE     0.1µF
+        C4         2       1              PASSIVE     1µF
+        C5         1       1              PASSIVE     0.1µF
+        C6         1       1              PASSIVE     0.1µF
+        C8         1       1              PASSIVE     0.1µF
+        C9         1       1              PASSIVE     0.1µF
+        C10        2       1              PASSIVE     1µF
+        C11        1       1              PASSIVE     0.1µF
+        C12        1       1              PASSIVE     0.1µF
+        C13        2       1              PASSIVE     1µF
+        C14        1       1              PASSIVE     0.1µF
+        C15        1       1              PASSIVE     0.1µF
+        C16        1       1              PASSIVE     0.1µF
+        C17        1       1              PASSIVE     0.1µF
+        C18        2       1              PASSIVE     1µF
+        C19        1       1              PASSIVE     0.1µF
+        C20        1       1              PASSIVE     0.1µF
+        C21        1       1              PASSIVE     0.1µF
+        C22        2       1              PASSIVE     4.7µF
+        C23        2       1              PASSIVE     0.1µF
+        C24        1       1              PASSIVE     10µF
+        C25        2       1              PASSIVE     4.7µF
+        C26        1       1              PASSIVE     0.1µF
+        C27        1       1              PASSIVE     0.1µF
+        C28        2       1              PASSIVE     12pF
+        C29        2       1              PASSIVE     12pF
+        C30        2       1              PASSIVE     9.5pF
+        C31        2       1              PASSIVE     9.5pF
+        D1         C       C              PASSIVE     APT1608CGCK
+        J1         1,7,33, GND            PASSIVE     Micromod 2222 Card Edge Fingers
+        R8         1       1              PASSIVE     20k
+        U1         D6      VSS_1          PASSIVE     MCXN947VDFT
+        U1         D9      VSS_2          PASSIVE     MCXN947VDFT
+        U1         D12     VSS_3          PASSIVE     MCXN947VDFT
+        U1         E5      VSS_4          PASSIVE     MCXN947VDFT
+        U1         E13     VSS_5          PASSIVE     MCXN947VDFT
+        U1         G2      VSS_6          PASSIVE     MCXN947VDFT
+        U1         H5      VSS_7          PASSIVE     MCXN947VDFT
+        U1         H9      VSS_8          PASSIVE     MCXN947VDFT
+        U1         H13     VSS_9          PASSIVE     MCXN947VDFT
+        U1         J4      VSS_10         PASSIVE     MCXN947VDFT
+        U1         J8      VSS_11         PASSIVE     MCXN947VDFT
+        U1         J10     VSS_12         PASSIVE     MCXN947VDFT
+        U1         J14     VSS_13         PASSIVE     MCXN947VDFT
+        U1         K9      VSS_14         PASSIVE     MCXN947VDFT
+        U1         N13     VSS_15         PASSIVE     MCXN947VDFT
+        U1         P6      VSS_P4_1       PASSIVE     MCXN947VDFT
+        U1         P7      VSS_P4_2       PASSIVE     MCXN947VDFT
+        U1         P9      VSS_P4_3       PASSIVE     MCXN947VDFT
+        U1         P12     VSS_16         PASSIVE     MCXN947VDFT
+        U1         P14     VSS_17         PASSIVE     MCXN947VDFT
+        U1         P16     VSS_DCDC       PASSIVE     MCXN947VDFT
+        U1         R6      VREFL          PASSIVE     MCXN947VDFT
+        U1         T16     VSS_18         PASSIVE     MCXN947VDFT
+        U2         B3      VSS            POWER       APS6408L-3OBM-BA
+        U2         C1      VSSQ           POWER       APS6408L-3OBM-BA
+        U2         E5      VSSQ           POWER       APS6408L-3OBM-BA
+
+[00016] FLEXSPI0A-SS0-N
+        R3         1       1              PASSIVE     10k
+        U1         B17     P3_0/TRIG_IN0/FPASSIVE     MCXN947VDFT
+        U2         A3      C\E\\          INPUT       APS6408L-3OBM-BA
+
+[00015] FLEXSPI0A-SCK
+        U1         D14     P3_7/FC6_P6/FC7PASSIVE     MCXN947VDFT
+        U2         B2      CLK            INPUT       APS6408L-3OBM-BA
+
+[00014] FLEXSPI0A-DQS
+        U1         D17     P3_6/CLKOUT/FC6PASSIVE     MCXN947VDFT
+        U2         C3      DQS/DM         I/O         APS6408L-3OBM-BA
+
+[00013] FLEXSPI0A-D7
+        U1         H15     P3_15/FC8_P1/CTPASSIVE     MCXN947VDFT
+        U2         E1      ADQ7           I/O         APS6408L-3OBM-BA
+
+[00012] FLEXSPI0A-D6
+        U1         H17     P3_14/FC8_P0/CTPASSIVE     MCXN947VDFT
+        U2         E2      ADQ6           I/O         APS6408L-3OBM-BA
+
+[00011] FLEXSPI0A-D5
+        U1         H16     P3_13/FC7_P5/FCPASSIVE     MCXN947VDFT
+        U2         E3      ADQ5           I/O         APS6408L-3OBM-BA
+
+[00010] FLEXSPI0A-D4
+        U1         G16     P3_12/FC7_P4/FCPASSIVE     MCXN947VDFT
+        U2         D5      ADQ4           I/O         APS6408L-3OBM-BA
+
+[00009] FLEXSPI0A-D3
+        U1         F16     P3_11/FC6_P3/FCPASSIVE     MCXN947VDFT
+        U2         D4      ADQ3           I/O         APS6408L-3OBM-BA
+
+[00008] FLEXSPI0A-D2
+        U1         F17     P3_10/FC6_P2/FCPASSIVE     MCXN947VDFT
+        U2         C4      ADQ2           I/O         APS6408L-3OBM-BA
+
+[00007] FLEXSPI0A-D1
+        U1         F15     P3_9/FC6_P5/FC7PASSIVE     MCXN947VDFT
+        U2         D2      ADQ1           I/O         APS6408L-3OBM-BA
+
+[00006] FLEXSPI0A-D0
+        U1         E14     P3_8/FC6_P4/FC7PASSIVE     MCXN947VDFT
+        U2         D3      ADQ0           I/O         APS6408L-3OBM-BA
+
+[00005] DCDC-LX
+        L2         2       2              PASSIVE     2.2µH 1.5A
+        U1         P17     DCDC_LX/DCDC_LXPASSIVE     MCXN947VDFT
+
+[00004] DAC2-OUT
+        J1         34      A0             PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         U2      ANA_6/DAC2_OUT/PASSIVE     MCXN947VDFT
+
+[00003] BAT-VIN/3
+        J1         49      BATT_VIN/3     PASSIVE     Micromod 2222 Card Edge Fingers
+        U1         P3      ANA_0/ADC0_A0  PASSIVE     MCXN947VDFT
+
+[00002] +5vUSB
+        J1         9       USB_VIN        PASSIVE     Micromod 2222 Card Edge Fingers
+        R7         2       2              PASSIVE     10k
+
+[00001] +3v3
+        C1         1       1              PASSIVE     1µF
+        C2         2       1              PASSIVE     0.1µF
+        C3         2       1              PASSIVE     0.1µF
+        C4         1       1              PASSIVE     1µF
+        C5         2       1              PASSIVE     0.1µF
+        C6         2       1              PASSIVE     0.1µF
+        C8         2       1              PASSIVE     0.1µF
+        C9         2       1              PASSIVE     0.1µF
+        C10        1       1              PASSIVE     1µF
+        C11        2       1              PASSIVE     0.1µF
+        C12        2       1              PASSIVE     0.1µF
+        C22        1       1              PASSIVE     4.7µF
+        C23        1       1              PASSIVE     0.1µF
+        C25        1       1              PASSIVE     4.7µF
+        C26        2       1              PASSIVE     0.1µF
+        D2         1       A              PASSIVE     BAT760-7
+        J1         2,74    3.3V           PASSIVE     Micromod 2222 Card Edge Fingers
+        L1         1       1              PASSIVE     ACML-0402HC-221-T
+        R2         2       2              PASSIVE     10k
+        R3         2       2              PASSIVE     10k
+        R9         2       2              PASSIVE     10k
+        U1         G7      VDD_1          PASSIVE     MCXN947VDFT
+        U1         G11     VDD_P3_1       PASSIVE     MCXN947VDFT
+        U1         H6      VDD_2          PASSIVE     MCXN947VDFT
+        U1         H8      VDD_3          PASSIVE     MCXN947VDFT
+        U1         H10     VDD_P3_2       PASSIVE     MCXN947VDFT
+        U1         H12     VDD_P3_3       PASSIVE     MCXN947VDFT
+        U1         K8      VDD_P2_1       PASSIVE     MCXN947VDFT
+        U1         L7      VDD_P2_2       PASSIVE     MCXN947VDFT
+        U1         N5      VDD_P4_1       PASSIVE     MCXN947VDFT
+        U1         P4      VDD_P4_2       PASSIVE     MCXN947VDFT
+        U1         P15     VDD_LDO_SYS    PASSIVE     MCXN947VDFT
+        U1         R12     VDD_USB        PASSIVE     MCXN947VDFT
+        U1         R15     VDD_DCDC       PASSIVE     MCXN947VDFT
+        U2         B4      VDD            POWER       APS6408L-3OBM-BA
+        U2         D1      VDDQ           POWER       APS6408L-3OBM-BA
+        U2         E4      VDDQ           POWER       APS6408L-3OBM-BA
+

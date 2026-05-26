@@ -1,0 +1,126 @@
+*************************************************************
+FileName = node-test-array__B4.PcbDoc
+ODB++ directory structure
+*************************************************************
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\profile
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\stephdr
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\dielectric1\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\dielectric1\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_overlay\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_overlay\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\keep-out_layer\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\keep-out_layer\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\_8__board_outline\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\_8__board_outline\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_3d_body\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_3d_body\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\drill_non-plated_bottom_layer-top_layer\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\drill_non-plated_bottom_layer-top_layer\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\drill_non-plated_bottom_layer-top_layer\tools
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_paste\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_paste\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\_13__assembly_top\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\_13__assembly_top\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_solder\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_solder\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\drill_plated_bottom_layer-top_layer\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\drill_plated_bottom_layer-top_layer\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\drill_plated_bottom_layer-top_layer\tools
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_courtyard\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_courtyard\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_paste\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_paste\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_layer\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\bottom_layer\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_solder\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_solder\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_layer\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_layer\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_overlay\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\top_overlay\attrlist
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\comp_+_top\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\layers\comp_+_top\components
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\steps\pcb\eda\data
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\matrix\matrix
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.002x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.003x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset0.005x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.004x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset-0.002x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset-0.003x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset0.005x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset-0.004x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.002x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.003x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset0.005x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.004x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset-0.002x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset-0.003x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset0.005x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect59.181x43.433_270_offset-0.004x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.002x0.003\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.003x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset0.005x0\features
+
+Generated File : C:\eli\wn_pcb-sch\tools\test_cases\altium\common\real_world_pcbdoc\node_test_array\reference_output\no_variant\ODB++\odb\symbols\uds_rect51.181x35.433_270_offset-0.004x0.003\features
+

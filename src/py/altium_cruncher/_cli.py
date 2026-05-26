@@ -33,6 +33,9 @@ from altium_cruncher.altium_cruncher_cmd_clean import (
 from altium_cruncher.altium_cruncher_cmd_extract import (
     register_parser as register_extract_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_jlc import (
+    register_parser as register_jlc_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_merge import (
     register_parser as register_merge_parser,
 )
@@ -167,6 +170,7 @@ def main() -> None:
     register_clean_parser(command_subparsers)
     _register_easyeda_parsers(command_subparsers)
     register_extract_parser(command_subparsers)
+    register_jlc_parser(command_subparsers)
     register_megamaid_parser(command_subparsers)
     register_merge_parser(command_subparsers)
     register_netlist_parser(command_subparsers)

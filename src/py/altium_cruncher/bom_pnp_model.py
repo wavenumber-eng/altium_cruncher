@@ -4,9 +4,20 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+import json
 from pathlib import Path
 import re
 
+from altium_cruncher.output_path_templates import (
+    TemplateValue,
+    resolve_output_name,
+    resolve_output_expression,
+    resolve_output_relative_path,
+)
+
+BOM_PNP_DEFAULT_CONFIG_NAME = "bom.config"
+BOM_PNP_FALLBACK_CONFIG_NAME = "bom.config.json"
+BOM_PNP_CONFIG_SCHEMA = "wn.altium_cruncher.bom.config.v1"
 BOM_RAW_SCHEMA = "wn.altium_cruncher.bom.raw.v1"
 BOM_GROUPED_SCHEMA = "wn.altium_cruncher.bom.grouped.v1"
 PNP_SCHEMA = "wn.altium_cruncher.pnp.v1"
@@ -23,6 +34,42 @@ JLC_CPL_COLUMNS: tuple[str, ...] = (
     "Mid Y",
     "Rotation",
 )
+BOM_GROUPED_DEFAULT_COLUMNS: tuple[str, ...] = (
+    "item",
+    "quantity",
+    "designators",
+    "dnp",
+    "manufacturer",
+    "manufacturer_part_number",
+    "value",
+    "footprint",
+    "description",
+    "jlcpcb_part_number",
+)
+PNP_DEFAULT_COLUMNS: tuple[str, ...] = (
+    "designator",
+    "comment",
+    "layer",
+    "footprint",
+    "center_x",
+    "center_y",
+    "rotation",
+    "description",
+)
+_BOM_OUTPUT_KINDS = frozenset(
+    {
+        "raw-json",
+        "legacy-json",
+        "grouped-json",
+        "grouped-csv",
+        "grouped-xlsx",
+        "jlc-csv",
+    }
+)
+_PNP_OUTPUT_KINDS = frozenset({"json", "csv", "xlsx", "jlc-cpl"})
+_BOM_SOURCE_MODES = frozenset({"schematic", "pcb", "merged"})
+_DNP_PLACEMENTS = frozenset({"inline", "end", "separate"})
+_VARIANT_MODES = frozenset({"base", "all", "named"})
 
 _DESIGNATOR_TOKEN_RE = re.compile(r"\d+|[A-Za-z]+|[^A-Za-z\d]+")
 _LEADING_PREFIX_RE = re.compile(r"^[A-Za-z]+")
@@ -82,14 +129,12 @@ class FieldAliasConfig:
     @classmethod
     def from_mapping(
         cls,
-        mapping: Mapping[str, Sequence[str]],
+        mapping: Mapping[str, object],
     ) -> "FieldAliasConfig":
         """Build an alias config from JSON-style mappings."""
         return cls(
             {
-                _normalize_name(name): tuple(
-                    alias.strip() for alias in aliases if alias.strip()
-                )
+                _normalize_name(name): _string_tuple(aliases)
                 for name, aliases in mapping.items()
             }
         )
@@ -106,6 +151,289 @@ class FieldAliasConfig:
             name: list(aliases)
             for name, aliases in sorted(self.canonical_fields.items())
         }
+
+
+@dataclass(frozen=True, slots=True)
+class BomPnpConfig:
+    """Versioned BOM/PnP command configuration."""
+
+    schema: str = BOM_PNP_CONFIG_SCHEMA
+    field_aliases: FieldAliasConfig = field(default_factory=FieldAliasConfig)
+    variant_mode: str = "base"
+    variant_names: tuple[str, ...] = ()
+    include_base_variant: bool = True
+    bom_source_mode: str = "schematic"
+    bom_outputs: tuple[str, ...] = (
+        "raw-json",
+        "grouped-json",
+        "grouped-xlsx",
+    )
+    bom_group_fields: tuple[str, ...] = (
+        "manufacturer",
+        "manufacturer_part_number",
+        "value",
+        "footprint",
+    )
+    bom_output_fields: tuple[str, ...] = BOM_GROUPED_DEFAULT_COLUMNS
+    include_dnp: bool = True
+    split_dnp: bool = True
+    dnp_placement: str = "inline"
+    pcb_line_item_enabled: bool = False
+    pcb_line_item_designator: str = "PCB"
+    pcb_line_item_fields: dict[str, str] = field(default_factory=dict)
+    pnp_outputs: tuple[str, ...] = ("json", "csv")
+    pnp_output_fields: tuple[str, ...] = PNP_DEFAULT_COLUMNS
+    pnp_units: str = "mm"
+    pnp_exclude_no_bom: bool = False
+    layer_order: tuple[str, ...] = ("top", "bottom")
+    prefix_order: tuple[str, ...] = ()
+    output_dir_template: str = "{Command}"
+    output_name_template: str = "{SourceStem}_{VariantName}_{OutputKind}"
+
+    @classmethod
+    def from_mapping(cls, payload: Mapping[str, object]) -> "BomPnpConfig":
+        """Build a config from a JSON-style mapping."""
+        if payload.get("schema") not in {None, BOM_PNP_CONFIG_SCHEMA}:
+            raise ValueError(
+                f"Unsupported BOM/PnP config schema: {payload.get('schema')}"
+            )
+        variants = _mapping_value(payload.get("variants"))
+        bom = _mapping_value(payload.get("bom"))
+        pnp = _mapping_value(payload.get("pnp"))
+        output = _mapping_value(payload.get("output"))
+        pcb_line_item = _mapping_value(bom.get("pcb_line_item"))
+        aliases = _mapping_value(payload.get("field_aliases"))
+
+        return cls(
+            field_aliases=FieldAliasConfig.from_mapping(aliases)
+            if aliases
+            else FieldAliasConfig(),
+            variant_mode=_choice(
+                _string_value(variants.get("mode") or "base"),
+                _VARIANT_MODES,
+                "variant mode",
+            ),
+            variant_names=_string_tuple(variants.get("names")),
+            include_base_variant=_bool_value(
+                variants.get("include_base"),
+                default=True,
+            ),
+            bom_source_mode=_choice(
+                _string_value(bom.get("source_mode") or "schematic"),
+                _BOM_SOURCE_MODES,
+                "BOM source mode",
+            ),
+            bom_outputs=_choices_tuple(
+                bom.get("outputs"),
+                _BOM_OUTPUT_KINDS,
+                ("raw-json", "grouped-json", "grouped-xlsx"),
+                "BOM output",
+            ),
+            bom_group_fields=_string_tuple(
+                bom.get("group_fields"),
+                default=(
+                    "manufacturer",
+                    "manufacturer_part_number",
+                    "value",
+                    "footprint",
+                ),
+            ),
+            bom_output_fields=_string_tuple(
+                bom.get("output_fields"),
+                default=BOM_GROUPED_DEFAULT_COLUMNS,
+            ),
+            include_dnp=_bool_value(bom.get("include_dnp"), default=True),
+            split_dnp=_bool_value(bom.get("split_dnp"), default=True),
+            dnp_placement=_choice(
+                _string_value(bom.get("dnp_placement") or "inline"),
+                _DNP_PLACEMENTS,
+                "DNP placement",
+            ),
+            pcb_line_item_enabled=_bool_value(
+                pcb_line_item.get("enabled"),
+                default=False,
+            ),
+            pcb_line_item_designator=_string_value(
+                pcb_line_item.get("designator") or "PCB"
+            ),
+            pcb_line_item_fields=_string_mapping(pcb_line_item.get("fields")),
+            pnp_outputs=_choices_tuple(
+                pnp.get("outputs"),
+                _PNP_OUTPUT_KINDS,
+                ("json", "csv"),
+                "PnP output",
+            ),
+            pnp_output_fields=_string_tuple(
+                pnp.get("output_fields"),
+                default=PNP_DEFAULT_COLUMNS,
+            ),
+            pnp_units=_choice(
+                _string_value(pnp.get("units") or "mm"),
+                frozenset({"mm", "mils"}),
+                "PnP units",
+            ),
+            pnp_exclude_no_bom=_bool_value(
+                pnp.get("exclude_no_bom"),
+                default=False,
+            ),
+            layer_order=_string_tuple(
+                pnp.get("layer_order"),
+                default=("top", "bottom"),
+            ),
+            prefix_order=_string_tuple(
+                pnp.get("prefix_order"),
+                default=_string_tuple(bom.get("prefix_order")),
+            ),
+            output_dir_template=_string_value(
+                output.get("dir_template") or "{Command}"
+            ),
+            output_name_template=_string_value(
+                output.get("name_template")
+                or "{SourceStem}_{VariantName}_{OutputKind}"
+            ),
+        )
+
+    def to_json_obj(self) -> dict[str, object]:
+        """Return a deterministic JSON-compatible config object."""
+        return {
+            "schema": self.schema,
+            "field_aliases": self.field_aliases.to_json_obj(),
+            "variants": {
+                "mode": self.variant_mode,
+                "names": list(self.variant_names),
+                "include_base": self.include_base_variant,
+            },
+            "bom": {
+                "source_mode": self.bom_source_mode,
+                "outputs": list(self.bom_outputs),
+                "group_fields": list(self.bom_group_fields),
+                "output_fields": list(self.bom_output_fields),
+                "include_dnp": self.include_dnp,
+                "split_dnp": self.split_dnp,
+                "dnp_placement": self.dnp_placement,
+                "prefix_order": list(self.prefix_order),
+                "pcb_line_item": {
+                    "enabled": self.pcb_line_item_enabled,
+                    "designator": self.pcb_line_item_designator,
+                    "fields": dict(sorted(self.pcb_line_item_fields.items())),
+                },
+            },
+            "pnp": {
+                "outputs": list(self.pnp_outputs),
+                "output_fields": list(self.pnp_output_fields),
+                "units": self.pnp_units,
+                "exclude_no_bom": self.pnp_exclude_no_bom,
+                "layer_order": list(self.layer_order),
+                "prefix_order": list(self.prefix_order),
+            },
+            "output": {
+                "dir_template": self.output_dir_template,
+                "name_template": self.output_name_template,
+            },
+        }
+
+
+def find_bom_pnp_config_path(start_dir: Path | None = None) -> Path | None:
+    """Return the first default BOM/PnP config path found in a directory."""
+    root = (start_dir or Path.cwd()).resolve()
+    for name in (BOM_PNP_DEFAULT_CONFIG_NAME, BOM_PNP_FALLBACK_CONFIG_NAME):
+        candidate = root / name
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def load_bom_pnp_config(path: Path) -> BomPnpConfig:
+    """Load a BOM/PnP JSON config file."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, Mapping):
+        raise ValueError(f"BOM/PnP config must be a JSON object: {path}")
+    return BomPnpConfig.from_mapping(payload)
+
+
+def write_bom_pnp_config(
+    path: Path,
+    config: BomPnpConfig | None = None,
+) -> None:
+    """Write a default BOM/PnP config template."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps((config or BomPnpConfig()).to_json_obj(), indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def select_variant_names(
+    available_variants: Sequence[str],
+    config: BomPnpConfig,
+    *,
+    cli_variant: str | None = None,
+    cli_all_variants: bool = False,
+) -> list[str | None]:
+    """Select variant names from CLI overrides and config policy."""
+    available = list(available_variants)
+    if cli_all_variants:
+        return [None, *available]
+    if cli_variant:
+        return [cli_variant]
+    if config.variant_mode == "all":
+        variants: list[str | None] = []
+        if config.include_base_variant:
+            variants.append(None)
+        variants.extend(available)
+        return variants or [None]
+    if config.variant_mode == "named":
+        variants = []
+        if config.include_base_variant:
+            variants.append(None)
+        variants.extend(config.variant_names)
+        return variants or [None]
+    return [None]
+
+
+def configured_output_file(
+    output_root: Path,
+    config: BomPnpConfig,
+    *,
+    source: Path,
+    command: str,
+    output_kind: str,
+    extension: str,
+    project_parameters: Mapping[str, TemplateValue],
+    variant_name: str | None,
+) -> Path:
+    """Resolve a safe configured output path for one generated artifact."""
+    variant_label = variant_name or "base"
+    tokens: dict[str, TemplateValue] = {
+        "Command": command,
+        "OutputKind": output_kind,
+        "SourceName": source.name,
+        "SourceStem": source.stem,
+        "VariantName": variant_label,
+    }
+    relative_dir = resolve_output_relative_path(
+        config.output_dir_template,
+        project_parameters,
+        variant_name=variant_label,
+        tokens=tokens,
+        missing="empty",
+    )
+    filename_stem = resolve_output_name(
+        config.output_name_template,
+        project_parameters,
+        variant_name=variant_label,
+        tokens=tokens,
+        missing="empty",
+    )
+    suffix = f".{extension.lstrip('.')}"
+    filename = (
+        filename_stem
+        if filename_stem.casefold().endswith(suffix.casefold())
+        else f"{filename_stem}{suffix}"
+    )
+    output_dir = output_root.joinpath(*relative_dir.parts)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir / filename
 
 
 @dataclass(frozen=True, slots=True)
@@ -293,6 +621,100 @@ def group_bom_components(
     ]
 
 
+def ordered_bom_lines(
+    lines: Sequence[GroupedBomLine],
+    *,
+    dnp_placement: str = "inline",
+) -> list[GroupedBomLine]:
+    """Order grouped BOM lines according to DNP placement policy."""
+    placement = _choice(dnp_placement, _DNP_PLACEMENTS, "DNP placement")
+    if placement in {"end", "separate"}:
+        fitted = [line for line in lines if not line.dnp]
+        dnp = [line for line in lines if line.dnp]
+        return [*fitted, *dnp]
+    return list(lines)
+
+
+def filter_bom_components(
+    components: Sequence[NormalizedBomComponent],
+    *,
+    include_dnp: bool,
+) -> list[NormalizedBomComponent]:
+    """Apply BOM inclusion policy to normalized components."""
+    if include_dnp:
+        return list(components)
+    return [component for component in components if not component.dnp]
+
+
+def grouped_bom_table_rows(
+    lines: Sequence[GroupedBomLine],
+    *,
+    fields: Sequence[str] = BOM_GROUPED_DEFAULT_COLUMNS,
+    dnp_placement: str = "inline",
+) -> list[dict[str, str]]:
+    """Return configured table rows for grouped BOM outputs."""
+    rows: list[dict[str, str]] = []
+    for line in ordered_bom_lines(lines, dnp_placement=dnp_placement):
+        rows.append({field: _grouped_line_field(line, field) for field in fields})
+    return rows
+
+
+def pnp_table_rows(
+    placements: Sequence[NormalizedPlacement],
+    *,
+    fields: Sequence[str] = PNP_DEFAULT_COLUMNS,
+    layer_order: Sequence[str] = ("top", "bottom"),
+    prefix_order: Sequence[str] = (),
+) -> list[dict[str, str]]:
+    """Return configured table rows for PnP outputs."""
+    return [
+        {field: _placement_field(placement, field) for field in fields}
+        for placement in sort_placements(
+            placements,
+            layer_order=layer_order,
+            prefix_order=prefix_order,
+        )
+    ]
+
+
+def make_pcb_line_item(
+    config: BomPnpConfig,
+    project_parameters: Mapping[str, TemplateValue],
+    *,
+    variant_name: str | None,
+) -> NormalizedBomComponent | None:
+    """Create the optional configured PCB BOM line item."""
+    if not config.pcb_line_item_enabled:
+        return None
+    canonical_fields = {
+        _normalize_name(name): resolve_output_expression(
+            template,
+            project_parameters,
+            variant_name=variant_name,
+            tokens={"VariantName": variant_name or "base"},
+            missing="empty",
+        )
+        for name, template in config.pcb_line_item_fields.items()
+    }
+    canonical_fields = {
+        name: value for name, value in canonical_fields.items() if value
+    }
+    return NormalizedBomComponent(
+        designator=config.pcb_line_item_designator,
+        value=canonical_fields.get("value", ""),
+        footprint=canonical_fields.get("footprint", "PCB"),
+        library_ref="PCB",
+        description=canonical_fields.get("description", ""),
+        sheet="",
+        dnp=False,
+        parameters=dict(canonical_fields),
+        canonical_fields=canonical_fields,
+        field_sources={
+            name: "config:pcb_line_item.fields" for name in canonical_fields
+        },
+    )
+
+
 def bom_raw_payload(
     components: Sequence[NormalizedBomComponent],
     *,
@@ -334,6 +756,8 @@ def pnp_payload(
     source: Path,
     variant: str | None,
     units: str,
+    layer_order: Sequence[str] = ("top", "bottom"),
+    prefix_order: Sequence[str] = (),
 ) -> dict[str, object]:
     """Build the normalized PnP JSON payload."""
     return {
@@ -344,7 +768,11 @@ def pnp_payload(
         "placement_count": len(placements),
         "placements": [
             placement.to_json_obj()
-            for placement in sort_placements(placements)
+            for placement in sort_placements(
+                placements,
+                layer_order=layer_order,
+                prefix_order=prefix_order,
+            )
         ],
     }
 
@@ -418,6 +846,45 @@ def _normalize_bom_component(
         parameters=parameters,
         canonical_fields=canonical,
         field_sources=sources,
+    )
+
+
+def _grouped_line_field(line: GroupedBomLine, field_name: str) -> str:
+    """Return one configured grouped BOM field as text."""
+    normalized = _normalize_name(field_name)
+    if normalized == "item":
+        return str(line.item)
+    if normalized == "quantity":
+        return str(line.quantity)
+    if normalized == "designators":
+        return ", ".join(line.designators)
+    if normalized == "dnp":
+        return "Yes" if line.dnp else "No"
+    return line.fields.get(normalized, "")
+
+
+def _placement_field(placement: NormalizedPlacement, field_name: str) -> str:
+    """Return one configured placement field as text."""
+    normalized = _normalize_name(field_name)
+    if normalized == "designator":
+        return placement.designator
+    if normalized == "comment":
+        return placement.comment
+    if normalized == "layer":
+        return placement.layer
+    if normalized == "footprint":
+        return placement.footprint
+    if normalized == "center_x":
+        return _format_decimal(placement.center_x, precision=4)
+    if normalized == "center_y":
+        return _format_decimal(placement.center_y, precision=4)
+    if normalized == "rotation":
+        return _format_decimal(placement.rotation, precision=2)
+    if normalized == "description":
+        return placement.description
+    return placement.canonical_fields.get(
+        normalized,
+        placement.parameters.get(field_name, ""),
     )
 
 
@@ -545,6 +1012,71 @@ def _float_value(value: object) -> float:
 def _normalize_name(name: str) -> str:
     """Normalize a canonical field name for config lookups."""
     return name.strip().casefold().replace(" ", "_").replace("-", "_")
+
+
+def _mapping_value(value: object) -> Mapping[str, object]:
+    """Return a mapping value or an empty mapping."""
+    if isinstance(value, Mapping):
+        return value
+    return {}
+
+
+def _string_tuple(
+    value: object,
+    *,
+    default: Sequence[str] = (),
+) -> tuple[str, ...]:
+    """Return a tuple of non-empty string values from config input."""
+    if value is None:
+        return tuple(default)
+    if isinstance(value, str):
+        text = value.strip()
+        return (text,) if text else tuple(default)
+    if not isinstance(value, Sequence):
+        return tuple(default)
+    result = tuple(_string_value(item) for item in value if _string_value(item))
+    return result or tuple(default)
+
+
+def _string_mapping(value: object) -> dict[str, str]:
+    """Return a string mapping from config input."""
+    if not isinstance(value, Mapping):
+        return {}
+    return {
+        _string_value(key): _string_value(item)
+        for key, item in value.items()
+        if _string_value(key)
+    }
+
+
+def _bool_value(value: object, *, default: bool) -> bool:
+    """Return a bool value from config input."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().casefold() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
+def _choice(value: str, allowed: frozenset[str], label: str) -> str:
+    """Validate a normalized config choice."""
+    normalized = value.strip().casefold()
+    if normalized not in allowed:
+        raise ValueError(f"Unsupported {label}: {value}")
+    return normalized
+
+
+def _choices_tuple(
+    value: object,
+    allowed: frozenset[str],
+    default: Sequence[str],
+    label: str,
+) -> tuple[str, ...]:
+    """Validate a sequence of config choices."""
+    choices = _string_tuple(value, default=default)
+    return tuple(_choice(choice, allowed, label) for choice in choices)
 
 
 def _tokenize_designator(designator: str) -> tuple[tuple[int, int | str], ...]:

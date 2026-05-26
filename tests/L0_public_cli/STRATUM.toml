@@ -21,7 +21,7 @@ name = "CLI Entrypoint"
 description = "Validate version/help startup and public command-manifest visibility"
 concerns = ["cli", "contracts", "release"]
 test_case_type = "contract"
-test_cases = "../../contracts/command_manifest.v0.json"
+test_cases = "../../docs/contracts/command_manifest.v0.json"
 
 [subtests.code_under_test]
 module = "altium_cruncher._cli"

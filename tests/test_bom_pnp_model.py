@@ -5,17 +5,23 @@ from pathlib import Path
 from typing import cast
 
 from altium_cruncher.bom_pnp_model import (
+    BOM_PNP_CONFIG_SCHEMA,
+    BomPnpConfig,
     FieldAliasConfig,
     JLC_BOM_COLUMNS,
     JLC_CPL_COLUMNS,
     bom_raw_payload,
+    configured_output_file,
     group_bom_components,
+    grouped_bom_table_rows,
     grouped_bom_payload,
     jlc_bom_rows,
     jlc_cpl_rows,
     normalize_bom_components,
     normalize_pnp_entries,
+    pnp_table_rows,
     pnp_payload,
+    select_variant_names,
     sort_designators,
 )
 
@@ -196,3 +202,86 @@ def test_field_alias_config_accepts_json_style_custom_aliases() -> None:
 
     assert component.canonical_fields["manufacturer_part_number"] == "STM32-EXAMPLE"
     assert aliases.to_json_obj() == {"manufacturer_part_number": ["Supplier MPN"]}
+
+
+def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
+    """Parse config mappings and resolve configured output paths."""
+    config = BomPnpConfig.from_mapping(
+        {
+            "schema": BOM_PNP_CONFIG_SCHEMA,
+            "variants": {"mode": "named", "names": ["B4"], "include_base": False},
+            "bom": {
+                "outputs": ["raw-json", "grouped-xlsx", "jlc-csv"],
+                "group_fields": ["manufacturer_part_number", "value"],
+            },
+            "pnp": {
+                "outputs": ["json", "xlsx", "jlc-cpl"],
+                "layer_order": ["bottom", "top"],
+            },
+            "output": {
+                "dir_template": "{Command}/{VariantName}",
+                "name_template": "{SourceStem}_{PartNumberPCB}_{OutputKind}",
+            },
+        }
+    )
+
+    output = configured_output_file(
+        tmp_path,
+        config,
+        source=Path("Project.PrjPcb"),
+        command="bom",
+        output_kind="grouped-xlsx",
+        extension="xlsx",
+        project_parameters={"PartNumberPCB": "175:TEST"},
+        variant_name="B4",
+    )
+
+    assert config.schema == BOM_PNP_CONFIG_SCHEMA
+    assert config.bom_outputs == ("raw-json", "grouped-xlsx", "jlc-csv")
+    assert config.pnp_outputs == ("json", "xlsx", "jlc-cpl")
+    assert select_variant_names(["A", "B4"], config) == ["B4"]
+    assert output == tmp_path / "bom" / "B4" / "Project_175_TEST_grouped-xlsx.xlsx"
+
+
+def test_configured_bom_and_pnp_table_rows_use_selected_fields() -> None:
+    """Build configured table rows from grouped BOM and placement records."""
+    bom_lines = group_bom_components(
+        normalize_bom_components(
+            [
+                {
+                    "designator": "R1",
+                    "value": "10k",
+                    "footprint": "R0603",
+                    "parameters": {"MPN": "RC0603"},
+                }
+            ]
+        )
+    )
+    placements = normalize_pnp_entries(
+        [
+            {
+                "designator": "R1",
+                "comment": "10k",
+                "layer": "TopLayer",
+                "footprint": "R0603",
+                "center_x": 1,
+                "center_y": 2,
+                "rotation": 90,
+            }
+        ],
+        units="mm",
+    )
+
+    assert grouped_bom_table_rows(
+        bom_lines,
+        fields=("quantity", "designators", "manufacturer_part_number"),
+    ) == [
+        {
+            "quantity": "1",
+            "designators": "R1",
+            "manufacturer_part_number": "RC0603",
+        }
+    ]
+    assert pnp_table_rows(placements, fields=("designator", "layer", "center_x")) == [
+        {"designator": "R1", "layer": "top", "center_x": "1"}
+    ]

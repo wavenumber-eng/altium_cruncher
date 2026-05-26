@@ -25,12 +25,12 @@ commands.
 
 Design documentation is release-signoff material:
 
-- every command in `contracts/command_manifest.v0.json` needs
+- every command in `docs/contracts/command_manifest.v0.json` needs
   `docs/design/cli/<command>.html`;
 - command docs must cover usage patterns, invocations, arguments, output, and
   tests;
 - commands with config files or stable machine-readable output need a contract
-  under `contracts/` plus conformance tests;
+  under `docs/contracts/` plus conformance tests;
 - every public dataclass and listed major interface needs an API design section
   under `docs/design/api/` with rationale, purpose, test requirements, working
   definition, and Rack test ownership.

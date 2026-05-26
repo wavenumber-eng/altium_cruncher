@@ -16,7 +16,7 @@ This inventory records the command set migrated from the private
 | `pcblib-footprint-3d` | deferred | none | Broken; do not migrate into first public release. Remove or hide from public CLI/manifest before release. |
 | `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy, and source selection. |
 | `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL, units, variant/no-BOM filtering, and configurable sorting. |
-| `jlc` | planned-public | none | Planned meta command that generates both JLC BOM and JLC CPL through the shared BOM/PnP implementation paths. |
+| `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM and JLC CPL through the shared BOM/PnP implementation paths. |
 | `netlist` | public | `L3_public_workflows` | Key command. Keep current netlist JSON behavior for Altium schematic/project documents. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
 | `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
@@ -27,7 +27,7 @@ This inventory records the command set migrated from the private
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
 | `clean` | public | `L3_public_workflows` | Keep. Needs detailed config documentation plus fixture-backed CLI tests for template creation, actual clean application, output/backup behavior, and PcbLib removal rules. |
 
-The command manifest lives at `contracts/command_manifest.v0.json`. `L99` should
+The command manifest lives at `docs/contracts/command_manifest.v0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
 test ownership.
 
@@ -44,7 +44,7 @@ Shared output naming requirements:
 - output-producing commands should use one filename-template resolver rather
   than command-local naming rules;
 - the shared resolver applies to `svg`, `sch-svg`, `pcb-svg`, `netlist`, `bom`,
-  `pnp`, and the planned `jlc` command;
+  `pnp`, and the `jlc` command;
 - filename and output-folder templates should support stable placeholders,
   fixed string fragments, `PrjPcb` project parameters, and the runtime
   `VariantName` token for the current processed variant;
@@ -111,8 +111,7 @@ PnP notes:
 
 JLC notes:
 
-- add `jlc` as a planned meta command once shared BOM/PnP data is stable;
-- `jlc` should generate JLC BOM plus JLC CPL from one project/config
+- `jlc` generates JLC BOM plus JLC CPL from one project/config
   invocation;
 - tests should prove meta-command output matches the equivalent independent
   `bom` and `pnp` JLC modes.

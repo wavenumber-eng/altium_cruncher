@@ -14,7 +14,7 @@ can understand the intended behavior before changing it.
 
 Design documentation is part of release signoff.
 
-Every public CLI command in `contracts/command_manifest.v0.json` must have a
+Every public CLI command in `docs/contracts/command_manifest.v0.json` must have a
 matching HTML design document:
 
 - path: `docs/design/cli/<command-name>.html`;
@@ -36,7 +36,7 @@ Every public dataclass must have a machine-readable design section in
 - rationale, purpose, test requirements, and working definition.
 
 Major public interfaces that are not dataclasses are listed in
-`contracts/interface_design_manifest.v0.json`. The manifest is intentionally
+`docs/contracts/interface_design_manifest.v0.json`. The manifest is intentionally
 explicit because "major interface" is an ownership decision, not a reliable AST
 property.
 
@@ -46,7 +46,7 @@ property.
 ownership links are missing.
 
 Commands with config files or stable machine-readable output need contracts
-under `contracts/` and conformance tests before the command is release-ready.
+under `docs/contracts/` and conformance tests before the command is release-ready.
 Generated JSON remains the default config format for now because it is easy to
 parse and validate. Human guidance belongs in the design doc and schema
 descriptions rather than comments inside generated JSON.

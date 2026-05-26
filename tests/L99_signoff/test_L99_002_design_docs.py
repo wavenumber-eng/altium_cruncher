@@ -16,7 +16,7 @@ def _project_root() -> Path:
 
 PACKAGE_ROOT = _project_root()
 DESIGN_ROOT = PACKAGE_ROOT / "docs" / "design"
-COMMAND_MANIFEST = PACKAGE_ROOT / "contracts" / "command_manifest.v0.json"
+COMMAND_MANIFEST = PACKAGE_ROOT / "docs" / "contracts" / "command_manifest.v0.json"
 
 
 def _manifest_commands() -> list[str]:

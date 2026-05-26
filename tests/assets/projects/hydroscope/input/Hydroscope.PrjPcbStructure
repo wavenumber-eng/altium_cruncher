@@ -1,0 +1,4 @@
+Record=TopLevelDocument|FileName=TOP_LEVEL.SchDoc|SheetNumber=4
+Record=SheetSymbol|SourceDocument=TOP_LEVEL.SchDoc|Designator=U_CPU|SchDesignator=U_CPU|FileName=CPU.SchDoc|SheetNumber=1|SymbolType=Normal|RawFileName=CPU.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
+Record=SheetSymbol|SourceDocument=TOP_LEVEL.SchDoc|Designator=U_POWER_SUPPLY|SchDesignator=U_POWER_SUPPLY|FileName=POWER_SUPPLY.SchDoc|SheetNumber=2|SymbolType=Normal|RawFileName=POWER_SUPPLY.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
+Record=SheetSymbol|SourceDocument=TOP_LEVEL.SchDoc|Designator=U_US_IF|SchDesignator=U_US_IF|FileName=US_IF.SchDoc|SheetNumber=3|SymbolType=Normal|RawFileName=US_IF.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 

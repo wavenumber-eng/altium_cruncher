@@ -13,7 +13,7 @@ contracts should have design documentation here and conformance tests under
 
 L99 signoff enforces:
 
-- every command in `contracts/command_manifest.v0.json` has
+- every command in `docs/contracts/command_manifest.v0.json` has
   `docs/design/cli/<command>.html`;
 - every command doc declares usage, arguments, output, tests, and config
   contract status;

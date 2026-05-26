@@ -1,0 +1,60 @@
+Altium Designer Pick and Place Locations
+C:\eli\agent-worktrees\altium_cruncher\tests\assets\projects\bunny_brain\reference_output\no_variant\PNP-METRIC\Pick Place for bunny_brain_D.csv
+
+========================================================================================================================
+File Design Information:
+
+Date:       26/05/26
+Time:       13:59
+Revision:   Not in VersionControl
+Variant:    No variations
+Units used: mm
+
+"Designator","Comment","Layer","Footprint","Center-X(mm)","Center-Y(mm)","Rotation","Description"
+"L2","2.2µH 1.5A","BottomLayer","L_NRH3012","-0.9702","18.6378","0","Inductor 2.2µH 1.5A"
+"D2","BAT760-7","BottomLayer","D_SOD-323_P","8.3358","19.2266","180","DIODE SCHOTTKY 30V 1A SOD323"
+"R2","10k","TopLayer","R0603_0.55MM_MD","9.1982","11.3738","90","RES 10K OHM 1/10W 1% 0603 SMD"
+"R9","10k","BottomLayer","R0603_0.55MM_HD","-9.1018","9.0988","180","RES 10K OHM 1/10W 1% 0603 SMD"
+"R1","1k","TopLayer","R0603_0.55MM_HD","10.1916","19.9124","270","RES 1K OHM 1/10W 1% 0603 SMD"
+"R6","0","TopLayer","R0402_0.40MM_HD","-6.2018","12.7238","180","RES 0.0 OHM 1/10W JUMP 0402 SMD"
+"R3","10k","TopLayer","R0603_0.55MM_HD","-8.3658","13.2322","180","RES 10K OHM 1/10W 1% 0603 SMD"
+"R8","20k","BottomLayer","R0603_0.55MM_HD","8.7580","14.7770","90","RES 20K OHM 1/10W 1% 0603 SMD"
+"R7","10k","BottomLayer","R0603_0.55MM_HD","9.9868","14.8070","270","RES 10K OHM 1/10W 1% 0603 SMD"
+"R5","33","TopLayer","R0603_0.55MM_HD","6.9642","13.4354","180","RES 33 OHM 1/10W 1% 0603 SMD"
+"R4","33","TopLayer","R0603_0.55MM_HD","6.9642","14.6292","180","RES 33 OHM 1/10W 1% 0603 SMD"
+"L1","ACML-0402HC-221-T","BottomLayer","C0402_HD","7.0562","12.1608","180","Ind Chip Bead Multi-Layer 220Ohm 25% 100MHz Ferrite 1A 0402 T/R"
+"C31","9.5pF","TopLayer","PERFECT_0402","9.0232","18.6238","270","CAP CER 9.5PF 50V C0G/NP0 0402"
+"C30","9.5pF","TopLayer","PERFECT_0402","9.0232","16.7238","90","CAP CER 9.5PF 50V C0G/NP0 0402"
+"C23","0.1µF","TopLayer","C0402_0.55MM_HD","-6.1518","17.3424","0","CAP CER 0.1UF 10V X7R 0402"
+"C22","4.7µF","TopLayer","C0603_1.00MM_MD","-9.6570","15.6406","270","CAP CER 4.7UF 6.3V X7S 0603"
+"C27","0.1µF","BottomLayer","C0402_0.55MM_HD","2.7382","11.3734","90","CAP CER 0.1UF 10V X7R 0402"
+"C26","0.1µF","BottomLayer","C0402_0.55MM_HD","4.6432","13.8118","180","CAP CER 0.1UF 10V X7R 0402"
+"C25","4.7µF","BottomLayer","C0603_1.00MM_MD","6.2818","16.5042","0","CAP CER 4.7UF 6.3V X7S 0603"
+"C24","10µF","BottomLayer","C0603_0.90MM_MD","-1.3258","21.1016","180","CAP CER 10UF 10V X5R 0603"
+"C18","1µF","BottomLayer","C0402_0.55MM_HD","7.1070","13.0498","0","CAP CER 1UF 10V X7S 0402"
+"C21","0.1µF","BottomLayer","C0402_0.55MM_HD","4.2622","15.1580","180","CAP CER 0.1UF 10V X7R 0402"
+"C20","0.1µF","BottomLayer","C0402_0.55MM_HD","5.5068","17.7234","180","CAP CER 0.1UF 10V X7R 0402"
+"C17","0.1µF","BottomLayer","C0402_0.55MM_HD","7.1578","9.2398","180","CAP CER 0.1UF 10V X7R 0402"
+"C16","0.1µF","BottomLayer","C0402_0.55MM_HD","7.1416","8.0714","180","CAP CER 0.1UF 10V X7R 0402"
+"C15","0.1µF","BottomLayer","C0402_0.55MM_HD","1.9858","11.5304","90","CAP CER 0.1UF 10V X7R 0402"
+"C28","12pF","BottomLayer","C0402_0.55MM_MD","1.0232","6.8238","270","CAP CER 12PF 50V C0G/NP0 0402"
+"C14","0.1µF","BottomLayer","C0402_0.55MM_HD","1.3412","14.8532","270","CAP CER 0.1UF 10V X7R 0402"
+"C13","1µF","BottomLayer","C0402_0.55MM_HD","2.4232","14.4738","90","CAP CER 1UF 10V X7S 0402"
+"C19","0.1µF","BottomLayer","C0402_0.55MM_HD","7.0908","10.5352","180","CAP CER 0.1UF 10V X7R 0402"
+"C9","0.1µF","BottomLayer","C0402_0.55MM_HD","3.8812","17.3424","270","CAP CER 0.1UF 10V X7R 0402"
+"C8","0.1µF","BottomLayer","C0402_0.55MM_HD","5.1258","10.8400","90","CAP CER 0.1UF 10V X7R 0402"
+"C12","0.1µF","BottomLayer","C0402_0.55MM_HD","0.1062","11.6574","180","CAP CER 0.1UF 10V X7R 0402"
+"C29","12pF","BottomLayer","C0402_0.55MM_MD","-2.4018","6.8488","90","CAP CER 12PF 50V C0G/NP0 0402"
+"C11","0.1µF","BottomLayer","C0402_0.55MM_HD","4.7102","12.6942","180","CAP CER 0.1UF 10V X7R 0402"
+"C10","1µF","BottomLayer","C0402_0.55MM_HD","3.8812","10.8146","270","CAP CER 1UF 10V X7S 0402"
+"C6","0.1µF","BottomLayer","C0402_0.55MM_HD","-0.8178","13.5832","0","CAP CER 0.1UF 10V X7R 0402"
+"C5","0.1µF","BottomLayer","C0402_0.55MM_HD","-0.8432","12.5418","0","CAP CER 0.1UF 10V X7R 0402"
+"C4","1µF","BottomLayer","C0402_0.55MM_HD","2.8652","17.6904","90","CAP CER 1UF 10V X7S 0402"
+"C3","0.1µF","BottomLayer","C0402_0.55MM_HD","0.0458","15.1580","0","CAP CER 0.1UF 10V X7R 0402"
+"C2","0.1µF","BottomLayer","C0402_0.55MM_HD","0.6300","13.0244","270","CAP CER 0.1UF 10V X7R 0402"
+"C1","1µF","BottomLayer","C0402_0.55MM_HD","1.8238","17.3424","90","CAP CER 1UF 10V X7S 0402"
+"Y1","24MHz","TopLayer","ECS-1637B","-0.6768","6.8488","0","Crystal 24MHz ±10ppm (Tol) ±10ppm (Stability) 12pF FUND 50Ohm 4-Pin Mini-CSMD T/R"
+"X1","32.768kHz","TopLayer","XTAL_3215","7.3982","17.6737","270","CRYSTAL 32.768KHZ 9PF SMD"
+"D1","APT1608CGCK","TopLayer","LED_0603_-_GREEN","8.3440","21.2250","180","LED 1.6X0.8MM 570NM GRN CLR SMD"
+"U2","APS6408L-3OBM-BA","BottomLayer","BGA24C100P5X5_600X800X120","-7.6570","15.3452","0","3.3v Double-Data-Rate Octal SPI Xccela PSRAM"
+"U1","MCXN947VDFT","TopLayer","VFBGA184","0.8854","13.3880","90","IC MCX N94 150MHZ DUAL CORE NPU"

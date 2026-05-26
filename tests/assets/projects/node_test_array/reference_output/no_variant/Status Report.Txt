@@ -1,0 +1,11 @@
+Output: XML-BOM
+Type  : BOM
+From  : Variant [[No Variations]] of Project [11-10077__node-test-array__B4.PrjPcb]
+   Generated File[XML-BOM-11-10077__node-test-array__B4.xml]
+   Generated File[XML-BOM-11-10077__node-test-array__B4.xsl]
+
+
+Files Generated   : 2
+Documents Printed : 0
+
+Finished Output Generation At 12:20:55 PM On 3/9/2026

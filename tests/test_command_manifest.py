@@ -10,7 +10,7 @@ import pytest
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = PACKAGE_ROOT / "contracts" / "command_manifest.v0.json"
+MANIFEST = PACKAGE_ROOT / "docs" / "contracts" / "command_manifest.v0.json"
 
 
 def _manifest_commands() -> list[str]:

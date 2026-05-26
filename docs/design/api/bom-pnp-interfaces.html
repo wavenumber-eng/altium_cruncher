@@ -25,6 +25,22 @@
   </header>
 
   <section
+    data-interface="BomPnpConfig"
+    data-rack-stratum="L3_public_workflows"
+    data-test-file="tests/test_bom_pnp_model.py"
+    data-test-target="test_bom_pnp_config_parses_outputs_and_templates">
+    <h2>BomPnpConfig</h2>
+    <h3>Rationale</h3>
+    <p>BOM, PnP, and JLC output need one versioned config shape for aliases, variants, output kinds, and naming templates.</p>
+    <h3>Purpose</h3>
+    <p>Represents the shared JSON config contract consumed by the BOM/PnP command family.</p>
+    <h3>Test Requirements</h3>
+    <p>Tests must cover parsing, default serialization, output kind validation, and configured output path resolution.</p>
+    <h3>Working Definition</h3>
+    <p>Working when a JSON-style mapping can select outputs, resolve paths, and round-trip into a deterministic template.</p>
+  </section>
+
+  <section
     data-interface="FieldAliasConfig"
     data-rack-stratum="L3_public_workflows"
     data-test-file="tests/test_bom_pnp_model.py"

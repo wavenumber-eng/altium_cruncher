@@ -86,6 +86,29 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
     assert len(netlist_payload["nets"]) >= 100
 
 
+def test_bom_pnp_config_and_jlc_command_use_public_project(tmp_path: Path) -> None:
+    """Exercise shared BOM/PnP config and paired JLC outputs."""
+    config_path = tmp_path / "bom.config"
+    _run_cli("bom", "--write-config", str(config_path))
+    config_payload = json.loads(config_path.read_text(encoding="utf-8"))
+    assert config_payload["schema"] == "wn.altium_cruncher.bom.config.v1"
+
+    bom_root = tmp_path / "configured-bom"
+    _run_cli("bom", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(bom_root))
+    assert (bom_root / "bom" / "Hydroscope_base_raw-json.json").exists()
+    assert (bom_root / "bom" / "Hydroscope_base_grouped-xlsx.xlsx").exists()
+
+    pnp_root = tmp_path / "configured-pnp"
+    _run_cli("pnp", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(pnp_root))
+    assert (pnp_root / "pnp" / "Hydroscope_base_json.json").exists()
+    assert (pnp_root / "pnp" / "Hydroscope_base_csv.csv").exists()
+
+    jlc_root = tmp_path / "jlc"
+    _run_cli("jlc", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(jlc_root))
+    assert (jlc_root / "jlc" / "Hydroscope_base_jlc-csv.csv").exists()
+    assert (jlc_root / "jlc" / "Hydroscope_base_jlc-cpl.csv").exists()
+
+
 def test_output_path_template_uses_public_project_parameters() -> None:
     """Resolve a release-style output folder from a real public PrjPcb fixture."""
     design = AltiumDesign.from_prjpcb(HYDROSCOPE_PROJECT)

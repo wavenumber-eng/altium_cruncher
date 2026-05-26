@@ -28,7 +28,7 @@ plan is considered retired:
 - canonical format descriptions go to `docs/canonical_format/`;
 - interface, command, data-flow, and explanatory format docs go to
   `docs/design/`;
-- machine-readable schemas and examples go to `contracts/` when applicable;
+- machine-readable schemas and examples go to `docs/contracts/` when applicable;
 - executable behavior expectations go into Rack strata and tests;
 - reusable examples or fixtures go into the package's public example/test
   locations when they are intended for users or downstream consumers.

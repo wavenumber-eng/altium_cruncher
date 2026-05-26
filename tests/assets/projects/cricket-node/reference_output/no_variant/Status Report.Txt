@@ -1,0 +1,11 @@
+Output: XML-BOM
+Type  : BOM
+From  : Variant [[No Variations]] of Project [11-10028__cricket-node-hw__B.PrjPcb]
+   Generated File[XML-BOM-11-10028__cricket-node-hw__B.xml]
+   Generated File[XML-BOM-11-10028__cricket-node-hw__B.xsl]
+
+
+Files Generated   : 2
+Documents Printed : 0
+
+Finished Output Generation At 2:03:59 PM On 5/26/2026

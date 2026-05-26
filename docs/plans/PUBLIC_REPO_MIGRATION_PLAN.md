@@ -49,7 +49,7 @@ The standalone public repo should include:
 - `docs/adrs/` for architecture decision records;
 - `docs/design/` for interface, command, data-flow, and format design
   documentation;
-- `contracts/` for machine-readable schemas and contract examples where a
+- `docs/contracts/` for machine-readable schemas and contract examples where a
   command exposes stable JSON or config formats.
 
 One of the first ADRs must define versioning, tagging, release, and
@@ -165,7 +165,7 @@ The signoff model should copy the useful shape from the in-progress
 
 - ADRs record architecture choices and compatibility policy;
 - `docs/design/` records durable interface and data-flow design;
-- `contracts/` stores stable schema/config artifacts;
+- `docs/contracts/` stores stable schema/config artifacts;
 - contract conformance helpers live in tests and are reused by command tests;
 - L99 checks prevent new public surfaces from landing without matching docs,
   contracts, and tests.
@@ -406,7 +406,7 @@ Required config behavior:
 - define output enablement, output field sets, canonical fields, field aliases,
   grouping keys, source mode, inclusion/exclusion rules, DNP policy, variant
   policy, and PCB line-item behavior;
-- include a machine-readable contract/schema under `contracts/` and a matching
+- include a machine-readable contract/schema under `docs/contracts/` and a matching
   design document under `docs/design/cli/bom.html`.
 
 Required PCB line item behavior:
@@ -496,19 +496,20 @@ Required processing model:
 Current implementation status:
 
 - the `pnp` command now normalizes placements through the shared BOM/PnP model
-  before JSON and CSV output;
+  before JSON, CSV, and XLSX output;
 - JSON output remains compatible with the old `units` and `placements` keys
   while adding schema/version, source, variant, count, and canonical fields;
 - `--format jlc-cpl` emits the JLC CPL upload columns with top-before-bottom
   ordering and natural designator sorting;
-- focused unit tests cover normalized placement JSON, JLC CPL rows, layer
-  naming, coordinate formatting, and stable ordering.
+- focused unit tests cover normalized placement JSON, configured table rows,
+  XLSX generation, JLC CPL rows, layer naming, coordinate formatting, and
+  stable ordering.
 
-Required JLC meta command:
+JLC meta command status:
 
-- add a `jlc` meta command after the BOM/PnP shared data layer is stable;
-- `jlc` generates both JLC BOM and JLC CPL from one project/config invocation;
-- it should reuse the `bom` and `pnp` implementation paths rather than
+- `jlc` now generates both JLC BOM and JLC CPL from one project/config
+  invocation;
+- it reuses the `bom` and `pnp` implementation paths rather than
   duplicating extraction, filtering, aliasing, or sorting logic;
 - tests should prove the `jlc` output is equivalent to running the matching
   `bom` and `pnp` JLC modes independently.
@@ -524,8 +525,8 @@ Required fixtures/tests:
   layers, unit conversion, and `--exclude-no-bom` behavior;
 - validate top/bottom grouping and natural designator sorting;
 - add tests for configurable designator-prefix ordering;
-- add tests for XLSX output once the formatter is implemented;
-- add tests for JLC CPL fields and the planned `jlc` meta command;
+- deepen fixture tests for XLSX output against reference outputs;
+- add equivalence tests for JLC CPL fields and the `jlc` meta command;
 - consider old `bom_cruncher/tests/test_cases/altium/node-test-array/pnp_reference`
   as a candidate source of Altium-generated reference outputs after
   redistribution review.
@@ -827,7 +828,7 @@ Config documentation required before release:
   - `remove_mechanical_primitives`;
   - `remove_text_strings`;
   - `remove_regions`;
-- provide machine-readable config contracts or examples under `contracts/` and
+- provide machine-readable config contracts or examples under `docs/contracts/` and
   make L99 fail if the documented schemas drift from generated templates.
 
 Current test coverage analysis:
@@ -1100,9 +1101,10 @@ Current local status:
   `PrjPcb` fixture so real project parameters can drive release-style output
   folders;
 - shared BOM/PnP normalization is implemented with canonical field aliases,
-  source traceability, grouped BOM JSON, JLC BOM CSV, normalized PnP JSON, and
-  JLC CPL CSV; focused unit tests cover the model and L3 still covers
-  Hydroscope BOM/PnP command execution;
+  source traceability, config parsing, configured output naming, grouped BOM
+  JSON/CSV/XLSX, JLC BOM CSV, normalized PnP JSON/CSV/XLSX, and JLC CPL CSV;
+  focused unit tests cover the model and L3 covers Hydroscope BOM/PnP config
+  plus paired `jlc` output execution;
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
