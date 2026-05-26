@@ -201,6 +201,40 @@ Every public command should have:
 `L99_signoff` should fail when a new public command is added without the
 required manifest/test/doc coverage.
 
+## Shared CLI Help Requirements
+
+The command-line interface should be readable for users who are discovering the
+tool from the executable alone.
+
+Top-level help behavior:
+
+- bare `altium-cruncher` and `altium-cruncher --help` should report the package
+  version before the help text;
+- the version line, usage block, and command list should have enough blank
+  space to scan easily in a terminal;
+- command names should be listed alphabetically;
+- the help text should clearly state how to get command-specific help, for
+  example `altium-cruncher <command> --help`.
+
+Command-specific help behavior:
+
+- every `altium-cruncher <command> --help` output should report the package
+  version;
+- command help should keep options grouped and spaced so required arguments,
+  output controls, config controls, and command-specific behavior are easy to
+  distinguish;
+- command design docs should mirror the help shape: usage, arguments/options,
+  output, config/contracts, and tests.
+
+Required tests:
+
+- top-level CLI test verifies version is present in bare and `--help` output;
+- command manifest/help test verifies command ordering is alphabetical;
+- per-command help tests verify version text and guidance are present for every
+  manifest command;
+- installed-console test verifies the same behavior from the generated
+  `altium-cruncher` executable, not only `python -m altium_cruncher`.
+
 ## EasyEDA Commands
 
 Some newer commands convert EasyEDA designs and currently depend on private
@@ -313,6 +347,9 @@ Preferred shape:
      `L99_signoff` now hard-fails missing command design docs and public
      dataclass/interface design ownership, so the next slice must add the
      missing design docs or explicitly classify interfaces as internal.
+   - Shared CLI help polish is required before first public release: version in
+     help output, readable whitespace, alphabetical command ordering, and clear
+     command-specific help guidance.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 

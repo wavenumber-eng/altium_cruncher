@@ -29,3 +29,11 @@ This inventory records the command set migrated from the private
 The command manifest lives at `contracts/command_manifest.v0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
 test ownership.
+
+Shared help requirements for every command:
+
+- top-level and command-specific help should print the package version;
+- command lists should be alphabetical;
+- help output should include readable spacing between version, usage, commands,
+  and options;
+- top-level help should explicitly show how to request command-specific help.
