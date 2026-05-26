@@ -1,0 +1,85 @@
+from types import SimpleNamespace
+
+import pytest
+
+from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
+    PcbSvgConfig,
+    _apply_pcb_layer_selection,
+    _apply_pcb_view_selection,
+    resolve_pcb_svg_configs,
+)
+
+
+def _enabled_sources(config: PcbSvgConfig) -> set[str]:
+    return {view.source for view in config.views if view.enabled}
+
+
+def test_pcb_svg_cli_views_enable_requested_content_views():
+    config = PcbSvgConfig.default()
+
+    _apply_pcb_view_selection(config, "assembly-top,assembly-bottom")
+
+    assert _enabled_sources(config) == {"assembly-top", "assembly-bottom"}
+
+
+def test_pcb_svg_cli_views_all_enables_all_content_views():
+    config = PcbSvgConfig.default()
+
+    _apply_pcb_view_selection(config, "all")
+
+    assert _enabled_sources(config) == {
+        "layers",
+        "top",
+        "bottom",
+        "assembly-top",
+        "assembly-bottom",
+    }
+
+
+def test_pcb_svg_cli_views_override_created_default_config(tmp_path):
+    config_path = tmp_path / "pcb-svg.json"
+    input_file = tmp_path / "board.PrjPcb"
+    input_file.write_text("", encoding="utf-8")
+    args = SimpleNamespace(config=config_path, pcb_views="assembly-top,assembly-bottom")
+
+    config_by_input, created_configs = resolve_pcb_svg_configs(args, [input_file])
+
+    assert created_configs == [config_path.resolve()]
+    assert _enabled_sources(config_by_input[input_file.resolve()]) == {
+        "assembly-top",
+        "assembly-bottom",
+    }
+
+
+def test_pcb_svg_cli_views_reject_unknown_view():
+    config = PcbSvgConfig.default()
+
+    with pytest.raises(ValueError, match="Unknown --pcb-views token"):
+        _apply_pcb_view_selection(config, "top,mechanical")
+
+
+def test_pcb_svg_cli_layers_filter_layer_view():
+    config = PcbSvgConfig.default()
+
+    _apply_pcb_layer_selection(config, "bottom")
+
+    layer_view = next(view for view in config.views if view.source == "layers")
+    assert layer_view.layers == ["BOTTOM"]
+
+
+def test_pcb_svg_cli_layers_override_created_default_config(tmp_path):
+    config_path = tmp_path / "pcb-svg.json"
+    input_file = tmp_path / "board.PrjPcb"
+    input_file.write_text("", encoding="utf-8")
+    args = SimpleNamespace(config=config_path, pcb_views="layers", pcb_layers="bottom")
+
+    config_by_input, created_configs = resolve_pcb_svg_configs(args, [input_file])
+
+    assert created_configs == [config_path.resolve()]
+    layer_view = next(
+        view
+        for view in config_by_input[input_file.resolve()].views
+        if view.source == "layers"
+    )
+    assert layer_view.enabled is True
+    assert layer_view.layers == ["BOTTOM"]

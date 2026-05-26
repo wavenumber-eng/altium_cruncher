@@ -1,0 +1,199 @@
+{
+  "success": true,
+  "code": 0,
+  "result": {
+    "uuid": "05c35992425b4b70bcbd3a8ac391349c",
+    "title": "YZP0436-30165-01",
+    "description": "",
+    "docType": 2,
+    "type": 3,
+    "thumb": "//image.lceda.cn/components/05c35992425b4b70bcbd3a8ac391349c.png",
+    "lcsc": {
+      "id": 8527688,
+      "number": "C7471747"
+    },
+    "szlcsc": {
+      "id": 8527688,
+      "number": "C7471747"
+    },
+    "owner": {
+      "uuid": "0819f05c4eef4c71ace90d822a990e87",
+      "username": "lcsc",
+      "nickname": "LCSC",
+      "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+    },
+    "tags": [
+      "Pogo Pin Spring Probe Connector"
+    ],
+    "updateTime": 1726131017,
+    "updated_at": "2024-09-12 08:55:33",
+    "dataStr": {
+      "head": {
+        "docType": "2",
+        "editorVersion": "6.5.47",
+        "x": 400,
+        "y": 300,
+        "c_para": {
+          "pre": "U?",
+          "name": "YZP0436-30165-01",
+          "package": "CONN-TH_YZP0436-30165-01",
+          "Supplier": "LCSC",
+          "Supplier Part": "C7471747",
+          "Manufacturer": "Xinyangze(\u946b\u626c\u6cfd)",
+          "Manufacturer Part": "YZP0436-30165-01",
+          "JLCPCB Part Class": "Extended Part",
+          "Contributor": "lcsc"
+        },
+        "uuid": "05c35992425b4b70bcbd3a8ac391349c",
+        "puuid": "3821b37270aa423c9f9d4f60e8beea2c",
+        "importFlag": 0,
+        "c_spiceCmd": null,
+        "pre": "U?",
+        "name": "YZP0436-30165-01",
+        "hasIdFlag": true,
+        "utime": 1726112765
+      },
+      "canvas": "CA~1000~1000~#FFFFFF~yes~#CCCCCC~5~1000~1000~line~5~pixel~5~400~300",
+      "shape": [
+        "R~390~290~2~2~20~20~#880000~1~0~none~gge1~0~",
+        "E~395~295~1.5~1.5~#880000~1~0~#880000~gge2~0",
+        "P~show~0~1~380~300~180~gge5~0^^380~300^^M380,300h10~#880000^^1~393.7~304~0~1~start~~~#0000FF^^1~389.5~299~0~1~end~~~#0000FF^^0~387~300^^0~M 390 303 L 393 300 L 390 297"
+      ],
+      "BBox": {
+        "x": 379,
+        "y": 289.6,
+        "width": 31,
+        "height": 20.4
+      },
+      "colors": []
+    },
+    "jlcOnSale": 1,
+    "datastrid": "9af02b440cef4502ad770517efb6e40c",
+    "verify": true,
+    "writable": false,
+    "isFavorite": false,
+    "packageDetail": {
+      "uuid": "3821b37270aa423c9f9d4f60e8beea2c",
+      "title": "CONN-TH_YZP0436-30165-01",
+      "docType": 4,
+      "updateTime": 1727428719,
+      "owner": {
+        "uuid": "0819f05c4eef4c71ace90d822a990e87",
+        "username": "lcsc",
+        "nickname": "LCSC",
+        "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+      },
+      "datastrid": "75c368ca7b464011a3bf1de745874944",
+      "writable": false,
+      "dataStr": {
+        "head": {
+          "docType": "4",
+          "editorVersion": "6.5.47",
+          "newgId": true,
+          "c_para": {
+            "package": "CONN-TH_YZP0436-30165-01",
+            "pre": "U?",
+            "Contributor": "lcsc",
+            "link": "https://atta.szlcsc.com/upload/public/pdf/source/20240523/A051A45A8BA7380054397EC9347A15B8.pdf",
+            "3DModel": "CONN-TH_YZP0436-30165-01"
+          },
+          "hasIdFlag": true,
+          "x": 4000,
+          "y": 3000,
+          "utime": 1727421205,
+          "uuid": "3821b37270aa423c9f9d4f60e8beea2c",
+          "importFlag": 0,
+          "transformList": "",
+          "uuid_3d": "a9a0868318fd45b5b7dbfc7f85d691e3"
+        },
+        "canvas": "CA~1000~1000~#000000~yes~#FFFFFF~10~1000~1000~line~0.5~mm~1~45~visible~0.5~4000~3000~0~none",
+        "shape": [
+          "CIRCLE~4000~3000~7.087~1~3~gge37~0~~",
+          "PAD~ELLIPSE~4000~3000~11.811~11.811~11~~1~1.9685~~0~gge16~0~~Y~0~0~0.2~4000,3000",
+          "SVGNODE~{\"gId\":\"g1_outline\",\"nodeName\":\"g\",\"nodeType\":1,\"layerid\":\"19\",\"attrs\":{\"c_width\":\"11.811\",\"c_height\":\"11.8398\",\"c_rotation\":\"0,0,0\",\"z\":\"-5.9055\",\"c_origin\":\"4000,3000\",\"uuid\":\"659ce9a3cd17477a9cb4e64b7be4e54a\",\"c_etype\":\"outline3D\",\"id\":\"g1_outline\",\"title\":\"CONN-TH_YZP0436-30165-01\",\"layerid\":\"19\",\"transform\":\"scale(1) translate(0, 0)\"},\"childNodes\":[{\"gId\":\"g1_outline_line0\",\"nodeName\":\"polyline\",\"nodeType\":1,\"attrs\":{\"fill\":\"none\",\"id\":\"g1_outline_line0\",\"c_shapetype\":\"line\",\"points\":\"3994.0945 2999.9606 3994.1339 3000.315 3994.1339 3000.6299 3994.2126 3000.9449 3994.252 3001.3386 3994.3701 3001.6929 3994.4488 3001.9685 3994.6063 3002.2835 3994.7244 3002.5984 3994.9213 3002.9134 3995.0787 3003.189 3995.2756 3003.4252 3995.4724 3003.7402 3995.6693 3003.937 3995.9449 3004.252 3996.2598 3004.5276 3996.4567 3004.685 3996.6535 3004.8032 3997.0472 3005.0787 3997.4016 3005.2362 3997.6772 3005.3937 3997.9528 3005.4724 3998.3071 3005.6299 3998.6614 3005.7087 3998.9764 3005.7874 3999.2913 3005.7874 3999.6457 3005.8661 4000 3005.8268 4000.3543 3005.8661 4000.6693 3005.7874 4001.0236 3005.7874 4001.3779 3005.6693 4001.6929 3005.6299 4002.0079 3005.5118 4002.3228 3005.3937 4002.559 3005.2362 4002.9527 3005.0787 4003.2677 3004.8425 4003.5433 3004.685 4003.7401 3004.4882 4004.0551 3004.252 4004.2913 3003.937 4004.5275 3003.7402 4004.7244 3003.4252 4004.9212 3003.189 4005.0394 3002.9134 4005.2756 3002.5984 4005.3937 3002.2441 4005.5512 3001.9685 4005.6299 3001.6929 4005.748 3001.3386 4005.7874 3000.9449 4005.8661 3000.6299 4005.9055 2999.9606 4005.8661 2999.2914 4005.7874 2998.9764 4005.748 2998.5827 4005.6299 2998.2284 4005.5512 2997.9528 4005.3937 2997.6772 4005.2756 2997.3229 4005.0394 2997.0079 4004.9212 2996.7323 4004.8425 2996.5355 4004.8425 2996.4961 4004.8031 2996.4567 4004.8031 2996.4173 4004.7638 2996.378 4004.7244 2996.2992 4004.6457 2996.2599 4004.6457 2996.2205 4004.685 2996.2992 4004.6457 2996.2599 4004.7244 2996.2992 4004.685 2996.2992 4004.6457 2996.2205 4004.7244 2996.3386 4004.685 2996.2992 4004.7244 2996.2992 4004.7244 2996.3386 4004.6457 2996.2205 4004.6063 2996.1811 4004.5669 2996.1418 4004.5275 2996.1024 4004.4882 2996.063 4004.4488 2996.0236 4004.4094 2995.9843 4004.3307 2995.9055 4004.3701 2995.9055 4004.3701 2995.9449 4004.3307 2995.9055 4004.3307 2995.8662 4004.3701 2995.9055 4004.3307 2995.9055 4004.2913 2995.9055 4004.2913 2995.8662 4004.3307 2995.8662 4004.3307 2995.9055 4004.3307 2995.9449 4004.2913 2995.9055 4004.3307 2995.9055 4004.4094 2995.9843 4004.3701 2995.9843 4004.3701 2995.9449 4004.4882 2996.063 4004.4488 2996.063 4004.4488 2996.0236 4004.4882 2996.063 4004.4882 2996.1024 4004.4488 2996.063 4004.4882 2996.063 4004.5275 2996.1024 4004.4882 2996.1024 4004.4882 2996.063 4004.3701 2995.9449 4004.3701 2995.9055 4004.3307 2995.8662 4004.2913 2995.8268 4004.252 2995.7874 4004.2126 2995.7481 4004.1732 2995.7087 4004.1338 2995.7087 4004.1338 2995.6693 4004.0945 2995.6299 4004.0551 2995.5906 4004.0157 2995.5906 4004.0157 2995.5512 4004.0945 2995.6299 4004.0157 2995.5906 4004.0551 2995.5906 4004.0945 2995.6299 4004.0551 2995.6693 4004.0551 2995.6299 4004.0157 2995.5906 4004.0945 2995.6299 4004.0945 2995.6693 4004.0551 2995.6693 4004.0945 2995.6299 4004.1338 2995.6693 4004.0945 2995.6693 4004.0945 2995.6299 4004.0157 2995.5512 4003.937 2995.4725 4003.8976 2995.4725 4003.8583 2995.4331 4003.8189 2995.3937 4003.7795 2995.3544 4003.7401 2995.315 4003.7008 2995.2756 4003.5827 2995.1969 4003.5433 2995.1575 4003.3858 2995.0788 4003.4252 2995.0788 4003.4252 2995.1181 4003.3858 2995.0788 4003.5433 2995.1575 4003.5039 2995.1575 4003.4646 2995.1181 4003.4252 2995.0788 4003.3858 2995.0788 4003.3071 2995 4003.2677 2994.9607 4003.189 2994.9213 4003.1102 2994.8819 4003.0709 2994.8819 4002.9527 2994.8032 4002.8346 2994.7244 4002.7559 2994.6851 4002.6772 2994.6457 4002.6378 2994.6063 4002.559 2994.567 4002.5197 2994.567 4002.4409 2994.5276 4002.4803 2994.5276 4002.4803 2994.567 4002.4409 2994.5276 4002.5197 2994.567 4002.4803 2994.567 4002.4803 2994.5276 4002.4409 2994.5276 4002.3622 2994.4882 4002.2441 2994.4488 4002.2047 2994.4095 4002.1653 2994.4095 4001.8504 2994.2914 4001.7323 2994.252 4001.5748 2994.2126 4001.4173 2994.1733 4001.4567 2994.1733 4001.4567 2994.2126 4001.4173 2994.1733 4001.4961 2994.2126 4001.4567 2994.2126 4001.4567 2994.1733 4001.4961 2994.2126 4001.4173 2994.1733 4001.5354 2994.2126 4001.4961 2994.2126 4001.4567 2994.1733 4001.5354 2994.2126 4001.4173 2994.1733 4001.5748 2994.2126 4001.5354 2994.2126 4001.4567 2994.1733 4001.4173 2994.1733 4001.2598 2994.1339 4001.3386 2994.1339 4001.3386 2994.1733 4001.2992 2994.1339 4001.3386 2994.1339 3994.0945 2999.9606 3994.0945 2999.9606\"}}]}"
+        ],
+        "layers": [
+          "1~TopLayer~#FF0000~true~false~true~",
+          "2~BottomLayer~#0000FF~true~false~true~",
+          "3~TopSilkLayer~#FFCC00~true~true~true~",
+          "4~BottomSilkLayer~#66CC33~true~false~true~",
+          "5~TopPasteMaskLayer~#808080~true~false~true~",
+          "6~BottomPasteMaskLayer~#800000~true~false~true~",
+          "7~TopSolderMaskLayer~#800080~true~false~true~0.3",
+          "8~BottomSolderMaskLayer~#AA00FF~true~false~true~0.3",
+          "9~Ratlines~#6464FF~false~false~true~",
+          "10~BoardOutLine~#FF00FF~true~false~true~",
+          "11~Multi-Layer~#C0C0C0~true~false~true~",
+          "12~Document~#FFFFFF~true~false~true~",
+          "13~TopAssembly~#33CC99~true~false~true~",
+          "14~BottomAssembly~#5555FF~true~false~true~",
+          "15~Mechanical~#F022F0~true~false~true~",
+          "19~3DModel~#66CCFF~true~false~true~",
+          "21~Inner1~#999966~false~false~false~~",
+          "22~Inner2~#008000~false~false~false~~",
+          "23~Inner3~#00FF00~false~false~false~~",
+          "24~Inner4~#BC8E00~false~false~false~~",
+          "25~Inner5~#70DBFA~false~false~false~~",
+          "26~Inner6~#00CC66~false~false~false~~",
+          "27~Inner7~#9966FF~false~false~false~~",
+          "28~Inner8~#800080~false~false~false~~",
+          "29~Inner9~#008080~false~false~false~~",
+          "30~Inner10~#15935F~false~false~false~~",
+          "31~Inner11~#000080~false~false~false~~",
+          "32~Inner12~#00B400~false~false~false~~",
+          "33~Inner13~#2E4756~false~false~false~~",
+          "34~Inner14~#99842F~false~false~false~~",
+          "35~Inner15~#FFFFAA~false~false~false~~",
+          "36~Inner16~#99842F~false~false~false~~",
+          "37~Inner17~#2E4756~false~false~false~~",
+          "38~Inner18~#3535FF~false~false~false~~",
+          "39~Inner19~#8000BC~false~false~false~~",
+          "40~Inner20~#43AE5F~false~false~false~~",
+          "41~Inner21~#C3ECCE~false~false~false~~",
+          "42~Inner22~#728978~false~false~false~~",
+          "43~Inner23~#39503F~false~false~false~~",
+          "44~Inner24~#0C715D~false~false~false~~",
+          "45~Inner25~#5A8A80~false~false~false~~",
+          "46~Inner26~#2B937E~false~false~false~~",
+          "47~Inner27~#23999D~false~false~false~~",
+          "48~Inner28~#45B4E3~false~false~false~~",
+          "49~Inner29~#215DA1~false~false~false~~",
+          "50~Inner30~#4564D7~false~false~false~~",
+          "51~Inner31~#6969E9~false~false~false~~",
+          "52~Inner32~#9069E9~false~false~false~~",
+          "99~ComponentShapeLayer~#00CCCC~true~false~true~0.4",
+          "100~LeadShapeLayer~#CC9999~true~false~true~",
+          "101~ComponentMarkingLayer~#66FFCC~true~false~true~",
+          "Hole~Hole~#222222~false~false~true~",
+          "DRCError~DRCError~#FAD609~false~false~true~"
+        ],
+        "objects": [
+          "All~true~false",
+          "Component~true~true",
+          "Prefix~true~true",
+          "Name~true~false",
+          "Track~true~true",
+          "Pad~true~true",
+          "Via~true~true",
+          "Hole~true~true",
+          "Copper_Area~true~true",
+          "Circle~true~true",
+          "Arc~true~true",
+          "Solid_Region~true~true",
+          "Text~true~true",
+          "Image~true~true",
+          "Rect~true~true",
+          "Dimension~true~true",
+          "Protractor~true~true"
+        ],
+        "BBox": {
+          "x": 3992.9,
+          "y": 2992.9,
+          "width": 14.2,
+          "height": 14.2
+        },
+        "netColors": []
+      }
+    }
+  }
+}

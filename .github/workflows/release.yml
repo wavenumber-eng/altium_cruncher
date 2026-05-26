@@ -1,0 +1,32 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Verify tag matches package version
+        shell: bash
+        run: |
+          VERSION="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          test "v${VERSION}" = "${GITHUB_REF_NAME}"
+      - name: Run tests
+        run: uv run --extra test pytest
+      - name: Run signoff
+        run: uv run --extra test python scripts/py_signoff.py --root .
+      - name: Build package
+        run: uv run --extra test python -m build
+      - name: Check package
+        run: uv run --extra test twine check dist/*
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

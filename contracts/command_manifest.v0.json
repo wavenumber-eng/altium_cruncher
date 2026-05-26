@@ -1,0 +1,22 @@
+{
+  "schema": "altium_cruncher.command_manifest.v0",
+  "commands": [
+    {"name": "version", "status": "public", "requires_extra": null},
+    {"name": "sch-svg", "status": "public", "requires_extra": null},
+    {"name": "pcb-svg", "status": "public", "requires_extra": null},
+    {"name": "pcb-layer-step", "status": "public", "requires_extra": null},
+    {"name": "svg", "status": "public", "requires_extra": null},
+    {"name": "pcblib-footprint-3d", "status": "public", "requires_extra": null},
+    {"name": "bom", "status": "public", "requires_extra": null},
+    {"name": "pnp", "status": "public", "requires_extra": null},
+    {"name": "netlist", "status": "public", "requires_extra": null},
+    {"name": "extract", "status": "public", "requires_extra": null},
+    {"name": "easyeda-import", "status": "planned-public", "requires_extra": "easyeda"},
+    {"name": "easyeda-review", "status": "planned-public", "requires_extra": "easyeda"},
+    {"name": "easyeda-footprint-review", "status": "planned-public", "requires_extra": "easyeda"},
+    {"name": "split", "status": "public", "requires_extra": null},
+    {"name": "merge", "status": "public", "requires_extra": null},
+    {"name": "megamaid", "status": "public", "requires_extra": null},
+    {"name": "clean", "status": "public", "requires_extra": null}
+  ]
+}

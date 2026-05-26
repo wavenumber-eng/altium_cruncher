@@ -1,0 +1,14 @@
+*.BomDoc binary
+*.Harness binary
+*.IntLib binary
+*.PcbDoc binary
+*.PCBdoc binary
+*.PCBDOC binary
+*.PcbLib binary
+*.PrjPcb binary
+*.PrjPCB binary
+*.SCHDOC binary
+*.SCHLIB binary
+*.SchDoc binary
+*.step binary
+*.STEP binary

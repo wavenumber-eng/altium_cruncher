@@ -1,0 +1,198 @@
+{
+  "success": true,
+  "code": 0,
+  "result": {
+    "uuid": "814554e04a30475291ad0d68774d05fb",
+    "title": "YZ110615028F-01",
+    "description": "",
+    "docType": 2,
+    "type": 3,
+    "thumb": "//image.lceda.cn/components/814554e04a30475291ad0d68774d05fb.png",
+    "lcsc": {
+      "id": 5893643,
+      "number": "C5203974"
+    },
+    "szlcsc": {
+      "id": 5893643,
+      "number": "C5203974"
+    },
+    "owner": {
+      "uuid": "0819f05c4eef4c71ace90d822a990e87",
+      "username": "lcsc",
+      "nickname": "LCSC",
+      "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+    },
+    "tags": [],
+    "updateTime": 1769067718,
+    "updated_at": "2026-03-14 18:13:38",
+    "dataStr": {
+      "head": {
+        "docType": "2",
+        "editorVersion": "6.5.51",
+        "x": 395,
+        "y": 300,
+        "c_para": {
+          "pre": "CN?",
+          "name": "YZ110615028F-01",
+          "package": "SMD-1_L2.8-W1.5_YZ110615028F-01",
+          "Supplier": "LCSC",
+          "Supplier Part": "C5203974",
+          "Manufacturer": "Xinyangze(\u946b\u626c\u6cfd)",
+          "Manufacturer Part": "YZ110615028F-01",
+          "JLCPCB Part Class": "Extended Part",
+          "Contributor": "lcsc"
+        },
+        "uuid": "814554e04a30475291ad0d68774d05fb",
+        "utime": 1769067718,
+        "puuid": "333784b89d7649c49058c9a31f0a0cf8",
+        "importFlag": 0,
+        "c_spiceCmd": null,
+        "pre": "CN?",
+        "name": "YZ110615028F-01",
+        "hasIdFlag": true
+      },
+      "canvas": "CA~1000~1000~#FFFFFF~yes~#CCCCCC~5~1000~1000~line~5~pixel~5~395~300",
+      "shape": [
+        "R~390~290~2~2~20~20~#880000~1~0~none~gge1~0~",
+        "E~395~295~1.5~1.5~#880000~1~0~#880000~gge2~0",
+        "P~show~0~1~380~300~180~gge5~0^^380~300^^M380,300h10~#880000^^1~393.7~304~0~1~start~~~#0000FF^^1~389.5~299~0~1~end~~~#0000FF^^0~387~300^^0~M 390 303 L 393 300 L 390 297"
+      ],
+      "BBox": {
+        "x": 379,
+        "y": 289.6,
+        "width": 31,
+        "height": 20.4
+      },
+      "colors": []
+    },
+    "jlcOnSale": 1,
+    "datastrid": "ece5e00f3ac246e799a088644bfdcdef",
+    "verify": true,
+    "SMT": true,
+    "writable": false,
+    "isFavorite": false,
+    "packageDetail": {
+      "uuid": "333784b89d7649c49058c9a31f0a0cf8",
+      "title": "SMD-1_L2.8-W1.5_YZ110615028F-01",
+      "docType": 4,
+      "updateTime": 1769067718,
+      "owner": {
+        "uuid": "0819f05c4eef4c71ace90d822a990e87",
+        "username": "LCSC",
+        "nickname": "LCSC",
+        "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png",
+        "team": true
+      },
+      "datastrid": "c51c2f9f04b24c9a95adbce960d02e49",
+      "writable": false,
+      "dataStr": {
+        "head": {
+          "docType": "4",
+          "editorVersion": "6.5.51",
+          "newgId": true,
+          "c_para": {
+            "package": "SMD-1_L2.8-W1.5_YZ110615028F-01",
+            "pre": "U?",
+            "Contributor": "hezhonglin",
+            "link": "https://item.szlcsc.com/datasheet/YZ110615028F-01/5893643.html?spm=sc.gbn.xds.a___sc.hm.hd.ss&lcsc_vid=RFlXUFBfRAJcVlNQR1MLVlEDQVhdUQZUEQBaAVZTFlgxVlNQTlFYUFdeRVJdUDtW"
+          },
+          "x": 3989.2244,
+          "y": 3002.7244,
+          "hasIdFlag": true,
+          "utime": 1769067694,
+          "uuid": "333784b89d7649c49058c9a31f0a0cf8"
+        },
+        "canvas": "CA~1000~1000~#000000~yes~#FFFFFF~10~1000~1000~line~0.5~mm~1~45~~0.5~3989.2244~3002.7244~0~none",
+        "shape": [
+          "CIRCLE~3997.2953~2999.7717~0.1181~0.2362~101~gge58~0~~",
+          "SOLIDREGION~100~~M 3986.2717 2999.7717 L 3992.1772 2999.7717 L 3992.1772 3005.6772 L 3986.2717 3005.6772 Z ~solid~gge40~~~~0",
+          "SOLIDREGION~99~~M 3986.2717 2999.7717 L 3986.2717 3005.6772 L 3997.29525 3005.6772 L 3997.29525 2999.7717 Z ~solid~gge37~~~~0",
+          "PAD~RECT~3989.2244~3002.7244~7.0866~7.0866~1~~1~0~3985.6811 2999.1811 3992.7677 2999.1811 3992.7677 3006.2677 3985.6811 3006.2677~0~gge34~0~~Y~0~0~0.2~3989.2244,3002.7244",
+          "TRACK~1~3~~3984.5 2998 3998.22 2998 3998.22 3007.45 3984.5 3007.45 3984.5 2998~gge46~0",
+          "SOLIDREGION~12~~M 3995.22 2997.72 L 3998.22 2997.72 A0.5,0.5 0 0 1 3998.72 2998.22 L 3998.72 2998.72 L 3998.72 3007.22 A0.5,0.5 0 0 1 3998.22 3007.72 L 3995.22 3007.72 A0.5,0.5 0 0 1 3995.22 3006.72 L 3997.72 3006.72 L 3997.72 2998.72 L 3997.72 2998.72 L 3995.22 2998.72 A0.5,0.5 0 0 1 3995.22 2997.72 Z~solid~gge52~~~~0"
+        ],
+        "layers": [
+          "1~TopLayer~#FF0000~true~false~true~",
+          "2~BottomLayer~#0000FF~true~false~true~",
+          "3~TopSilkLayer~#FFCC00~true~false~true~",
+          "4~BottomSilkLayer~#66CC33~true~false~true~",
+          "5~TopPasteMaskLayer~#808080~true~false~true~",
+          "6~BottomPasteMaskLayer~#800000~true~false~true~",
+          "7~TopSolderMaskLayer~#800080~true~false~true~0.3",
+          "8~BottomSolderMaskLayer~#AA00FF~true~false~true~0.3",
+          "9~Ratlines~#6464FF~false~false~true~",
+          "10~BoardOutLine~#FF00FF~true~false~true~",
+          "11~Multi-Layer~#C0C0C0~true~false~true~",
+          "12~Document~#FFFFFF~true~true~true~",
+          "13~TopAssembly~#33CC99~true~false~true~",
+          "14~BottomAssembly~#5555FF~true~false~true~",
+          "15~Mechanical~#F022F0~true~false~true~",
+          "19~3DModel~#66CCFF~true~false~true~",
+          "21~Inner1~#999966~false~false~false~~",
+          "22~Inner2~#008000~false~false~false~~",
+          "23~Inner3~#00FF00~false~false~false~~",
+          "24~Inner4~#BC8E00~false~false~false~~",
+          "25~Inner5~#70DBFA~false~false~false~~",
+          "26~Inner6~#00CC66~false~false~false~~",
+          "27~Inner7~#9966FF~false~false~false~~",
+          "28~Inner8~#800080~false~false~false~~",
+          "29~Inner9~#008080~false~false~false~~",
+          "30~Inner10~#15935F~false~false~false~~",
+          "31~Inner11~#000080~false~false~false~~",
+          "32~Inner12~#00B400~false~false~false~~",
+          "33~Inner13~#2E4756~false~false~false~~",
+          "34~Inner14~#99842F~false~false~false~~",
+          "35~Inner15~#FFFFAA~false~false~false~~",
+          "36~Inner16~#99842F~false~false~false~~",
+          "37~Inner17~#2E4756~false~false~false~~",
+          "38~Inner18~#3535FF~false~false~false~~",
+          "39~Inner19~#8000BC~false~false~false~~",
+          "40~Inner20~#43AE5F~false~false~false~~",
+          "41~Inner21~#C3ECCE~false~false~false~~",
+          "42~Inner22~#728978~false~false~false~~",
+          "43~Inner23~#39503F~false~false~false~~",
+          "44~Inner24~#0C715D~false~false~false~~",
+          "45~Inner25~#5A8A80~false~false~false~~",
+          "46~Inner26~#2B937E~false~false~false~~",
+          "47~Inner27~#23999D~false~false~false~~",
+          "48~Inner28~#45B4E3~false~false~false~~",
+          "49~Inner29~#215DA1~false~false~false~~",
+          "50~Inner30~#4564D7~false~false~false~~",
+          "51~Inner31~#6969E9~false~false~false~~",
+          "52~Inner32~#9069E9~false~false~false~~",
+          "99~ComponentShapeLayer~#00CCCC~true~false~true~0.4",
+          "100~LeadShapeLayer~#CC9999~true~false~true~",
+          "101~ComponentMarkingLayer~#66FFCC~true~false~true~",
+          "Hole~Hole~#222222~~false~true~",
+          "DRCError~DRCError~#FAD609~~false~true~"
+        ],
+        "objects": [
+          "All~true~false",
+          "Component~true~true",
+          "Prefix~true~true",
+          "Name~true~false",
+          "Track~true~true",
+          "Pad~true~true",
+          "Via~true~true",
+          "Hole~true~true",
+          "Copper_Area~true~true",
+          "Circle~true~true",
+          "Arc~true~true",
+          "Solid_Region~true~true",
+          "Text~true~true",
+          "Image~true~true",
+          "Rect~true~true",
+          "Dimension~true~true",
+          "Protractor~true~true"
+        ],
+        "BBox": {
+          "x": 3984.5,
+          "y": 2997.7,
+          "width": 14.2,
+          "height": 10
+        },
+        "netColors": []
+      }
+    }
+  }
+}
