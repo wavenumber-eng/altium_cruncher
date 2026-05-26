@@ -461,6 +461,139 @@ Required tests:
   using the same semantic comparisons as the underlying Altium Monkey tests,
   not byte-for-byte output unless the format is intentionally stable.
 
+## Split Command
+
+`split` stays in the first public command set. It should be tested like the
+previous split command tests, but the public CLI does not need the complex
+interop/native parity harness.
+
+Current behavior to preserve:
+
+- `.SchLib` input splits a multi-symbol library into one `SchLib` per symbol;
+- `.PcbLib` input splits a multi-footprint library into one `PcbLib` per
+  footprint;
+- `.SchLib` supports `--pattern` for output filenames;
+- `.SchLib` supports `--symbols` for filtering;
+- `.PcbLib` rejects `--pattern` and `--symbols` because footprint splitting
+  does not support those options today;
+- `--output` controls the output folder.
+
+Required test shape:
+
+- use public test projects with checked-in `reference_output/` split results;
+- run the public `altium-cruncher split` command, not direct library helpers;
+- compare the generated output file set against the provided reference file
+  set;
+- reparse every generated split library and every reference split library;
+- compare stable semantic content such as symbol names, footprint names, and
+  selected primitive/stream counts;
+- byte-for-byte comparison is not required unless a fixture is intentionally
+  declared stable at that level;
+- no AD25 plugin, native C++ executable, or complex interop round trip is
+  required for this public command test.
+
+Reference material:
+
+- SchLib split behavior can follow
+  `toolz-tests/suites/altium_monkey/tests/L5_sch_tools/test_L5_003_schlib_split.py`;
+- SchDoc extraction split reference comparisons can be reused as a semantic
+  comparison model from
+  `toolz-tests/suites/altium_monkey/tests/L5_sch_tools/test_L5_002_extract_symbols.py`;
+- PcbLib split behavior can follow the simple split checks in
+  `toolz-tests/suites/altium_monkey/tests/L7_pcb_comprehensive_interop/test_L7_006_pcbdoc_footprint_extraction.py`.
+
+## Merge Command
+
+`merge` stays in the first public command set. Its public test requirements
+should match the `split` command style: run the public CLI and compare the
+result to provided reference outputs from cleared test projects, without the
+complex interop/native parity harness.
+
+Current behavior to preserve:
+
+- directory input containing `SchLib` files merges to one multi-symbol
+  `SchLib`;
+- directory input containing `PcbLib` files merges to one multi-footprint
+  `PcbLib`;
+- mixed `SchLib`/`PcbLib` input directories are rejected;
+- empty or missing input directories are rejected;
+- `--conflicts rename`, `--conflicts skip`, and `--conflicts error` remain
+  available for `SchLib`;
+- `PcbLib` merge currently supports only `--conflicts rename`;
+- `--output` controls the output folder.
+
+Required test shape:
+
+- use public test projects with checked-in merged reference libraries;
+- run the public `altium-cruncher merge` command, not direct library helpers;
+- reparse the generated merged library and the reference merged library;
+- compare stable semantic content such as symbol names, footprint names,
+  selected primitive/stream counts, and conflict-policy outcomes;
+- include at least one SchLib merge reference test and one PcbLib merge
+  reference test when cleared fixtures are available;
+- byte-for-byte comparison is not required unless a fixture is intentionally
+  declared stable at that level;
+- no AD25 plugin, native C++ executable, or complex interop round trip is
+  required for this public command test.
+
+Reference material:
+
+- SchLib merge behavior can follow
+  `toolz-tests/suites/altium_monkey/tests/L5_sch_tools/test_L5_004_schlib_merge.py`;
+- the previous split/merge CLI parity shape can be used as a reference from
+  `toolz-tests/suites/altium_monkey/tests/L5_sch_tools/test_L5_068_schlib_cpp_cli_split_merge.py`,
+  minus the native/interop requirement;
+- PcbLib merge can use the recombine checks around `AltiumPcbLib.combine()` in
+  `toolz-tests/suites/altium_monkey/tests/L7_pcb_comprehensive_interop/test_L7_006_pcbdoc_footprint_extraction.py`
+  and
+  `toolz-tests/suites/altium_monkey/tests/L7_pcb_comprehensive_interop/test_L7_007_pcbdoc_extract_synthesized.py`.
+
+## Megamaid Command
+
+`megamaid` stays in the first public command set and should be treated as a
+showcase command. It demonstrates the value of `altium-cruncher` as a complete
+project decomposition tool rather than only a collection of narrow format
+helpers.
+
+Current behavior to preserve:
+
+- `.PrjPcb` input only;
+- no file argument auto-detects a project in the working directory;
+- output tree includes `schlib/combined`, `schlib/split`, `pcblib/combined`,
+  `pcblib/split`, `bom`, `netlist`, `embedded_models`, `embedded_fonts`, and
+  `sch_images`;
+- stale megamaid-owned output subtrees are cleared on rerun while unrelated
+  files in the output root are preserved;
+- `megamaid_manifest.json` describes the generated artifacts and scalar counts;
+- schematic embedded images, PCB embedded fonts, and PCB embedded models are
+  extracted and deduplicated.
+
+Required test shape:
+
+- run the public `altium-cruncher megamaid` command against a cleared
+  representative project fixture;
+- verify the expected output tree exists and non-empty artifacts are produced;
+- reparse generated combined `SchLib` and `PcbLib` outputs;
+- verify BOM CSV and netlist JSON are generated;
+- verify manifest schema/kind, document counts, artifact paths, and scalar
+  counts;
+- verify embedded image/font/model extraction when the fixture contains those
+  assets;
+- verify rerun cleanup removes stale megamaid-owned artifacts without deleting
+  unrelated files under the selected output root;
+- no native C++ parity sweep is required in the public repo, but the public
+  test should still prove the command works end to end.
+
+Reference material:
+
+- current public-repo tests in `tests/test_megamaid_schematic_images.py`;
+- old native smoke/parity expectations in
+  `toolz-tests/suites/altium_monkey/tests/L6_pcb_foundation/test_L6_050_pcbdoc_cpp_cli_megamaid.py`
+  and
+  `toolz-tests/suites/altium_monkey/tests/L6_pcb_foundation/test_L6_051_pcbdoc_cpp_cli_megamaid_parity.py`,
+  adapted to public Python CLI tests and without the native executable
+  requirement.
+
 ## Deferred Commands
 
 `pcblib-footprint-3d` is broken and should not be migrated into the first public

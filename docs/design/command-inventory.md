@@ -21,9 +21,9 @@ This inventory records the command set migrated from the private
 | `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
 | `easyeda-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
 | `easyeda-footprint-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
-| `split` | public | `L3_public_workflows` | SchLib/PcbLib split workflows. |
-| `merge` | public | `L3_public_workflows` | SchLib/PcbLib merge workflows. |
-| `megamaid` | public | pytest | Project decomposition workflow, including Hydroscope embedded images/models. |
+| `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
+| `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
+| `megamaid` | public | pytest | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
 | `clean` | public | `L3_public_workflows` | SchDoc/SchLib/PcbLib cleanup workflows. |
 
 The command manifest lives at `contracts/command_manifest.v0.json`. `L99` should
@@ -108,6 +108,42 @@ EasyEDA command notes:
   dev-only or deferred if they are not stable enough for public CLI support;
 - no EasyEDA command should be release-owned until the `easyeda-monkey` optional
   extra lane runs fixture-backed command tests.
+
+Split notes:
+
+- `split` stays in the first public command set;
+- tests should run the public CLI and compare generated split output against
+  checked-in reference outputs from cleared test projects;
+- SchLib coverage should include file-set matching, reparsing generated
+  `SchLib` files, output filename pattern behavior, and symbol filtering;
+- PcbLib coverage should include file-set matching and reparsing generated
+  `PcbLib` files;
+- heavy AD25/native/interop parity is not required for the public CLI split
+  test; stable semantic matching is enough.
+
+Merge notes:
+
+- `merge` stays in the first public command set;
+- tests should run the public CLI and compare generated merged libraries
+  against checked-in reference outputs from cleared test projects;
+- SchLib coverage should include reparse checks, symbol-name set matching,
+  selected primitive/stream counts, and conflict policies;
+- PcbLib coverage should include reparse checks, footprint-name set matching,
+  and rename-only conflict behavior;
+- heavy AD25/native/interop parity is not required for the public CLI merge
+  test; stable semantic matching is enough.
+
+Megamaid notes:
+
+- `megamaid` stays in the first public command set as a showcase command;
+- tests should run the public CLI against a representative project fixture;
+- required output coverage includes `schlib/`, `pcblib/`, `bom/`, `netlist/`,
+  `embedded_models/`, `embedded_fonts/`, `sch_images/`, and
+  `megamaid_manifest.json`;
+- generated combined libraries should reparse, BOM CSV and netlist JSON should
+  exist, and manifest counts/paths should be validated;
+- rerun behavior should clear megamaid-owned stale artifacts while preserving
+  unrelated files under the output root.
 
 Deferred command notes:
 
