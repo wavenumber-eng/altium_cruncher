@@ -257,6 +257,47 @@ Required SVG follow-up:
 - keep at least one test that exercises normal PCB layer SVG output so HLR work
   cannot regress existing layer rendering.
 
+## PCB Layer STEP Command
+
+`pcb-layer-step` stays in the first public command set.
+
+Fixture corpus requirements:
+
+- all `altium-cruncher` command fixtures should use the same structure:
+  - `input/` for source designs and configs;
+  - `reference_output/` for checked-in expected artifacts where the command has
+    stable output contracts;
+  - `output/` for transient local/test output only;
+- copied `altium-monkey` public-release projects need to be restructured into
+  this convention and should gain reference-generation jobs before their
+  outputs are treated as golden references;
+- per-command tests may use the same fixture families differently, but the
+  folder shape should stay consistent.
+
+Required source fixtures:
+
+- copy from private test corpus:
+  - `C:\eli\wn_test_corpus\altium\common\real_world_pcbdoc\cricket-node`;
+  - `C:\eli\wn_test_corpus\altium\common\real_world_pcbdoc\node_test_array`;
+- copy/restructure from public `altium-monkey` examples:
+  - `C:\eli\altium_monkey_public\examples\assets\projects\hydroscope`;
+  - `C:\eli\altium_monkey_public\examples\assets\projects\loz-old-man`;
+  - `C:\eli\altium_monkey_public\examples\assets\projects\rt_super_c1`;
+  - `C:\eli\altium_monkey_public\examples\assets\projects\goomba`;
+  - `C:\eli\altium_monkey_public\examples\assets\projects\bunny_brain`.
+
+Initial `pcb-layer-step` coverage:
+
+- use `cricket-node`;
+- generate bottom-layer copper STEP;
+- document and test color control:
+  - copper color: `#3D85C6`;
+  - board outline color: `#CCCCCC`;
+- verify the command creates a non-empty STEP artifact and any stable report or
+  manifest output expected for the command;
+- later golden/reference checks should compare against `reference_output/` once
+  the reference-generation job is in place.
+
 ## EasyEDA Commands
 
 Some newer commands convert EasyEDA designs and currently depend on private

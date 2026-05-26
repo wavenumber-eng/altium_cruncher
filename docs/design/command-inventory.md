@@ -46,3 +46,13 @@ SVG command family notes:
 - `svg` help should describe that routing behavior clearly;
 - `pcb-svg` needs fixture-backed assembly-view coverage with HLR/geometer and a
   redistributable project that proves SVG artifacts are created.
+
+PCB layer STEP notes:
+
+- `pcb-layer-step` stays in the first public command set;
+- first fixture-backed command test should use `cricket-node` and generate
+  bottom-layer copper;
+- the documented example colors are copper `#3D85C6` and board outline
+  `#CCCCCC`;
+- command fixtures should use `input/`, `reference_output/`, and transient
+  `output/` folders.
