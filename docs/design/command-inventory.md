@@ -17,14 +17,14 @@ This inventory records the command set migrated from the private
 | `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy, and source selection. |
 | `pnp` | public | `L3_public_workflows` | Pick-and-place output. |
 | `netlist` | public | `L3_public_workflows` | Key command. Keep current netlist JSON behavior for Altium schematic/project documents. |
-| `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc extraction workflows must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
+| `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
 | `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
 | `easyeda-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
 | `easyeda-footprint-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | pytest | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
-| `clean` | public | `L3_public_workflows` | SchDoc/SchLib/PcbLib cleanup workflows. |
+| `clean` | public | `L3_public_workflows` | Keep. Needs detailed config documentation plus fixture-backed CLI tests for template creation, actual clean application, output/backup behavior, and PcbLib removal rules. |
 
 The command manifest lives at `contracts/command_manifest.v0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
@@ -94,6 +94,11 @@ Extract notes:
   cleared PcbDoc extraction fixtures;
 - `.PrjPcb` extraction should prove both `schlib/` and `pcblib/` fanout when a
   project contains both source types;
+- `.IntLib` extraction should expose the existing `AltiumIntLib.extract_sources`
+  behavior from the command line, writing individual source libraries, a
+  manifest, and the generated `.LibPkg`;
+- IntLib tests should use public fixtures such as `RT_SUPER_C1.IntLib` or
+  `loz-old-man.IntLib` and verify the extracted `SchLib`/`PcbLib` files reparse;
 - fixtures copied from `C:\eli\wn_test_corpus` require proprietary-information
   review before check-in.
 
@@ -144,6 +149,23 @@ Megamaid notes:
   exist, and manifest counts/paths should be validated;
 - rerun behavior should clear megamaid-owned stale artifacts while preserving
   unrelated files under the output root.
+
+Clean notes:
+
+- `clean` stays in the first public command set;
+- release docs must explain both config schemas:
+  `wn.altium.clean.config.v1` for `SchDoc`/`SchLib`/`PrjPcb`, and
+  `wn.altium.pcblib.clean.config.v1` for `PcbLib`;
+- docs must cover config auto-generation, output path behavior, backup
+  behavior, color/font/line-width/no-ERC value formats, every schematic
+  normalization section, and every PcbLib removal section;
+- current tests are not enough: they cover SchDoc template generation, a few
+  SchLib helper-ordering cases, and PcbLib config-path discovery;
+- add CLI tests for actual SchLib/SchDoc clean application, project fanout when
+  cleared fixtures exist, PcbLib mechanical/text/region removal, generated
+  config contract conformance, and backup/output semantics;
+- before/after preview or GUI-assisted rule development is useful but should be
+  tracked as a post-release issue, not a first-release blocker.
 
 Deferred command notes:
 
