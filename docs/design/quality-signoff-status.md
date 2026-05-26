@@ -11,13 +11,12 @@ Last updated: 2026-05-26
 - `pytest` passes locally.
 - `rack run --all` passes locally.
 - build, `twine check`, and built-wheel install smoke pass locally.
-- Direct `pipx` smoke was not run because `pipx` is not installed in the local
-  shell; the venv install smoke verifies equivalent generated console scripts
-  through PATH.
+- Direct `uv tool install` smoke is not yet a hard local gate; the venv install
+  smoke verifies equivalent generated console scripts through PATH.
 - GitHub CI is blocking on Windows and Ubuntu for the first public release.
   macOS GitHub-hosted CI is deferred because `wn-geometer==2026.5.25` currently
   publishes a `macosx_26_0_arm64` wheel while GitHub `macos-latest` resolves to
-  macOS 15 arm64. Manual macOS pip/pipx smoke is still required until that
+  macOS 15 arm64. Manual macOS pip/uv-tool smoke is still required until that
   wheel tag or runner mismatch is resolved.
 
 ## Pyright Backlog

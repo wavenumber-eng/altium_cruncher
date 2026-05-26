@@ -2,5 +2,9 @@
 
 This folder records accepted architecture decisions for `altium-cruncher`.
 
-The first ADR should define versioning, tagging, release automation, and
-traceability policy before the first public package release.
+## Index
+
+- [ADR-0001](ADR-0001-versioning-tagging-release-policy.md) - Versioning,
+  tagging, release automation, and traceability policy.
+- [ADR-0002](ADR-0002-cli-install-and-dependency-discipline.md) - CLI install,
+  command layout, licensing boundary, and dependency discipline.

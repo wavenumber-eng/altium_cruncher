@@ -11,3 +11,6 @@
   merge, megamaid, and EasyEDA placeholder commands.
 - Add Rack smoke strata, release signoff checks, package build validation, and
   built-wheel install smoke coverage.
+- Document `uv tool install` as the preferred CLI install path.
+- Add ADR-0002 for CLI install, command layout, AGPL licensing boundary, and
+  dependency-minimization discipline.

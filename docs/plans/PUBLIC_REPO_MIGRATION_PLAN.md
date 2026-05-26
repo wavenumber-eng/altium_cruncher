@@ -84,10 +84,15 @@ The likely package and entry-point names are:
 - import package: `altium_cruncher`;
 - console script: `altium-cruncher`.
 
-The package should be easy to install with `pipx`, producing normal executable
-entry points on Windows, macOS, and Linux. Nuitka or PyInstaller packaging can
-be evaluated later, but the first packaging target should be a normal Python
-package with console scripts.
+The package should be easy to install with `uv tool install`, producing normal
+executable entry points on Windows, macOS, and Linux. Nuitka or PyInstaller
+packaging can be evaluated later, but the first packaging target should be a
+normal Python package with console scripts.
+
+`altium-cruncher` remains AGPL-3.0-or-later because it imports and depends on
+AGPL `altium-monkey` for normal operation. A permissive license is appropriate
+for independent parser/helper packages such as `easyeda-monkey`, but not for
+this combined application package.
 
 ## Workspace Installer Integration
 
@@ -98,9 +103,10 @@ flow, not only through direct developer commands.
 
 - add a standalone `altium_cruncher` repo/dependency entry to the workspace
   manifest when the public repo is ready to consume;
-- decide whether `wn-hw` installs the released package with `pipx`, installs
-  the local source checkout in editable mode, or creates workspace-local
-  wrappers;
+- install the released package with pinned `uv tool install --force`
+  invocations;
+- allow editable `uv tool install --force --editable <checkout>` overrides for
+  local development;
 - ensure the resulting script/executable directory is on PATH after
   `setup.ps1`/`setup.sh` and after `update.ps1`/`update.sh`;
 - standardize workspace workflows on the single public console name
@@ -113,7 +119,9 @@ flow, not only through direct developer commands.
 ## Dependency Policy
 
 `altium_cruncher` is an application package, so it can carry richer dependencies
-than core `altium-monkey`.
+than core `altium-monkey`, but Wavenumber tools still minimize dependencies.
+New runtime, optional, and test-only dependencies need explicit justification in
+the commit, PR, or linked plan.
 
 Expected direct dependencies include:
 
@@ -124,6 +132,10 @@ Expected direct dependencies include:
 The package must not import private `toolz` modules. `wn-hw` should eventually
 clone/use this standalone repo as an external dependency, similar to
 `geometer`.
+
+New public commands should keep the top-level CLI as an orchestrator. Command
+specific parser setup, command behavior, output formatting, and command-specific
+imports belong in command modules, including simple commands.
 
 ## Test Strategy
 
@@ -217,6 +229,8 @@ That package must have the same public-repo and signoff requirements as
   expectations as `altium_cruncher`.
 - an early ADR for versioning, tagging, release, and traceability policy,
   aligned with the `altium_cruncher` policy.
+- the same `uv tool install` CLI install pattern and dependency-minimization
+  discipline.
 
 As part of the split, audit `toolz` and `appz` for imports and workspace
 dependencies that currently reach into private `ezeda_monkey` or
@@ -322,7 +336,7 @@ Preferred shape:
 The first migration slice is complete when:
 
 - the public repo has installable package metadata;
-- `pipx install` can expose the CLI from a built wheel;
+- `uv tool install` can expose the CLI from a built wheel;
 - `wn-hw` setup/update can expose the CLI executable without a manual PATH fix;
 - Rack tests run from the standalone repo;
 - CI runs on Windows and Linux; macOS CI is deferred until the `wn-geometer`

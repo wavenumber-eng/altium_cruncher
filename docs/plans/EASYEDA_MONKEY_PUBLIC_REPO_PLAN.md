@@ -66,7 +66,8 @@ The first `easyeda-monkey` release should prove:
 - release tags match package versions;
 - changelog/release notes are enforced;
 - PyPI Trusted Publishing works from the intended workflow and environment;
-- a clean install from PyPI works with `pip`, and `pipx` if a CLI is exposed;
+- a clean install from PyPI works with `pip` for library use and
+  `uv tool install` for the CLI;
 - the published source commit, tag, GitHub release, and PyPI artifact are
   traceable to each other.
 
@@ -119,7 +120,7 @@ Required local and CI gates:
 - package build via `python -m build`;
 - `twine check dist/*`;
 - clean-venv install smoke;
-- optional `pipx` smoke when available;
+- optional `uv tool install` smoke when available;
 - release workflow that reruns tests, Rack, signoff, build, `twine check`, and
   install smoke before publishing.
 
@@ -182,8 +183,9 @@ After `easyeda-monkey` is public and passing signoff:
    - base install: EasyEDA commands report the missing dependency clearly;
    - EasyEDA extra installed: command workflows run against public fixtures;
 5. document install guidance:
-   - `pipx install altium-cruncher`;
-   - `pipx inject altium-cruncher easyeda-monkey` or equivalent extra flow.
+   - `uv tool install altium-cruncher`;
+   - `uv tool install --force --with easyeda-monkey altium-cruncher` or
+     equivalent extra flow.
 
 `altium-cruncher` should not duplicate EasyEDA parsing/conversion logic once the
 public package exists.

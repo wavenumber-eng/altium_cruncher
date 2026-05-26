@@ -29,15 +29,17 @@ altium-cruncher --version
 - The install path is visible immediately to workspace activation and documented
   for fresh shells.
 
-## Candidate Install Modes
+## Install Modes
 
-1. Public package install with `pipx install --force altium-cruncher`.
-2. Local source checkout install with `pipx install --force --editable
+1. Public package install with `uv tool install --force
+   altium-cruncher==<version>`.
+2. Local source checkout install with `uv tool install --force --editable
    <workspace>/altium_cruncher`.
-3. Workspace-local wrapper scripts in a PATH-managed `bin` folder.
+3. Workspace-local wrapper scripts in a PATH-managed `bin` folder only as a
+   fallback for non-Python native tools or unusual installer constraints.
 
-The first release can choose one mode, but the installer smoke test must be the
-same: resolve `altium-cruncher` and check the version.
+The first release should use `uv tool install`. The installer smoke test must
+resolve `altium-cruncher` and check the version.
 
 ## Smoke Test Contract
 
@@ -49,3 +51,6 @@ altium-cruncher --version
 ```
 
 The version output must match the configured or released package version.
+
+Setup/update should also run `uv tool update-shell` or otherwise ensure the uv
+tool executable directory is visible to fresh workspace shells.

@@ -11,10 +11,23 @@ workflows.
 
 ## Install
 
-The intended user install path is `pipx`:
+Install `uv` first if it is not already available:
 
 ```powershell
-pipx install altium-cruncher
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+On macOS or Linux:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+The intended user install path is `uv tool install`:
+
+```powershell
+uv tool install altium-cruncher
+uv tool update-shell
 altium-cruncher --help
 ```
 
@@ -26,11 +39,11 @@ uv run altium-cruncher --help
 uv run python -m altium_cruncher version
 ```
 
-EasyEDA commands require `easyeda-monkey` to be installed in the same
+EasyEDA commands require `easyeda-monkey` to be installed in the same tool
 environment:
 
 ```powershell
-pipx inject altium-cruncher easyeda-monkey
+uv tool install --force --with easyeda-monkey altium-cruncher
 ```
 
 Until `easyeda-monkey` is published as its own public package, local EasyEDA
@@ -63,6 +76,12 @@ The current migrated command set includes:
 Compact JSON output is a core direction for machine-consumable Altium design
 data, but the first standalone milestone prioritizes command parity and
 cross-platform packaging.
+
+New commands should keep the top-level CLI as an orchestrator. Command-specific
+parser setup and behavior belong in command modules, including simple commands.
+New commands, features, and external dependencies need explicit justification in
+the commit, PR, or linked plan. Wavenumber tools should minimize dependencies
+unless there is a clear install, licensing, and maintenance case.
 
 ## Tests
 
@@ -112,3 +131,6 @@ Versioning, tagging, release, and traceability are defined in
 `docs/adrs/ADR-0001-versioning-tagging-release-policy.md`. The intended
 release workflow is GitHub Actions plus PyPI Trusted Publishing/OIDC. Local
 Twine upload is fallback only.
+
+`altium-cruncher` remains AGPL-3.0-or-later because it imports and depends on
+the AGPL `altium-monkey` package for normal operation.
