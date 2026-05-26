@@ -89,6 +89,27 @@ entry points on Windows, macOS, and Linux. Nuitka or PyInstaller packaging can
 be evaluated later, but the first packaging target should be a normal Python
 package with console scripts.
 
+## Workspace Installer Integration
+
+The standalone package must also work through the WN workspace setup/update
+flow, not only through direct developer commands.
+
+`wn-hw` integration is a first-release blocker:
+
+- add a standalone `altium_cruncher` repo/dependency entry to the workspace
+  manifest when the public repo is ready to consume;
+- decide whether `wn-hw` installs the released package with `pipx`, installs
+  the local source checkout in editable mode, or creates workspace-local
+  wrappers;
+- ensure the resulting script/executable directory is on PATH after
+  `setup.ps1`/`setup.sh` and after `update.ps1`/`update.sh`;
+- preserve both console names: `altium-cruncher` for public users and
+  `altium_cruncher` for compatibility with existing workspace workflows;
+- add an installer smoke test that starts from the workspace shell and runs
+  `altium-cruncher --version` plus `altium_cruncher --version`;
+- remove old `uv run --project ... toolz/altium_cruncher` assumptions from
+  WN docs/scripts only after the standalone executable path is verified.
+
 ## Dependency Policy
 
 `altium_cruncher` is an application package, so it can carry richer dependencies
@@ -250,6 +271,8 @@ Preferred shape:
 5. Wire into `wn-hw`.
    - Add standalone `altium_cruncher` as a cloned dependency.
    - Update workspace scripts/configuration.
+   - Ensure setup/update exposes the console executable path.
+   - Add a workspace installer smoke test for both console script names.
 
 6. Remove from `toolz`.
    - Delete the private `toolz/altium_cruncher` package only after the public
@@ -262,6 +285,7 @@ The first migration slice is complete when:
 
 - the public repo has installable package metadata;
 - `pipx install` can expose the CLI from a built wheel;
+- `wn-hw` setup/update can expose the CLI executable without a manual PATH fix;
 - Rack tests run from the standalone repo;
 - CI runs on Windows, macOS, and Linux;
 - at least one stable command is migrated with fixture-backed coverage;
