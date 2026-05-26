@@ -8,10 +8,12 @@ default_lane = "fast"
 order = [
     "L0_public_cli",
     "L3_public_workflows",
+    "L99_signoff",
 ]
 default_enabled = [
     "L0_public_cli",
     "L3_public_workflows",
+    "L99_signoff",
 ]
 
 [concerns.cli]
@@ -22,6 +24,9 @@ description = "Public machine-readable contracts"
 
 [concerns.release]
 description = "Package release smoke checks"
+
+[concerns.signoff]
+description = "Final release quality gates"
 
 [lanes.fast]
 description = "Default smoke lane for package and command registration"

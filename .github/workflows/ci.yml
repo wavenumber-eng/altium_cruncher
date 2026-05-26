@@ -23,7 +23,7 @@ jobs:
       - name: Run tests
         run: uv run --extra test pytest
       - name: Run Rack smoke lane
-        run: uv run --extra test rack run
+        run: uv run --extra test rack run --all
       - name: Run signoff
         run: uv run --extra test python scripts/py_signoff.py --root .
       - name: Build package

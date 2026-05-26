@@ -1,3 +1,5 @@
+"""Release signoff tests for the public package."""
+
 from __future__ import annotations
 
 import json
@@ -11,12 +13,21 @@ import altium_cruncher
 from altium_cruncher._version import cli_version_text
 
 
-PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+def _project_root() -> Path:
+    """Find the repository root from this test file."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    raise RuntimeError("Could not locate repository root")
+
+
+PACKAGE_ROOT = _project_root()
 EXPECTED_VERSION = "2026.5.25"
 EXPECTED_RELEASE_DATE = date(2026, 5, 25)
 
 
 def test_version_contract_matches_date_based_release() -> None:
+    """Verify that package version metadata follows the date release contract."""
     pyproject = tomllib.loads((PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     version = altium_cruncher.version()
 
@@ -34,6 +45,7 @@ def test_version_contract_matches_date_based_release() -> None:
 
 
 def test_cli_emits_package_version() -> None:
+    """Verify that CLI version commands emit the canonical package version text."""
     for args in (("--version",), ("version",)):
         completed = subprocess.run(
             [sys.executable, "-m", "altium_cruncher", *args],
@@ -47,6 +59,7 @@ def test_cli_emits_package_version() -> None:
 
 
 def test_python_signoff_does_not_regress() -> None:
+    """Verify that the Python source signoff has no findings."""
     baseline = PACKAGE_ROOT / "scripts" / "py_signoff_baseline.json"
     script = PACKAGE_ROOT / "scripts" / "py_signoff.py"
 

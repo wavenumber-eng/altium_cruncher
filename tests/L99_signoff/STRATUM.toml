@@ -1,0 +1,39 @@
+name = "Release Signoff"
+order = 99
+description = "Final release signoff checks for versioning, CLI version output, and Python hygiene"
+enabled = true
+concerns = ["release", "contracts"]
+
+objectives = [
+    "Package version metadata matches the release date contract",
+    "CLI version output matches package metadata",
+    "Python signoff does not regress against the accepted baseline",
+]
+
+[dependencies]
+strata = ["L0_public_cli", "L3_public_workflows"]
+note = "L99 is enabled in this public repo because the current signoff lane is lightweight."
+
+[[subtests]]
+id = "L99_001"
+file = "test_L99_001_release_signoff.py"
+name = "Release Signoff"
+description = "Validate version contract and run py_signoff"
+concerns = ["release", "contracts"]
+test_case_type = "audit_meta"
+
+[subtests.code_under_test]
+module = "altium_cruncher._version"
+
+[subtests.objectives]
+version_contract = "Date-based version metadata matches pyproject and package API"
+cli_version = "CLI version output matches package API"
+python_hygiene = "py_signoff has zero findings"
+
+[subtests.approach]
+pytest = "Run package-local signoff checks as normal pytest tests"
+
+[subtests.test_functions]
+test_version_contract_matches_date_based_release = "Package version metadata follows the date release contract"
+test_cli_emits_package_version = "CLI version commands emit the canonical package version text"
+test_python_signoff_does_not_regress = "Python signoff produces zero findings"
