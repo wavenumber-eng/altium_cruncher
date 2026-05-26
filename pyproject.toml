@@ -59,6 +59,10 @@ include = [
     "tests/**",
     "pyproject.toml",
 ]
+exclude = [
+    "docs/plans/**",
+    "docs/research/**",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/py/altium_cruncher"]

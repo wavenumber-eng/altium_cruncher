@@ -34,6 +34,11 @@ OIDC:
    `twine check`;
 6. release workflow publishes wheel and sdist to PyPI.
 
+Release artifacts may include public reference docs such as ADRs, design docs,
+canonical format docs, contracts, examples, and tests. Developer planning and
+research notes under `docs/plans/` and `docs/research/` are not part of the
+public release artifacts and must be excluded from source distributions.
+
 Local Twine upload is reserved for emergency fallback.
 
 Public command names, command-line flags, stable JSON outputs, and config file

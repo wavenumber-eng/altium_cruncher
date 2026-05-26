@@ -69,6 +69,16 @@ def test_changelog_mentions_package_version() -> None:
     assert f"## {EXPECTED_VERSION}" in changelog
 
 
+def test_developer_working_docs_are_excluded_from_release_artifacts() -> None:
+    """Verify that developer-only plan and research docs are not packaged."""
+    pyproject = tomllib.loads((PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    sdist = pyproject["tool"]["hatch"]["build"]["targets"]["sdist"]
+
+    assert "docs/**" in sdist["include"]
+    assert "docs/plans/**" in sdist["exclude"]
+    assert "docs/research/**" in sdist["exclude"]
+
+
 def test_python_signoff_does_not_regress() -> None:
     """Verify that the Python source signoff has no findings."""
     baseline = PACKAGE_ROOT / "tests" / "support_scripts" / "py_signoff_baseline.json"

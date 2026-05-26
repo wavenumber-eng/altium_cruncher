@@ -10,3 +10,5 @@ This folder records accepted architecture decisions for `altium-cruncher`.
   command layout, licensing boundary, and dependency discipline.
 - [ADR-0003](ADR-0003-test-support-helper-location.md) - Test support helper
   location.
+- [ADR-0004](ADR-0004-documentation-lifecycle-and-release-boundary.md) -
+  Documentation lifecycle and release boundary.
