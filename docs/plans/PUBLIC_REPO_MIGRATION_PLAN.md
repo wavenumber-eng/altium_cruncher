@@ -1043,6 +1043,7 @@ Current local status:
   backlog item rather than a hard release gate for this bootstrap slice;
 - shared output path/name expression resolver is implemented with focused L0
   tests for project parameters, `VariantName`, sanitization, traversal
-  rejection, and path separator normalization;
+  rejection, and path separator normalization; the shared API design doc is
+  `docs/design/api/output-path-templates.html`;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers.
