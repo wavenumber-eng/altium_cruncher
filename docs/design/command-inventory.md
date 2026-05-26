@@ -14,9 +14,9 @@ This inventory records the command set migrated from the private
 | `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
 | `svg` | public | help only | Combined schematic/project SVG wrapper. |
 | `pcblib-footprint-3d` | deferred | none | Broken; do not migrate into first public release. Remove or hide from public CLI/manifest before release. |
-| `bom` | public | `L3_public_workflows` | BOM CSV/JSON/XLSX output. |
+| `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy, and source selection. |
 | `pnp` | public | `L3_public_workflows` | Pick-and-place output. |
-| `netlist` | public | `L3_public_workflows` | Netlist JSON output. |
+| `netlist` | public | `L3_public_workflows` | Key command. Keep current netlist JSON behavior for Altium schematic/project documents. |
 | `extract` | public | `L3_public_workflows` | SchDoc/PcbDoc extraction workflows. |
 | `easyeda-import` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
 | `easyeda-review` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
@@ -56,6 +56,32 @@ PCB layer STEP notes:
   `#CCCCCC`;
 - command fixtures should use `input/`, `reference_output/`, and transient
   `output/` folders.
+
+BOM notes:
+
+- `bom` stays in the first public command set;
+- first-release target is a self-contained version of the old
+  `bom_cruncher` behavior, not only the current flat CSV/JSON/XLSX command;
+- required outputs are raw JSON every run, JLC BOM, grouped JSON BOM, and
+  grouped XLSX BOM;
+- BOM config should be JSON with a schema/type field, auto-generated as
+  `bom.config`, overridable with `--config`, and covered by a machine-readable
+  contract;
+- config owns output fields, canonical parameter names, aliases, grouping
+  keys, source mode, variant selection, DNP handling, component-kind filtering,
+  and optional PCB-as-line-item behavior;
+- alias behavior should adapt the `wn-hw` library-policy concepts while keeping
+  the public package self-contained;
+- `node_test_array` is the required hierarchical design fixture for validating
+  resolved designators against Altium-generated BOM CSV reference output.
+
+Netlist notes:
+
+- `netlist` stays in the first public command set;
+- preserve current JSON model output from `.SchDoc` and `.PrjPcb` inputs;
+- keep `--no-indexes`;
+- treat the command as a first-class machine-consumable output surface in
+  design docs and L99 command coverage.
 
 Deferred command notes:
 

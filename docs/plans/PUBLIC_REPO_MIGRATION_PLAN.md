@@ -298,6 +298,109 @@ Initial `pcb-layer-step` coverage:
 - later golden/reference checks should compare against `reference_output/` once
   the reference-generation job is in place.
 
+## BOM Command
+
+`bom` stays in the first public command set and is a key command, not a
+placeholder. The current standalone command is a thin CSV/JSON/XLSX emitter;
+the public release target is closer to the older `bom_cruncher` application
+behavior, but self-contained inside `altium-cruncher` and without private
+`toolz` or `data_models` imports.
+
+Reference material:
+
+- old BOM application code in
+  `C:\eli\agent-worktrees\lib_cruncher_panel_monkey\appz\bom_cruncher`;
+- old grouping/fallback logic in `bom_cruncher.processing.grouping`;
+- old Altium component-kind filtering tests in
+  `bom_cruncher/tests/L0_foundation/test_componentkind_filtering.py`;
+- alias and policy data in
+  `C:\eli\agent-worktrees\altium_monkey_cpp\wn-hw\config\library-policy.json`.
+
+Required outputs:
+
+- always emit raw JSON that preserves the parsed component data used for the
+  BOM decision process;
+- emit grouped JSON BOM output with stable schema/version metadata;
+- emit JLC BOM output;
+- emit XLSX BOM output grouped by designator/line item.
+
+Required processing model:
+
+- introduce helper code/data structures for normalized BOM rows and grouped
+  BOM line items instead of leaving grouping embedded in the CLI command;
+- support schematic-derived BOM data, PCB-derived BOM data, and merged
+  schematic+PCB data as explicit source modes;
+- support configurable output fields for every emitted format;
+- support canonical parameter names plus aliases so projects with messy
+  parameters such as `mpn`, `MPN`, and `Manufacturer Part Number` resolve to
+  the same meaning;
+- use or adapt the `wn-hw` library-policy alias concepts, but package the
+  public command so it is self-contained and can run without a private
+  workspace checkout;
+- keep a traceable normalization path so the raw input parameter and canonical
+  field selected for each line can be audited from JSON output.
+
+Required config behavior:
+
+- use a JSON config with an explicit schema/type field such as
+  `wn.altium_cruncher.bom.config.v1`;
+- auto-generate `bom.config` in the working folder when no config exists;
+- accept `--config <path>` so a project can keep multiple BOM configs;
+- look for the default config name when `--config` is omitted;
+- define output enablement, output field sets, canonical fields, field aliases,
+  grouping keys, source mode, inclusion/exclusion rules, DNP policy, variant
+  policy, and PCB line-item behavior;
+- include a machine-readable contract/schema under `contracts/` and a matching
+  design document under `docs/design/cli/bom.html`.
+
+Required PCB line item behavior:
+
+- config can add the PCB itself as a BOM line item;
+- config can provide PCB part number, description, and other fields directly;
+- config can alternatively name a `PrjPcb` project parameter as the source for
+  the PCB part number or other PCB fields.
+
+Required DNP and inclusion behavior:
+
+- config can include or exclude DNP components;
+- config can place DNP lines at the end of the XLSX, in a separate DNP section,
+  or immediately below the matching populated line item;
+- when populated and DNP components share the same part identity, support the
+  split-line representation, for example seven populated zero-ohm resistors on
+  one line and three DNP zero-ohm resistors directly below;
+- config can process no variant, one named variant, or all variants including
+  the vanilla/base design;
+- config controls inclusion rules for component type and parameters, including
+  mechanical, graphical, no-BOM, and other Altium component-kind or flag-driven
+  decisions.
+
+Required BOM fixtures/tests:
+
+- use `node_test_array` as a required fixture because it exercises
+  hierarchical sheet instances and resolved designators;
+- validate the generated BOM against Altium-generated CSV reference output
+  where the reference is distributable;
+- add focused tests for alias resolution, grouping fallback, output field
+  selection, DNP placement policies, variant selection, component-kind
+  filtering, PCB line-item insertion, and the invariant that raw JSON is always
+  emitted;
+- put fixtures in the standard `input/`, `reference_output/`, and transient
+  `output/` shape.
+
+## Netlist Command
+
+`netlist` stays in the first public command set as-is for the first release.
+It is a key machine-consumable output command.
+
+Required follow-up:
+
+- preserve the current behavior that emits full Altium design JSON from
+  `AltiumDesign.to_json()`;
+- keep support for `.SchDoc` and `.PrjPcb` inputs plus current auto-detection;
+- keep the `--no-indexes` option;
+- add or confirm design-doc and manifest coverage so L99 treats the command as
+  intentionally public and release-owned.
+
 ## Deferred Commands
 
 `pcblib-footprint-3d` is broken and should not be migrated into the first public
