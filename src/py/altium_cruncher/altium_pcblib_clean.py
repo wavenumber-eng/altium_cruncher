@@ -1,4 +1,4 @@
-"""PcbLib cleanup transforms used by the altium_cruncher clean workflow."""
+"""PcbLib cleanup transforms used by the altium-cruncher clean workflow."""
 
 from __future__ import annotations
 

@@ -1889,7 +1889,7 @@ def cmd_pcb_svg(args) -> int:
                     "No file specified and no .PrjPcb/.PcbDoc found in current directory"
                 )
                 log.info(
-                    "Usage: altium_cruncher pcb-svg [project.PrjPcb | board.PcbDoc]"
+                    "Usage: altium-cruncher pcb-svg [project.PrjPcb | board.PcbDoc]"
                 )
                 return 1
 
@@ -2136,11 +2136,11 @@ def register_parser(subparsers):
             "presentation text should be added by downstream viewers/reports."
         ),
         epilog="Examples:\n"
-        "  altium_cruncher pcb-svg board.PcbDoc\n"
-        "  altium_cruncher pcb-svg project.PrjPcb --config pcb-svg.json\n"
-        "  altium_cruncher pcb-svg board.PcbDoc --config custom_pcb_svg.json\n"
-        "  altium_cruncher pcb-svg                              # Auto-detect PrjPcb/PcbDoc in CWD\n"
-        "  altium_cruncher pcb-svg board.PcbDoc -o output_dir/",
+        "  altium-cruncher pcb-svg board.PcbDoc\n"
+        "  altium-cruncher pcb-svg project.PrjPcb --config pcb-svg.json\n"
+        "  altium-cruncher pcb-svg board.PcbDoc --config custom_pcb_svg.json\n"
+        "  altium-cruncher pcb-svg                              # Auto-detect PrjPcb/PcbDoc in CWD\n"
+        "  altium-cruncher pcb-svg board.PcbDoc -o output_dir/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     pcb_svg_parser.add_argument(

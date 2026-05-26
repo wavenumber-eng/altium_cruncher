@@ -111,11 +111,11 @@ def register_parser(subparsers):
         ),
         epilog=(
             "Examples:\n"
-            "  altium_cruncher merge input_directory/\n"
-            "  altium_cruncher merge input_directory/ -o output_dir/\n"
-            "  altium_cruncher merge input_directory/ --conflicts skip\n"
-            "  altium_cruncher merge input_directory/ --conflicts error\n"
-            "  altium_cruncher merge split_pcblib_dir/ --conflicts rename"
+            "  altium-cruncher merge input_directory/\n"
+            "  altium-cruncher merge input_directory/ -o output_dir/\n"
+            "  altium-cruncher merge input_directory/ --conflicts skip\n"
+            "  altium-cruncher merge input_directory/ --conflicts error\n"
+            "  altium-cruncher merge split_pcblib_dir/ --conflicts rename"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

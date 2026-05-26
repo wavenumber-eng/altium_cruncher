@@ -162,13 +162,13 @@ def cmd_extract(args) -> int:
             elif len(pcbdocs) > 1:
                 log.error("No file specified and multiple .PcbDoc files found in current directory")
                 log.info(
-                    "Usage: altium_cruncher extract [file.SchDoc | file.PcbDoc | project.PrjPcb]"
+                    "Usage: altium-cruncher extract [file.SchDoc | file.PcbDoc | project.PrjPcb]"
                 )
                 return 1
             else:
                 log.error("No file specified and no .PrjPcb or .PcbDoc found in current directory")
                 log.info(
-                    "Usage: altium_cruncher extract [file.SchDoc | file.PcbDoc | project.PrjPcb]"
+                    "Usage: altium-cruncher extract [file.SchDoc | file.PcbDoc | project.PrjPcb]"
                 )
                 return 1
 
@@ -262,15 +262,15 @@ def register_parser(subparsers):
         ),
         epilog=(
             "Examples:\n"
-            "  altium_cruncher extract schematic.SchDoc\n"
-            "  altium_cruncher extract board.PcbDoc\n"
-            "  altium_cruncher extract project.PrjPcb\n"
-            "  altium_cruncher extract                      # Auto-detect PrjPcb or single PcbDoc in CWD\n"
-            "  altium_cruncher extract schematic.SchDoc -o my_symbols/\n"
-            "  altium_cruncher extract board.PcbDoc --combined --split -o my_footprints/\n"
-            "  altium_cruncher extract project.PrjPcb -o out/extract    # emits schlib/ and pcblib/ subfolders\n"
-            "  altium_cruncher extract schematic.SchDoc --combined   # Single multi-symbol SchLib\n"
-            "  altium_cruncher extract board.PcbDoc --split          # Individual PcbLib files (default)"
+            "  altium-cruncher extract schematic.SchDoc\n"
+            "  altium-cruncher extract board.PcbDoc\n"
+            "  altium-cruncher extract project.PrjPcb\n"
+            "  altium-cruncher extract                      # Auto-detect PrjPcb or single PcbDoc in CWD\n"
+            "  altium-cruncher extract schematic.SchDoc -o my_symbols/\n"
+            "  altium-cruncher extract board.PcbDoc --combined --split -o my_footprints/\n"
+            "  altium-cruncher extract project.PrjPcb -o out/extract    # emits schlib/ and pcblib/ subfolders\n"
+            "  altium-cruncher extract schematic.SchDoc --combined   # Single multi-symbol SchLib\n"
+            "  altium-cruncher extract board.PcbDoc --split          # Individual PcbLib files (default)"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

@@ -238,7 +238,7 @@ def cmd_bom(args) -> int:
         input_file = find_prjpcb_in_cwd()
         if not input_file:
             log.error("No file specified and no .PrjPcb found in current directory")
-            log.info("Usage: altium_cruncher bom [file.SchDoc | project.PrjPcb]")
+            log.info("Usage: altium-cruncher bom [file.SchDoc | project.PrjPcb]")
             return 1
         log.info(f"Auto-detected project: {input_file.name}")
 
@@ -332,15 +332,15 @@ def register_parser(subparsers):
         description="Generate Bill of Materials (BOM) from Altium SchDoc or PrjPcb files. "
         "CSV/XLSX formats include parameters as columns; JSON preserves nested structure.",
         epilog="Examples:\n"
-        "  altium_cruncher bom project.PrjPcb\n"
-        "  altium_cruncher bom schematic.SchDoc\n"
-        "  altium_cruncher bom                               # Auto-detect PrjPcb in CWD\n"
-        "  altium_cruncher bom project.PrjPcb --variant V1   # Single variant\n"
-        "  altium_cruncher bom project.PrjPcb --all-variants # All variants\n"
-        "  altium_cruncher bom project.PrjPcb --format json  # JSON output\n"
-        "  altium_cruncher bom project.PrjPcb --format generic-json\n"
-        "  altium_cruncher bom project.PrjPcb --format xlsx  # XLSX output\n"
-        "  altium_cruncher bom project.PrjPcb -o output_dir/",
+        "  altium-cruncher bom project.PrjPcb\n"
+        "  altium-cruncher bom schematic.SchDoc\n"
+        "  altium-cruncher bom                               # Auto-detect PrjPcb in CWD\n"
+        "  altium-cruncher bom project.PrjPcb --variant V1   # Single variant\n"
+        "  altium-cruncher bom project.PrjPcb --all-variants # All variants\n"
+        "  altium-cruncher bom project.PrjPcb --format json  # JSON output\n"
+        "  altium-cruncher bom project.PrjPcb --format generic-json\n"
+        "  altium-cruncher bom project.PrjPcb --format xlsx  # XLSX output\n"
+        "  altium-cruncher bom project.PrjPcb -o output_dir/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     bom_parser.add_argument(

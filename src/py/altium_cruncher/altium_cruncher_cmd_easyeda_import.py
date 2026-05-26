@@ -240,8 +240,8 @@ def register_parser(subparsers):
         description="Generate an Altium schematic library from EasyEDA/LCSC component data.",
         epilog=(
             "Examples:\n"
-            "  altium_cruncher easyeda-import C2040 --preview\n"
-            "  altium_cruncher easyeda-import C2040 --input-json C2040.json -o output/easyeda-import"
+            "  altium-cruncher easyeda-import C2040 --preview\n"
+            "  altium-cruncher easyeda-import C2040 --input-json C2040.json -o output/easyeda-import"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

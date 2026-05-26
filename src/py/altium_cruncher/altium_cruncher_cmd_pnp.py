@@ -37,7 +37,7 @@ def cmd_pnp(args) -> int:
         input_file = find_prjpcb_in_cwd()
         if not input_file:
             log.error("No file specified and no .PrjPcb found in current directory")
-            log.info("Usage: altium_cruncher pnp [project.PrjPcb]")
+            log.info("Usage: altium-cruncher pnp [project.PrjPcb]")
             return 1
         log.info(f"Auto-detected project: {input_file.name}")
 
@@ -158,13 +158,13 @@ def register_parser(subparsers):
         description='Generate Pick-and-Place (PnP) from Altium PrjPcb files. '
                     'Requires PcbDoc in project. Includes all component parameters.',
         epilog='Examples:\n'
-               '  altium_cruncher pnp project.PrjPcb\n'
-               '  altium_cruncher pnp                               # Auto-detect PrjPcb in CWD\n'
-               '  altium_cruncher pnp project.PrjPcb --variant V1   # Single variant\n'
-               '  altium_cruncher pnp project.PrjPcb --all-variants # All variants\n'
-               '  altium_cruncher pnp project.PrjPcb --units mils   # Use mils instead of mm\n'
-               '  altium_cruncher pnp project.PrjPcb --format json  # JSON output\n'
-               '  altium_cruncher pnp project.PrjPcb -o output_dir/',
+               '  altium-cruncher pnp project.PrjPcb\n'
+               '  altium-cruncher pnp                               # Auto-detect PrjPcb in CWD\n'
+               '  altium-cruncher pnp project.PrjPcb --variant V1   # Single variant\n'
+               '  altium-cruncher pnp project.PrjPcb --all-variants # All variants\n'
+               '  altium-cruncher pnp project.PrjPcb --units mils   # Use mils instead of mm\n'
+               '  altium-cruncher pnp project.PrjPcb --format json  # JSON output\n'
+               '  altium-cruncher pnp project.PrjPcb -o output_dir/',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     pnp_parser.add_argument('file', nargs='?', help='PrjPcb file (optional if PrjPcb in CWD)')

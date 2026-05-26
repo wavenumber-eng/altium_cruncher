@@ -103,10 +103,10 @@ flow, not only through direct developer commands.
   wrappers;
 - ensure the resulting script/executable directory is on PATH after
   `setup.ps1`/`setup.sh` and after `update.ps1`/`update.sh`;
-- preserve both console names: `altium-cruncher` for public users and
-  `altium_cruncher` for compatibility with existing workspace workflows;
+- standardize workspace workflows on the single public console name
+  `altium-cruncher`; the import/module name remains `altium_cruncher`;
 - add an installer smoke test that starts from the workspace shell and runs
-  `altium-cruncher --version` plus `altium_cruncher --version`;
+  `altium-cruncher --version`;
 - remove old `uv run --project ... toolz/altium_cruncher` assumptions from
   WN docs/scripts only after the standalone executable path is verified.
 
@@ -279,7 +279,7 @@ Preferred shape:
    - Add standalone `altium_cruncher` as a cloned dependency.
    - Update workspace scripts/configuration.
    - Ensure setup/update exposes the console executable path.
-   - Add a workspace installer smoke test for both console script names.
+   - Add a workspace installer smoke test for the public console script name.
 
 6. Remove from `toolz`.
    - Status: blocked until public repo is pushed, CI is green, and app/workspace
@@ -303,12 +303,12 @@ The first migration slice is complete when:
 
 Current local status:
 
-- package metadata, console scripts, CI/release workflow drafts, ADRs, design
+- package metadata, console script, CI/release workflow drafts, ADRs, design
   docs, and contracts are present;
 - `rack run --all` passes locally with `L0_public_cli`,
   `L3_public_workflows`, and `L99_signoff`;
-- built-wheel install smoke passes locally and verifies both console script
-  names through PATH inside a clean venv;
+- built-wheel install smoke passes locally and verifies the public console
+  script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
   backlog item rather than a hard release gate for this bootstrap slice;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first

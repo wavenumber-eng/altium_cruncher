@@ -57,4 +57,4 @@ def parse_version(raw_version: str) -> Version:
 
 
 def cli_version_text() -> str:
-    return f"altium_cruncher {version().string}"
+    return f"altium-cruncher {version().string}"

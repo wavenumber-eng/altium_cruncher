@@ -61,7 +61,7 @@ def _clean_env(venv_dir: Path) -> dict[str, str]:
 
 
 def run_install_smoke(wheel: Path) -> None:
-    """Install a wheel into a temporary venv and verify both console scripts."""
+    """Install a wheel into a temporary venv and verify the console script."""
     wheel = wheel.resolve()
     if not wheel.exists():
         raise SystemExit(f"Wheel does not exist: {wheel}")
@@ -76,12 +76,16 @@ def run_install_smoke(wheel: Path) -> None:
         env = _clean_env(venv_dir)
         _run([str(python), "-m", "pip", "install", str(wheel)], cwd=temp_dir, env=env)
 
-        for command in ("altium-cruncher", "altium_cruncher"):
-            executable = _console_script(venv_dir, command)
-            if not executable.exists():
-                raise SystemExit(f"Missing console script after install: {executable}")
-            _run([str(executable), "--version"], cwd=temp_dir, env=env)
-            _run([command, "--version"], cwd=temp_dir, env=env)
+        command = "altium-cruncher"
+        executable = _console_script(venv_dir, command)
+        if not executable.exists():
+            raise SystemExit(f"Missing console script after install: {executable}")
+        _run([str(executable), "--version"], cwd=temp_dir, env=env)
+        _run([command, "--version"], cwd=temp_dir, env=env)
+
+        legacy_executable = _console_script(venv_dir, "altium_cruncher")
+        if legacy_executable.exists():
+            raise SystemExit(f"Unexpected legacy console script after install: {legacy_executable}")
 
         _run([str(python), "-m", "altium_cruncher", "version"], cwd=temp_dir, env=env)
         sys.stdout.write("Installed-console smoke passed.\n")

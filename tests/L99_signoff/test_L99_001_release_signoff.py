@@ -42,6 +42,9 @@ def test_version_contract_matches_date_based_release() -> None:
     )
     assert version.release_date == EXPECTED_RELEASE_DATE
     assert version.release_date <= date.today()
+    assert pyproject["project"]["scripts"] == {
+        "altium-cruncher": "altium_cruncher._cli:main"
+    }
 
 
 def test_cli_emits_package_version() -> None:
@@ -56,6 +59,7 @@ def test_cli_emits_package_version() -> None:
 
         assert completed.returncode == 0, completed.stderr
         assert completed.stdout.strip() == cli_version_text()
+        assert completed.stdout.startswith("altium-cruncher ")
 
 
 def test_python_signoff_does_not_regress() -> None:

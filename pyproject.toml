@@ -41,7 +41,6 @@ Issues = "https://github.com/wavenumber-eng/altium_cruncher/issues"
 
 [project.scripts]
 altium-cruncher = "altium_cruncher._cli:main"
-altium_cruncher = "altium_cruncher._cli:main"
 
 [build-system]
 requires = ["hatchling"]

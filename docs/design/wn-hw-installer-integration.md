@@ -9,12 +9,11 @@ Last updated: 2026-05-25
 public package. Existing WN workspace flows still need a command-line executable
 after `wn-hw` setup and update.
 
-The integration is successful only when a normal workspace shell can run both
-entry points without manually editing PATH:
+The integration is successful only when a normal workspace shell can run the
+canonical executable without manually editing PATH:
 
 ```powershell
 altium-cruncher --version
-altium_cruncher --version
 ```
 
 ## Required Behavior
@@ -24,7 +23,9 @@ altium_cruncher --version
   or source checkout changes.
 - Windows, macOS, Linux, and WSL get equivalent behavior.
 - The public command name is `altium-cruncher`.
-- The compatibility command name is `altium_cruncher`.
+- The Python import/module name remains `altium_cruncher`; use
+  `python -m altium_cruncher` only as a developer/module fallback, not as a
+  second installed executable.
 - The install path is visible immediately to workspace activation and documented
   for fresh shells.
 
@@ -36,7 +37,7 @@ altium_cruncher --version
 3. Workspace-local wrapper scripts in a PATH-managed `bin` folder.
 
 The first release can choose one mode, but the installer smoke test must be the
-same: resolve both commands and check the version.
+same: resolve `altium-cruncher` and check the version.
 
 ## Smoke Test Contract
 
@@ -44,9 +45,7 @@ The `wn-hw` installer test should run after setup and after update:
 
 ```powershell
 Get-Command altium-cruncher
-Get-Command altium_cruncher
 altium-cruncher --version
-altium_cruncher --version
 ```
 
 The version output must match the configured or released package version.

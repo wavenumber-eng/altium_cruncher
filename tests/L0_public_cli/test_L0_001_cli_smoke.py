@@ -40,6 +40,7 @@ def test_cli_help_lists_manifest_commands() -> None:
     result = _run_cli("--help")
 
     assert result.returncode == 0, result.stderr
+    assert "usage: altium-cruncher" in result.stdout
     for command in expected_commands:
         assert command in result.stdout
 

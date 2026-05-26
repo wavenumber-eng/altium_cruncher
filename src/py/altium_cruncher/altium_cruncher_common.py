@@ -1,4 +1,4 @@
-"""Shared file-level helpers for altium_cruncher command modules."""
+"""Shared file-level helpers for altium-cruncher command modules."""
 
 from __future__ import annotations
 

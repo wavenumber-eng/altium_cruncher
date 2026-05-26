@@ -1,5 +1,5 @@
 """
-Shared PCB view render core for altium_cruncher commands.
+Shared PCB view render core for altium-cruncher commands.
 
 This module provides a stable, command-agnostic interface for:
 - loading/resolving pcb-svg configuration payloads

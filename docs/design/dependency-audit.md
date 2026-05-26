@@ -64,9 +64,8 @@ Required migration:
 
 - add a standalone `altium_cruncher` repo/dependency entry after the public repo
   is pushed;
-- install or expose both `altium-cruncher` and `altium_cruncher` during
-  `setup` and `update`;
-- add a workspace smoke that resolves both commands from PATH and checks
+- install or expose `altium-cruncher` during `setup` and `update`;
+- add a workspace smoke that resolves `altium-cruncher` from PATH and checks
   `--version`;
 - remove stale `uv run --project ... toolz/altium_cruncher` guidance once the
   workspace executable path is verified.

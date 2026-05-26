@@ -427,7 +427,7 @@ def cmd_megamaid(args) -> int:
         input_file = find_prjpcb_in_cwd()
         if input_file is None:
             log.error("No file specified and no .PrjPcb found in current directory")
-            log.info("Usage: altium_cruncher megamaid [project.PrjPcb]")
+            log.info("Usage: altium-cruncher megamaid [project.PrjPcb]")
             return 1
         log.info(f"Auto-detected project: {input_file.name}")
 
@@ -584,9 +584,9 @@ def register_parser(subparsers):
         ),
         epilog=(
             "Examples:\n"
-            "  altium_cruncher megamaid project.PrjPcb\n"
-            "  altium_cruncher megamaid                 # Auto-detect PrjPcb in CWD\n"
-            "  altium_cruncher megamaid project.PrjPcb -o output/megamaid\n"
+            "  altium-cruncher megamaid project.PrjPcb\n"
+            "  altium-cruncher megamaid                 # Auto-detect PrjPcb in CWD\n"
+            "  altium-cruncher megamaid project.PrjPcb -o output/megamaid\n"
             "\n"
             "Output tree:\n"
             "  schlib/combined, schlib/split\n"

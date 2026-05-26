@@ -27,7 +27,7 @@ def cmd_sch_svg(args) -> int:
         input_file = find_prjpcb_in_cwd()
         if not input_file:
             log.error("No file specified and no .PrjPcb found in current directory")
-            log.info("Usage: altium_cruncher sch-svg [file.SchDoc | project.PrjPcb | library.SchLib]")
+            log.info("Usage: altium-cruncher sch-svg [file.SchDoc | project.PrjPcb | library.SchLib]")
             return 1
         log.info(f"Auto-detected project: {input_file.name}")
 
@@ -104,11 +104,11 @@ def register_parser(subparsers):
         help="generate schematic SVG from Altium SchDoc/PrjPcb/SchLib",
         description="Generate SVG files from Altium SchDoc, PrjPcb, or SchLib inputs.",
         epilog="Examples:\n"
-               "  altium_cruncher sch-svg schematic.SchDoc\n"
-               "  altium_cruncher sch-svg project.PrjPcb\n"
-               "  altium_cruncher sch-svg library.SchLib\n"
-               "  altium_cruncher sch-svg                             # Auto-detect PrjPcb in CWD\n"
-               "  altium_cruncher sch-svg project.PrjPcb -o output_dir/",
+               "  altium-cruncher sch-svg schematic.SchDoc\n"
+               "  altium-cruncher sch-svg project.PrjPcb\n"
+               "  altium-cruncher sch-svg library.SchLib\n"
+               "  altium-cruncher sch-svg                             # Auto-detect PrjPcb in CWD\n"
+               "  altium-cruncher sch-svg project.PrjPcb -o output_dir/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     sch_svg_parser.add_argument(

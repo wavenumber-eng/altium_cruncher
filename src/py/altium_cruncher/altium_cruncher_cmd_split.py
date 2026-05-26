@@ -97,11 +97,11 @@ def register_parser(subparsers):
         ),
         epilog=(
             "Examples:\n"
-            "  altium_cruncher split library.SchLib\n"
-            "  altium_cruncher split library.PcbLib\n"
-            "  altium_cruncher split library.SchLib -o split_output/\n"
-            "  altium_cruncher split library.SchLib --pattern \"MY_{symbol_name}.SchLib\"\n"
-            "  altium_cruncher split library.SchLib --symbols \"RES1\" \"CAP1\""
+            "  altium-cruncher split library.SchLib\n"
+            "  altium-cruncher split library.PcbLib\n"
+            "  altium-cruncher split library.SchLib -o split_output/\n"
+            "  altium-cruncher split library.SchLib --pattern \"MY_{symbol_name}.SchLib\"\n"
+            "  altium-cruncher split library.SchLib --symbols \"RES1\" \"CAP1\""
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

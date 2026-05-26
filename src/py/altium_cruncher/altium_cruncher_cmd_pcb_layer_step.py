@@ -202,7 +202,7 @@ def _resolve_input_files(file_arg: str | Path | None) -> list[Path] | None:
         return pcbdocs
 
     log.error("No file specified and no .PrjPcb/.PcbDoc found in current directory")
-    log.info("Usage: altium_cruncher pcb-layer-step [project.PrjPcb | board.PcbDoc]")
+    log.info("Usage: altium-cruncher pcb-layer-step [project.PrjPcb | board.PcbDoc]")
     return None
 
 
@@ -216,10 +216,10 @@ def register_parser(subparsers):
             "and a separate board-outline body."
         ),
         epilog="Examples:\n"
-        "  altium_cruncher pcb-layer-step board.PcbDoc\n"
-        "  altium_cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --layer bottom\n"
-        "  altium_cruncher pcb-layer-step board.PcbDoc --exclude-poured-polygons\n"
-        "  altium_cruncher pcb-layer-step board.PcbDoc --outline-only\n",
+        "  altium-cruncher pcb-layer-step board.PcbDoc\n"
+        "  altium-cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --layer bottom\n"
+        "  altium-cruncher pcb-layer-step board.PcbDoc --exclude-poured-polygons\n"
+        "  altium-cruncher pcb-layer-step board.PcbDoc --outline-only\n",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(

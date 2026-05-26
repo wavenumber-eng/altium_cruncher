@@ -127,11 +127,11 @@ def _register_easyeda_parsers(subparsers: argparse._SubParsersAction) -> None:
 
 
 def main() -> None:
-    """Main entry point for altium_cruncher CLI tool."""
+    """Main entry point for the altium-cruncher CLI tool."""
     setup_cli_logging()
 
     parser = argparse.ArgumentParser(
-        prog="altium_cruncher",
+        prog="altium-cruncher",
         description="High-level CLI for Altium file operations",
     )
     parser.add_argument(

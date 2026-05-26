@@ -74,7 +74,7 @@ def cmd_svg(args) -> int:
             log.info("Supported svg shortcut file types: .SchDoc, .SchLib, .PcbDoc, .PrjPcb")
             return 1
         log.error("No file specified and no compatible .PrjPcb/.PcbDoc found in current directory")
-        log.info("Usage: altium_cruncher svg [file.SchDoc | file.SchLib | board.PcbDoc | project.PrjPcb]")
+        log.info("Usage: altium-cruncher svg [file.SchDoc | file.SchLib | board.PcbDoc | project.PrjPcb]")
         return 1
 
     # Meta-command output policy:
@@ -106,11 +106,11 @@ def register_parser(subparsers):
         help="legacy shortcut: run sch-svg and/or pcb-svg based on input",
         description="Compatibility shortcut command. Routes to sch-svg and pcb-svg based on input type.",
         epilog="Examples:\n"
-               "  altium_cruncher svg schematic.SchDoc      # runs sch-svg\n"
-               "  altium_cruncher svg board.PcbDoc          # runs pcb-svg\n"
-               "  altium_cruncher svg project.PrjPcb        # runs sch-svg + pcb-svg\n"
-               "  altium_cruncher svg                        # auto-detects and runs available commands\n"
-               "  altium_cruncher svg -o output_dir project.PrjPcb",
+               "  altium-cruncher svg schematic.SchDoc      # runs sch-svg\n"
+               "  altium-cruncher svg board.PcbDoc          # runs pcb-svg\n"
+               "  altium-cruncher svg project.PrjPcb        # runs sch-svg + pcb-svg\n"
+               "  altium-cruncher svg                        # auto-detects and runs available commands\n"
+               "  altium-cruncher svg -o output_dir project.PrjPcb",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     svg_parser.add_argument(

@@ -1,4 +1,4 @@
-"""Cleanup transforms used by the altium_cruncher clean workflow."""
+"""Cleanup transforms used by the altium-cruncher clean workflow."""
 
 from __future__ import annotations
 

@@ -35,7 +35,7 @@ def cmd_netlist(args) -> int:
         input_file = find_prjpcb_in_cwd()
         if not input_file:
             log.error("No file specified and no .PrjPcb found in current directory")
-            log.info("Usage: altium_cruncher netlist [file.SchDoc | project.PrjPcb]")
+            log.info("Usage: altium-cruncher netlist [file.SchDoc | project.PrjPcb]")
             return 1
         log.info(f"Auto-detected project: {input_file.name}")
 
@@ -83,11 +83,11 @@ def register_parser(subparsers):
         description='Generate netlist JSON from Altium SchDoc or PrjPcb files. '
                     'Serializes the full AltiumDesign model including nets, components, and hierarchy.',
         epilog='Examples:\n'
-               '  altium_cruncher netlist project.PrjPcb\n'
-               '  altium_cruncher netlist schematic.SchDoc\n'
-               '  altium_cruncher netlist                    # Auto-detect PrjPcb in CWD\n'
-               '  altium_cruncher netlist project.PrjPcb --no-indexes  # Without lookup indexes\n'
-               '  altium_cruncher netlist project.PrjPcb -o output_dir/',
+               '  altium-cruncher netlist project.PrjPcb\n'
+               '  altium-cruncher netlist schematic.SchDoc\n'
+               '  altium-cruncher netlist                    # Auto-detect PrjPcb in CWD\n'
+               '  altium-cruncher netlist project.PrjPcb --no-indexes  # Without lookup indexes\n'
+               '  altium-cruncher netlist project.PrjPcb -o output_dir/',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     netlist_parser.add_argument('file', nargs='?', help='SchDoc or PrjPcb file (optional if PrjPcb in CWD)')

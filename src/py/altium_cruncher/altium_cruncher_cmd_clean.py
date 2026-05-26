@@ -151,7 +151,7 @@ def cmd_clean(args) -> int:
                 "found in current directory"
             )
             log.info(
-                "Usage: altium_cruncher clean "
+                "Usage: altium-cruncher clean "
                 "[project.PrjPcb | file.SchDoc | file.SchLib | file.PcbLib]"
             )
             return 1
@@ -577,11 +577,11 @@ def register_parser(subparsers):
         ),
         epilog=(
             "Examples:\n"
-            "  altium_cruncher clean device.SchLib\n"
-            "  altium_cruncher clean sheet.SchDoc --config altium-clean.json\n"
-            "  altium_cruncher clean footprint.PcbLib --config altium-pcblib-clean.json\n"
-            "  altium_cruncher clean project.PrjPcb --output cleaned_schdocs/\n"
-            "  altium_cruncher clean device.SchLib --backup --output cleaned/Device.SchLib"
+            "  altium-cruncher clean device.SchLib\n"
+            "  altium-cruncher clean sheet.SchDoc --config altium-clean.json\n"
+            "  altium-cruncher clean footprint.PcbLib --config altium-pcblib-clean.json\n"
+            "  altium-cruncher clean project.PrjPcb --output cleaned_schdocs/\n"
+            "  altium-cruncher clean device.SchLib --backup --output cleaned/Device.SchLib"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

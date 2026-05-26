@@ -26,7 +26,7 @@ HYDROSCOPE_PCBDOC = HYDROSCOPE_DIR / "TZ-SB-0001-PCB-[A] (HydroScope Mainboard).
 
 
 def _run_cli(*args: str) -> str:
-    """Run altium_cruncher and return combined output."""
+    """Run Altium Cruncher and return combined output."""
     completed = subprocess.run(
         [sys.executable, "-m", "altium_cruncher", *args],
         cwd=PACKAGE_ROOT,

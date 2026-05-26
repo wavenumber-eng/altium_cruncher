@@ -164,9 +164,9 @@ def register_parser(subparsers):
         ),
         epilog=(
             "Examples:\n"
-            "  altium_cruncher easyeda-review --fixture-dir easyeda_monkey/tests/"
+            "  altium-cruncher easyeda-review --fixture-dir easyeda_monkey/tests/"
             "L0_foundation/cases/api_responses --pattern C*.json\n"
-            "  altium_cruncher easyeda-review C2040.json C53078.json -o output/review"
+            "  altium-cruncher easyeda-review C2040.json C53078.json -o output/review"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
