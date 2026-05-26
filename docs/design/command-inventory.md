@@ -24,7 +24,7 @@ This inventory records the command set migrated from the private
 | `easyeda-footprint-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
-| `megamaid` | public | pytest | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
+| `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
 | `clean` | public | `L3_public_workflows` | Keep. Needs detailed config documentation plus fixture-backed CLI tests for template creation, actual clean application, output/backup behavior, and PcbLib removal rules. |
 
 The command manifest lives at `contracts/command_manifest.v0.json`. `L99` should

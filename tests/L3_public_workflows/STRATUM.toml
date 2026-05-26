@@ -65,3 +65,29 @@ command_handler = "Invoke the command handler directly with a small geometer wri
 
 [subtests.test_functions]
 test_pcb_layer_step_cricket_bottom_layer_uses_configured_colors = "Generate bottom-layer artifacts and verify configured colors"
+
+[[subtests]]
+id = "L3_003"
+file = "test_L3_003_megamaid_workflow.py"
+name = "Megamaid Workflow"
+description = "Run megamaid against Hydroscope and validate embedded assets and manifest counts"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "reference"
+test_cases = "../../examples/assets/projects/hydroscope"
+
+[subtests.code_under_test]
+module = "altium_cruncher.altium_cruncher_cmd_megamaid"
+
+[subtests.objectives]
+embedded_assets = "megamaid extracts embedded schematic images and 3D models"
+manifest_contract = "megamaid writes a JSON manifest with expected asset counts"
+native_parity = "optional native executable parity remains available when configured"
+
+[subtests.approach]
+subprocess_cli = "Invoke public megamaid CLI through the current Python environment"
+direct_helper = "Exercise image payload decoding with a focused helper-level test"
+
+[subtests.test_functions]
+test_megamaid_schematic_image_extract_writes_preferred_payload = "Embedded schematic image extraction writes preferred decoded payloads"
+test_megamaid_hydroscope_extracts_images_and_models = "Hydroscope megamaid run extracts expected image and model counts"
+test_native_megamaid_matches_python_for_hydroscope_assets = "Optional native executable output matches Python for embedded assets"

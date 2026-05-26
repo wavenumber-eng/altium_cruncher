@@ -16,7 +16,7 @@ from altium_monkey.altium_sch_image_payload import decode_sch_embedded_image_pay
 
 
 PNG_BYTES = b"\x89PNG\r\n\x1a\nembedded-png"
-PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 HYDROSCOPE_PROJECT = (
     PACKAGE_ROOT
     / "examples"

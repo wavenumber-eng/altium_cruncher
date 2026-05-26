@@ -733,7 +733,8 @@ Required test shape:
 
 Reference material:
 
-- current public-repo tests in `tests/test_megamaid_schematic_images.py`;
+- current public-repo tests in
+  `tests/L3_public_workflows/test_L3_003_megamaid_workflow.py`;
 - old native smoke/parity expectations in
   `toolz-tests/suites/altium_monkey/tests/L6_pcb_foundation/test_L6_050_pcbdoc_cpp_cli_megamaid.py`
   and
