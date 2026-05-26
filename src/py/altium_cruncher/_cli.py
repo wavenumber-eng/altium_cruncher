@@ -12,6 +12,7 @@ Output policy:
 import argparse
 import sys
 from pathlib import Path
+from typing import cast
 
 # Support direct script execution: `python -m altium_cruncher`.
 if __package__ in {None, ""}:
@@ -64,6 +65,15 @@ from altium_cruncher.altium_cruncher_cmd_svg import (
 )
 
 
+class CruncherArgumentParser(argparse.ArgumentParser):
+    """Argument parser that prints the package version in help output."""
+
+    def format_help(self) -> str:
+        """Return help text with a visible version line at the top."""
+        help_text = super().format_help().rstrip()
+        return f"{cli_version_text()}\n\n{help_text}\n"
+
+
 def _cmd_version(_args: argparse.Namespace) -> int:
     print(cli_version_text())
     return 0
@@ -107,6 +117,11 @@ def _register_easyeda_parsers(subparsers: argparse._SubParsersAction) -> None:
             raise
         _register_missing_easyeda_parser(
             subparsers,
+            "easyeda-footprint-review",
+            "Review EasyEDA footprint imports (requires easyeda-monkey)",
+        )
+        _register_missing_easyeda_parser(
+            subparsers,
             "easyeda-import",
             "Import EasyEDA symbols/footprints (requires easyeda-monkey)",
         )
@@ -115,25 +130,21 @@ def _register_easyeda_parsers(subparsers: argparse._SubParsersAction) -> None:
             "easyeda-review",
             "Review EasyEDA schematic imports (requires easyeda-monkey)",
         )
-        _register_missing_easyeda_parser(
-            subparsers,
-            "easyeda-footprint-review",
-            "Review EasyEDA footprint imports (requires easyeda-monkey)",
-        )
         return
 
+    register_easyeda_footprint_review_parser(subparsers)
     register_easyeda_import_parser(subparsers)
     register_easyeda_review_parser(subparsers)
-    register_easyeda_footprint_review_parser(subparsers)
 
 
 def main() -> None:
     """Main entry point for the altium-cruncher CLI tool."""
     setup_cli_logging()
 
-    parser = argparse.ArgumentParser(
+    parser = CruncherArgumentParser(
         prog="altium-cruncher",
         description="High-level CLI for Altium file operations",
+        epilog="Run `altium-cruncher <command> --help` for command-specific options.",
     )
     parser.add_argument(
         "--version",
@@ -141,25 +152,34 @@ def main() -> None:
         version=cli_version_text(),
         help="Print version information and exit",
     )
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    subparsers = parser.add_subparsers(
+        dest="command",
+        help="Available commands",
+        metavar="<command>",
+        parser_class=CruncherArgumentParser,
+    )
+    command_subparsers = cast(
+        "argparse._SubParsersAction[argparse.ArgumentParser]",
+        subparsers,
+    )
+
+    register_bom_parser(command_subparsers)
+    register_clean_parser(command_subparsers)
+    _register_easyeda_parsers(command_subparsers)
+    register_extract_parser(command_subparsers)
+    register_megamaid_parser(command_subparsers)
+    register_merge_parser(command_subparsers)
+    register_netlist_parser(command_subparsers)
+    register_pcb_layer_step_parser(command_subparsers)
+    register_pcb_svg_parser(command_subparsers)
+    register_pcblib_footprint_3d_parser(command_subparsers)
+    register_pnp_parser(command_subparsers)
+    register_sch_svg_parser(command_subparsers)
+    register_split_parser(command_subparsers)
+    register_svg_parser(command_subparsers)
 
     version_parser = subparsers.add_parser("version", help="Print version information")
     version_parser.set_defaults(handler=_cmd_version)
-
-    register_sch_svg_parser(subparsers)
-    register_pcb_svg_parser(subparsers)
-    register_pcb_layer_step_parser(subparsers)
-    register_svg_parser(subparsers)
-    register_pcblib_footprint_3d_parser(subparsers)
-    register_bom_parser(subparsers)
-    register_pnp_parser(subparsers)
-    register_netlist_parser(subparsers)
-    register_extract_parser(subparsers)
-    _register_easyeda_parsers(subparsers)
-    register_split_parser(subparsers)
-    register_merge_parser(subparsers)
-    register_megamaid_parser(subparsers)
-    register_clean_parser(subparsers)
 
     args, unknown_args = parser.parse_known_args()
     if unknown_args:

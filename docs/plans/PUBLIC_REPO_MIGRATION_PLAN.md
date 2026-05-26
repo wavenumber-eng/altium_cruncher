@@ -987,9 +987,9 @@ Preferred shape:
      `L99_signoff` now hard-fails missing command design docs and public
      dataclass/interface design ownership, so the next slice must add the
      missing design docs or explicitly classify interfaces as internal.
-   - Shared CLI help polish is required before first public release: version in
-     help output, readable whitespace, alphabetical command ordering, and clear
-     command-specific help guidance.
+   - Shared CLI help polish is implemented: root and command help show the
+     version, root commands are alphabetical, bare invocation prints help, and
+     root help points to command-specific help.
    - Active execution slice: implement the shared output path/name expression
      resolver first, with focused unit tests, so SVG, netlist, BOM, PnP, and
      the planned JLC command can adopt one common output naming contract.
@@ -1049,5 +1049,8 @@ Current local status:
 - the shared resolver is also exercised at L3 against the public Hydroscope
   `PrjPcb` fixture so real project parameters can drive release-style output
   folders;
+- CLI help now prints the package version in root and command help, lists
+  commands alphabetically, and points users to
+  `altium-cruncher <command> --help`;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers.
