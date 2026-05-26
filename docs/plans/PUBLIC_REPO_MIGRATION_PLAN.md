@@ -196,8 +196,12 @@ on private modules.
 
 The intended direction is to move `ezeda_monkey` out of `toolz` into its own
 public repository at <https://github.com/wavenumber-eng/easyeda_monkey> and
-publish it to PyPI as a normal dependency. That package should have the same
-public-repo requirements as `altium_cruncher`:
+publish it to PyPI as a normal dependency before finalizing EasyEDA behavior in
+`altium-cruncher`. See `EASYEDA_MONKEY_PUBLIC_REPO_PLAN.md` for the detailed
+work plan.
+
+That package must have the same public-repo and signoff requirements as
+`altium_cruncher`:
 
 - `pyproject.toml` and installable package metadata;
 - tests that run from its own repo;
@@ -219,12 +223,16 @@ dependencies that currently reach into private `ezeda_monkey` or
 `altium_cruncher` source. Public-facing packages and applications should consume
 the public PyPI/GitHub versions once those repos exist.
 
-First-release options for `altium_cruncher`:
+Current release policy for `altium_cruncher`:
 
-1. defer the EasyEDA commands until public `ezeda_monkey` exists;
-2. keep them documented as planned/experimental but absent from the public CLI;
-3. expose them later behind an optional extra such as
-   `altium-cruncher[easyeda]` once public `ezeda_monkey` is packageable.
+1. finish `easyeda-monkey` setup, tests, signoff, and release first;
+2. keep EasyEDA commands as missing-dependency placeholders in the base
+   `altium-cruncher` install until public `easyeda-monkey` is ready;
+3. link `altium-cruncher` to `easyeda-monkey` through an optional dependency or
+   extra after `easyeda-monkey` has passing public CI/signoff;
+4. add two `altium-cruncher` lanes after linking:
+   - base install verifies clear missing-dependency behavior;
+   - EasyEDA extra install verifies real workflows against public fixtures.
 
 ## AI Skill / Assistant Workflow
 
@@ -255,33 +263,52 @@ Preferred shape:
    - Audit `toolz` and `appz` for private `altium_cruncher` and
      `ezeda_monkey` imports that need to become public package dependencies.
 
-2. Bootstrap the public repo.
+2. Stand up `easyeda-monkey`.
+   - Status: planned prerequisite before official `altium-cruncher` release.
+   - Bootstrap the public `easyeda-monkey` repo with the same docs, tests,
+     Rack strata, signoff, CI, and release workflow requirements as
+     `altium-cruncher`.
+   - Use `easyeda-monkey` as the simpler public CI/CD proving ground for GitHub
+     Actions, release tags, changelog enforcement, PyPI Trusted Publishing, and
+     clean install smoke before relying on the same path for
+     `altium-cruncher`.
+   - Inventory and migrate redistributable EasyEDA fixtures.
+   - Publish `easyeda-monkey` only after its own public signoff passes.
+
+3. Bootstrap the public repo.
    - Status: initial local bootstrap complete; awaiting push/CI.
    - Add packaging, source layout, Rack tests, CI, project hygiene files, and
      a minimal CLI skeleton.
    - Add the initial versioning/tagging/release-policy ADR before the first
      package release.
 
-3. Migrate stable commands.
+4. Migrate stable commands.
    - Status: current stable command modules copied from private `toolz` and
      smoke-tested against Hydroscope for the first public slice.
    - Move commands one family at a time.
    - Add manifest entries, tests, and docs as each command lands.
 
-4. Add command parity gates.
+5. Add command parity gates.
    - Status: initial manifest/help checks, `L3_public_workflows`, and
      `L99_signoff` are wired; stricter coverage enforcement remains.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install smoke.
 
-5. Wire into `wn-hw`.
+6. Link EasyEDA into `altium-cruncher`.
+   - Status: blocked until `easyeda-monkey` public package/signoff exists.
+   - Add optional dependency/extra.
+   - Keep command adapters thin and covered by base-install plus extra-install
+     lanes.
+   - Update README, command inventory, contracts, and release notes.
+
+7. Wire into `wn-hw`.
    - Status: not started; documented as a first-release blocker.
    - Add standalone `altium_cruncher` as a cloned dependency.
    - Update workspace scripts/configuration.
    - Ensure setup/update exposes the console executable path.
    - Add a workspace installer smoke test for the public console script name.
 
-6. Remove from `toolz`.
+8. Remove from `toolz`.
    - Status: blocked until public repo is pushed, CI is green, and app/workspace
      consumers are migrated.
    - Delete the private `toolz/altium_cruncher` package only after the public
