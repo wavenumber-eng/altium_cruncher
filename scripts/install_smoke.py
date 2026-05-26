@@ -81,6 +81,7 @@ def run_install_smoke(wheel: Path) -> None:
             if not executable.exists():
                 raise SystemExit(f"Missing console script after install: {executable}")
             _run([str(executable), "--version"], cwd=temp_dir, env=env)
+            _run([command, "--version"], cwd=temp_dir, env=env)
 
         _run([str(python), "-m", "altium_cruncher", "version"], cwd=temp_dir, env=env)
         sys.stdout.write("Installed-console smoke passed.\n")
