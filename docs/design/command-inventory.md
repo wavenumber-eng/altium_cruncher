@@ -15,7 +15,8 @@ This inventory records the command set migrated from the private
 | `svg` | public | help only | Combined schematic/project SVG wrapper. |
 | `pcblib-footprint-3d` | deferred | none | Broken; do not migrate into first public release. Remove or hide from public CLI/manifest before release. |
 | `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy, and source selection. |
-| `pnp` | public | `L3_public_workflows` | Pick-and-place output. |
+| `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL, units, variant/no-BOM filtering, and configurable sorting. |
+| `jlc` | planned-public | none | Planned meta command that generates both JLC BOM and JLC CPL through the shared BOM/PnP implementation paths. |
 | `netlist` | public | `L3_public_workflows` | Key command. Keep current netlist JSON behavior for Altium schematic/project documents. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
 | `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
@@ -37,6 +38,17 @@ Shared help requirements for every command:
 - help output should include readable spacing between version, usage, commands,
   and options;
 - top-level help should explicitly show how to request command-specific help.
+
+Shared output naming requirements:
+
+- output-producing commands should use one filename-template resolver rather
+  than command-local naming rules;
+- the shared resolver applies to `svg`, `sch-svg`, `pcb-svg`, `netlist`, `bom`,
+  `pnp`, and the planned `jlc` command;
+- filename templates should support stable placeholders and `PrjPcb` project
+  parameters;
+- missing parameter behavior, filename sanitization, and manifest reporting of
+  resolved output names must be documented and tested.
 
 SVG command family notes:
 
@@ -74,6 +86,31 @@ BOM notes:
   the public package self-contained;
 - `node_test_array` is the required hierarchical design fixture for validating
   resolved designators against Altium-generated BOM CSV reference output.
+
+PnP notes:
+
+- `pnp` stays in the first public command set;
+- current CSV/JSON behavior from `.PrjPcb` should be preserved while adding
+  XLSX, JLC CPL, and richer sorting controls;
+- implementation should share normalized component/placement records with
+  `bom` so PCB-derived BOM JSON and PnP JSON do not diverge;
+- sorting needs natural designator order, top/bottom grouping, and configurable
+  designator-prefix ordering;
+- test against `node_test_array`, including variant `B4`, because it exercises
+  hierarchical sheet instances and resolved designators;
+- tests should mirror core `AltiumDesign.to_pnp(...)` coverage for required
+  fields, numeric positions, `top`/`bottom` layers, mm/mils conversion, and
+  no-BOM filtering;
+- use the older `bom_cruncher` placement, JLC CPL, and natural designator
+  sorting code as reference material, but keep `altium-cruncher` self-contained.
+
+JLC notes:
+
+- add `jlc` as a planned meta command once shared BOM/PnP data is stable;
+- `jlc` should generate JLC BOM plus JLC CPL from one project/config
+  invocation;
+- tests should prove meta-command output matches the equivalent independent
+  `bom` and `pnp` JLC modes.
 
 Netlist notes:
 

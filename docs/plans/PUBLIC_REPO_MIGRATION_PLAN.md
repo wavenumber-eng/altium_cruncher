@@ -235,6 +235,28 @@ Required tests:
 - installed-console test verifies the same behavior from the generated
   `altium-cruncher` executable, not only `python -m altium_cruncher`.
 
+## Shared Output Naming Requirements
+
+Commands that create files should share one output-naming resolver instead of
+hard-coding filename patterns in each command.
+
+Required behavior:
+
+- apply to output-producing commands including `svg`, `sch-svg`, `pcb-svg`,
+  `netlist`, `bom`, `pnp`, and the planned `jlc` meta command;
+- support a config-controlled filename template with stable placeholders such
+  as command name, project stem, source stem, variant, layer, view name, output
+  kind, and extension;
+- allow placeholders to read `PrjPcb` project parameters so company/project
+  metadata can control generated filenames;
+- define behavior for missing project parameters, with either explicit fallback
+  text or a clear validation error based on config;
+- sanitize generated filenames consistently across Windows, macOS, and Linux;
+- include the resolved output names in machine-readable manifests when a
+  command emits a manifest;
+- document this once in a shared design document and reference it from each
+  command design doc that supports configurable naming.
+
 ## SVG Command Family
 
 The first public command set keeps all three SVG commands:
@@ -386,6 +408,82 @@ Required BOM fixtures/tests:
   emitted;
 - put fixtures in the standard `input/`, `reference_output/`, and transient
   `output/` shape.
+
+## PnP Command
+
+`pnp` stays in the first public command set. The current command emits CSV or
+JSON from a `PrjPcb`; the release target should make it a first-class
+pick-and-place/CPL exporter that shares as much normalized component data and
+sorting logic with `bom` as practical.
+
+Current behavior to preserve:
+
+- input is a `.PrjPcb`, with current working-directory auto-detection when no
+  file is supplied;
+- output folder defaults under `output/pnp`;
+- `--variant`, `--all-variants`, `--units mm|mils`, `--exclude-no-bom`,
+  `--format csv|json`, and `--output` remain supported;
+- output rows include designator, comment, layer, footprint, center X/Y,
+  rotation, description, and component parameters.
+
+Reference material:
+
+- core extraction API: `AltiumDesign.to_pnp(...)`;
+- current public CLI command:
+  `src/py/altium_cruncher/altium_cruncher_cmd_pnp.py`;
+- core PnP behavior tests:
+  `toolz-tests/suites/altium_monkey/tests/L5_sch_tools/test_L5_007_bom.py`;
+- existing CLI/native parity shape:
+  `toolz-tests/suites/altium_monkey/tests/L6_pcb_foundation/test_L6_048_pcbdoc_cpp_cli_bom_pnp_parity.py`;
+- design JSON PnP inclusion test:
+  `toolz-tests/suites/altium_monkey/tests/L7_pcb_comprehensive_interop/test_L7_023_design_json_pnp.py`;
+- older placement export, JLC CPL, and natural designator sorting logic in
+  `C:\eli\agent-worktrees\altium_monkey_cpp\appz\bom_cruncher`.
+
+Required processing model:
+
+- introduce a shared BOM/PnP normalization layer so PCB-derived BOM JSON and
+  PnP JSON are derived from the same component/placement records;
+- keep the raw JSON output machine-consumable and schema-versioned;
+- support CSV, JSON, and XLSX output for standard pick-and-place;
+- support JLC CPL output, with JLC naming and columns aligned to the older
+  `bom_cruncher.export.jlcpcb.export__jlc_cpl` behavior;
+- support configurable units, at minimum `mm` and `mils`;
+- support sorting modes:
+  - natural designator order such as `R1`, `R2`, `R10`;
+  - group by top then bottom;
+  - group by bottom then top;
+  - configurable designator-prefix order so users can choose category ordering
+    such as capacitors before inductors;
+- use the same variant, DNP, no-BOM, graphical/mechanical component, field
+  alias, and source-mode policy concepts as the BOM command wherever the data
+  overlaps.
+
+Required JLC meta command:
+
+- add a `jlc` meta command after the BOM/PnP shared data layer is stable;
+- `jlc` generates both JLC BOM and JLC CPL from one project/config invocation;
+- it should reuse the `bom` and `pnp` implementation paths rather than
+  duplicating extraction, filtering, aliasing, or sorting logic;
+- tests should prove the `jlc` output is equivalent to running the matching
+  `bom` and `pnp` JLC modes independently.
+
+Required fixtures/tests:
+
+- use `node_test_array` as the required first fixture because it exercises a
+  hierarchical design and resolved designators;
+- compare CLI CSV and JSON output against `AltiumDesign.to_pnp(...)` using the
+  same shape as the existing L6 parity test;
+- include variant `B4` coverage for `node_test_array`;
+- validate required fields, numeric positions, normalized `top`/`bottom`
+  layers, unit conversion, and `--exclude-no-bom` behavior;
+- validate top/bottom grouping and natural designator sorting;
+- add tests for configurable designator-prefix ordering;
+- add tests for XLSX output once the formatter is implemented;
+- add tests for JLC CPL fields and the planned `jlc` meta command;
+- consider old `bom_cruncher/tests/test_cases/altium/node-test-array/pnp_reference`
+  as a candidate source of Altium-generated reference outputs after
+  redistribution review.
 
 ## Netlist Command
 
