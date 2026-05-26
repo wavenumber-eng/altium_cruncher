@@ -20,6 +20,11 @@ def _manifest_commands() -> list[str]:
     return names
 
 
+def _manifest_entries() -> list[dict[str, object]]:
+    payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    return list(payload["commands"])
+
+
 def test_command_manifest_lists_registered_cli_commands() -> None:
     """Every manifest command should appear in top-level CLI help."""
     completed = subprocess.run(
@@ -40,3 +45,39 @@ def test_command_manifest_has_docs_anchor() -> None:
     readme = (PACKAGE_ROOT / "README.md").read_text(encoding="utf-8")
     for command in _manifest_commands():
         assert f"`{command}`" in readme
+
+
+def test_each_manifest_command_has_help() -> None:
+    """Every manifest command should start and show command-level help."""
+    for command in _manifest_commands():
+        completed = subprocess.run(
+            [sys.executable, "-m", "altium_cruncher", command, "--help"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        assert completed.returncode == 0, f"{command}: {completed.stderr}"
+        assert command in completed.stdout
+        assert "usage:" in completed.stdout
+
+
+def test_planned_easyeda_commands_have_missing_dependency_placeholder() -> None:
+    """EasyEDA commands should fail clearly until easyeda-monkey is public."""
+    planned_easyeda = [
+        str(entry["name"])
+        for entry in _manifest_entries()
+        if entry.get("requires_extra") == "easyeda"
+    ]
+
+    assert planned_easyeda
+    for command in planned_easyeda:
+        completed = subprocess.run(
+            [sys.executable, "-m", "altium_cruncher", command],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        assert completed.returncode == 2
+        assert "easyeda-monkey" in completed.stderr

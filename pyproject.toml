@@ -50,8 +50,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 include = [
     "src/py/altium_cruncher/**",
-    "scripts/py_signoff.py",
-    "scripts/py_signoff_baseline.json",
+    "scripts/**",
     "README.md",
     "LICENSE",
     "CONTRIBUTING.md",

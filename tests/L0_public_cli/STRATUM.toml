@@ -29,6 +29,7 @@ module = "altium_cruncher._cli"
 [subtests.objectives]
 cli_startup = "CLI entry point starts without optional EasyEDA dependencies"
 manifest_alignment = "Manifest commands remain visible in help output"
+command_help = "Each manifest command exposes command-level help"
 
 [subtests.approach]
 subprocess_cli = "Invoke the package command through the current Python environment"
@@ -36,3 +37,4 @@ subprocess_cli = "Invoke the package command through the current Python environm
 [subtests.test_functions]
 test_cli_version_command = "Version subcommand reports the package version"
 test_cli_help_lists_manifest_commands = "Root help lists each command declared in the manifest"
+test_cli_command_help_starts_for_manifest_commands = "Each manifest command starts and prints command-level help"

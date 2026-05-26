@@ -84,6 +84,12 @@ Run signoff:
 uv run --extra test python scripts\py_signoff.py --root .
 ```
 
+Run the built-wheel install smoke after `python -m build`:
+
+```powershell
+uv run --extra test python scripts\install_smoke.py
+```
+
 This repository uses `wn-rack` for test strata. The first public stratum is
 `L0_public_cli`; additional command parity and `L99_signoff` strata will be
 added as the public fixtures and release policy are finalized. Signoff policy

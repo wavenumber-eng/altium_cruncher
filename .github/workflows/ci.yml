@@ -30,3 +30,5 @@ jobs:
         run: uv run --extra test python -m build
       - name: Check package
         run: uv run --extra test twine check dist/*
+      - name: Run installed console smoke
+        run: uv run --extra test python scripts/install_smoke.py

@@ -42,3 +42,16 @@ def test_cli_help_lists_manifest_commands() -> None:
     assert result.returncode == 0, result.stderr
     for command in expected_commands:
         assert command in result.stdout
+
+
+def test_cli_command_help_starts_for_manifest_commands() -> None:
+    """Verify that each manifest command has command-level help."""
+    manifest = json.loads(_MANIFEST_PATH.read_text(encoding="utf-8"))
+
+    for entry in manifest["commands"]:
+        command = entry["name"]
+        result = _run_cli(command, "--help")
+
+        assert result.returncode == 0, f"{command}: {result.stderr}"
+        assert "usage:" in result.stdout
+        assert command in result.stdout
