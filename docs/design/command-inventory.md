@@ -13,7 +13,7 @@ This inventory records the command set migrated from the private
 | `pcb-svg` | public | `L3_public_workflows` | PCB SVG export and board-view generation. |
 | `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
 | `svg` | public | help only | Combined schematic/project SVG wrapper. |
-| `pcblib-footprint-3d` | public | help only | Footprint 3D preview helper; needs a curated redistributable PcbLib+STEP fixture. |
+| `pcblib-footprint-3d` | deferred | none | Broken; do not migrate into first public release. Remove or hide from public CLI/manifest before release. |
 | `bom` | public | `L3_public_workflows` | BOM CSV/JSON/XLSX output. |
 | `pnp` | public | `L3_public_workflows` | Pick-and-place output. |
 | `netlist` | public | `L3_public_workflows` | Netlist JSON output. |
@@ -56,3 +56,7 @@ PCB layer STEP notes:
   `#CCCCCC`;
 - command fixtures should use `input/`, `reference_output/`, and transient
   `output/` folders.
+
+Deferred command notes:
+
+- `pcblib-footprint-3d` should not be treated as public for the first release.
