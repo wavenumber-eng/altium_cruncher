@@ -368,6 +368,18 @@ Required outputs:
 - emit JLC BOM output;
 - emit XLSX BOM output grouped by designator/line item.
 
+Current implementation status:
+
+- `src/py/altium_cruncher/bom_pnp_model.py` now provides the first shared
+  BOM/PnP normalization layer with `FieldAliasConfig`,
+  `NormalizedBomComponent`, `GroupedBomLine`, and `NormalizedPlacement`;
+- `generic-json` preserves the existing shape and also includes normalized raw
+  BOM records with canonical fields and field-source traceability;
+- `grouped-json` emits schema `wn.altium_cruncher.bom.grouped.v1`;
+- `jlc-csv` emits the JLC BOM upload columns from grouped line items;
+- focused unit tests cover alias resolution, natural designator sorting,
+  fitted-vs-DNP grouping, raw/grouped JSON payloads, and JLC BOM rows.
+
 Required processing model:
 
 - introduce helper code/data structures for normalized BOM rows and grouped
@@ -480,6 +492,17 @@ Required processing model:
 - use the same variant, DNP, no-BOM, graphical/mechanical component, field
   alias, and source-mode policy concepts as the BOM command wherever the data
   overlaps.
+
+Current implementation status:
+
+- the `pnp` command now normalizes placements through the shared BOM/PnP model
+  before JSON and CSV output;
+- JSON output remains compatible with the old `units` and `placements` keys
+  while adding schema/version, source, variant, count, and canonical fields;
+- `--format jlc-cpl` emits the JLC CPL upload columns with top-before-bottom
+  ordering and natural designator sorting;
+- focused unit tests cover normalized placement JSON, JLC CPL rows, layer
+  naming, coordinate formatting, and stable ordering.
 
 Required JLC meta command:
 
@@ -994,9 +1017,8 @@ Preferred shape:
    - Shared CLI help polish is implemented: root and command help show the
      version, root commands are alphabetical, bare invocation prints help, and
      root help points to command-specific help.
-   - Active execution slice: implement the shared output path/name expression
-     resolver first, with focused unit tests, so SVG, netlist, BOM, PnP, and
-     the planned JLC command can adopt one common output naming contract.
+   - Active execution slice: implement BOM/PnP shared normalization and JLC
+     output foundations, then move to extract/IntLib parity.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 
@@ -1042,12 +1064,14 @@ Current local status:
 - `rack run --all` passes locally with `L0_public_cli`,
   `L3_public_workflows`, and `L99_signoff`: 33 passed, 1 optional native
   parity skip;
-- full `pytest` with the EasyEDA extra passes locally: 108 passed, 2 skipped;
+- full `pytest` with the EasyEDA extra passes locally: 116 passed, 2 skipped;
 - built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
   backlog item rather than a hard release gate for this bootstrap slice, with
   current findings in existing typed-dynamic modules;
+- targeted Pyright is clean for the new BOM/PnP model, command adapters, and
+  focused tests;
 - CLI command design docs and grouped API/interface design docs now satisfy
   the L99 documentation signoff checks;
 - shared output path/name expression resolver is implemented with focused L0
@@ -1057,6 +1081,10 @@ Current local status:
 - the shared resolver is also exercised at L3 against the public Hydroscope
   `PrjPcb` fixture so real project parameters can drive release-style output
   folders;
+- shared BOM/PnP normalization is implemented with canonical field aliases,
+  source traceability, grouped BOM JSON, JLC BOM CSV, normalized PnP JSON, and
+  JLC CPL CSV; focused unit tests cover the model and L3 still covers
+  Hydroscope BOM/PnP command execution;
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
@@ -1064,4 +1092,7 @@ Current local status:
   `pcb-layer-step` bottom-layer fixture, and the Hydroscope `megamaid`
   showcase workflow;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
-  release blockers.
+  release blockers;
+- macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
+  tracked in `wavenumber-eng/geometer#2`; this is not a BOM/PnP logic blocker,
+  but it must be closed before final `altium-cruncher` release signoff.

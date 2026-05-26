@@ -1,6 +1,7 @@
 """BOM command for altium_cruncher."""
 
 import argparse
+from collections.abc import Mapping, Sequence
 import csv
 from datetime import UTC, datetime
 import json
@@ -12,6 +13,15 @@ from xml.sax.saxutils import escape
 from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
+)
+from altium_cruncher.bom_pnp_model import (
+    JLC_BOM_COLUMNS,
+    bom_raw_payload,
+    designator_sort_key,
+    group_bom_components,
+    grouped_bom_payload,
+    jlc_bom_rows,
+    normalize_bom_components,
 )
 
 log = logging.getLogger(__name__)
@@ -41,7 +51,10 @@ def _bom_rows(
         param_columns if param_columns is not None else _bom_parameter_columns(bom)
     )
     rows: list[list[str]] = []
-    for comp in sorted(bom, key=lambda c: c["designator"]):
+    for comp in sorted(
+        bom,
+        key=lambda c: designator_sort_key(str(c.get("designator", ""))),
+    ):
         params = comp.get("parameters", {})
         rows.append(
             [
@@ -66,6 +79,64 @@ def _write_bom_csv(output_file: Path, bom: list[dict]) -> None:
         writer.writerows(_bom_rows(bom, param_columns=param_columns))
 
 
+def _write_named_rows_csv(
+    output_file: Path,
+    columns: Sequence[str],
+    rows: Sequence[Mapping[str, str]],
+) -> None:
+    """Write named rows to CSV using a fixed column order."""
+    with open(output_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(columns), extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _bom_output_extension(output_format: str) -> str:
+    """Return the file extension for a BOM output format."""
+    if output_format in {"json", "generic-json", "grouped-json"}:
+        return "json"
+    if output_format == "xlsx":
+        return "xlsx"
+    return "csv"
+
+
+def _write_bom_output(
+    output_file: Path,
+    bom: list[dict],
+    *,
+    output_format: str,
+    source: Path,
+    variant: str | None,
+) -> None:
+    """Write one BOM output artifact for the selected format."""
+    if output_format == "json":
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(bom, f, indent=2)
+        return
+    if output_format == "generic-json":
+        payload = _generic_bom_payload(bom, source=source, variant=variant)
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+        return
+    if output_format == "grouped-json":
+        normalized = normalize_bom_components(bom)
+        lines = group_bom_components(normalized)
+        payload = grouped_bom_payload(lines, source=source, variant=variant)
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+        return
+    if output_format == "jlc-csv":
+        normalized = normalize_bom_components(bom)
+        lines = group_bom_components(normalized)
+        rows = jlc_bom_rows(lines)
+        _write_named_rows_csv(output_file, JLC_BOM_COLUMNS, rows)
+        return
+    if output_format == "xlsx":
+        _write_bom_xlsx(output_file, bom)
+        return
+    _write_bom_csv(output_file, bom)
+
+
 def _generic_bom_payload(
     bom: list[dict],
     *,
@@ -78,6 +149,7 @@ def _generic_bom_payload(
     components = [
         {column: row[index] for index, column in enumerate(columns)} for row in rows
     ]
+    normalized_components = normalize_bom_components(bom)
     return {
         "schema": "wn.altium_cruncher.bom.v1",
         "source": {
@@ -92,6 +164,11 @@ def _generic_bom_payload(
         "parameter_columns": param_columns,
         "components": components,
         "raw_components": bom,
+        "normalized": bom_raw_payload(
+            normalized_components,
+            source=source,
+            variant=variant,
+        ),
     }
 
 
@@ -287,29 +364,19 @@ def cmd_bom(args) -> int:
 
         # Determine output filename
         base_name = input_file.stem
-        if output_format in {"json", "generic-json"}:
-            ext = "json"
-        elif output_format == "xlsx":
-            ext = "xlsx"
-        else:
-            ext = "csv"
+        ext = _bom_output_extension(output_format)
         if var:
             output_file = output_dir / f"{base_name}_{var}_bom.{ext}"
         else:
             output_file = output_dir / f"{base_name}_bom.{ext}"
 
-        if output_format == "json":
-            # Write JSON (preserves full structure with nested parameters)
-            with open(output_file, "w", encoding="utf-8") as f:
-                json.dump(bom, f, indent=2)
-        elif output_format == "generic-json":
-            payload = _generic_bom_payload(bom, source=input_file, variant=var)
-            with open(output_file, "w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=2)
-        elif output_format == "xlsx":
-            _write_bom_xlsx(output_file, bom)
-        else:
-            _write_bom_csv(output_file, bom)
+        _write_bom_output(
+            output_file,
+            bom,
+            output_format=output_format,
+            source=input_file,
+            variant=var,
+        )
 
         variant_name = var or "base"
         log.info(f"BOM ({variant_name}): {len(bom)} components -> {output_file.name}")
@@ -330,7 +397,8 @@ def register_parser(subparsers):
         "bom",
         help="generate BOM from Altium schematic documents (CSV, JSON, or XLSX)",
         description="Generate Bill of Materials (BOM) from Altium SchDoc or PrjPcb files. "
-        "CSV/XLSX formats include parameters as columns; JSON preserves nested structure.",
+        "CSV/XLSX formats include parameters as columns; JSON preserves nested structure. "
+        "jlc-csv writes JLCPCB BOM upload columns from grouped line items.",
         epilog="Examples:\n"
         "  altium-cruncher bom project.PrjPcb\n"
         "  altium-cruncher bom schematic.SchDoc\n"
@@ -339,6 +407,8 @@ def register_parser(subparsers):
         "  altium-cruncher bom project.PrjPcb --all-variants # All variants\n"
         "  altium-cruncher bom project.PrjPcb --format json  # JSON output\n"
         "  altium-cruncher bom project.PrjPcb --format generic-json\n"
+        "  altium-cruncher bom project.PrjPcb --format grouped-json\n"
+        "  altium-cruncher bom project.PrjPcb --format jlc-csv\n"
         "  altium-cruncher bom project.PrjPcb --format xlsx  # XLSX output\n"
         "  altium-cruncher bom project.PrjPcb -o output_dir/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -351,7 +421,7 @@ def register_parser(subparsers):
     )
     bom_parser.add_argument(
         "--format",
-        choices=["csv", "json", "generic-json", "xlsx"],
+        choices=["csv", "json", "generic-json", "grouped-json", "jlc-csv", "xlsx"],
         default="csv",
         help="output format (default: csv)",
     )

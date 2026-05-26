@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BOM and PnP Interfaces</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body data-doc-kind="api-design" data-api="bom-pnp-interfaces">
+<main>
+  <nav class="nav">
+    <a href="../index.html">Design Index</a>
+    <a href="index.html">API</a>
+  </nav>
+
+  <header>
+    <p class="status">Shared interface design</p>
+    <h1>BOM and PnP Interfaces</h1>
+    <p class="lede">
+      The BOM/PnP model is the shared normalization layer for manufacturing
+      output commands. It keeps raw Altium Monkey data available, adds
+      canonical fields through aliases, and produces grouped BOM and JLC rows
+      without tying the CLI to private workflow code.
+    </p>
+  </header>
+
+  <section
+    data-interface="FieldAliasConfig"
+    data-rack-stratum="L3_public_workflows"
+    data-test-file="tests/test_bom_pnp_model.py"
+    data-test-target="test_field_alias_config_accepts_json_style_custom_aliases">
+    <h2>FieldAliasConfig</h2>
+    <h3>Rationale</h3>
+    <p>Real projects use inconsistent parameter names for manufacturer, MPN, supplier, and value fields.</p>
+    <h3>Purpose</h3>
+    <p>Defines canonical field names and accepted aliases for BOM and PnP normalization.</p>
+    <h3>Test Requirements</h3>
+    <p>Tests must prove config-style mappings resolve parameters and can serialize deterministically.</p>
+    <h3>Working Definition</h3>
+    <p>Working when messy input parameters resolve to canonical fields without losing the source field name.</p>
+  </section>
+
+  <section
+    data-interface="NormalizedBomComponent"
+    data-rack-stratum="L3_public_workflows"
+    data-test-file="tests/test_bom_pnp_model.py"
+    data-test-target="test_bom_alias_resolution_tracks_parameter_sources">
+    <h2>NormalizedBomComponent</h2>
+    <h3>Rationale</h3>
+    <p>BOM outputs need both raw component parameters and normalized manufacturing fields.</p>
+    <h3>Purpose</h3>
+    <p>Represents one BOM component with canonical fields and field-source traceability.</p>
+    <h3>Test Requirements</h3>
+    <p>Tests must cover alias resolution, source tracking, DNP state, and JSON serialization.</p>
+    <h3>Working Definition</h3>
+    <p>Working when raw BOM dictionaries become deterministic records suitable for raw JSON and grouping.</p>
+  </section>
+
+  <section
+    data-interface="GroupedBomLine"
+    data-rack-stratum="L3_public_workflows"
+    data-test-file="tests/test_bom_pnp_model.py"
+    data-test-target="test_bom_grouping_uses_aliases_and_natural_designator_sort">
+    <h2>GroupedBomLine</h2>
+    <h3>Rationale</h3>
+    <p>Manufacturing BOM outputs need line items grouped by equivalent purchasable identity.</p>
+    <h3>Purpose</h3>
+    <p>Represents one grouped BOM line with quantity, designator list, DNP state, and resolved fields.</p>
+    <h3>Test Requirements</h3>
+    <p>Tests must cover alias-based grouping, natural designator ordering, and DNP line separation.</p>
+    <h3>Working Definition</h3>
+    <p>Working when fitted and DNP components can be grouped into stable line items for JSON, XLSX, and JLC output.</p>
+  </section>
+
+  <section
+    data-interface="NormalizedPlacement"
+    data-rack-stratum="L3_public_workflows"
+    data-test-file="tests/test_bom_pnp_model.py"
+    data-test-target="test_pnp_normalization_and_jlc_cpl_rows_sort_top_before_bottom">
+    <h2>NormalizedPlacement</h2>
+    <h3>Rationale</h3>
+    <p>PnP output uses PCB placement data while sharing BOM-style parameter aliases.</p>
+    <h3>Purpose</h3>
+    <p>Represents one normalized placement with units, layer, coordinate, rotation, and canonical fields.</p>
+    <h3>Test Requirements</h3>
+    <p>Tests must cover top/bottom ordering, natural designator sorting, JLC CPL formatting, and JSON payload shape.</p>
+    <h3>Working Definition</h3>
+    <p>Working when Altium Monkey PnP entries and dict fixtures produce stable CSV/JSON/JLC records.</p>
+  </section>
+</main>
+</body>
+</html>

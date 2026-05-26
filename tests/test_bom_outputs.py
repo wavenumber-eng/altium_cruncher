@@ -5,6 +5,7 @@ import zipfile
 
 from altium_cruncher.altium_cruncher_cmd_bom import (
     _generic_bom_payload,
+    _write_bom_output,
     _write_bom_xlsx,
 )
 
@@ -62,3 +63,34 @@ def test_write_bom_xlsx_creates_openxml_workbook(tmp_path) -> None:
     assert "Designator" in sheet
     assert "Tolerance" in sheet
     assert "100nF" in sheet
+
+
+def test_write_bom_output_supports_grouped_json_and_jlc_csv(tmp_path) -> None:
+    source = tmp_path / "project.PrjPcb"
+    grouped_json = tmp_path / "grouped.json"
+    jlc_csv = tmp_path / "jlc.csv"
+    bom = _sample_bom()
+    bom[0]["parameters"]["LCSC"] = "C25804"
+
+    _write_bom_output(
+        grouped_json,
+        bom,
+        output_format="grouped-json",
+        source=source,
+        variant=None,
+    )
+    _write_bom_output(
+        jlc_csv,
+        bom,
+        output_format="jlc-csv",
+        source=source,
+        variant=None,
+    )
+
+    grouped_payload = json.loads(grouped_json.read_text(encoding="utf-8"))
+    assert grouped_payload["schema"] == "wn.altium_cruncher.bom.grouped.v1"
+    assert grouped_payload["component_count"] == 2
+
+    jlc_text = jlc_csv.read_text(encoding="utf-8")
+    assert "Comment,Designator,Footprint,JLCPCB Part #" in jlc_text
+    assert "C25804" in jlc_text
