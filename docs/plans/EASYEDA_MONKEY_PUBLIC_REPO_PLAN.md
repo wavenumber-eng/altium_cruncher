@@ -58,7 +58,7 @@ Reasoning:
 - PyPI Trusted Publishing can be configured and verified with less release
   risk;
 - the resulting workflow can become the template for `altium-cruncher` and
-  future public Wavenumber packages.
+  future public packages.
 
 The first `easyeda-monkey` release should prove:
 
@@ -96,7 +96,7 @@ Once that flow works, mirror the corrected release automation back into
 - `contracts/` for stable JSON/config schemas and conformance examples.
 
 The first ADR should define versioning, tagging, release, and compatibility
-policy. It should match the date-based Wavenumber package policy:
+policy. It should match the date-based package policy:
 
 - normal release: `YYYY.M.D`;
 - supplemental build release: `YYYY.M.D.N`;
@@ -112,22 +112,22 @@ policy. It should match the date-based Wavenumber package policy:
 
 Required local and CI gates:
 
-- `pytest` for the full test suite;
-- `wn-rack` strata with `rack run --all`;
-- `ruff check .`;
-- `pyright src/py tests`;
-- Python signoff script with zero unwaived findings;
+- Rack strata with `rack run --all` as the primary gate;
+- Python signoff, ruff, pyright, command docs, API docs, and interface test
+  ownership under L99 where practical;
 - package build via `python -m build`;
 - `twine check dist/*`;
-- clean-venv install smoke;
-- optional `uv tool install` smoke when available;
+- clean-venv install test;
+- optional `uv tool install` test when available;
 - release workflow that reruns tests, Rack, signoff, build, `twine check`, and
-  install smoke before publishing.
+  install test before publishing.
 
 Required signoff policy:
 
 - every public function and method has a PEP 257-style docstring;
-- public interfaces have design docs under `docs/design/`;
+- public dataclasses and major interfaces have design docs under
+  `docs/design/api/` with rationale, purpose, test requirements, working
+  definition, and Rack test ownership;
 - stable JSON/config formats have schemas or contract examples under
   `contracts/`;
 - contract conformance tests exercise those schemas/examples;
@@ -139,7 +139,7 @@ Required signoff policy:
 
 Initial Rack shape:
 
-- `L0_foundation`: package import, version, basic parser/API smoke;
+- `L0_foundation`: package import, version, basic parser/API tests;
 - `L1_contracts`: schemas, config examples, and fixture integrity;
 - `L2_parsers`: EasyEDA JSON/input parsing with redistributable fixtures;
 - `L3_converters`: Altium symbol/footprint conversion behavior;
@@ -147,7 +147,7 @@ Initial Rack shape:
 - `L9_cross_platform`: path handling, Unicode filenames, and install/runtime
   behavior on supported OSes;
 - `L99_signoff`: version contract, changelog, docs/contracts coverage,
-  docstring coverage, no private imports, build/install smoke, and Python
+  docstring coverage, no private imports, build/install tests, and Python
   quality gates.
 
 ## Fixture Strategy

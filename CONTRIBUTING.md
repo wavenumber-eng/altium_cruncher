@@ -14,10 +14,10 @@ Before opening a PR:
    PR, or linked plan.
 5. Run package tests and signoff locally.
 
-Minimize external dependencies. This is a general Wavenumber tool convention.
-A new dependency must explain why the standard library and existing project
-dependencies are not enough, whether it is runtime/optional/test-only, its
-license compatibility, and the expected packaging impact.
+Minimize external dependencies. A new dependency must explain why the standard
+library and existing project dependencies are not enough, whether it is
+runtime/optional/test-only, its license compatibility, and the expected
+packaging impact.
 
 The top-level CLI should stay an orchestrator. Public subcommands should keep
 command-specific parser setup and behavior in command modules, including simple
@@ -26,9 +26,11 @@ commands.
 Expected local checks:
 
 ```powershell
-uv run pytest
-uv run python scripts\py_signoff.py --root .
+uv run --extra test rack run --all
 ```
+
+Rack is the primary local gate. Additional release artifact tests should
+also run before publishing.
 
 Release decisions, compatibility policy, and public contract changes should be
 recorded in `docs/adrs/`.

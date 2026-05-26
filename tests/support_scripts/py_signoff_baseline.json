@@ -93,10 +93,6 @@
   ],
   "any_count_total": 196,
   "complexity_offenders": {
-    "scripts/py_signoff.py::_annotation_missing": 14,
-    "scripts/py_signoff.py::_count_any_in_module": 11,
-    "scripts/py_signoff.py::_evaluate": 24,
-    "scripts/py_signoff.py::main": 11,
     "src/py/altium_cruncher/altium_clean.py::CleanApplyResult.changed": 22,
     "src/py/altium_cruncher/altium_clean.py::_apply_font_spec_to_pin": 17,
     "src/py/altium_cruncher/altium_clean.py::_coerce_color": 11,
@@ -147,7 +143,11 @@
     "src/py/altium_cruncher/easyeda_altium_symbol.py::_add_easyeda_graphics": 12,
     "src/py/altium_cruncher/easyeda_altium_symbol.py::_easyeda_bounds": 12,
     "src/py/altium_cruncher/easyeda_altium_symbol.py::_parse_path_points": 13,
-    "src/py/altium_cruncher/easyeda_altium_symbol.py::_pin_text_rotation": 12
+    "src/py/altium_cruncher/easyeda_altium_symbol.py::_pin_text_rotation": 12,
+    "tests/support_scripts/py_signoff.py::_annotation_missing": 14,
+    "tests/support_scripts/py_signoff.py::_count_any_in_module": 11,
+    "tests/support_scripts/py_signoff.py::_evaluate": 24,
+    "tests/support_scripts/py_signoff.py::main": 11
   },
   "duplicate_groups": [
     {

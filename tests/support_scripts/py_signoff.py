@@ -35,7 +35,7 @@ from pathlib import Path
 DEFAULT_INCLUDES: tuple[str, ...] = (
     "__init__.py",
     "src/py/altium_cruncher/**/*.py",
-    "scripts/**/*.py",
+    "tests/support_scripts/**/*.py",
 )
 DEFAULT_EXCLUDES: tuple[str, ...] = (
     "**/__pycache__/**",
@@ -672,7 +672,10 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--baseline",
         type=Path,
         default=None,
-        help="Path to baseline JSON. Defaults to <root>/scripts/py_signoff_baseline.json.",
+        help=(
+            "Path to baseline JSON. Defaults to "
+            "<root>/tests/support_scripts/py_signoff_baseline.json."
+        ),
     )
     parser.add_argument(
         "--update-baseline",
@@ -740,7 +743,9 @@ def main(argv: list[str] | None = None) -> int:
     root = args.root.resolve()
     includes = list(args.include) if args.include else list(DEFAULT_INCLUDES)
     excludes = list(DEFAULT_EXCLUDES) + list(args.exclude or [])
-    baseline_path: Path = args.baseline or root / "scripts" / "py_signoff_baseline.json"
+    baseline_path: Path = (
+        args.baseline or root / "tests" / "support_scripts" / "py_signoff_baseline.json"
+    )
     baseline = _load_baseline(baseline_path)
     if args.max_file_lines is not None:
         baseline.max_file_lines = args.max_file_lines

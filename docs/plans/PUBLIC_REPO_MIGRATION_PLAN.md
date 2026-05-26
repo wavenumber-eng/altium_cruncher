@@ -67,7 +67,7 @@ The preferred release workflow should be GitHub-driven rather than a local-only
 Twine ritual:
 
 - PR and push CI run Rack tests, `L99_signoff`, package build, clean-install
-  smoke, and `twine check`;
+  tests, and `twine check`;
 - `main` is protected and requires passing CI before merge;
 - release publishing uses GitHub Actions with PyPI Trusted Publishing / OIDC
   where possible, not long-lived local PyPI tokens;
@@ -111,7 +111,7 @@ flow, not only through direct developer commands.
   `setup.ps1`/`setup.sh` and after `update.ps1`/`update.sh`;
 - standardize workspace workflows on the single public console name
   `altium-cruncher`; the import/module name remains `altium_cruncher`;
-- add an installer smoke test that starts from the workspace shell and runs
+- add an installer test that starts from the workspace shell and runs
   `altium-cruncher --version`;
 - remove old `uv run --project ... toolz/altium_cruncher` assumptions from
   WN docs/scripts only after the standalone executable path is verified.
@@ -119,7 +119,7 @@ flow, not only through direct developer commands.
 ## Dependency Policy
 
 `altium_cruncher` is an application package, so it can carry richer dependencies
-than core `altium-monkey`, but Wavenumber tools still minimize dependencies.
+than core `altium-monkey`, but these tools still minimize dependencies.
 New runtime, optional, and test-only dependencies need explicit justification in
 the commit, PR, or linked plan.
 
@@ -151,14 +151,14 @@ Initial Rack shape:
 - `L1_command_manifest`: every registered command has docs, help, and test
   ownership;
 - `L2_assets`: redistributable fixture discovery and asset-integrity checks;
-- `L3_commands`: fixture-backed command smoke tests;
+- `L3_commands`: fixture-backed command tests;
 - `L4_outputs`: structured/golden output checks for selected stable commands;
 - `L9_cross_platform`: path handling, Unicode filenames, output folders, and
   OS-specific install/runtime behavior;
 - `L99_signoff`: type coverage, complexity checks, command coverage, docs
   links, PEP 257-style docstring coverage, design/contract documentation
   coverage, contract conformance tests, no private paths, no `toolz` imports,
-  package build/install smoke.
+  package build/install tests.
 
 The signoff model should copy the useful shape from the in-progress
 `data_models` worktree:
@@ -169,6 +169,9 @@ The signoff model should copy the useful shape from the in-progress
 - contract conformance helpers live in tests and are reused by command tests;
 - L99 checks prevent new public surfaces from landing without matching docs,
   contracts, and tests.
+- public dataclasses and major interfaces require design documentation with
+  rationale, purpose, test requirements, working definition, and Rack test
+  ownership.
 
 All package functions and methods should have PEP 257-style docstrings. Public
 interfaces, command output formats, JSON config files, and any stable compact
@@ -191,7 +194,7 @@ The repo should have a command manifest used by tests and CI.
 Every public command should have:
 
 - manifest entry;
-- CLI help smoke test;
+- CLI help test;
 - docs or README coverage;
 - at least one behavioral test, or an explicit waiver with rationale.
 
@@ -224,7 +227,8 @@ That package must have the same public-repo and signoff requirements as
 - contributor guide, license, issue templates, and PR template;
 - no private `toolz` imports in public package code;
 - direct PRs allowed only through CI/signoff.
-- the same date-versioning policy used by current Wavenumber Python packages.
+- the same date-versioning policy used by current Python packages in this
+  package family.
 - the same ADR/design-doc/contract-conformance and PEP 257 docstring signoff
   expectations as `altium_cruncher`.
 - an early ADR for versioning, tagging, release, and traceability policy,
@@ -285,7 +289,7 @@ Preferred shape:
      `altium-cruncher`.
    - Use `easyeda-monkey` as the simpler public CI/CD proving ground for GitHub
      Actions, release tags, changelog enforcement, PyPI Trusted Publishing, and
-     clean install smoke before relying on the same path for
+     clean install test before relying on the same path for
      `altium-cruncher`.
    - Initial parser fixtures and tests are migrated and pass locally.
    - Publish `easyeda-monkey` only after its own public GitHub signoff passes.
@@ -300,7 +304,7 @@ Preferred shape:
 
 4. Migrate stable commands.
    - Status: current stable command modules copied from private `toolz` and
-     smoke-tested against Hydroscope for the first public slice.
+     tested against Hydroscope for the first public slice.
    - Move commands one family at a time.
    - Add manifest entries, tests, and docs as each command lands.
 
@@ -308,7 +312,7 @@ Preferred shape:
    - Status: initial manifest/help checks, `L3_public_workflows`, and
      `L99_signoff` are wired; stricter coverage enforcement remains.
    - Enforce manifest/test/doc coverage.
-   - Add `L99_signoff` and package build/install smoke.
+   - Add `L99_signoff` and package build/install tests.
 
 6. Link EasyEDA into `altium-cruncher`.
    - Status: blocked until `easyeda-monkey` public package/signoff exists.
@@ -322,7 +326,7 @@ Preferred shape:
    - Add standalone `altium_cruncher` as a cloned dependency.
    - Update workspace scripts/configuration.
    - Ensure setup/update exposes the console executable path.
-   - Add a workspace installer smoke test for the public console script name.
+   - Add a workspace installer test for the public console script name.
 
 8. Remove from `toolz`.
    - Status: blocked until public repo is pushed, CI is green, and app/workspace
@@ -351,7 +355,7 @@ Current local status:
   docs, and contracts are present;
 - `rack run --all` passes locally with `L0_public_cli`,
   `L3_public_workflows`, and `L99_signoff`;
-- built-wheel install smoke passes locally and verifies the public console
+- built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
   backlog item rather than a hard release gate for this bootstrap slice;

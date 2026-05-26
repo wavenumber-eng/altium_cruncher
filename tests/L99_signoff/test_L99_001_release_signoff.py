@@ -71,8 +71,8 @@ def test_changelog_mentions_package_version() -> None:
 
 def test_python_signoff_does_not_regress() -> None:
     """Verify that the Python source signoff has no findings."""
-    baseline = PACKAGE_ROOT / "scripts" / "py_signoff_baseline.json"
-    script = PACKAGE_ROOT / "scripts" / "py_signoff.py"
+    baseline = PACKAGE_ROOT / "tests" / "support_scripts" / "py_signoff_baseline.json"
+    script = PACKAGE_ROOT / "tests" / "support_scripts" / "py_signoff.py"
 
     completed = subprocess.run(
         [

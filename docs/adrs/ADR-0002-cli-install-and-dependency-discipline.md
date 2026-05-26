@@ -7,10 +7,10 @@ Date: 2026-05-26
 
 `altium-cruncher` is a public command-line application. It should be easy for
 new users to install, easy for WN workspace setup to pin, and predictable for
-CI to smoke test.
+CI to test.
 
-Wavenumber tools also need a shared discipline around dependencies and CLI
-command layout. Application packages may carry more dependencies than core
+Tools in this package family need a shared discipline around dependencies and
+CLI command layout. Application packages may carry more dependencies than core
 libraries, but every dependency still creates install, packaging, CI, and
 support cost.
 
@@ -29,7 +29,7 @@ altium-cruncher --version
 ```
 
 WN workspace setup/update should install pinned released tool versions with
-`uv tool install --force`, then smoke test the generated executable.
+`uv tool install --force`, then test the generated executable.
 
 Local source development may replace a released tool with an editable checkout:
 
@@ -45,6 +45,10 @@ simple commands.
 Every new public feature or command must justify itself in the commit, PR, or
 linked plan.
 
+Every public dataclass and major interface should have design documentation
+with rationale, purpose, test requirements, working definition, and Rack test
+ownership. L99 should enforce this as the package stabilizes.
+
 Every new dependency must explain:
 
 - why the dependency is needed;
@@ -56,7 +60,7 @@ Every new dependency must explain:
 ## Consequences
 
 `pipx` can remain a possible user fallback, but it is not the primary install
-path documented for Wavenumber tools.
+path documented for these tools.
 
 Reviewers can reject command or dependency additions that lack justification,
 even when tests pass.

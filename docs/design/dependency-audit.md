@@ -49,7 +49,7 @@ Required migration:
 - switch `appz` and `lib_cruncher` to public `altium-cruncher`;
 - decide whether `lib_cruncher` should depend on application internals such as
   clean helpers or whether those helpers should move to `altium-monkey` later;
-- add an app-level smoke after the dependency change so CAD import and PcbLib
+- add an app-level test after the dependency change so CAD import and PcbLib
   cleaning still work.
 
 ## wn-hw
@@ -65,7 +65,7 @@ Required migration:
 - add a standalone `altium_cruncher` repo/dependency entry after the public repo
   is pushed;
 - install or expose `altium-cruncher` during `setup` and `update`;
-- add a workspace smoke that resolves `altium-cruncher` from PATH and checks
+- add a workspace test that resolves `altium-cruncher` from PATH and checks
   `--version`;
 - remove stale `uv run --project ... toolz/altium_cruncher` guidance once the
   workspace executable path is verified.

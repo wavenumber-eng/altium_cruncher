@@ -2,8 +2,7 @@
 
 ## Validation
 
-- [ ] `uv run pytest`
-- [ ] `uv run python scripts\py_signoff.py --root .`
+- [ ] `uv run --extra test rack run --all`
 
 ## Public Surface
 

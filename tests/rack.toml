@@ -23,13 +23,13 @@ description = "Installed CLI behavior and command registration"
 description = "Public machine-readable contracts"
 
 [concerns.release]
-description = "Package release smoke checks"
+description = "Package release artifact checks"
 
 [concerns.signoff]
 description = "Final release quality gates"
 
 [lanes.fast]
-description = "Default smoke lane for package and command registration"
+description = "Default fast lane for package and command registration"
 
 [lanes.full]
 description = "Full package-local test lane"

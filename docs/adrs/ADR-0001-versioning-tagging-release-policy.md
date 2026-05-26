@@ -30,7 +30,7 @@ OIDC:
    commit;
 3. release workflow verifies package version metadata matches the tag;
 4. release workflow verifies release notes mention the version;
-5. release workflow runs tests, signoff, package build, install smoke, and
+5. release workflow runs tests, signoff, package build, install tests, and
    `twine check`;
 6. release workflow publishes wheel and sdist to PyPI.
 

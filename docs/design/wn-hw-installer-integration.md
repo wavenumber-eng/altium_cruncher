@@ -38,10 +38,10 @@ altium-cruncher --version
 3. Workspace-local wrapper scripts in a PATH-managed `bin` folder only as a
    fallback for non-Python native tools or unusual installer constraints.
 
-The first release should use `uv tool install`. The installer smoke test must
+The first release should use `uv tool install`. The installer test must
 resolve `altium-cruncher` and check the version.
 
-## Smoke Test Contract
+## Install Test Contract
 
 The `wn-hw` installer test should run after setup and after update:
 

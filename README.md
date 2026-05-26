@@ -80,42 +80,30 @@ cross-platform packaging.
 New commands should keep the top-level CLI as an orchestrator. Command-specific
 parser setup and behavior belong in command modules, including simple commands.
 New commands, features, and external dependencies need explicit justification in
-the commit, PR, or linked plan. Wavenumber tools should minimize dependencies
-unless there is a clear install, licensing, and maintenance case.
+the commit, PR, or linked plan. Minimize dependencies unless there is a clear
+install, licensing, and maintenance case.
 
 ## Tests
 
-Run package-local tests:
+Run the Rack suite:
 
 ```powershell
-uv run --extra test pytest
+uv run --extra test rack run --all
 ```
 
-Run the Rack smoke lane:
+Run the built-wheel install test after `python -m build`:
 
 ```powershell
-uv run --extra test rack run
+uv run --extra test python tests\support_scripts\install_test.py
 ```
 
-Run signoff:
-
-```powershell
-uv run --extra test python scripts\py_signoff.py --root .
-```
-
-Run the built-wheel install smoke after `python -m build`:
-
-```powershell
-uv run --extra test python scripts\install_smoke.py
-```
-
-This repository uses `wn-rack` for test strata. Current public strata are
+Rack is the primary local gate. Current public strata are
 `L0_public_cli` for command registration and `L3_public_workflows` for
 fixture-backed CLI workflows. `L99_signoff` runs version-contract and Python
 hygiene checks. Additional command parity gates will be added as public fixtures
 and release policy are finalized. Signoff policy will cover command manifests,
 public command tests, PEP 257-style docstrings, architecture/design
-documentation, JSON/config contracts, and package build/install smoke.
+documentation, JSON/config contracts, and package build/install tests.
 
 ## Architecture Docs
 

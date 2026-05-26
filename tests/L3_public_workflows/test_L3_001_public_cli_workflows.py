@@ -1,4 +1,4 @@
-"""Fixture-backed CLI workflow smoke tests for public commands."""
+"""Fixture-backed CLI workflow tests for public commands."""
 
 from __future__ import annotations
 

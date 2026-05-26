@@ -1,4 +1,4 @@
-"""Rack smoke tests for the standalone public CLI package."""
+"""Rack tests for the standalone public CLI package."""
 
 from __future__ import annotations
 

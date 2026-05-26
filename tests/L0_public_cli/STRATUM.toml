@@ -1,6 +1,6 @@
 name = "Public CLI"
 order = 0
-description = "Smoke tests for the standalone public CLI package and command manifest"
+description = "Tests for the standalone public CLI package and command manifest"
 enabled = true
 concerns = ["cli", "contracts", "release"]
 
@@ -16,8 +16,8 @@ note = "This is the first standalone Rack stratum; broader command parity tests 
 
 [[subtests]]
 id = "L0_001"
-file = "test_L0_001_cli_smoke.py"
-name = "CLI Smoke"
+file = "test_L0_001_cli_entrypoint.py"
+name = "CLI Entrypoint"
 description = "Validate version/help startup and public command-manifest visibility"
 concerns = ["cli", "contracts", "release"]
 test_case_type = "contract"

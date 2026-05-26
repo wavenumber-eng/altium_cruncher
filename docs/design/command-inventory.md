@@ -6,12 +6,12 @@ Last updated: 2026-05-26
 This inventory records the command set migrated from the private
 `toolz/altium_cruncher` package into the standalone public repo.
 
-| Command | Initial status | Public smoke coverage | Notes |
+| Command | Initial status | Public test coverage | Notes |
 | --- | --- | --- | --- |
 | `version` | public | `L0_public_cli` | Package/CLI version reporting. |
 | `sch-svg` | public | `L3_public_workflows` | Schematic SVG export. |
 | `pcb-svg` | public | `L3_public_workflows` | PCB SVG export and board-view generation. |
-| `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default smoke lane. |
+| `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
 | `svg` | public | help only | Combined schematic/project SVG wrapper. |
 | `pcblib-footprint-3d` | public | help only | Footprint 3D preview helper; needs a curated redistributable PcbLib+STEP fixture. |
 | `bom` | public | `L3_public_workflows` | BOM CSV/JSON/XLSX output. |

@@ -1,4 +1,4 @@
-"""Run a clean installed-console smoke test for a built wheel."""
+"""Run a clean installed-console test for a built wheel."""
 
 from __future__ import annotations
 
@@ -60,16 +60,16 @@ def _clean_env(venv_dir: Path) -> dict[str, str]:
     return env
 
 
-def run_install_smoke(wheel: Path) -> None:
+def run_install_test(wheel: Path) -> None:
     """Install a wheel into a temporary venv and verify the console script."""
     wheel = wheel.resolve()
     if not wheel.exists():
         raise SystemExit(f"Wheel does not exist: {wheel}")
 
-    with tempfile.TemporaryDirectory(prefix="altium_cruncher_install_smoke_") as temp:
+    with tempfile.TemporaryDirectory(prefix="altium_cruncher_install_test_") as temp:
         temp_dir = Path(temp)
         venv_dir = temp_dir / "venv"
-        sys.stdout.write(f"Creating smoke venv: {venv_dir}\n")
+        sys.stdout.write(f"Creating test venv: {venv_dir}\n")
         _run([sys.executable, "-m", "venv", str(venv_dir)], cwd=temp_dir)
 
         python = _venv_python(venv_dir)
@@ -88,11 +88,11 @@ def run_install_smoke(wheel: Path) -> None:
             raise SystemExit(f"Unexpected legacy console script after install: {legacy_executable}")
 
         _run([str(python), "-m", "altium_cruncher", "version"], cwd=temp_dir, env=env)
-        sys.stdout.write("Installed-console smoke passed.\n")
+        sys.stdout.write("Installed-console test passed.\n")
 
 
 def main() -> None:
-    """Parse arguments and run the install smoke."""
+    """Parse arguments and run the install test."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--wheel",
@@ -102,9 +102,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(__file__).resolve().parents[2]
     wheel = args.wheel or _latest_wheel(repo_root / "dist")
-    run_install_smoke(wheel)
+    run_install_test(wheel)
 
 
 if __name__ == "__main__":

@@ -24,15 +24,11 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Set up Python
         run: uv python install ${{ matrix.python-version }}
-      - name: Run tests
-        run: uv run --extra test pytest
-      - name: Run Rack smoke lane
+      - name: Run Rack suite
         run: uv run --extra test rack run --all
-      - name: Run signoff
-        run: uv run --extra test python scripts/py_signoff.py --root .
       - name: Build package
         run: uv run --extra test python -m build
       - name: Check package
         run: uv run --extra test twine check dist/*
-      - name: Run installed console smoke
-        run: uv run --extra test python scripts/install_smoke.py
+      - name: Run installed console test
+        run: uv run --extra test python tests/support_scripts/install_test.py
