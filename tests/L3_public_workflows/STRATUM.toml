@@ -42,3 +42,26 @@ test_output_path_template_uses_public_project_parameters = "Resolve release-styl
 test_library_extract_split_merge_commands_use_public_fixtures = "Exercise extraction and library split/merge commands on Hydroscope"
 test_pcb_svg_command_uses_public_pcbdoc_without_private_context = "Exercise pcb-svg against a copied public PcbDoc and explicit config"
 test_clean_command_creates_template_for_public_schdoc_copy = "Exercise clean template generation without mutating assets"
+
+[[subtests]]
+id = "L3_002"
+file = "test_L3_002_pcb_layer_step_workflow.py"
+name = "PCB Layer STEP Workflow"
+description = "Generate bottom-layer STEP artifacts from the cricket-node fixture"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "reference"
+test_cases = "../../tests/assets/projects/cricket-node"
+
+[subtests.code_under_test]
+module = "altium_cruncher.altium_cruncher_cmd_pcb_layer_step"
+
+[subtests.objectives]
+fixture_backed_step = "pcb-layer-step runs against a real cricket-node PcbDoc fixture"
+color_contract = "Configured copper and board-outline colors reach the STEP request and manifest"
+artifact_shape = "Command writes a STEP artifact and JSON manifest"
+
+[subtests.approach]
+command_handler = "Invoke the command handler directly with a small geometer writer stub"
+
+[subtests.test_functions]
+test_pcb_layer_step_cricket_bottom_layer_uses_configured_colors = "Generate bottom-layer artifacts and verify configured colors"

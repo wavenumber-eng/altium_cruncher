@@ -329,8 +329,11 @@ Required source fixtures:
 
 Initial `pcb-layer-step` coverage:
 
-- use `cricket-node`;
-- generate bottom-layer copper STEP;
+- status: implemented as `L3_002` with a minimized `cricket-node` PcbDoc
+  fixture under `tests/assets/projects/cricket-node/input`;
+- generate bottom-layer copper STEP through the command handler with a small
+  geometer writer stub so tests verify command behavior without checking in
+  large generated STEP artifacts;
 - document and test color control:
   - copper color: `#3D85C6`;
   - board outline color: `#CCCCCC`;

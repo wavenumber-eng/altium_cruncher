@@ -66,8 +66,8 @@ SVG command family notes:
 PCB layer STEP notes:
 
 - `pcb-layer-step` stays in the first public command set;
-- first fixture-backed command test should use `cricket-node` and generate
-  bottom-layer copper;
+- first fixture-backed command test uses a minimized `cricket-node` PcbDoc and
+  generates bottom-layer copper through the command handler;
 - the documented example colors are copper `#3D85C6` and board outline
   `#CCCCCC`;
 - command fixtures should use `input/`, `reference_output/`, and transient
