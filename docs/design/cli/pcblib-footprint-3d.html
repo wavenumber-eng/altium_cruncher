@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>pcblib-footprint-3d command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="pcblib-footprint-3d" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>pcblib-footprint-3d</h1><p class="lede">Generates standalone 3D preview artifacts for one footprint from an Altium PCB library. This command is currently deferred from migration because the old implementation is broken.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher pcblib-footprint-3d footprint.PcbLib FOOTPRINT_NAME -o output/preview</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p>Inputs identify a <code>.PcbLib</code>, footprint name, and output directory. The public command remains listed for migration tracking but should not be treated as release-ready until repaired.</p></section>
+<section id="output"><h2>Output</h2><p>Target output is a 3D preview and supporting report. Release work should either fix and test this behavior or remove the command from the public manifest for the first release.</p></section>
+<section id="tests"><h2>Tests</h2><p>No release-grade workflow test is present yet. The migration plan explicitly marks this command as broken and not to migrate until repaired.</p></section>
+</main>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>megamaid command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="megamaid" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>megamaid</h1><p class="lede">Decomposes an Altium project into reusable generated libraries, BOM/netlist outputs, embedded assets, and a manifest.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher megamaid Hydroscope.PrjPcb -o output/megamaid</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> is a <code>.PrjPcb</code>. <code>-o</code> selects the output root. The command owns its generated subtrees and should avoid deleting unrelated output files.</p></section>
+<section id="output"><h2>Output</h2><p>Outputs include decomposed libraries, schematic images, embedded 3D models, BOM/netlist artifacts, and <code>megamaid_manifest.json</code> with generated artifact counts.</p></section>
+<section id="tests"><h2>Tests</h2><p>L3 runs Hydroscope through the public CLI, verifies image/model counts, validates decoded schematic image payloads, and keeps optional native parity coverage.</p></section>
+</main>
+</body>
+</html>

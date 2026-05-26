@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>easyeda-footprint-review command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="easyeda-footprint-review" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>easyeda-footprint-review</h1><p class="lede">Builds fixture-wide review artifacts comparing EasyEDA footprint source data to generated Altium footprint output.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher easyeda-footprint-review C963370.json C266603.json -o output/review
+altium-cruncher easyeda-footprint-review --fixture-dir tests/assets/easyeda/api_responses --pattern C*.json</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p>Inputs are saved EasyEDA JSON files or a fixture directory plus pattern. Policy flags match the footprint importer where needed. The command requires the optional <code>easyeda</code> dependency extra.</p></section>
+<section id="output"><h2>Output</h2><p>Outputs include per-case Altium artifacts, EasyEDA source previews, review SVG, review HTML, and case reports under the selected output directory.</p></section>
+<section id="tests"><h2>Tests</h2><p>Optional EasyEDA tests validate multi-case footprint review generation from saved public JSON fixtures with <code>altium-cruncher[easyeda]</code> installed.</p></section>
+</main>
+</body>
+</html>

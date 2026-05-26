@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>bom command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="bom" data-config-contract="planned">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>bom</h1><p class="lede">Exports bill-of-materials data from Altium schematic or project inputs. The first public version keeps the current CSV, JSON, and XLSX outputs while the richer BOM config and alias system are being designed.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher bom project.PrjPcb --format json -o output/bom
+altium-cruncher bom schematic.SchDoc --format xlsx
+altium-cruncher bom project.PrjPcb --variant B4</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. <code>--format</code> selects <code>csv</code>, <code>json</code>, <code>generic-json</code>, or <code>xlsx</code>. <code>--variant</code> and <code>--all-variants</code> select variant processing. <code>-o</code> selects the output directory.</p></section>
+<section id="output"><h2>Output</h2><p>Current output is written under the selected output directory using the input stem. Planned output includes raw JSON every run, grouped JSON, grouped XLSX, JLC BOM, config-driven field aliases, DNP policy, and optional PCB line-item support.</p></section>
+<section id="tests"><h2>Tests</h2><p>Current L3 coverage verifies BOM JSON generation on Hydroscope. Planned BOM parity tests use <code>node_test_array</code> for hierarchy, variants, DNP handling, and field aliasing.</p></section>
+</main>
+</body>
+</html>
