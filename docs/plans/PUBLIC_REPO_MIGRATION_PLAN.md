@@ -1026,17 +1026,16 @@ Preferred shape:
    - Add manifest entries, tests, and docs as each command lands.
 
 5. Add command parity gates.
-   - Status: initial manifest/help checks and `L3_public_workflows` are wired.
-     `L99_signoff` now hard-fails missing command design docs and public
-     dataclass/interface design ownership, so the next slice must add the
-     missing design docs or explicitly classify interfaces as internal.
+   - Status: BOM/PnP/JLC command parity is implemented and under oracle review.
+     `L99_signoff` hard-fails missing command design docs and public
+     dataclass/interface design ownership.
    - Shared CLI help polish is implemented: root and command help show the
      version, root commands are alphabetical, bare invocation prints help, and
      root help points to command-specific help.
-   - Active execution slice: BOM/PnP shared normalization, JLC output
-     foundations, and extract/IntLib source extraction are implemented; next
-     slices should deepen fixture parity and add the richer BOM/PnP config
-     contract.
+   - Active execution slice: BOM/PnP shared normalization, rich JSON config,
+     JLC paired output, fixture notes, and oracle-backed tests are committed.
+     Next work is command-by-command review, starting with core
+     `altium-monkey` PnP oracle parity before continuing to extract/IntLib.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 
@@ -1080,8 +1079,12 @@ Current local status:
 - package metadata, console script, CI/release workflow, changelog, ADRs, design
   docs, and contracts are present;
 - `rack run --all` passes locally with `L0_public_cli`,
-  `L3_public_workflows`, and `L99_signoff`: 34 passed, 1 optional native
+  `L3_public_workflows`, and `L99_signoff`: 38 passed, 1 optional native
   parity skip;
+- latest committed slice:
+  - `29834dc Add BOM PnP fixture oracle notes`;
+  - `0af8245 Ignore Altium transient project folders`;
+  - `5c4181f Complete BOM PnP config workflows`;
 - full `pytest` with the EasyEDA extra passes locally: 117 passed, 2 skipped;
 - built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
@@ -1105,6 +1108,26 @@ Current local status:
   JSON/CSV/XLSX, JLC BOM CSV, normalized PnP JSON/CSV/XLSX, and JLC CPL CSV;
   focused unit tests cover the model and L3 covers Hydroscope BOM/PnP config
   plus paired `jlc` output execution;
+- BOM/PnP oracle tests now exercise `node_test_array` and `loz-old-man`:
+  raw BOM JSON is checked against Altium XML-BOM designators and key fields,
+  normalized PnP JSON is checked against Altium PNP-METRIC side/rotation/core
+  coordinates with explicit known coordinate exceptions, and paired JLC
+  BOM/CPL generation is checked;
+- fixture layout notes live in `docs/design/test-assets.html` and
+  `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
+  `tests/assets/projects/node_test_array/reference_output/B4`;
+- generated review artifacts for inspection are under
+  `output/bom_pnp_jlc`;
+- latest targeted validation:
+  - `uv run --extra test pytest tests\L3_public_workflows -q`: 13 passed,
+    1 skipped;
+  - `uv run --extra test rack run --all`: 38 passed, 1 skipped;
+  - `uv run --extra test pyright tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
+    0 errors;
+  - `uv run --extra test ruff check docs tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
+    clean;
+  - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json`:
+    0 findings;
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
@@ -1116,3 +1139,8 @@ Current local status:
 - macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
   tracked in `wavenumber-eng/geometer#2`; this is not a BOM/PnP logic blocker,
   but it must be closed before final `altium-cruncher` release signoff.
+- current worktree still has unrelated/generated Altium fixture churn from
+  reference generation. Keep those files unstaged unless they are deliberately
+  adopted as new reference assets. A full worktree `git diff --check` also
+  reports the unrelated `rt_super_c1/input/reference_gen.OutJob` blank EOF
+  issue; scoped checks over committed files passed.
