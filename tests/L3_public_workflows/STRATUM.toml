@@ -29,6 +29,7 @@ module = "altium_cruncher._cli"
 [subtests.objectives]
 schematic_outputs = "Sch SVG, BOM, PnP, and netlist commands generate expected artifacts"
 library_outputs = "Extract, split, and merge commands generate valid library artifacts"
+intlib_outputs = "IntLib source extraction writes source libraries, LibPkg, and manifest"
 pcb_outputs = "pcb-svg generates layer SVG outputs from a public PcbDoc"
 clean_template = "clean creates a config template without mutating committed assets"
 output_path_templates = "Output path templates can use real PrjPcb project parameters"
@@ -40,6 +41,7 @@ subprocess_cli = "Invoke public CLI commands through the current Python environm
 test_schematic_and_design_json_commands_use_public_project = "Exercise Sch SVG, BOM, PnP, and netlist commands on Hydroscope"
 test_output_path_template_uses_public_project_parameters = "Resolve release-style output paths from public Hydroscope project parameters"
 test_library_extract_split_merge_commands_use_public_fixtures = "Exercise extraction and library split/merge commands on Hydroscope"
+test_intlib_extract_command_uses_public_fixture = "Exercise IntLib source extraction on RT_SUPER_C1"
 test_pcb_svg_command_uses_public_pcbdoc_without_private_context = "Exercise pcb-svg against a copied public PcbDoc and explicit config"
 test_clean_command_creates_template_for_public_schdoc_copy = "Exercise clean template generation without mutating assets"
 

@@ -26,6 +26,10 @@ HYDROSCOPE_PROJECT = HYDROSCOPE_DIR / "Hydroscope.PrjPcb"
 HYDROSCOPE_SCHDOC = HYDROSCOPE_DIR / "CPU.SchDoc"
 HYDROSCOPE_SCHLIB = HYDROSCOPE_DIR / "Hydroscope.SCHLIB"
 HYDROSCOPE_PCBDOC = HYDROSCOPE_DIR / "TZ-SB-0001-PCB-[A] (HydroScope Mainboard).PcbDoc"
+RT_SUPER_C1_INTLIB = (
+    PACKAGE_ROOT / "tests" / "assets" / "intlib" / "rt_super_c1" / "input"
+    / "RT_SUPER_C1.IntLib"
+)
 
 
 def _run_cli(*args: str) -> str:
@@ -118,6 +122,28 @@ def test_library_extract_split_merge_commands_use_public_fixtures(tmp_path: Path
     merged_files = list(merge_dir.glob("*.SchLib"))
     assert len(merged_files) == 1
     assert merged_files[0].stat().st_size > 0
+
+
+def test_intlib_extract_command_uses_public_fixture(tmp_path: Path) -> None:
+    """Exercise IntLib source extraction on a redistributable fixture."""
+    output_dir = tmp_path / "intlib"
+
+    _run_cli("extract", str(RT_SUPER_C1_INTLIB), "-o", str(output_dir))
+
+    manifest = json.loads(
+        (output_dir / "RT_SUPER_C1_intlib_extract_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert manifest["schema"] == "wn.altium_cruncher.extract.intlib.v1"
+    assert manifest["source_count"] == 2
+    assert sorted(source["kind"] for source in manifest["sources"]) == [
+        "PCBLib",
+        "SchLib",
+    ]
+    assert (output_dir / "SchLib" / "RT_SUPER_C1.SCHLIB").exists()
+    assert (output_dir / "PCBLib" / "RT_SUPER_C1.PcbLib").exists()
+    assert (output_dir / "RT_SUPER_C1.LibPkg").exists()
 
 
 def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Path) -> None:

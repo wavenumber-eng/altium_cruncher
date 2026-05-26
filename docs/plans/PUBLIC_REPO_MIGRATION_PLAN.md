@@ -580,6 +580,21 @@ New IntLib source-extraction requirements:
   the interface becomes materially different from the existing extraction
   workflow.
 
+Current implementation status:
+
+- `extract` now dispatches `.IntLib` inputs to the public
+  `AltiumIntLib.extract_sources(...)` API;
+- extracted IntLib sources are written under kind folders such as `SchLib/` and
+  `PCBLib/`;
+- the command writes a generated `.LibPkg` by default and supports
+  `--no-libpkg`, `--stream-filenames`, and `--no-overwrite`;
+- every IntLib extraction writes
+  `*_intlib_extract_manifest.json` with schema
+  `wn.altium_cruncher.extract.intlib.v1`, source stream paths, original paths,
+  output paths, source kinds, component count, and parse errors if present;
+- L3 coverage uses the redistributable `RT_SUPER_C1.IntLib` fixture under
+  `tests/assets/intlib/rt_super_c1/input`.
+
 Required parity sources:
 
 - SchDoc extraction behavior should track the promoted Altium Monkey tests in
@@ -1017,8 +1032,10 @@ Preferred shape:
    - Shared CLI help polish is implemented: root and command help show the
      version, root commands are alphabetical, bare invocation prints help, and
      root help points to command-specific help.
-   - Active execution slice: implement BOM/PnP shared normalization and JLC
-     output foundations, then move to extract/IntLib parity.
+   - Active execution slice: BOM/PnP shared normalization, JLC output
+     foundations, and extract/IntLib source extraction are implemented; next
+     slices should deepen fixture parity and add the richer BOM/PnP config
+     contract.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 
@@ -1062,16 +1079,17 @@ Current local status:
 - package metadata, console script, CI/release workflow, changelog, ADRs, design
   docs, and contracts are present;
 - `rack run --all` passes locally with `L0_public_cli`,
-  `L3_public_workflows`, and `L99_signoff`: 33 passed, 1 optional native
+  `L3_public_workflows`, and `L99_signoff`: 34 passed, 1 optional native
   parity skip;
-- full `pytest` with the EasyEDA extra passes locally: 116 passed, 2 skipped;
+- full `pytest` with the EasyEDA extra passes locally: 117 passed, 2 skipped;
 - built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
   backlog item rather than a hard release gate for this bootstrap slice, with
   current findings in existing typed-dynamic modules;
 - targeted Pyright is clean for the new BOM/PnP model, command adapters, and
-  focused tests;
+  focused tests; targeted Pyright is also clean for the IntLib extract adapter
+  and L3 fixture test;
 - CLI command design docs and grouped API/interface design docs now satisfy
   the L99 documentation signoff checks;
 - shared output path/name expression resolver is implemented with focused L0
@@ -1089,8 +1107,8 @@ Current local status:
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
 - L3 now covers the Hydroscope public workflows, the minimized cricket-node
-  `pcb-layer-step` bottom-layer fixture, and the Hydroscope `megamaid`
-  showcase workflow;
+  `pcb-layer-step` bottom-layer fixture, the `RT_SUPER_C1.IntLib` source
+  extraction fixture, and the Hydroscope `megamaid` showcase workflow;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers;
 - macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
