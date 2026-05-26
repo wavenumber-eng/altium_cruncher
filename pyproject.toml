@@ -15,6 +15,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+easyeda = [
+    "easyeda-monkey>=2026.5.26",
+]
 test = [
     "pytest>=8.0.0",
     "wn-rack>=1.1.0",

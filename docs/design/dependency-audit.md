@@ -78,9 +78,12 @@ Current private state:
   optional package is installed;
 - standalone `altium-cruncher` treats EasyEDA commands as placeholders when
   `easyeda-monkey` is missing.
+- `easyeda-monkey==2026.5.26` is now public on PyPI and linked through the
+  `altium-cruncher[easyeda]` optional extra.
 
 Required migration:
 
-- split `easyeda_monkey` to its public repo and PyPI package;
-- add an `altium-cruncher[easyeda]` extra only after `easyeda-monkey` is public;
-- keep placeholder behavior tested until the optional dependency is available.
+- add an EasyEDA-extra test lane that installs `altium-cruncher[easyeda]` and
+  runs fixture-backed EasyEDA workflows;
+- keep base-install placeholder behavior tested when the optional dependency is
+  absent.

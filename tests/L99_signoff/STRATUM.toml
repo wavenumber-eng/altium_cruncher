@@ -1,13 +1,15 @@
 name = "Release Signoff"
 order = 99
-description = "Final release signoff checks for versioning, CLI version output, and Python hygiene"
+description = "Final release signoff checks for versioning, CLI version output, Python hygiene, and design coverage"
 enabled = true
-concerns = ["release", "contracts"]
+concerns = ["release", "contracts", "signoff", "docs"]
 
 objectives = [
     "Package version metadata matches the release date contract",
     "CLI version output matches package metadata",
     "Python signoff does not regress against the accepted baseline",
+    "Registered CLI commands have matching HTML design documentation",
+    "Dataclasses and major interfaces have design docs and Rack test ownership",
 ]
 
 [dependencies]
@@ -37,3 +39,36 @@ pytest = "Run package-local signoff checks as normal pytest tests"
 test_version_contract_matches_date_based_release = "Package version metadata follows the date release contract"
 test_cli_emits_package_version = "CLI version commands emit the canonical package version text"
 test_python_signoff_does_not_regress = "Python signoff produces zero findings"
+
+[[subtests]]
+id = "L99_002"
+file = "test_L99_002_design_docs.py"
+name = "Design Documentation Signoff"
+description = "Validate CLI design document coverage"
+concerns = ["release", "contracts", "docs", "signoff"]
+test_case_type = "audit_meta"
+
+[subtests.objectives]
+design_index = "Master docs/design/index.html and CLI/API indexes exist"
+cli_docs = "Every registered CLI command has a matching docs/design/cli HTML page"
+command_modules = "Every command except version has a dedicated command module"
+config_contracts = "Command docs declare whether config contracts are required"
+
+[subtests.approach]
+pytest = "Inspect command manifest and matching design documentation"
+
+[[subtests]]
+id = "L99_004"
+file = "test_L99_004_interface_design_docs.py"
+name = "Interface Design Documentation Signoff"
+description = "Validate dataclass and major-interface design documentation and test ownership"
+concerns = ["release", "signoff", "docs"]
+test_case_type = "audit_meta"
+
+[subtests.objectives]
+dataclass_docs = "Every public dataclass has a machine-readable design-doc section"
+major_interface_docs = "Major public interfaces are listed with design and test requirements"
+rack_test_ownership = "Each interface doc references an exercising Rack stratum and test target"
+
+[subtests.approach]
+pytest = "Inspect source AST, design HTML, Rack strata, and test files"

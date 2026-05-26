@@ -1,6 +1,6 @@
 # EasyEDA Monkey Public Repo Plan
 
-Status: public repo bootstrap pushed; GitHub Actions run creation blocked
+Status: public package released; Altium Cruncher integration active
 Last updated: 2026-05-26
 
 ## Goal
@@ -18,30 +18,31 @@ Repository target:
 It should become a CLI/application consumer of the public `easyeda-monkey`
 package once that package has the same quality and release shape as this repo.
 
-## Release Blocker
+## Release Status
 
-The first official `altium-cruncher` release should not treat EasyEDA import
-commands as complete until `easyeda-monkey` has a public package with passing
-signoff, redistributable fixtures, and verified GitHub CI/release automation.
+The first official `altium-cruncher` release can now link EasyEDA commands
+through an optional dependency. `easyeda-monkey` has a public package with
+passing signoff, redistributable fixtures, and verified GitHub CI/release
+automation.
 
 Current EasyEDA status:
 
-- public repo is bootstrapped and pushed:
-  <https://github.com/wavenumber-eng/easyeda_monkey>;
-- current pushed head at time of this plan update: `d310fd3`;
-- local Windows release-equivalent gates pass;
-- GitHub lists `CI` and `Publish` workflows as active, but creates no runs for
-  pushes to `main`;
-- manual `CI` workflow dispatch fails with GitHub HTTP 500;
-- blocker is tracked at
-  <https://github.com/wavenumber-eng/easyeda_monkey/issues/1>.
+- public repo: <https://github.com/wavenumber-eng/easyeda_monkey>;
+- PyPI package: `easyeda-monkey==2026.5.26`;
+- release tag: `easyeda-monkey/v2026.5.26`;
+- GitHub release:
+  <https://github.com/wavenumber-eng/easyeda_monkey/releases/tag/easyeda-monkey/v2026.5.26>;
+- GitHub CI and PyPI Trusted Publishing release workflow passed;
+- clean PyPI install and CLI version checks passed.
 
 Allowed interim behavior in `altium-cruncher`:
 
 - keep EasyEDA commands as missing-dependency placeholders;
-- keep `altium-cruncher` tests that verify the placeholders fail clearly;
-- keep direct EasyEDA behavioral tests out of the required release lane until
-  they can consume public `easyeda-monkey`.
+- add `easyeda-monkey` through the `altium-cruncher[easyeda]` optional extra;
+- keep `altium-cruncher` tests that verify the placeholders fail clearly in a
+  base install;
+- add EasyEDA-extra tests that consume public `easyeda-monkey` and public
+  fixtures.
 
 ## CI/CD Proving Ground
 
@@ -212,14 +213,14 @@ public package exists.
    - Add footprint conversion tests.
    - Add stable output checks where practical.
 
-5. Publish `easyeda-monkey`. BLOCKED.
+5. Publish `easyeda-monkey`. COMPLETE.
    - Run local and GitHub signoff.
    - Configure PyPI Trusted Publishing.
    - Use this release to validate the GitHub/PyPI CI/CD path end to end before
      relying on the same path for `altium-cruncher`.
    - Publish a date-versioned release.
 
-6. Link into `altium-cruncher`.
+6. Link into `altium-cruncher`. IN PROGRESS.
    - Replace placeholders with optional dependency-backed command behavior.
    - Add base-install and extra-install test lanes.
    - Update command inventory, README, and release notes.
@@ -227,8 +228,6 @@ public package exists.
 ## Open Questions
 
 - Which existing EasyEDA fixtures can be redistributed?
-- Why is GitHub Actions not creating runs or accepting manual dispatch for the
-  bootstrapped public repo?
 - Should `easyeda-monkey` expose only library APIs, or also a small standalone
   diagnostic CLI?
 - Which output contracts should be stable in the first release versus marked

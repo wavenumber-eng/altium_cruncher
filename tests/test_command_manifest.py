@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -63,7 +66,10 @@ def test_each_manifest_command_has_help() -> None:
 
 
 def test_planned_easyeda_commands_have_missing_dependency_placeholder() -> None:
-    """EasyEDA commands should fail clearly until easyeda-monkey is public."""
+    """EasyEDA commands should fail clearly in a base install."""
+    if importlib.util.find_spec("easyeda_monkey") is not None:
+        pytest.skip("easyeda-monkey is installed; this is a base-install check")
+
     planned_easyeda = [
         str(entry["name"])
         for entry in _manifest_entries()

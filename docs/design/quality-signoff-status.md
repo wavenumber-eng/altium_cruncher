@@ -19,6 +19,21 @@ Last updated: 2026-05-26
   macOS 15 arm64. Manual macOS pip/uv-tool testing is still required until that
   wheel tag or runner mismatch is resolved.
 
+## Active Design-Doc Gate
+
+`L99_signoff` now includes hard checks for command design docs and public
+dataclass / major-interface design ownership. The checks are intentionally
+expected to fail until command-specific `docs/design/cli/*.html` pages and
+API/interface design sections are added.
+
+Current known gaps:
+
+- command design docs are missing for the migrated command manifest;
+- public dataclasses do not yet have `data-interface` sections under
+  `docs/design/api/`;
+- machine-readable config contracts for commands such as `pcb-svg`,
+  `pcb-layer-step`, and `clean` are still pending.
+
 ## Pyright Backlog
 
 `pyright` is installed in the test extra, but it is not yet a release-blocking
@@ -28,7 +43,8 @@ The current local run reports 169 errors and 2 warnings. The main categories
 are:
 
 - dynamic baseline parsing in `tests/support_scripts/py_signoff.py`;
-- optional `easyeda_monkey` imports before `easyeda-monkey` is public;
+- optional `easyeda_monkey` imports behind the `altium-cruncher[easyeda]`
+  extra;
 - broad `object`/union typing in `altium_cruncher_cmd_megamaid.py`;
 - broad renderer option unions in PCB assembly/SVG helpers;
 - a small set of optional-value narrowing issues in EasyEDA and PCB geometry

@@ -14,3 +14,7 @@
 - Document `uv tool install` as the preferred CLI install path.
 - Add ADR-0002 for CLI install, command layout, AGPL licensing boundary, and
   dependency-minimization discipline.
+- Add `altium-cruncher[easyeda]` as the optional public dependency path for
+  EasyEDA workflows through `easyeda-monkey`.
+- Add ADR-0005 and L99 checks for CLI design docs plus public dataclass and
+  major-interface design/test ownership.

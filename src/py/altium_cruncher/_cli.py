@@ -73,7 +73,8 @@ def _cmd_missing_easyeda(_args: argparse.Namespace) -> int:
     """Report that an EasyEDA command needs the optional dependency extra."""
     print(
         "EasyEDA commands require the optional easyeda dependency: "
-        "install easyeda-monkey alongside altium-cruncher.",
+        "install altium-cruncher[easyeda] or install easyeda-monkey "
+        "alongside altium-cruncher.",
         file=sys.stderr,
     )
     return 2

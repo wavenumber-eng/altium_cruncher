@@ -18,9 +18,9 @@ This inventory records the command set migrated from the private
 | `pnp` | public | `L3_public_workflows` | Pick-and-place output. |
 | `netlist` | public | `L3_public_workflows` | Netlist JSON output. |
 | `extract` | public | `L3_public_workflows` | SchDoc/PcbDoc extraction workflows. |
-| `easyeda-import` | planned-public | placeholder | Requires `easyeda-monkey`; optional extra until that package is public. |
-| `easyeda-review` | planned-public | placeholder | Requires `easyeda-monkey`; optional extra until that package is public. |
-| `easyeda-footprint-review` | planned-public | placeholder | Requires `easyeda-monkey`; optional extra until that package is public. |
+| `easyeda-import` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
+| `easyeda-review` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
+| `easyeda-footprint-review` | optional-public | placeholder plus extra lane | Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`. |
 | `split` | public | `L3_public_workflows` | SchLib/PcbLib split workflows. |
 | `merge` | public | `L3_public_workflows` | SchLib/PcbLib merge workflows. |
 | `megamaid` | public | pytest | Project decomposition workflow, including Hydroscope embedded images/models. |

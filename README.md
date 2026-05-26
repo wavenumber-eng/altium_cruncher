@@ -39,17 +39,25 @@ uv run altium-cruncher --help
 uv run python -m altium_cruncher version
 ```
 
-EasyEDA commands require `easyeda-monkey` to be installed in the same tool
-environment:
+EasyEDA commands are optional. Install the `easyeda` extra when those workflows
+are needed:
+
+```powershell
+uv tool install --force "altium-cruncher[easyeda]"
+```
+
+The equivalent explicit form is:
 
 ```powershell
 uv tool install --force --with easyeda-monkey altium-cruncher
 ```
 
-Until `easyeda-monkey` is published as its own public package, local EasyEDA
-testing can install the sibling source checkout explicitly. The
-`altium-cruncher[easyeda]` extra should be added after `easyeda-monkey` is
-available on PyPI.
+During local EasyEDA development:
+
+```powershell
+uv sync --extra test --extra easyeda
+uv run --extra easyeda altium-cruncher easyeda-import --help
+```
 
 ## Commands
 
@@ -110,6 +118,8 @@ documentation, JSON/config contracts, and package build/install tests.
 - `docs/adrs/` records accepted architecture decisions.
 - `docs/design/` records durable interface, command, data-flow, and format
   design notes.
+- `docs/design/index.html` is the master design-doc entry point used by humans
+  and signoff tooling.
 - `contracts/` stores stable schemas and conformance examples for public JSON
   or config formats.
 

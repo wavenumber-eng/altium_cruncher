@@ -243,11 +243,12 @@ the public PyPI/GitHub versions once those repos exist.
 
 Current release policy for `altium_cruncher`:
 
-1. finish `easyeda-monkey` setup, tests, signoff, and release first;
+1. finish `easyeda-monkey` setup, tests, signoff, and release first; COMPLETE
+   with `easyeda-monkey==2026.5.26`;
 2. keep EasyEDA commands as missing-dependency placeholders in the base
    `altium-cruncher` install until public `easyeda-monkey` is ready;
-3. link `altium-cruncher` to `easyeda-monkey` through an optional dependency or
-   extra after `easyeda-monkey` has passing public CI/signoff;
+3. link `altium-cruncher` to `easyeda-monkey` through the
+   `altium-cruncher[easyeda]` optional extra; IN PROGRESS;
 4. add two `altium-cruncher` lanes after linking:
    - base install verifies clear missing-dependency behavior;
    - EasyEDA extra install verifies real workflows against public fixtures.
@@ -282,8 +283,8 @@ Preferred shape:
      `ezeda_monkey` imports that need to become public package dependencies.
 
 2. Stand up `easyeda-monkey`.
-   - Status: public repo bootstrap pushed; GitHub Actions run creation blocked
-     by <https://github.com/wavenumber-eng/easyeda_monkey/issues/1>.
+   - Status: COMPLETE. Public package `easyeda-monkey==2026.5.26` is
+     published on PyPI and tagged as `easyeda-monkey/v2026.5.26`.
    - Bootstrap the public `easyeda-monkey` repo with the same docs, tests,
      Rack strata, signoff, CI, and release workflow requirements as
      `altium-cruncher`.
@@ -291,12 +292,11 @@ Preferred shape:
      Actions, release tags, changelog enforcement, PyPI Trusted Publishing, and
      clean install test before relying on the same path for
      `altium-cruncher`.
-   - Initial parser fixtures and tests are migrated and pass locally.
-   - Publish `easyeda-monkey` only after its own public GitHub signoff passes.
+   - Initial parser fixtures and tests are migrated and pass locally and in
+     GitHub CI.
 
 3. Bootstrap the public repo.
-   - Status: initial local bootstrap complete; awaiting next push/CI after
-     EasyEDA CI blocker is understood.
+   - Status: initial local bootstrap complete; EasyEDA CI blocker is closed.
    - Add packaging, source layout, Rack tests, CI, project hygiene files, and
      a minimal CLI skeleton.
    - Add the initial versioning/tagging/release-policy ADR before the first
@@ -309,13 +309,15 @@ Preferred shape:
    - Add manifest entries, tests, and docs as each command lands.
 
 5. Add command parity gates.
-   - Status: initial manifest/help checks, `L3_public_workflows`, and
-     `L99_signoff` are wired; stricter coverage enforcement remains.
+   - Status: initial manifest/help checks and `L3_public_workflows` are wired.
+     `L99_signoff` now hard-fails missing command design docs and public
+     dataclass/interface design ownership, so the next slice must add the
+     missing design docs or explicitly classify interfaces as internal.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 
 6. Link EasyEDA into `altium-cruncher`.
-   - Status: blocked until `easyeda-monkey` public package/signoff exists.
+   - Status: IN PROGRESS now that `easyeda-monkey` is public.
    - Add optional dependency/extra.
    - Keep command adapters thin and covered by base-install plus extra-install
      lanes.

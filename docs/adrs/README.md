@@ -12,3 +12,5 @@ This folder records accepted architecture decisions for `altium-cruncher`.
   location.
 - [ADR-0004](ADR-0004-documentation-lifecycle-and-release-boundary.md) -
   Documentation lifecycle and release boundary.
+- [ADR-0005](ADR-0005-design-doc-and-test-ownership-signoff.md) - Design
+  documentation and test ownership signoff.

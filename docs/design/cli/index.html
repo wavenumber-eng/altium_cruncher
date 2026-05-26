@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Altium Cruncher CLI Design Index</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body data-doc-kind="cli-design-index">
+<main>
+  <nav class="nav">
+    <a href="../index.html">Design Index</a>
+    <a href="index.html">CLI</a>
+  </nav>
+
+  <header>
+    <p class="status">CLI command design index</p>
+    <h1>Altium Cruncher CLI</h1>
+    <p class="lede">
+      Public commands are listed in <code>contracts/command_manifest.v0.json</code>
+      and must have matching design documents. This index is the human-readable
+      command map and the signoff anchor for command documentation.
+    </p>
+  </header>
+
+  <section>
+    <h2>Commands</h2>
+    <table id="cli-command-design-docs">
+      <tr>
+        <th>Command</th>
+        <th>Design</th>
+        <th>Config Contract</th>
+        <th>Purpose</th>
+      </tr>
+      <tr data-command="version" data-design-doc="cli/version.html" data-config-contract="none">
+        <td><code>version</code></td>
+        <td><a href="version.html">version.html</a></td>
+        <td>None</td>
+        <td>Report package and CLI version metadata.</td>
+      </tr>
+      <tr data-command="sch-svg" data-design-doc="cli/sch-svg.html" data-config-contract="none">
+        <td><code>sch-svg</code></td>
+        <td><a href="sch-svg.html">sch-svg.html</a></td>
+        <td>None</td>
+        <td>Render schematic documents as SVG artifacts.</td>
+      </tr>
+      <tr data-command="pcb-svg" data-design-doc="cli/pcb-svg.html" data-config-contract="pending">
+        <td><code>pcb-svg</code></td>
+        <td><a href="pcb-svg.html">pcb-svg.html</a></td>
+        <td>Pending contract for <code>pcb-svg.json</code></td>
+        <td>Render PCB layer and assembly SVG views.</td>
+      </tr>
+      <tr data-command="pcb-layer-step" data-design-doc="cli/pcb-layer-step.html" data-config-contract="pending">
+        <td><code>pcb-layer-step</code></td>
+        <td><a href="pcb-layer-step.html">pcb-layer-step.html</a></td>
+        <td>Pending contract for config-driven layer STEP exports.</td>
+        <td>Generate STEP geometry from PCB layer data.</td>
+      </tr>
+      <tr data-command="svg" data-design-doc="cli/svg.html" data-config-contract="none">
+        <td><code>svg</code></td>
+        <td><a href="svg.html">svg.html</a></td>
+        <td>None</td>
+        <td>Combined SVG wrapper for schematic/project workflows.</td>
+      </tr>
+      <tr data-command="pcblib-footprint-3d" data-design-doc="cli/pcblib-footprint-3d.html" data-config-contract="none">
+        <td><code>pcblib-footprint-3d</code></td>
+        <td><a href="pcblib-footprint-3d.html">pcblib-footprint-3d.html</a></td>
+        <td>None</td>
+        <td>Generate footprint 3D preview artifacts.</td>
+      </tr>
+      <tr data-command="bom" data-design-doc="cli/bom.html" data-config-contract="none">
+        <td><code>bom</code></td>
+        <td><a href="bom.html">bom.html</a></td>
+        <td>None</td>
+        <td>Export bill-of-materials data.</td>
+      </tr>
+      <tr data-command="pnp" data-design-doc="cli/pnp.html" data-config-contract="none">
+        <td><code>pnp</code></td>
+        <td><a href="pnp.html">pnp.html</a></td>
+        <td>None</td>
+        <td>Export pick-and-place data.</td>
+      </tr>
+      <tr data-command="netlist" data-design-doc="cli/netlist.html" data-config-contract="none">
+        <td><code>netlist</code></td>
+        <td><a href="netlist.html">netlist.html</a></td>
+        <td>None</td>
+        <td>Export project netlist JSON.</td>
+      </tr>
+      <tr data-command="extract" data-design-doc="cli/extract.html" data-config-contract="none">
+        <td><code>extract</code></td>
+        <td><a href="extract.html">extract.html</a></td>
+        <td>None</td>
+        <td>Extract source document contents and assets.</td>
+      </tr>
+      <tr data-command="easyeda-import" data-design-doc="cli/easyeda-import.html" data-config-contract="none">
+        <td><code>easyeda-import</code></td>
+        <td><a href="easyeda-import.html">easyeda-import.html</a></td>
+        <td>None</td>
+        <td>Import EasyEDA/LCSC symbol and footprint data.</td>
+      </tr>
+      <tr data-command="easyeda-review" data-design-doc="cli/easyeda-review.html" data-config-contract="none">
+        <td><code>easyeda-review</code></td>
+        <td><a href="easyeda-review.html">easyeda-review.html</a></td>
+        <td>None</td>
+        <td>Build review artifacts for EasyEDA schematic imports.</td>
+      </tr>
+      <tr data-command="easyeda-footprint-review" data-design-doc="cli/easyeda-footprint-review.html" data-config-contract="none">
+        <td><code>easyeda-footprint-review</code></td>
+        <td><a href="easyeda-footprint-review.html">easyeda-footprint-review.html</a></td>
+        <td>None</td>
+        <td>Build review artifacts for EasyEDA footprint imports.</td>
+      </tr>
+      <tr data-command="split" data-design-doc="cli/split.html" data-config-contract="none">
+        <td><code>split</code></td>
+        <td><a href="split.html">split.html</a></td>
+        <td>None</td>
+        <td>Split Altium libraries into individual artifacts.</td>
+      </tr>
+      <tr data-command="merge" data-design-doc="cli/merge.html" data-config-contract="none">
+        <td><code>merge</code></td>
+        <td><a href="merge.html">merge.html</a></td>
+        <td>None</td>
+        <td>Merge individual Altium artifacts into library files.</td>
+      </tr>
+      <tr data-command="megamaid" data-design-doc="cli/megamaid.html" data-config-contract="none">
+        <td><code>megamaid</code></td>
+        <td><a href="megamaid.html">megamaid.html</a></td>
+        <td>None</td>
+        <td>Decompose Altium projects into reusable public artifacts.</td>
+      </tr>
+      <tr data-command="clean" data-design-doc="cli/clean.html" data-config-contract="pending">
+        <td><code>clean</code></td>
+        <td><a href="clean.html">clean.html</a></td>
+        <td>Pending contract for clean config JSON.</td>
+        <td>Normalize schematic and library style details.</td>
+      </tr>
+    </table>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,82 @@
+"""Design documentation signoff tests for public CLI commands."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+def _project_root() -> Path:
+    """Find the repository root from this test file."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    raise RuntimeError("Could not locate repository root")
+
+
+PACKAGE_ROOT = _project_root()
+DESIGN_ROOT = PACKAGE_ROOT / "docs" / "design"
+COMMAND_MANIFEST = PACKAGE_ROOT / "contracts" / "command_manifest.v0.json"
+
+
+def _manifest_commands() -> list[str]:
+    """Return registered public command names from the command manifest."""
+    payload = json.loads(COMMAND_MANIFEST.read_text(encoding="utf-8"))
+    assert payload["schema"] == "altium_cruncher.command_manifest.v0"
+    commands = payload["commands"]
+    assert isinstance(commands, list)
+    return [str(command["name"]) for command in commands]
+
+
+def test_design_entry_points_exist() -> None:
+    """Verify that the master design docs entry points exist."""
+    assert (DESIGN_ROOT / "index.html").exists()
+    assert (DESIGN_ROOT / "styles.css").exists()
+    assert (DESIGN_ROOT / "cli" / "index.html").exists()
+    assert (DESIGN_ROOT / "api" / "index.html").exists()
+
+
+def test_cli_commands_have_matching_design_docs() -> None:
+    """Verify that every registered CLI command has a matching design document."""
+    cli_index = (DESIGN_ROOT / "cli" / "index.html").read_text(encoding="utf-8")
+    failures: list[str] = []
+
+    for command in _manifest_commands():
+        design_rel = Path("cli") / f"{command}.html"
+        design_doc = DESIGN_ROOT / design_rel
+        if f'data-command="{command}"' not in cli_index:
+            failures.append(f"{command}: missing cli index row")
+        if design_rel.as_posix() not in cli_index:
+            failures.append(f"{command}: cli index does not reference {design_rel.as_posix()}")
+        if not design_doc.exists():
+            failures.append(f"{command}: missing design doc {design_rel.as_posix()}")
+            continue
+
+        text = design_doc.read_text(encoding="utf-8")
+        for required in (
+            f'data-command="{command}"',
+            '<section id="usage">',
+            '<section id="arguments">',
+            '<section id="output">',
+            '<section id="tests">',
+            'data-config-contract="',
+        ):
+            if required not in text:
+                failures.append(f"{command}: {design_rel.as_posix()} missing {required}")
+
+    assert failures == [], "CLI design doc signoff gaps:\n" + "\n".join(failures)
+
+
+def test_cli_commands_have_dedicated_modules() -> None:
+    """Verify that public CLI behavior lives outside the orchestrator."""
+    commands_root = PACKAGE_ROOT / "src" / "py" / "altium_cruncher"
+    failures: list[str] = []
+
+    for command in _manifest_commands():
+        if command == "version":
+            continue
+        module_path = commands_root / f"altium_cruncher_cmd_{command.replace('-', '_')}.py"
+        if not module_path.exists():
+            failures.append(f"{command}: missing command module {module_path.name}")
+
+    assert failures == [], "CLI command module signoff gaps:\n" + "\n".join(failures)

@@ -9,7 +9,7 @@ Before opening a PR:
 
 1. Keep changes focused on one command, contract, or infrastructure slice.
 2. Add or update tests for every public command behavior change.
-3. Update docs for public interfaces, JSON output, or config formats.
+3. Update docs for public commands, interfaces, JSON output, or config formats.
 4. Justify every new public feature, command, and dependency in the commit,
    PR, or linked plan.
 5. Run package tests and signoff locally.
@@ -22,6 +22,18 @@ packaging impact.
 The top-level CLI should stay an orchestrator. Public subcommands should keep
 command-specific parser setup and behavior in command modules, including simple
 commands.
+
+Design documentation is release-signoff material:
+
+- every command in `contracts/command_manifest.v0.json` needs
+  `docs/design/cli/<command>.html`;
+- command docs must cover usage patterns, invocations, arguments, output, and
+  tests;
+- commands with config files or stable machine-readable output need a contract
+  under `contracts/` plus conformance tests;
+- every public dataclass and listed major interface needs an API design section
+  under `docs/design/api/` with rationale, purpose, test requirements, working
+  definition, and Rack test ownership.
 
 Expected local checks:
 
