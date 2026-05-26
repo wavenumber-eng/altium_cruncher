@@ -235,6 +235,28 @@ Required tests:
 - installed-console test verifies the same behavior from the generated
   `altium-cruncher` executable, not only `python -m altium_cruncher`.
 
+## SVG Command Family
+
+The first public command set keeps all three SVG commands:
+
+- `sch-svg`: schematic and schematic-library SVG output;
+- `pcb-svg`: PCB SVG output, including layer views and assembly views;
+- `svg`: convenience command that runs `sch-svg`, `pcb-svg`, or both based on
+  input type. Its help text should state this plainly and avoid implying it is
+  a separate renderer.
+
+Required SVG follow-up:
+
+- review `svg` help so it clearly says it runs both schematic and PCB SVG
+  commands where applicable;
+- add/confirm fixture-backed coverage that `svg <project.PrjPcb>` creates both
+  schematic SVG output and PCB SVG output;
+- review `pcb-svg` assembly-view rendering with HLR/geometer enabled;
+- choose a redistributable public test project with embedded 3D models and
+  verify assembly SVG output is created and non-empty;
+- keep at least one test that exercises normal PCB layer SVG output so HLR work
+  cannot regress existing layer rendering.
+
 ## EasyEDA Commands
 
 Some newer commands convert EasyEDA designs and currently depend on private
