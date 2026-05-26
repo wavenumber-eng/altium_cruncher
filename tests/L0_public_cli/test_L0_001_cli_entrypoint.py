@@ -91,3 +91,12 @@ def test_cli_command_help_starts_for_manifest_commands() -> None:
         assert cli_version_text() in result.stdout
         assert "usage:" in result.stdout
         assert command in result.stdout
+
+
+def test_svg_help_describes_combined_svg_command() -> None:
+    """Verify that svg help describes the combined schematic and PCB behavior."""
+    result = _run_cli("svg", "--help")
+
+    assert result.returncode == 0, result.stderr
+    assert "Run schematic SVG generation, PCB SVG generation, or both" in result.stdout
+    assert "legacy shortcut" not in result.stdout

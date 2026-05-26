@@ -59,7 +59,8 @@ SVG command family notes:
 - `sch-svg`, `pcb-svg`, and `svg` all stay in the first public command set;
 - `svg` is a convenience command that runs schematic output, PCB output, or both
   depending on the input type;
-- `svg` help should describe that routing behavior clearly;
+- `svg` help describes that routing behavior and avoids presenting the command
+  as a separate renderer;
 - `pcb-svg` needs fixture-backed assembly-view coverage with HLR/geometer and a
   redistributable project that proves SVG artifacts are created.
 

@@ -40,6 +40,7 @@ test_cli_no_args_prints_versioned_help = "Bare CLI invocation prints versioned r
 test_cli_help_lists_manifest_commands = "Root help lists each command declared in the manifest"
 test_cli_help_lists_commands_alphabetically = "Root help lists commands alphabetically"
 test_cli_command_help_starts_for_manifest_commands = "Each manifest command starts and prints versioned command-level help"
+test_svg_help_describes_combined_svg_command = "svg help describes combined schematic and PCB SVG behavior"
 
 [[subtests]]
 id = "L0_002"

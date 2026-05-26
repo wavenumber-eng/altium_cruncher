@@ -288,8 +288,8 @@ The first public command set keeps all three SVG commands:
 
 Required SVG follow-up:
 
-- review `svg` help so it clearly says it runs both schematic and PCB SVG
-  commands where applicable;
+- `svg` help now says it runs schematic SVG generation, PCB SVG generation, or
+  both where applicable;
 - add/confirm fixture-backed coverage that `svg <project.PrjPcb>` creates both
   schematic SVG output and PCB SVG output;
 - review `pcb-svg` assembly-view rendering with HLR/geometer enabled;
