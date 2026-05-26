@@ -90,12 +90,13 @@ Run the built-wheel install smoke after `python -m build`:
 uv run --extra test python scripts\install_smoke.py
 ```
 
-This repository uses `wn-rack` for test strata. The first public stratum is
-`L0_public_cli`; additional command parity and `L99_signoff` strata will be
-added as the public fixtures and release policy are finalized. Signoff policy
-will cover command manifests, public command tests, PEP 257-style docstrings,
-architecture/design documentation, JSON/config contracts, and package
-build/install smoke.
+This repository uses `wn-rack` for test strata. Current public strata are
+`L0_public_cli` for command registration and `L3_public_workflows` for
+fixture-backed CLI workflows. Additional command parity and `L99_signoff`
+strata will be added as the public fixtures and release policy are finalized.
+Signoff policy will cover command manifests, public command tests,
+PEP 257-style docstrings, architecture/design documentation, JSON/config
+contracts, and package build/install smoke.
 
 ## Architecture Docs
 

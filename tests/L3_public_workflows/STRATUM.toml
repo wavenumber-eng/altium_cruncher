@@ -1,0 +1,42 @@
+name = "Public Workflows"
+order = 3
+description = "Fixture-backed public CLI workflows using redistributable assets"
+enabled = true
+concerns = ["cli", "contracts", "release"]
+
+objectives = [
+    "Stable public commands run against redistributable Altium fixtures",
+    "Generated outputs have expected schemas or artifact shapes",
+    "Workflow tests do not require the private corpus",
+]
+
+[dependencies]
+strata = ["L0_public_cli"]
+note = "Hydroscope is the first redistributable workflow fixture."
+
+[[subtests]]
+id = "L3_001"
+file = "test_L3_001_public_cli_workflows.py"
+name = "Public CLI Workflows"
+description = "Run selected public CLI commands against the Hydroscope fixture and validate outputs"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "reference"
+test_cases = "../../examples/assets/projects/hydroscope"
+
+[subtests.code_under_test]
+module = "altium_cruncher._cli"
+
+[subtests.objectives]
+schematic_outputs = "Sch SVG, BOM, PnP, and netlist commands generate expected artifacts"
+library_outputs = "Extract, split, and merge commands generate valid library artifacts"
+pcb_outputs = "pcb-svg generates layer SVG outputs from a public PcbDoc"
+clean_template = "clean creates a config template without mutating committed assets"
+
+[subtests.approach]
+subprocess_cli = "Invoke public CLI commands through the current Python environment"
+
+[subtests.test_functions]
+test_schematic_and_design_json_commands_use_public_project = "Exercise Sch SVG, BOM, PnP, and netlist commands on Hydroscope"
+test_library_extract_split_merge_commands_use_public_fixtures = "Exercise extraction and library split/merge commands on Hydroscope"
+test_pcb_svg_command_uses_public_pcbdoc_without_private_context = "Exercise pcb-svg against a copied public PcbDoc and explicit config"
+test_clean_command_creates_template_for_public_schdoc_copy = "Exercise clean template generation without mutating assets"

@@ -7,9 +7,11 @@ default_lane = "fast"
 [strata]
 order = [
     "L0_public_cli",
+    "L3_public_workflows",
 ]
 default_enabled = [
     "L0_public_cli",
+    "L3_public_workflows",
 ]
 
 [concerns.cli]
