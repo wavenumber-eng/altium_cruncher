@@ -104,8 +104,10 @@ def test_pcb_svg_config_parses_board_cutout_layer_options():
                 "board_cutout_layer_hatch": True,
                 "board_cutout_layer_hash_spacing_mm": 1.25,
                 "board_cutout_layer_hash_angle_deg": 30,
+                "board_cutout_layer_hash_line_width_mm": 0.12,
                 "board_cutout_layer_outline_style": "dashed",
                 "board_cutout_layer_outline_dash_mm": 0.9,
+                "board_cutout_layer_outline_width_mm": 0.33,
                 "board_cutout_layer_label": True,
                 "board_cutout_layer_label_text": "slot",
             },
@@ -117,8 +119,10 @@ def test_pcb_svg_config_parses_board_cutout_layer_options():
     assert config.global_options.board_cutout_layer_hatch is True
     assert config.global_options.board_cutout_layer_hash_spacing_mm == 1.25
     assert config.global_options.board_cutout_layer_hash_angle_deg == 30
+    assert config.global_options.board_cutout_layer_hash_line_width_mm == 0.12
     assert config.global_options.board_cutout_layer_outline_style == "dashed"
     assert config.global_options.board_cutout_layer_outline_dash_mm == 0.9
+    assert config.global_options.board_cutout_layer_outline_width_mm == 0.33
     assert config.global_options.board_cutout_layer_label is True
     assert config.global_options.board_cutout_layer_label_text == "slot"
 
@@ -146,4 +150,20 @@ def test_pcb_svg_config_validates_board_cutout_hash_spacing():
     )
 
     with pytest.raises(ValueError, match="board_cutout_layer_hash_spacing_mm"):
+        _resolve_view_render_settings(config.global_options, config.views[0])
+
+
+def test_pcb_svg_config_validates_board_cutout_line_widths():
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": "wn.pcb.svg.config.v1",
+            "global": {
+                "board_cutout_layer_hash_line_width_mm": 0.0,
+                "board_cutout_layer_outline_width_mm": 0.0,
+            },
+            "views": [{"name": "layers", "source": "layers", "enabled": True}],
+        }
+    )
+
+    with pytest.raises(ValueError, match="board_cutout_layer_hash_line_width_mm"):
         _resolve_view_render_settings(config.global_options, config.views[0])

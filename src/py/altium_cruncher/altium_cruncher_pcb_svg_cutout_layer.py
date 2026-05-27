@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from altium_monkey.altium_pcb_svg_renderer import PcbSvgRenderer
 from altium_cruncher.svg_hatch_patterns import (
+    fmt_svg_number,
     svg_hatch_pattern_defs,
     svg_stroke_dasharray_for_style,
 )
@@ -32,10 +33,12 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
         include_hatch: bool = False,
         hatch_spacing_mm: float = 2.0,
         hatch_angle_deg: float = 45.0,
+        hatch_line_width_mm: float = 0.08,
         include_label: bool = False,
         label_text: str = "cutout",
         outline_style: str = "solid",
         outline_dash_mm: float = 1.5,
+        outline_width_mm: float = 0.15,
     ) -> str | None:
         """Render only interior board cutout contours, or ``None`` when absent."""
         outline = getattr(getattr(pcbdoc, "board", None), "outline", None)
@@ -56,6 +59,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
             self._cutout_hatch_defs(
                 hatch_spacing_mm=hatch_spacing_mm,
                 hatch_angle_deg=hatch_angle_deg,
+                hatch_line_width_mm=hatch_line_width_mm,
             )
             if include_hatch
             else []
@@ -88,6 +92,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
                 label_text=label_text,
                 outline_style=outline_style,
                 outline_dash_mm=outline_dash_mm,
+                outline_width_mm=outline_width_mm,
             )
         )
         lines.append("  </g>")
@@ -99,6 +104,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
         *,
         hatch_spacing_mm: float,
         hatch_angle_deg: float,
+        hatch_line_width_mm: float,
     ) -> list[str]:
         color = html.escape(str(self.options.board_cutout_color or "#FF0000"))
         return svg_hatch_pattern_defs(
@@ -106,6 +112,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
             stroke_color=color,
             spacing_mm=hatch_spacing_mm,
             angle_deg=hatch_angle_deg,
+            line_width_mm=hatch_line_width_mm,
         )
 
     def _render_cutout_paths(
@@ -118,6 +125,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
         label_text: str,
         outline_style: str,
         outline_dash_mm: float,
+        outline_width_mm: float,
     ) -> list[str]:
         stroke_color = html.escape(str(self.options.board_cutout_color or "#FF0000"))
         fill = (
@@ -141,7 +149,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
                 f'd="{cutout_path}"',
                 f'fill="{fill}"',
                 f'stroke="{stroke_color}"',
-                'stroke-width="0.15"',
+                f'stroke-width="{fmt_svg_number(outline_width_mm)}"',
                 'stroke-linejoin="round"',
                 'vector-effect="non-scaling-stroke"',
                 f'data-outline-style="{html.escape(str(outline_style))}"',

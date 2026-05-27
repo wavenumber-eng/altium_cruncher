@@ -25,7 +25,11 @@ from altium_cruncher.altium_cruncher_common import (
     find_pcbdocs_in_cwd,
     find_prjpcbs_in_cwd,
 )
-from altium_cruncher.svg_hatch_patterns import MIN_DASH_MM, MIN_HATCH_SPACING_MM
+from altium_cruncher.svg_hatch_patterns import (
+    MIN_DASH_MM,
+    MIN_HATCH_LINE_WIDTH_MM,
+    MIN_HATCH_SPACING_MM,
+)
 
 log = logging.getLogger(__name__)
 
@@ -241,8 +245,10 @@ class PcbSvgGlobalConfig:
     board_cutout_layer_hatch: bool = False
     board_cutout_layer_hash_spacing_mm: float = 2.0
     board_cutout_layer_hash_angle_deg: float = 45.0
+    board_cutout_layer_hash_line_width_mm: float = 0.08
     board_cutout_layer_outline_style: str = "solid"
     board_cutout_layer_outline_dash_mm: float = 1.5
+    board_cutout_layer_outline_width_mm: float = 0.15
     board_cutout_layer_label: bool = False
     board_cutout_layer_label_text: str = "cutout"
     assembly_enabled: bool = False
@@ -325,6 +331,10 @@ class PcbSvgGlobalConfig:
                 data.get("board_cutout_layer_hash_angle_deg"),
                 default.board_cutout_layer_hash_angle_deg,
             ),
+            board_cutout_layer_hash_line_width_mm=_coerce_float(
+                data.get("board_cutout_layer_hash_line_width_mm"),
+                default.board_cutout_layer_hash_line_width_mm,
+            ),
             board_cutout_layer_outline_style=_coerce_str(
                 data.get("board_cutout_layer_outline_style"),
                 default.board_cutout_layer_outline_style,
@@ -332,6 +342,10 @@ class PcbSvgGlobalConfig:
             board_cutout_layer_outline_dash_mm=_coerce_float(
                 data.get("board_cutout_layer_outline_dash_mm"),
                 default.board_cutout_layer_outline_dash_mm,
+            ),
+            board_cutout_layer_outline_width_mm=_coerce_float(
+                data.get("board_cutout_layer_outline_width_mm"),
+                default.board_cutout_layer_outline_width_mm,
             ),
             board_cutout_layer_label=_coerce_bool(
                 data.get("board_cutout_layer_label"),
@@ -406,8 +420,10 @@ class PcbSvgGlobalConfig:
             "board_cutout_layer_hatch": self.board_cutout_layer_hatch,
             "board_cutout_layer_hash_spacing_mm": self.board_cutout_layer_hash_spacing_mm,
             "board_cutout_layer_hash_angle_deg": self.board_cutout_layer_hash_angle_deg,
+            "board_cutout_layer_hash_line_width_mm": self.board_cutout_layer_hash_line_width_mm,
             "board_cutout_layer_outline_style": self.board_cutout_layer_outline_style,
             "board_cutout_layer_outline_dash_mm": self.board_cutout_layer_outline_dash_mm,
+            "board_cutout_layer_outline_width_mm": self.board_cutout_layer_outline_width_mm,
             "board_cutout_layer_label": self.board_cutout_layer_label,
             "board_cutout_layer_label_text": self.board_cutout_layer_label_text,
             "assembly_enabled": self.assembly_enabled,
@@ -466,8 +482,10 @@ class PcbSvgViewConfig:
     board_cutout_layer_hatch: bool | None = None
     board_cutout_layer_hash_spacing_mm: float | None = None
     board_cutout_layer_hash_angle_deg: float | None = None
+    board_cutout_layer_hash_line_width_mm: float | None = None
     board_cutout_layer_outline_style: str | None = None
     board_cutout_layer_outline_dash_mm: float | None = None
+    board_cutout_layer_outline_width_mm: float | None = None
     board_cutout_layer_label: bool | None = None
     board_cutout_layer_label_text: str | None = None
     assembly_enabled: bool | None = None
@@ -555,11 +573,17 @@ class PcbSvgViewConfig:
             board_cutout_layer_hash_angle_deg=_coerce_optional_float(
                 data.get("board_cutout_layer_hash_angle_deg")
             ),
+            board_cutout_layer_hash_line_width_mm=_coerce_optional_float(
+                data.get("board_cutout_layer_hash_line_width_mm")
+            ),
             board_cutout_layer_outline_style=_coerce_optional_str(
                 data.get("board_cutout_layer_outline_style")
             ),
             board_cutout_layer_outline_dash_mm=_coerce_optional_float(
                 data.get("board_cutout_layer_outline_dash_mm")
+            ),
+            board_cutout_layer_outline_width_mm=_coerce_optional_float(
+                data.get("board_cutout_layer_outline_width_mm")
             ),
             board_cutout_layer_label=_coerce_optional_bool(
                 data.get("board_cutout_layer_label"), False
@@ -629,8 +653,10 @@ class PcbSvgViewConfig:
             "board_cutout_layer_hatch": self.board_cutout_layer_hatch,
             "board_cutout_layer_hash_spacing_mm": self.board_cutout_layer_hash_spacing_mm,
             "board_cutout_layer_hash_angle_deg": self.board_cutout_layer_hash_angle_deg,
+            "board_cutout_layer_hash_line_width_mm": self.board_cutout_layer_hash_line_width_mm,
             "board_cutout_layer_outline_style": self.board_cutout_layer_outline_style,
             "board_cutout_layer_outline_dash_mm": self.board_cutout_layer_outline_dash_mm,
+            "board_cutout_layer_outline_width_mm": self.board_cutout_layer_outline_width_mm,
             "board_cutout_layer_label": self.board_cutout_layer_label,
             "board_cutout_layer_label_text": self.board_cutout_layer_label_text,
             "assembly_enabled": self.assembly_enabled,
@@ -1033,6 +1059,17 @@ def _resolve_view_render_settings(
         view_name=view_label,
         minimum=MIN_HATCH_SPACING_MM,
     )
+    board_cutout_hash_line_width_mm = _validate_positive_svg_mm(
+        value=float(
+            _view_option_value(
+                view.board_cutout_layer_hash_line_width_mm,
+                global_options.board_cutout_layer_hash_line_width_mm,
+            )
+        ),
+        field_name="board_cutout_layer_hash_line_width_mm",
+        view_name=view_label,
+        minimum=MIN_HATCH_LINE_WIDTH_MM,
+    )
     board_cutout_outline_style = _validate_board_cutout_outline_style(
         style=str(
             _view_option_value(
@@ -1052,6 +1089,17 @@ def _resolve_view_render_settings(
         field_name="board_cutout_layer_outline_dash_mm",
         view_name=view_label,
         minimum=MIN_DASH_MM,
+    )
+    board_cutout_outline_width_mm = _validate_positive_svg_mm(
+        value=float(
+            _view_option_value(
+                view.board_cutout_layer_outline_width_mm,
+                global_options.board_cutout_layer_outline_width_mm,
+            )
+        ),
+        field_name="board_cutout_layer_outline_width_mm",
+        view_name=view_label,
+        minimum=MIN_HATCH_LINE_WIDTH_MM,
     )
     plated_color = (
         str(
@@ -1298,8 +1346,10 @@ def _resolve_view_render_settings(
                 global_options.board_cutout_layer_hash_angle_deg,
             )
         ),
+        board_cutout_layer_hash_line_width_mm=board_cutout_hash_line_width_mm,
         board_cutout_layer_outline_style=board_cutout_outline_style,
         board_cutout_layer_outline_dash_mm=board_cutout_outline_dash_mm,
+        board_cutout_layer_outline_width_mm=board_cutout_outline_width_mm,
         board_cutout_layer_label=bool(
             _view_option_value(
                 view.board_cutout_layer_label,
@@ -1597,6 +1647,11 @@ def _render_core_pcb_svg_views(
                             "board_cutout_layer_hash_angle_deg"
                         ]
                     ),
+                    hatch_line_width_mm=float(
+                        layer_resolved["render_kwargs"][
+                            "board_cutout_layer_hash_line_width_mm"
+                        ]
+                    ),
                     include_label=bool(
                         layer_resolved["render_kwargs"]["board_cutout_layer_label"]
                     ),
@@ -1613,6 +1668,11 @@ def _render_core_pcb_svg_views(
                     outline_dash_mm=float(
                         layer_resolved["render_kwargs"][
                             "board_cutout_layer_outline_dash_mm"
+                        ]
+                    ),
+                    outline_width_mm=float(
+                        layer_resolved["render_kwargs"][
+                            "board_cutout_layer_outline_width_mm"
                         ]
                     ),
                 )

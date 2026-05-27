@@ -63,6 +63,27 @@ def test_cli_help_lists_manifest_commands() -> None:
         assert command in result.stdout
 
 
+def test_cli_help_lists_global_logging_controls() -> None:
+    """Verify that root help documents global logging controls."""
+    result = _run_cli("--help")
+
+    assert result.returncode == 0, result.stderr
+    assert "--quiet" in result.stdout
+    assert "--verbose" in result.stdout
+    assert "--log-level" in result.stdout
+
+
+def test_cli_quiet_suppresses_info_logs(tmp_path: Path) -> None:
+    """Verify that --quiet hides normal command info logs."""
+    config_path = tmp_path / "bom.config"
+
+    result = _run_cli("--quiet", "bom", "--write-config", str(config_path))
+
+    assert result.returncode == 0, result.stderr
+    assert config_path.exists()
+    assert "Wrote BOM/PnP config template" not in result.stdout
+
+
 def test_cli_help_lists_commands_alphabetically() -> None:
     """Verify that root help presents commands in alphabetical order."""
     expected_commands = _manifest_commands()

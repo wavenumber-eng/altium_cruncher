@@ -10,6 +10,7 @@ Output policy:
 """
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 from typing import cast
@@ -67,6 +68,14 @@ from altium_cruncher.altium_cruncher_cmd_svg import (
     register_parser as register_svg_parser,
 )
 
+LOG_LEVEL_BY_NAME = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
+}
+
 
 class CruncherArgumentParser(argparse.ArgumentParser):
     """Argument parser that prints the package version in help output."""
@@ -80,6 +89,18 @@ class CruncherArgumentParser(argparse.ArgumentParser):
 def _cmd_version(_args: argparse.Namespace) -> int:
     print(cli_version_text())
     return 0
+
+
+def _cli_log_level(args: argparse.Namespace) -> int:
+    """Return the requested root CLI logging threshold."""
+    if bool(getattr(args, "quiet", False)):
+        return logging.WARNING
+    if bool(getattr(args, "verbose", False)):
+        return logging.DEBUG
+    log_level = getattr(args, "log_level", None)
+    if log_level:
+        return LOG_LEVEL_BY_NAME[str(log_level)]
+    return logging.INFO
 
 
 def _cmd_missing_easyeda(_args: argparse.Namespace) -> int:
@@ -142,8 +163,6 @@ def _register_easyeda_parsers(subparsers: argparse._SubParsersAction) -> None:
 
 def main() -> None:
     """Main entry point for the altium-cruncher CLI tool."""
-    setup_cli_logging()
-
     parser = CruncherArgumentParser(
         prog="altium-cruncher",
         description="High-level CLI for Altium file operations",
@@ -154,6 +173,22 @@ def main() -> None:
         action="version",
         version=cli_version_text(),
         help="Print version information and exit",
+    )
+    logging_group = parser.add_mutually_exclusive_group()
+    logging_group.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Only print warnings and errors from command logging",
+    )
+    logging_group.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print debug-level command and parser logging",
+    )
+    logging_group.add_argument(
+        "--log-level",
+        choices=tuple(LOG_LEVEL_BY_NAME),
+        help="Set command logging level explicitly",
     )
     subparsers = parser.add_subparsers(
         dest="command",
@@ -188,6 +223,8 @@ def main() -> None:
     args, unknown_args = parser.parse_known_args()
     if unknown_args:
         parser.error(f"unrecognized arguments: {' '.join(unknown_args)}")
+
+    setup_cli_logging(_cli_log_level(args))
 
     handler = getattr(args, "handler", None)
     if handler is None:

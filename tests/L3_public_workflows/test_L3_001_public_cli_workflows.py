@@ -281,8 +281,10 @@ def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
                     "board_cutout_layer_hatch": True,
                     "board_cutout_layer_hash_spacing_mm": 1.25,
                     "board_cutout_layer_hash_angle_deg": 30,
+                    "board_cutout_layer_hash_line_width_mm": 0.12,
                     "board_cutout_layer_outline_style": "dashed",
                     "board_cutout_layer_outline_dash_mm": 0.9,
+                    "board_cutout_layer_outline_width_mm": 0.33,
                     "board_cutout_layer_label": True,
                     "board_cutout_layer_label_text": "cutout",
                 },
@@ -307,7 +309,9 @@ def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
     assert cutout_svg.count('data-feature="board-cutout"') == 4
     assert 'width="1.25" height="1.25"' in cutout_svg
     assert 'patternTransform="rotate(30)"' in cutout_svg
+    assert 'stroke-width="0.12"' in cutout_svg
     assert 'stroke-dasharray="0.9 0.9"' in cutout_svg
+    assert 'stroke-width="0.33"' in cutout_svg
     assert cutout_svg.count(">cutout</text>") == 4
 
 

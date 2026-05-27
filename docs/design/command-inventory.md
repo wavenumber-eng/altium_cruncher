@@ -38,6 +38,8 @@ Shared help requirements for every command:
 - help output should include readable spacing between version, usage, commands,
   and options;
 - top-level help should explicitly show how to request command-specific help.
+- root-level logging controls are `--quiet`, `--verbose`, and `--log-level`;
+  normal command progress is INFO, while parser internals should stay DEBUG.
 
 Shared output naming requirements:
 
@@ -65,8 +67,8 @@ SVG command family notes:
   Hydroscope embedded STEP models, while the normal layer-output test remains
   in place so HLR work cannot regress layer SVG output;
 - `pcb-svg` can emit a synthetic `BOARD_CUTOUTS` layer from board-profile
-  cutouts with optional labels, configurable hash spacing/direction, and solid
-  or dashed outlines;
+  cutouts with optional labels, configurable hash spacing/direction/line width,
+  configurable outline line width, and solid or dashed outlines;
 - board cutout hash rendering is implemented through reusable SVG pattern
   helpers so future synthetic layers can fill arbitrary closed paths the same
   way.
