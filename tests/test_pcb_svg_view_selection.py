@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
@@ -11,6 +12,7 @@ from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     PcbSvgViewConfig,
     _apply_pcb_layer_selection,
     _apply_pcb_view_selection,
+    _default_pcb_svg_config_text,
     _load_pcb_svg_config,
     _resolve_view_render_settings,
     resolve_pcb_svg_configs,
@@ -19,7 +21,24 @@ from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
     PcbSvgA0Renderer,
     write_or_update_view_svg,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
+    PcbSvgComponentInventory,
+    build_pcb_svg_component_inventory_from_pcbdoc,
+    load_pcb_svg_component_inventory,
+)
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CRICKET_PCBDOC = (
+    ROOT
+    / "tests"
+    / "assets"
+    / "projects"
+    / "cricket-node"
+    / "input"
+    / "cricket-node-hw__B.PcbDoc"
+)
 
 
 def _enabled_views(config: PcbSvgConfig) -> set[str]:
@@ -36,6 +55,10 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     assert payload["schema"] == PCB_SVG_CONFIG_SCHEMA
     assert PCB_SVG_CONFIG_FILENAME == "pcb.svg.config"
     assert "pcbdoc" not in global_options
+    assert "assembly" not in payload
+    assert "dnp" not in payload
+    assert "diodes" not in payload
+    assert "components" not in payload
     assert layer_outputs["enabled"] is True
     assert "BOARD_CUTOUTS" in cast(list[str], layer_outputs["include_special_layers"])
     top_view = next(view for view in views if view["name"] == "top_view")
@@ -141,10 +164,124 @@ def test_pcb_svg_cli_overrides_created_default_config(tmp_path) -> None:
     assert "Common physical layer tokens" in created_text
     assert "Synthetic layer tokens" in created_text
     assert "add global.pcbdoc" in created_text
+    assert "Projection modes: detail, simple, bounding_box, none" in created_text
     assert '"pcbdoc": null' not in created_text
     assert _enabled_views(resolved) == {"top_view"}
     assert resolved.layer_outputs["enabled"] is True
     assert resolved.layer_outputs["layers"] == ["BOTTOM"]
+
+
+def test_pcb_svg_config_accepts_virtual_assembly_options() -> None:
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "assembly": {
+                "default_projection": "bounding-box",
+                "dnp_projection": "none",
+                "designator_color": "#123456",
+                "dnp_designator_color": "#FF0000",
+            },
+            "dnp": {
+                "color": "#AA0000",
+                "hatch": True,
+                "hatch_spacing_mm": 1.25,
+                "hatch_angle_deg": 30.0,
+                "hatch_line_width_mm": 0.11,
+            },
+            "diodes": {
+                "numeric_cathode_pad": "1",
+                "cathode_pad_names": ["K", "C"],
+                "designator_prefixes": ["D", "LED"],
+                "parameter_terms": ["diode", "zener"],
+            },
+            "components": {
+                "D15": {
+                    "side": "top",
+                    "projection": "none",
+                    "pin1_pad": "1",
+                    "cathode_pad": "C",
+                    "diode": True,
+                    "diode_line_art": False,
+                    "show_designator": True,
+                }
+            },
+            "views": [
+                {
+                    "name": "pin1",
+                    "layers": ["BOARD_OUTLINE", "PIN_1_TOP"],
+                }
+            ],
+        }
+    )
+
+    assert config.assembly.default_projection == "bounding_box"
+    assert config.assembly.dnp_projection == "none"
+    assert config.dnp.hatch_spacing_mm == 1.25
+    assert config.diodes.numeric_cathode_pad == "1"
+    assert config.components["D15"].cathode_pad == "C"
+    assert config.views[0].layers == ["BOARD_OUTLINE", "PIN1_TOP"]
+    payload = config.to_dict()
+    assert "assembly" in payload
+    assert "dnp" in payload
+    assert "diodes" in payload
+    assert "components" in payload
+
+
+def test_pcb_svg_component_inventory_detects_sides_and_diodes() -> None:
+    led_component = SimpleNamespace(
+        designator="D1",
+        footprint="LED-0603",
+        description="green LED diode",
+        unique_id="ABC123",
+        parameters={"Value": "LED"},
+        raw_record={"SOURCEDESCRIPTION": "LED"},
+        get_layer_normalized=lambda: "top",
+        get_rotation_degrees=lambda: 90.0,
+    )
+    resistor_component = SimpleNamespace(
+        designator="R1",
+        footprint="R0603",
+        description="resistor",
+        unique_id="DEF456",
+        parameters={"Value": "10k"},
+        raw_record={},
+        get_layer_normalized=lambda: "bottom",
+        get_rotation_degrees=lambda: 180.0,
+    )
+    pcbdoc = SimpleNamespace(
+        components=[led_component, resistor_component],
+        pads=[
+            SimpleNamespace(component_index=0, designator="A"),
+            SimpleNamespace(component_index=0, designator="C"),
+            SimpleNamespace(component_index=1, designator="1"),
+            SimpleNamespace(component_index=1, designator="2"),
+        ],
+    )
+
+    inventory = build_pcb_svg_component_inventory_from_pcbdoc(
+        board_key="board",
+        pcb_path=Path("board.PcbDoc"),
+        pcbdoc=cast(AltiumPcbDoc, pcbdoc),
+    )
+
+    assert [component.designator for component in inventory.components] == ["D1", "R1"]
+    diode = inventory.diode_candidates[0]
+    assert diode.designator == "D1"
+    assert diode.side == "top"
+    assert diode.pad_designators == ("A", "C")
+    assert diode.cathode_pad == "C"
+    assert diode.is_two_pin_diode is True
+
+
+def test_pcb_svg_config_template_comments_include_cricket_node_inventory() -> None:
+    inventories = load_pcb_svg_component_inventory(CRICKET_PCBDOC)
+
+    text = _default_pcb_svg_config_text(cast(tuple[PcbSvgComponentInventory, ...], inventories))
+
+    assert "// Component inventory (designator: side, footprint):" in text
+    assert "//   D15: top, footprint=LED-0805-RED" in text
+    assert "// Auto-detected diode candidates:" in text
+    assert "//   D15: two-pin, side=top, pads=A,C, cathode=C" in text
 
 
 def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(

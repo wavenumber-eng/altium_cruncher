@@ -313,6 +313,18 @@ explicit design/contract slice before broad implementation so each virtual
 layer can be tested in isolation and the default config remains editable by a
 human.
 
+Status:
+
+- config/parser foundation is implemented: `pcb.svg.config.a0` accepts optional
+  `assembly`, `dnp`, `diodes`, and `components` sections; default generated
+  JSON omits those sections until a user adds non-default behavior;
+- generated JSONC templates now inspect the selected PcbDoc/PrjPcb when
+  possible and add comments listing discovered component designators, side,
+  footprint, and diode candidates. This inventory path parses PcbDoc data only
+  and does not invoke Geometer or HLR;
+- rendering support for component-level projection modes, designator layers,
+  pin-1 layers, DNP hatching, and diode line art remains the next work.
+
 Planned synthetic layer tokens:
 
 - `ASSEMBLY_HLR_TOP` / `ASSEMBLY_HLR_BOTTOM`: component body projection layer.

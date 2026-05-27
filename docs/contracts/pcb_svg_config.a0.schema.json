@@ -33,6 +33,53 @@
         "styles": { "$ref": "#/$defs/styleTable" }
       }
     },
+    "assembly": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_projection": { "$ref": "#/$defs/projectionMode" },
+        "dnp_projection": { "$ref": "#/$defs/projectionMode" },
+        "designator_color": { "type": "string" },
+        "dnp_designator_color": { "type": "string" }
+      }
+    },
+    "dnp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": { "type": "string" },
+        "hatch": { "type": "boolean" },
+        "hatch_spacing_mm": { "type": "number", "exclusiveMinimum": 0 },
+        "hatch_angle_deg": { "type": "number" },
+        "hatch_line_width_mm": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "diodes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "line_art": { "type": "boolean" },
+        "marker_color": { "type": "string" },
+        "numeric_cathode_pad": { "type": "string" },
+        "cathode_pad_names": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "designator_prefixes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "parameter_terms": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/componentOverride" }
+    },
     "layer_outputs": {
       "type": "object",
       "additionalProperties": false,
@@ -85,8 +132,28 @@
         "DRILLS",
         "SLOTS",
         "ASSEMBLY_HLR_TOP",
-        "ASSEMBLY_HLR_BOTTOM"
+        "ASSEMBLY_HLR_BOTTOM",
+        "ASSEMBLY_DESIGNATORS_TOP",
+        "ASSEMBLY_DESIGNATORS_BOTTOM",
+        "PIN1_TOP",
+        "PIN1_BOTTOM"
       ]
+    },
+    "projectionMode": {
+      "enum": ["detail", "simple", "bounding_box", "none"]
+    },
+    "componentOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "side": { "enum": ["top", "bottom"] },
+        "projection": { "$ref": "#/$defs/projectionMode" },
+        "pin1_pad": { "type": "string" },
+        "cathode_pad": { "type": "string" },
+        "diode": { "type": "boolean" },
+        "diode_line_art": { "type": "boolean" },
+        "show_designator": { "type": "boolean" }
+      }
     },
     "styleTable": {
       "type": "object",

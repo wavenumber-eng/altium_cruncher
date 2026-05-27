@@ -12,6 +12,10 @@ PCB_SVG_CONFIG_FILENAME = "pcb.svg.config"
 PCB_SVG_CONFIG_SCHEMA = "pcb.svg.config.a0"
 PCB_DEFAULT_SVG_SCALE = 10.0
 PCB_SVG_CANVAS_BOUNDS_MODES = frozenset({"board_outline", "all_geometry"})
+PCB_SVG_COMPONENT_PROJECTION_MODES = frozenset(
+    {"detail", "simple", "bounding_box", "none"}
+)
+PCB_SVG_COMPONENT_SIDES = frozenset({"top", "bottom"})
 
 PCB_SVG_SPECIAL_LAYERS = frozenset(
     {
@@ -21,6 +25,10 @@ PCB_SVG_SPECIAL_LAYERS = frozenset(
         "SLOTS",
         "ASSEMBLY_HLR_TOP",
         "ASSEMBLY_HLR_BOTTOM",
+        "ASSEMBLY_DESIGNATORS_TOP",
+        "ASSEMBLY_DESIGNATORS_BOTTOM",
+        "PIN1_TOP",
+        "PIN1_BOTTOM",
     }
 )
 
@@ -96,6 +104,50 @@ def _coerce_str_list(value: object, *, field_name: str) -> list[str]:
     return result
 
 
+def _coerce_raw_str_list(
+    value: object,
+    default: list[str],
+    *,
+    field_name: str,
+) -> list[str]:
+    if value is None:
+        return list(default)
+    if not isinstance(value, list):
+        raise ValueError(f"pcb-svg config field '{field_name}' must be an array")
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
+def _coerce_projection_mode(value: object, default: str, *, field_name: str) -> str:
+    raw = str(value or default).strip().lower().replace("-", "_")
+    aliases = {
+        "bbox": "bounding_box",
+        "box": "bounding_box",
+        "bounds": "bounding_box",
+        "off": "none",
+        "disabled": "none",
+    }
+    mode = aliases.get(raw, raw)
+    if mode not in PCB_SVG_COMPONENT_PROJECTION_MODES:
+        raise ValueError(
+            f"pcb-svg config field '{field_name}' must be one of: "
+            + ", ".join(sorted(PCB_SVG_COMPONENT_PROJECTION_MODES))
+        )
+    return mode
+
+
+def _coerce_component_side(value: object, *, field_name: str) -> str | None:
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return None
+    aliases = {"toplayer": "top", "bottomlayer": "bottom"}
+    side = aliases.get(raw.replace("_", "").replace("-", ""), raw)
+    if side not in PCB_SVG_COMPONENT_SIDES:
+        raise ValueError(
+            f"pcb-svg config field '{field_name}' must be 'top' or 'bottom'"
+        )
+    return side
+
+
 def _normalize_layer_token(value: str) -> str:
     token = value.strip()
     if not token:
@@ -120,6 +172,12 @@ def _normalize_layer_token(value: str) -> str:
         "BOARD_PROFILE": "BOARD_OUTLINE",
         "HLR_TOP": "ASSEMBLY_HLR_TOP",
         "HLR_BOTTOM": "ASSEMBLY_HLR_BOTTOM",
+        "DESIGNATORS_TOP": "ASSEMBLY_DESIGNATORS_TOP",
+        "DESIGNATORS_BOTTOM": "ASSEMBLY_DESIGNATORS_BOTTOM",
+        "ASSEMBLY_DESIGNATOR_TOP": "ASSEMBLY_DESIGNATORS_TOP",
+        "ASSEMBLY_DESIGNATOR_BOTTOM": "ASSEMBLY_DESIGNATORS_BOTTOM",
+        "PIN_1_TOP": "PIN1_TOP",
+        "PIN_1_BOTTOM": "PIN1_BOTTOM",
     }
     return aliases.get(normalized, normalized)
 
@@ -429,6 +487,231 @@ class PcbSvgViewConfig:
         return result
 
 
+@dataclass(slots=True)
+class PcbSvgAssemblyConfig:
+    """Component assembly projection defaults for PCB SVG virtual layers."""
+
+    default_projection: str = "detail"
+    dnp_projection: str = "bounding_box"
+    designator_color: str = "#111111"
+    dnp_designator_color: str = "#FF0000"
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgAssemblyConfig":
+        if data is None:
+            return cls()
+        if not isinstance(data, dict):
+            raise ValueError("pcb-svg config field 'assembly' must be an object")
+        default = cls()
+        return cls(
+            default_projection=_coerce_projection_mode(
+                data.get("default_projection"),
+                default.default_projection,
+                field_name="assembly.default_projection",
+            ),
+            dnp_projection=_coerce_projection_mode(
+                data.get("dnp_projection"),
+                default.dnp_projection,
+                field_name="assembly.dnp_projection",
+            ),
+            designator_color=str(
+                data.get("designator_color", default.designator_color)
+                or default.designator_color
+            ),
+            dnp_designator_color=str(
+                data.get("dnp_designator_color", default.dnp_designator_color)
+                or default.dnp_designator_color
+            ),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "default_projection": self.default_projection,
+            "dnp_projection": self.dnp_projection,
+            "designator_color": self.designator_color,
+            "dnp_designator_color": self.dnp_designator_color,
+        }
+
+
+@dataclass(slots=True)
+class PcbSvgDnpConfig:
+    """DNP projection and hatching defaults for PCB SVG component overlays."""
+
+    color: str = "#FF0000"
+    hatch: bool = True
+    hatch_spacing_mm: float = 1.5
+    hatch_angle_deg: float = 45.0
+    hatch_line_width_mm: float = 0.08
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgDnpConfig":
+        if data is None:
+            return cls()
+        if not isinstance(data, dict):
+            raise ValueError("pcb-svg config field 'dnp' must be an object")
+        default = cls()
+        return cls(
+            color=str(data.get("color", default.color) or default.color),
+            hatch=_coerce_bool(data.get("hatch"), default.hatch),
+            hatch_spacing_mm=_coerce_float(
+                data.get("hatch_spacing_mm"),
+                default.hatch_spacing_mm,
+            ),
+            hatch_angle_deg=_coerce_float(
+                data.get("hatch_angle_deg"),
+                default.hatch_angle_deg,
+            ),
+            hatch_line_width_mm=_coerce_float(
+                data.get("hatch_line_width_mm"),
+                default.hatch_line_width_mm,
+            ),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "color": self.color,
+            "hatch": self.hatch,
+            "hatch_spacing_mm": self.hatch_spacing_mm,
+            "hatch_angle_deg": self.hatch_angle_deg,
+            "hatch_line_width_mm": self.hatch_line_width_mm,
+        }
+
+
+@dataclass(slots=True)
+class PcbSvgDiodeConfig:
+    """Diode detection and cathode-marker defaults for PCB SVG overlays."""
+
+    enabled: bool = True
+    line_art: bool = True
+    marker_color: str = "#FF0000"
+    numeric_cathode_pad: str = "2"
+    cathode_pad_names: list[str] = field(default_factory=lambda: ["K", "C"])
+    designator_prefixes: list[str] = field(default_factory=lambda: ["D", "LED"])
+    parameter_terms: list[str] = field(
+        default_factory=lambda: ["diode", "schottky", "zener", "tvs", "led"]
+    )
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgDiodeConfig":
+        if data is None:
+            return cls()
+        if not isinstance(data, dict):
+            raise ValueError("pcb-svg config field 'diodes' must be an object")
+        default = cls()
+        return cls(
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
+            line_art=_coerce_bool(data.get("line_art"), default.line_art),
+            marker_color=str(
+                data.get("marker_color", default.marker_color)
+                or default.marker_color
+            ),
+            numeric_cathode_pad=str(
+                data.get("numeric_cathode_pad", default.numeric_cathode_pad)
+                or default.numeric_cathode_pad
+            ),
+            cathode_pad_names=_coerce_raw_str_list(
+                data.get("cathode_pad_names"),
+                default.cathode_pad_names,
+                field_name="diodes.cathode_pad_names",
+            ),
+            designator_prefixes=_coerce_raw_str_list(
+                data.get("designator_prefixes"),
+                default.designator_prefixes,
+                field_name="diodes.designator_prefixes",
+            ),
+            parameter_terms=_coerce_raw_str_list(
+                data.get("parameter_terms"),
+                default.parameter_terms,
+                field_name="diodes.parameter_terms",
+            ),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "enabled": self.enabled,
+            "line_art": self.line_art,
+            "marker_color": self.marker_color,
+            "numeric_cathode_pad": self.numeric_cathode_pad,
+            "cathode_pad_names": list(self.cathode_pad_names),
+            "designator_prefixes": list(self.designator_prefixes),
+            "parameter_terms": list(self.parameter_terms),
+        }
+
+
+@dataclass(slots=True)
+class PcbSvgComponentOverride:
+    """Per-designator PCB SVG virtual assembly override."""
+
+    side: str | None = None
+    projection: str | None = None
+    pin1_pad: str | None = None
+    cathode_pad: str | None = None
+    diode: bool | None = None
+    diode_line_art: bool | None = None
+    show_designator: bool | None = None
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: dict[str, object],
+        *,
+        designator: str,
+    ) -> "PcbSvgComponentOverride":
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"pcb-svg config field 'components.{designator}' must be an object"
+            )
+        projection = None
+        if data.get("projection") is not None:
+            projection = _coerce_projection_mode(
+                data.get("projection"),
+                "detail",
+                field_name=f"components.{designator}.projection",
+            )
+        return cls(
+            side=_coerce_component_side(
+                data.get("side"),
+                field_name=f"components.{designator}.side",
+            ),
+            projection=projection,
+            pin1_pad=_coerce_optional_str(data.get("pin1_pad")),
+            cathode_pad=_coerce_optional_str(data.get("cathode_pad")),
+            diode=(
+                None
+                if data.get("diode") is None
+                else _coerce_bool(data.get("diode"), False)
+            ),
+            diode_line_art=(
+                None
+                if data.get("diode_line_art") is None
+                else _coerce_bool(data.get("diode_line_art"), False)
+            ),
+            show_designator=(
+                None
+                if data.get("show_designator") is None
+                else _coerce_bool(data.get("show_designator"), False)
+            ),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        result: dict[str, object] = {}
+        if self.side is not None:
+            result["side"] = self.side
+        if self.projection is not None:
+            result["projection"] = self.projection
+        if self.pin1_pad is not None:
+            result["pin1_pad"] = self.pin1_pad
+        if self.cathode_pad is not None:
+            result["cathode_pad"] = self.cathode_pad
+        if self.diode is not None:
+            result["diode"] = self.diode
+        if self.diode_line_art is not None:
+            result["diode_line_art"] = self.diode_line_art
+        if self.show_designator is not None:
+            result["show_designator"] = self.show_designator
+        return result
+
+
 def _default_layer_outputs() -> dict[str, object]:
     return {
         "enabled": True,
@@ -462,6 +745,27 @@ def _normalize_layer_outputs(data: dict[str, object] | None) -> dict[str, object
     )
     merged["output_dir"] = str(merged.get("output_dir") or "layers")
     return merged
+
+
+def _normalize_component_overrides(
+    data: dict[str, object] | None,
+) -> dict[str, PcbSvgComponentOverride]:
+    if data is None:
+        return {}
+    result: dict[str, PcbSvgComponentOverride] = {}
+    for raw_designator, raw_override in data.items():
+        designator = str(raw_designator).strip()
+        if not designator:
+            raise ValueError("pcb-svg config field 'components' has an empty designator")
+        if not isinstance(raw_override, dict):
+            raise ValueError(
+                f"pcb-svg config field 'components.{designator}' must be an object"
+            )
+        result[designator] = PcbSvgComponentOverride.from_dict(
+            raw_override,
+            designator=designator,
+        )
+    return result
 
 
 def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
@@ -517,6 +821,10 @@ class PcbSvgConfig:
 
     schema: str = PCB_SVG_CONFIG_SCHEMA
     global_options: PcbSvgGlobalConfig = field(default_factory=PcbSvgGlobalConfig)
+    assembly: PcbSvgAssemblyConfig = field(default_factory=PcbSvgAssemblyConfig)
+    dnp: PcbSvgDnpConfig = field(default_factory=PcbSvgDnpConfig)
+    diodes: PcbSvgDiodeConfig = field(default_factory=PcbSvgDiodeConfig)
+    components: dict[str, PcbSvgComponentOverride] = field(default_factory=dict)
     layer_outputs: dict[str, object] = field(default_factory=_default_layer_outputs)
     views: list[PcbSvgViewConfig] = field(default_factory=_default_pcb_svg_views)
 
@@ -546,6 +854,21 @@ class PcbSvgConfig:
             global_options=PcbSvgGlobalConfig.from_dict(
                 _coerce_object_mapping(data.get("global"), field_name="global")
             ),
+            assembly=PcbSvgAssemblyConfig.from_dict(
+                _coerce_object_mapping(data.get("assembly"), field_name="assembly")
+            ),
+            dnp=PcbSvgDnpConfig.from_dict(
+                _coerce_object_mapping(data.get("dnp"), field_name="dnp")
+            ),
+            diodes=PcbSvgDiodeConfig.from_dict(
+                _coerce_object_mapping(data.get("diodes"), field_name="diodes")
+            ),
+            components=_normalize_component_overrides(
+                _coerce_object_mapping(
+                    data.get("components"),
+                    field_name="components",
+                )
+            ),
             layer_outputs=_normalize_layer_outputs(
                 _coerce_object_mapping(
                     data.get("layer_outputs"),
@@ -556,12 +879,24 @@ class PcbSvgConfig:
         )
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "schema": self.schema,
             "global": self.global_options.to_dict(),
             "layer_outputs": dict(self.layer_outputs),
             "views": [view.to_dict() for view in self.views],
         }
+        if self.assembly != PcbSvgAssemblyConfig():
+            result["assembly"] = self.assembly.to_dict()
+        if self.dnp != PcbSvgDnpConfig():
+            result["dnp"] = self.dnp.to_dict()
+        if self.diodes != PcbSvgDiodeConfig():
+            result["diodes"] = self.diodes.to_dict()
+        if self.components:
+            result["components"] = {
+                designator: override.to_dict()
+                for designator, override in sorted(self.components.items())
+            }
+        return result
 
     def enabled_views(self) -> list[PcbSvgViewConfig]:
         return [view for view in self.views if view.enabled]
@@ -584,11 +919,17 @@ def resolve_config_output_path(output_dir: Path, pattern: str, *, board: str, vi
 __all__ = [
     "PCB_DEFAULT_SVG_SCALE",
     "PCB_SVG_CANVAS_BOUNDS_MODES",
+    "PCB_SVG_COMPONENT_PROJECTION_MODES",
+    "PCB_SVG_COMPONENT_SIDES",
     "PCB_SVG_CONFIG_FILENAME",
     "PCB_SVG_CONFIG_SCHEMA",
     "PCB_SVG_SPECIAL_LAYERS",
+    "PcbSvgAssemblyConfig",
     "PcbSvgConfig",
     "PcbSvgCanvasConfig",
+    "PcbSvgComponentOverride",
+    "PcbSvgDiodeConfig",
+    "PcbSvgDnpConfig",
     "PcbSvgGlobalConfig",
     "PcbSvgViewConfig",
     "default_pcb_svg_styles",

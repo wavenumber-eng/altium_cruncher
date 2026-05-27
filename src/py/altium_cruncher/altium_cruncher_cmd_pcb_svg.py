@@ -24,6 +24,10 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgViewConfig,
     parse_pcb_layer_selector,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
+    PcbSvgComponentInventory,
+    load_pcb_svg_component_inventory,
+)
 from altium_cruncher.config_json import load_json_config
 
 log = logging.getLogger(__name__)
@@ -40,9 +44,93 @@ _VIEW_ALIASES = {
 }
 
 
-def _default_pcb_svg_config_text() -> str:
+def _comment_safe(value: object) -> str:
+    return " ".join(str(value).replace("\r", " ").replace("\n", " ").split())
+
+
+def _load_config_template_inventory(
+    input_file: Path | None,
+    *,
+    pcbdoc_selector: Path | str | None,
+) -> tuple[tuple[PcbSvgComponentInventory, ...], str | None]:
+    if input_file is None:
+        return (), None
+    try:
+        return load_pcb_svg_component_inventory(
+            input_file,
+            pcbdoc_selector=pcbdoc_selector,
+        ), None
+    except Exception as exc:
+        log.debug("Unable to build pcb-svg config inventory for %s: %s", input_file, exc)
+        return (), f"{type(exc).__name__}: {exc}"
+
+
+def _component_inventory_lines(
+    inventories: tuple[PcbSvgComponentInventory, ...],
+) -> list[str]:
+    if not inventories:
+        return []
+    lines = ["// Component inventory (designator: side, footprint):\n"]
+    for inventory in inventories:
+        if len(inventories) > 1:
+            lines.append(f"// Board {inventory.board_key}:\n")
+        for component in inventory.components:
+            lines.append(
+                f"//   {component.designator}: {component.side}, "
+                f"footprint={_comment_safe(component.footprint)}\n"
+            )
+    return lines
+
+
+def _diode_inventory_lines(
+    inventories: tuple[PcbSvgComponentInventory, ...],
+) -> list[str]:
+    diode_candidates = [
+        component
+        for inventory in inventories
+        for component in inventory.diode_candidates
+    ]
+    if not diode_candidates:
+        return []
+    lines = ["// Auto-detected diode candidates:\n"]
+    for component in diode_candidates:
+        pads = ",".join(component.pad_designators) or "none"
+        cathode = component.cathode_pad or "numeric-default"
+        diode_kind = "two-pin" if component.is_two_pin_diode else "multi-pin"
+        lines.append(
+            f"//   {component.designator}: {diode_kind}, side={component.side}, "
+            f"pads={pads}, cathode={cathode}, reason={component.diode_reason}\n"
+        )
+    return lines
+
+
+def _inventory_hint_lines(
+    inventories: tuple[PcbSvgComponentInventory, ...],
+    *,
+    inventory_error: str | None,
+) -> list[str]:
+    lines: list[str] = []
+    if inventory_error:
+        lines.append(
+            f"// Component inventory unavailable: {_comment_safe(inventory_error)}\n"
+        )
+    if not inventories:
+        return lines
+    lines.extend(_component_inventory_lines(inventories))
+    lines.extend(_diode_inventory_lines(inventories))
+    return lines
+
+
+def _default_pcb_svg_config_text(
+    inventories: tuple[PcbSvgComponentInventory, ...] = (),
+    *,
+    inventory_error: str | None = None,
+) -> str:
     """Return the JSONC text used for auto-created PCB SVG configs."""
     payload = json.dumps(PcbSvgConfig.default().to_dict(), indent=2)
+    inventory_hints = "".join(
+        _inventory_hint_lines(inventories, inventory_error=inventory_error)
+    )
     return (
         "// altium-cruncher pcb-svg configuration\n"
         "// This file is JSONC: // comments, /* block comments */, and trailing commas are accepted.\n"
@@ -50,20 +138,37 @@ def _default_pcb_svg_config_text() -> str:
         "// Common physical layer tokens: TOP, BOTTOM, TOPOVERLAY, BOTTOMOVERLAY, TOPPASTE,\n"
         "//   BOTTOMPASTE, TOPSOLDER, BOTTOMSOLDER, and MECHANICAL_1..MECHANICAL_32.\n"
         "// Synthetic layer tokens: BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS,\n"
-        "//   ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM.\n"
+        "//   ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM,\n"
+        "//   ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM.\n"
         "// In each view, the layers array is the draw order. HLR renders last, and\n"
         "//   DRILLS/SLOTS render immediately before HLR.\n"
         "// With .PrjPcb input, add global.pcbdoc to select one specific board.\n"
+        "// Optional component override example:\n"
+        "//   \"components\": {\"D15\": {\"projection\": \"bounding_box\", \"cathode_pad\": \"C\"}}\n"
+        "// Projection modes: detail, simple, bounding_box, none.\n"
+        f"{inventory_hints}"
         "// Set layer_outputs.enabled=false if you only want composed views.\n"
         f"{payload}\n"
     )
 
 
-def _write_default_pcb_svg_config(config_path: Path) -> None:
+def _write_default_pcb_svg_config(
+    config_path: Path,
+    *,
+    input_file: Path | None = None,
+    pcbdoc_selector: Path | str | None = None,
+) -> None:
     """Write an editable A0 pcb-svg config template."""
     config_path.parent.mkdir(parents=True, exist_ok=True)
+    inventories, inventory_error = _load_config_template_inventory(
+        input_file,
+        pcbdoc_selector=pcbdoc_selector,
+    )
     config_path.write_text(
-        _default_pcb_svg_config_text(),
+        _default_pcb_svg_config_text(
+            inventories,
+            inventory_error=inventory_error,
+        ),
         encoding="utf-8",
     )
 
@@ -193,10 +298,16 @@ def _resolve_pcb_svg_configs(
     config_cache: dict[Path, PcbSvgConfig] = {}
 
     raw_config = getattr(args, "config", None)
+    pcbdoc_selector = getattr(args, "pcbdoc", None)
     if raw_config:
         explicit_config_path = Path(raw_config).resolve()
         if not explicit_config_path.exists():
-            _write_default_pcb_svg_config(explicit_config_path)
+            first_input = resolved_input_files[0] if resolved_input_files else None
+            _write_default_pcb_svg_config(
+                explicit_config_path,
+                input_file=first_input,
+                pcbdoc_selector=pcbdoc_selector,
+            )
             created_paths.append(explicit_config_path)
         loaded_config = _load_pcb_svg_config(explicit_config_path)
         _apply_cli_overrides(loaded_config, args)
@@ -207,7 +318,11 @@ def _resolve_pcb_svg_configs(
     for input_file in resolved_input_files:
         auto_config_path = input_file.parent / PCB_SVG_CONFIG_FILENAME
         if not auto_config_path.exists():
-            _write_default_pcb_svg_config(auto_config_path)
+            _write_default_pcb_svg_config(
+                auto_config_path,
+                input_file=input_file,
+                pcbdoc_selector=pcbdoc_selector,
+            )
             created_paths.append(auto_config_path)
 
     for input_file in resolved_input_files:
