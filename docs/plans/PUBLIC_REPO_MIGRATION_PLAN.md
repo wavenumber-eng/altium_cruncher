@@ -306,6 +306,109 @@ Required SVG follow-up:
 - keep at least one test that exercises normal PCB layer SVG output so HLR work
   cannot regress existing layer rendering.
 
+### PCB SVG Virtual Assembly Layers
+
+This is an important post-A0 feature group for `pcb-svg`. Treat it as an
+explicit design/contract slice before broad implementation so each virtual
+layer can be tested in isolation and the default config remains editable by a
+human.
+
+Planned synthetic layer tokens:
+
+- `ASSEMBLY_HLR_TOP` / `ASSEMBLY_HLR_BOTTOM`: component body projection layer.
+  Each component can select `detail`, `simple`, `bounding_box`, or `none`.
+  `detail` and `simple` use Geometer HLR only for the components that need it.
+  `bounding_box` draws a rectangle around the component pad geometry and must
+  not invoke Geometer. `none` omits that component from the projection layer.
+- `ASSEMBLY_DESIGNATORS_TOP` / `ASSEMBLY_DESIGNATORS_BOTTOM`: component
+  designator labels linked to the same component bounds used by HLR or
+  bounding-box projection. Each generated label group must have a stable
+  per-component group id. On regeneration, user-authored position/rotation
+  adjustments on that label group should be preserved.
+- `PIN1_TOP` / `PIN1_BOTTOM`: placement-orientation markers. SMD pin 1 should
+  render as a configurable colored dot. Through-hole pin 1 should fill the
+  drill and the whole pad. BGA A1 and circular BGA pads should color the whole
+  pad because a dot alone is ambiguous.
+- `DNP` handling is not a separate required view token at first; it is a
+  component state that changes the assembly projection and designator styling
+  when a selected project variant marks the component DNP.
+
+Default generated `pcb.svg.config` requirements:
+
+- keep using JSONC so the generated file can include comments;
+- include comments listing all discovered component designators and their side
+  (`top` or `bottom`) so users can copy entries into override sections;
+- include comments or generated examples for all auto-detected two-pin diode
+  components so users can see and override cathode rules;
+- omit optional fields that have no effect in the default case;
+- keep the default layer/view behavior usable without requiring variant or
+  per-component override config.
+
+Component projection config:
+
+- add a component override section keyed by designator;
+- fields should include side, projection mode (`detail`, `simple`,
+  `bounding_box`, `none`), optional pin/cathode overrides, diode line-art
+  enable/disable, and optional designator display overrides;
+- a global assembly projection default should define normal component mode,
+  DNP fallback mode, DNP hatch options, and colors;
+- DNP through a project variant should force pad-bounding-box projection by
+  default, use configurable hatch marks, and use configurable DNP colors
+  (default red). For PcbDoc-only input with no project/variant context, no
+  variant DNP inference is available unless manually configured.
+
+Designator-layer behavior:
+
+- labels should always fit inside the component projection bounds, whether
+  those bounds come from `detail`, `simple`, or pad `bounding_box`;
+- for component orientations near 0 or 180 degrees, render label text at 0
+  degrees; for orientations near 90 or 270 degrees, render at 90 degrees so
+  labels stay in one of two orthogonal reading frames;
+- normal and DNP designator colors must be separately configurable;
+- label groups need stable ids and metadata attributes for designator, side,
+  projection source, DNP state, and source component identity.
+
+Pin-1 and diode behavior:
+
+- normal IC/passive handling should find pin `1`; BGA handling should also
+  recognize `A1`;
+- through-hole markers should fill the drill opening and whole pad;
+- two-pin diodes get diode-specific behavior: draw configurable diode line art
+  by default and mark the cathode with a dot. Detect likely diodes first from
+  designator prefixes such as `D` or `LED`, then from case-insensitive
+  parameter text such as value, description, and comment containing diode terms
+  (`diode`, `schottky`, `zener`, and similar);
+- cathode pad detection should prefer explicit pad names such as `K` or `C`
+  over `A`; for numeric `1`/`2` diode footprints, use a global default mapping
+  with per-component override support;
+- three-pin and four-pin diodes should fall back to standard pin-1 behavior
+  unless manually overridden.
+
+Metadata requirements:
+
+- component SVG metadata should include all available component parameters,
+  description/comment fields, designator, side, DNP state, projection mode,
+  diode detection result, and selected pin/cathode marker source;
+- the command should print a concise INFO summary of diode auto-detections and
+  projection fallbacks, with DEBUG detail for individual parsing decisions.
+
+Testing sequence:
+
+- config-template unit test: generated JSONC comments list component sides and
+  diode candidates while keeping optional no-op fields absent;
+- no-Geometer test: views using only `bounding_box`/`none` projections do not
+  import or construct the Geometer HLR path;
+- projection-mode tests: per-component `detail`, `simple`, `bounding_box`, and
+  `none` modes produce the expected SVG groups and metadata;
+- DNP variant test: a fixture variant marks a component DNP and output uses
+  hatched pad bounding boxes plus DNP designator styling;
+- durable designator test: regenerated SVG preserves user-adjusted transform on
+  nested per-component designator groups;
+- pin-1 tests: SMD, through-hole, BGA A1, and circular BGA pad cases render
+  the correct marker geometry;
+- diode tests: auto-detection, cathode mapping, numeric-pad override, and
+  line-art enable/disable are covered before fixture-scale integration.
+
 ## PCB Layer STEP Command
 
 `pcb-layer-step` stays in the first public command set.
