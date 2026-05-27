@@ -9,6 +9,14 @@ This audit records current private-workspace references that must be addressed
 before the standalone `altium-cruncher` repo fully replaces the private
 `toolz/altium_cruncher` package.
 
+## Runtime Dependencies
+
+- `openpyxl` is an intentional runtime dependency for BOM/PnP/JLC spreadsheet
+  output. It matches the existing `bom_cruncher` spreadsheet stack and avoids
+  hand-written OpenXML as the command grows support for DNP row highlighting,
+  text-preserved package fields such as `0603`, freeze panes, and future review
+  formatting.
+
 ## Toolz
 
 Current private state:

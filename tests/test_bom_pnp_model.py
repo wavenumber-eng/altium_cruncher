@@ -12,6 +12,7 @@ from altium_cruncher.bom_pnp_model import (
     JLC_CPL_COLUMNS,
     bom_raw_payload,
     configured_output_file,
+    flat_raw_bom_payload,
     group_bom_components,
     grouped_bom_table_rows,
     grouped_bom_payload,
@@ -20,6 +21,7 @@ from altium_cruncher.bom_pnp_model import (
     load_bom_pnp_config,
     normalize_bom_components,
     normalize_pnp_entries,
+    ordered_bom_lines,
     pnp_table_rows,
     pnp_payload,
     select_variant_names,
@@ -55,6 +57,11 @@ def test_bom_alias_resolution_tracks_parameter_sources(tmp_path) -> None:
     assert payload["schema"] == "wn.altium_cruncher.bom.raw.v1"
     assert payload["component_count"] == len(component_list)
     assert json.loads(json.dumps(payload))["schema"] == payload["schema"]
+
+    raw_payload = flat_raw_bom_payload(raw_bom)
+    assert isinstance(raw_payload, list)
+    assert raw_payload[0]["parameters"] == raw_bom[0]["parameters"]
+    assert "canonical_fields" not in raw_payload[0]
 
 
 def test_bom_grouping_uses_aliases_and_natural_designator_sort() -> None:
@@ -94,6 +101,49 @@ def test_bom_grouping_uses_aliases_and_natural_designator_sort() -> None:
     assert lines[0].dnp is False
     assert lines[1].designators == ("R3",)
     assert lines[1].dnp is True
+
+
+def test_dnp_placement_can_follow_part_or_move_to_end() -> None:
+    """Order split DNP lines beside matching parts or at the end."""
+    raw_bom = [
+        {
+            "designator": "R1",
+            "value": "10k",
+            "footprint": "0603",
+            "parameters": {"MPN": "RC0603"},
+        },
+        {
+            "designator": "U1",
+            "value": "100nF",
+            "footprint": "0603",
+            "parameters": {"MPN": "CC0603"},
+        },
+        {
+            "designator": "C1",
+            "value": "10k",
+            "footprint": "0603",
+            "parameters": {"MPN": "RC0603"},
+            "dnp": True,
+        },
+    ]
+
+    lines = group_bom_components(normalize_bom_components(raw_bom))
+    inline_rows = grouped_bom_table_rows(
+        lines,
+        fields=("item", "designators", "dnp", "manufacturer_part_number"),
+        dnp_placement="inline",
+    )
+    end_rows = grouped_bom_table_rows(
+        lines,
+        fields=("item", "designators", "dnp", "manufacturer_part_number"),
+        dnp_placement="end",
+    )
+
+    assert [row["designators"] for row in inline_rows] == ["R1", "C1", "U1"]
+    assert inline_rows[1]["manufacturer_part_number"] == "RC0603"
+    assert [row["item"] for row in inline_rows] == ["1", "2", "3"]
+    assert [row["designators"] for row in end_rows] == ["R1", "U1", "C1"]
+    assert ordered_bom_lines(lines, dnp_placement="end")[-1].dnp is True
 
 
 def test_jlc_bom_rows_skip_dnp_by_default_and_preserve_columns() -> None:
@@ -213,11 +263,12 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
             "schema": BOM_PNP_CONFIG_SCHEMA,
             "variants": {"mode": "named", "names": ["B4"], "include_base": False},
             "bom": {
-                "outputs": ["raw-json", "grouped-xlsx", "jlc-csv"],
+                "outputs": ["raw-json", "grouped-xlsx", "jlc-csv", "jlc-xlsx"],
                 "group_fields": ["manufacturer_part_number", "value"],
+                "highlight_dnp_rows": False,
             },
             "pnp": {
-                "outputs": ["json", "xlsx", "jlc-cpl"],
+                "outputs": ["json", "xlsx", "jlc-cpl", "jlc-cpl-xlsx"],
                 "layer_order": ["bottom", "top"],
                 "position_mode": "component-origin",
             },
@@ -240,8 +291,9 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
     )
 
     assert config.schema == BOM_PNP_CONFIG_SCHEMA
-    assert config.bom_outputs == ("raw-json", "grouped-xlsx", "jlc-csv")
-    assert config.pnp_outputs == ("json", "xlsx", "jlc-cpl")
+    assert config.bom_outputs == ("raw-json", "grouped-xlsx", "jlc-csv", "jlc-xlsx")
+    assert config.pnp_outputs == ("json", "xlsx", "jlc-cpl", "jlc-cpl-xlsx")
+    assert config.highlight_dnp_rows is False
     assert config.pnp_position_mode == "component-origin"
     assert select_variant_names(["A", "B4"], config) == ["B4"]
     assert output == tmp_path / "bom" / "B4" / "Project_175_TEST_grouped-xlsx.xlsx"

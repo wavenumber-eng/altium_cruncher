@@ -31,11 +31,11 @@
     data-test-target="test_bom_pnp_config_parses_outputs_and_templates">
     <h2>BomPnpConfig</h2>
     <h3>Rationale</h3>
-    <p>BOM, PnP, and JLC output need one versioned config shape for aliases, variants, output kinds, PnP position mode, and naming templates.</p>
+    <p>BOM, PnP, and JLC output need one versioned config shape for aliases, variants, output kinds, DNP placement/highlighting, PnP position mode, and naming templates.</p>
     <h3>Purpose</h3>
     <p>Represents the shared JSON config contract consumed by the BOM/PnP command family.</p>
     <h3>Test Requirements</h3>
-    <p>Tests must cover parsing, default serialization, output kind validation, PnP position mode selection, and configured output path resolution.</p>
+    <p>Tests must cover parsing, default serialization, output kind validation, DNP display policy, PnP position mode selection, and configured output path resolution.</p>
     <h3>Working Definition</h3>
     <p>Working when a JSON-style mapping can select outputs, resolve paths, and round-trip into a deterministic template.</p>
   </section>
@@ -65,9 +65,9 @@
     <h3>Rationale</h3>
     <p>BOM outputs need both raw component parameters and normalized manufacturing fields.</p>
     <h3>Purpose</h3>
-    <p>Represents one BOM component with canonical fields and field-source traceability.</p>
+    <p>Represents one normalized BOM component with canonical fields and field-source traceability. Raw BOM JSON output deliberately bypasses this interface and writes a flat list of unaliased component dictionaries.</p>
     <h3>Test Requirements</h3>
-    <p>Tests must cover alias resolution, source tracking, DNP state, and JSON serialization.</p>
+    <p>Tests must cover alias resolution, source tracking, DNP state, JSON serialization, and the separate flat raw JSON output contract.</p>
     <h3>Working Definition</h3>
     <p>Working when raw BOM dictionaries become deterministic records suitable for raw JSON and grouping.</p>
   </section>
@@ -83,9 +83,9 @@
     <h3>Purpose</h3>
     <p>Represents one grouped BOM line with quantity, designator list, DNP state, and resolved fields.</p>
     <h3>Test Requirements</h3>
-    <p>Tests must cover alias-based grouping, natural designator ordering, and DNP line separation.</p>
+    <p>Tests must cover alias-based grouping, natural designator ordering, DNP line separation, DNP row placement, and DNP XLSX highlighting.</p>
     <h3>Working Definition</h3>
-    <p>Working when fitted and DNP components can be grouped into stable line items for JSON, XLSX, and JLC output.</p>
+    <p>Working when fitted and DNP components can be grouped into stable line items for JSON, XLSX, and JLC output while preserving review-visible DNP state.</p>
   </section>
 
   <section

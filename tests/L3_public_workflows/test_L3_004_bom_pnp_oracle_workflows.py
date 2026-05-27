@@ -9,7 +9,10 @@ import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
 import xml.etree.ElementTree as ET
+
+from openpyxl import load_workbook
 
 
 def _project_root() -> Path:
@@ -166,12 +169,11 @@ def _designators_from_bom_rows(rows: Iterable[dict[str, str]]) -> set[str]:
     return designators
 
 
-def _component_by_designator(payload: dict[str, object]) -> dict[str, dict[str, object]]:
+def _component_by_designator(payload: object) -> dict[str, dict[str, object]]:
     """Index raw BOM JSON components by designator."""
-    components = payload["components"]
-    assert isinstance(components, list)
+    assert isinstance(payload, list)
     result: dict[str, dict[str, object]] = {}
-    for component in components:
+    for component in payload:
         assert isinstance(component, dict)
         designator = str(component.get("designator", ""))
         result[designator] = component
@@ -214,7 +216,6 @@ def test_bom_raw_json_covers_altium_xml_oracle_designators(tmp_path: Path) -> No
             "json",
         )
         payload = json.loads(payload_path.read_text(encoding="utf-8"))
-        assert payload["schema"] == "wn.altium_cruncher.bom.raw.v1"
 
         components = _component_by_designator(payload)
         raw_designators = set(components)
@@ -239,6 +240,7 @@ def test_bom_raw_json_covers_altium_xml_oracle_designators(tmp_path: Path) -> No
             assert component["description"] == row["Description"]
             parameters = component["parameters"]
             assert isinstance(parameters, dict)
+            assert "canonical_fields" not in component
             expected_mpn = parameters.get("Manufacturer Part Number")
             if expected_mpn:
                 assert expected_mpn == row["LibRef"]
@@ -317,26 +319,28 @@ def test_jlc_command_writes_paired_outputs_for_primary_fixtures(tmp_path: Path) 
         )
 
         jlc_dir = output_root / "jlc"
-        bom_path = jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc-csv.csv"
-        cpl_path = jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc-cpl.csv"
+        bom_path = jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc-xlsx.xlsx"
+        cpl_path = (
+            jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc-cpl-xlsx.xlsx"
+        )
+        config_path = jlc_dir / "bom.config.used.json"
 
-        with bom_path.open(encoding="utf-8", newline="") as f:
-            bom_rows = list(csv.DictReader(f))
-        with cpl_path.open(encoding="utf-8", newline="") as f:
-            cpl_rows = list(csv.DictReader(f))
+        bom_sheet = cast(Any, load_workbook(bom_path).active)
+        cpl_sheet = cast(Any, load_workbook(cpl_path).active)
 
-        assert bom_rows
-        assert cpl_rows
-        assert tuple(bom_rows[0]) == (
+        assert config_path.exists()
+        assert tuple(cell.value for cell in bom_sheet[1]) == (
             "Comment",
             "Designator",
             "Footprint",
             "JLCPCB Part #",
         )
-        assert tuple(cpl_rows[0]) == (
+        assert tuple(cell.value for cell in cpl_sheet[1]) == (
             "Designator",
             "Layer",
             "Mid X",
             "Mid Y",
             "Rotation",
         )
+        assert bom_sheet.max_row > 1
+        assert cpl_sheet.max_row > 1

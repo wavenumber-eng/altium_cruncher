@@ -376,9 +376,11 @@ Current implementation status:
 - `generic-json` preserves the existing shape and also includes normalized raw
   BOM records with canonical fields and field-source traceability;
 - `grouped-json` emits schema `wn.altium_cruncher.bom.grouped.v1`;
-- `jlc-csv` emits the JLC BOM upload columns from grouped line items;
+- `jlc-csv` and `jlc-xlsx` emit the JLC BOM upload columns from grouped line
+  items;
 - focused unit tests cover alias resolution, natural designator sorting,
-  fitted-vs-DNP grouping, raw/grouped JSON payloads, and JLC BOM rows.
+  fitted-vs-DNP grouping, flat raw JSON payloads, DNP row placement, grouped
+  JSON payloads, spreadsheet text-cell behavior, and JLC BOM rows.
 
 Required processing model:
 
@@ -421,6 +423,7 @@ Required DNP and inclusion behavior:
 - config can include or exclude DNP components;
 - config can place DNP lines at the end of the XLSX, in a separate DNP section,
   or immediately below the matching populated line item;
+- config can highlight DNP rows in grouped XLSX review output;
 - when populated and DNP components share the same part identity, support the
   split-line representation, for example seven populated zero-ohm resistors on
   one line and three DNP zero-ohm resistors directly below;
@@ -1111,16 +1114,18 @@ Current local status:
   `PrjPcb` fixture so real project parameters can drive release-style output
   folders;
 - shared BOM/PnP normalization is implemented with canonical field aliases,
-  source traceability, config parsing, configured output naming, grouped BOM
-  JSON/CSV/XLSX, JLC BOM CSV, normalized PnP JSON/CSV/XLSX, and JLC CPL CSV;
-  focused unit tests cover the model and L3 covers Hydroscope BOM/PnP config
-  plus paired `jlc` output execution;
+  source traceability, config parsing, configured output naming, flat raw BOM
+  JSON, grouped BOM JSON/CSV/XLSX, JLC BOM CSV/XLSX, normalized PnP
+  JSON/CSV/XLSX, and JLC CPL CSV/XLSX; configured outputs write
+  `bom.config.used.json` beside generated artifacts. Focused unit tests cover
+  the model and L3 covers Hydroscope BOM/PnP config plus paired `jlc` output
+  execution;
 - BOM/PnP oracle tests now exercise `node_test_array` and `loz-old-man`:
   raw BOM JSON is checked against Altium XML-BOM designators and key fields,
   normalized PnP JSON is checked against Altium PNP-METRIC side/rotation/core
   coordinates with no coordinate exception list. `altium-pick-place` is the
   documented default and `component-origin` is the explicit alternate mode.
-  Paired JLC BOM/CPL generation is checked;
+  Paired JLC BOM/CPL XLSX generation is checked;
 - fixture layout notes live in `docs/design/test-assets.html` and
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;
@@ -1128,6 +1133,10 @@ Current local status:
   `output/` folder, for example
   `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
+  - `uv run --extra test pytest tests\test_bom_pnp_model.py tests\test_bom_outputs.py tests\test_pnp_outputs.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_bom_pnp_config_and_jlc_command_use_public_project tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py -q`:
+    21 passed;
+  - `uv run --extra test pyright src\py\altium_cruncher\bom_pnp_model.py src\py\altium_cruncher\bom_pnp_cli_common.py src\py\altium_cruncher\altium_cruncher_cmd_bom.py src\py\altium_cruncher\altium_cruncher_cmd_pnp.py src\py\altium_cruncher\altium_cruncher_cmd_jlc.py src\py\altium_cruncher\simple_xlsx.py tests\test_bom_pnp_model.py tests\test_bom_outputs.py tests\test_pnp_outputs.py tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
+    0 errors;
   - `uv run --extra test pytest -q`: 124 passed, 2 skipped;
   - `uv run --extra test pytest tests\L3_public_workflows -q`: 13 passed,
     1 skipped;

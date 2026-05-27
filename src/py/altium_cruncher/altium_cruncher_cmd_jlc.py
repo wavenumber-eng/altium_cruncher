@@ -68,7 +68,7 @@ def cmd_jlc(args: argparse.Namespace) -> int:
     config, _config_path = load_optional_bom_pnp_config(getattr(args, "config", None))
     units = getattr(args, "units", None) or config.pnp_units
     position_mode = _position_mode_arg(args, config)
-    option_error = _pnp_format_option_error("jlc-cpl", units)
+    option_error = _pnp_format_option_error("jlc-cpl-xlsx", units)
     if option_error:
         log.error(option_error)
         return 1
@@ -103,7 +103,7 @@ def cmd_jlc(args: argparse.Namespace) -> int:
             source=input_file,
             variant=variant,
             project_parameters=project_parameters,
-            output_kinds=("jlc-csv",),
+            output_kinds=("jlc-xlsx",),
             command="jlc",
         )
         pnp_files = _configured_pnp_artifacts(
@@ -115,7 +115,7 @@ def cmd_jlc(args: argparse.Namespace) -> int:
             units=units,
             position_mode=position_mode,
             project_parameters=project_parameters,
-            output_kinds=("jlc-cpl",),
+            output_kinds=("jlc-cpl-xlsx",),
             command="jlc",
         )
         written = [*bom_files, *pnp_files]
@@ -156,7 +156,7 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
     parser = subparsers.add_parser(
         "jlc",
         help="generate JLCPCB BOM and CPL outputs from an Altium project",
-        description="Generate a JLCPCB BOM CSV and CPL CSV from one PrjPcb. "
+        description="Generate a JLCPCB BOM XLSX and CPL XLSX from one PrjPcb. "
         "The command reuses the BOM/PnP config for aliases, sorting, variants, "
         "and output naming.",
         epilog="Examples:\n"

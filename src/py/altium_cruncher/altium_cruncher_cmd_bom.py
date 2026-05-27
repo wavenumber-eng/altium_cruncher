@@ -21,6 +21,7 @@ from altium_cruncher.bom_pnp_cli_common import (
     project_parameters_from_design,
     warn_for_unknown_variants,
     write_config_template,
+    write_used_config_snapshot,
 )
 from altium_cruncher.bom_pnp_model import (
     BOM_GROUPED_DEFAULT_COLUMNS,
@@ -33,12 +34,14 @@ from altium_cruncher.bom_pnp_model import (
     configured_output_file,
     designator_sort_key,
     filter_bom_components,
+    flat_raw_bom_payload,
     group_bom_components,
     grouped_bom_table_rows,
     grouped_bom_payload,
     jlc_bom_rows,
     make_pcb_line_item,
     normalize_bom_components,
+    ordered_bom_lines,
     select_variant_names,
 )
 from altium_cruncher.output_path_templates import TemplateValue
@@ -140,7 +143,7 @@ def _bom_output_extension(output_format: str) -> str:
     }
     if output_format in json_formats:
         return "json"
-    if output_format in {"xlsx", "grouped-xlsx"}:
+    if output_format in {"xlsx", "grouped-xlsx", "jlc-xlsx"}:
         return "xlsx"
     return "csv"
 
@@ -159,10 +162,8 @@ def _write_bom_output(
             json.dump(bom, f, indent=2)
         return
     if output_format == "raw-json":
-        normalized = normalize_bom_components(bom)
-        payload = bom_raw_payload(normalized, source=source, variant=variant)
         with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(payload, f, indent=2)
+            json.dump(flat_raw_bom_payload(bom), f, indent=2)
         return
     if output_format in {"generic-json", "legacy-json"}:
         payload = _generic_bom_payload(bom, source=source, variant=variant)
@@ -198,6 +199,17 @@ def _write_bom_output(
         lines = group_bom_components(normalized)
         rows = jlc_bom_rows(lines)
         _write_named_rows_csv(output_file, JLC_BOM_COLUMNS, rows)
+        return
+    if output_format == "jlc-xlsx":
+        normalized = normalize_bom_components(bom)
+        lines = group_bom_components(normalized)
+        rows = jlc_bom_rows(lines)
+        write_xlsx_table(
+            output_file,
+            columns=JLC_BOM_COLUMNS,
+            rows=rows,
+            sheet_name="JLC BOM",
+        )
         return
     if output_format == "xlsx":
         _write_bom_xlsx(output_file, bom)
@@ -255,6 +267,7 @@ def _configured_bom_artifacts(
             source=source,
             variant=variant,
         )
+        write_used_config_snapshot(output_file, config)
         written.append(output_file)
     return written
 
@@ -272,41 +285,73 @@ def _write_configured_bom_artifact(
 ) -> None:
     """Write one configured BOM artifact."""
     if output_kind == "raw-json":
-        payload = bom_raw_payload(components, source=source, variant=variant)
-        output_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        output_file.write_text(
+            json.dumps(flat_raw_bom_payload(raw_bom), indent=2),
+            encoding="utf-8",
+        )
         return
     if output_kind == "legacy-json":
         payload = _generic_bom_payload(raw_bom, source=source, variant=variant)
         output_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return
     if output_kind == "grouped-json":
-        payload = grouped_bom_payload(lines, source=source, variant=variant)
+        payload = grouped_bom_payload(
+            ordered_bom_lines(lines, dnp_placement=config.dnp_placement),
+            source=source,
+            variant=variant,
+        )
         output_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return
     if output_kind == "grouped-csv":
-        rows = grouped_bom_table_rows(
+        ordered_lines = ordered_bom_lines(
             lines,
-            fields=config.bom_output_fields,
             dnp_placement=config.dnp_placement,
+        )
+        rows = grouped_bom_table_rows(
+            ordered_lines,
+            fields=config.bom_output_fields,
+            dnp_placement=None,
         )
         _write_named_rows_csv(output_file, config.bom_output_fields, rows)
         return
     if output_kind == "grouped-xlsx":
-        rows = grouped_bom_table_rows(
+        ordered_lines = ordered_bom_lines(
             lines,
-            fields=config.bom_output_fields,
             dnp_placement=config.dnp_placement,
+        )
+        rows = grouped_bom_table_rows(
+            ordered_lines,
+            fields=config.bom_output_fields,
+            dnp_placement=None,
         )
         write_xlsx_table(
             output_file,
             columns=config.bom_output_fields,
             rows=rows,
             sheet_name="BOM",
+            highlighted_rows=[line.dnp for line in ordered_lines]
+            if config.highlight_dnp_rows
+            else (),
         )
         return
     if output_kind == "jlc-csv":
-        rows = jlc_bom_rows(lines, include_dnp=config.include_dnp)
+        rows = jlc_bom_rows(
+            ordered_bom_lines(lines, dnp_placement=config.dnp_placement),
+            include_dnp=config.include_dnp,
+        )
         _write_named_rows_csv(output_file, JLC_BOM_COLUMNS, rows)
+        return
+    if output_kind == "jlc-xlsx":
+        rows = jlc_bom_rows(
+            ordered_bom_lines(lines, dnp_placement=config.dnp_placement),
+            include_dnp=config.include_dnp,
+        )
+        write_xlsx_table(
+            output_file,
+            columns=JLC_BOM_COLUMNS,
+            rows=rows,
+            sheet_name="JLC BOM",
+        )
         return
     raise ValueError(f"Unsupported configured BOM output: {output_kind}")
 
@@ -642,6 +687,7 @@ def register_parser(subparsers):
         "  altium-cruncher bom project.PrjPcb --format generic-json\n"
         "  altium-cruncher bom project.PrjPcb --format grouped-json\n"
         "  altium-cruncher bom project.PrjPcb --format jlc-csv\n"
+        "  altium-cruncher bom project.PrjPcb --format jlc-xlsx\n"
         "  altium-cruncher bom project.PrjPcb --format xlsx  # XLSX output\n"
         "  altium-cruncher bom --write-config bom.config\n"
         "  altium-cruncher bom project.PrjPcb --config bom.config\n"
@@ -666,6 +712,7 @@ def register_parser(subparsers):
             "grouped-csv",
             "grouped-xlsx",
             "jlc-csv",
+            "jlc-xlsx",
             "xlsx",
         ],
         default=None,

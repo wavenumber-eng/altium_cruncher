@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import csv
-import zipfile
+from typing import Any, cast
+
+from openpyxl import load_workbook
 
 from altium_cruncher.altium_cruncher_cmd_pnp import (
     _pnp_format_option_error,
+    _write_legacy_pnp_output,
     _write_jlc_cpl_csv,
     _write_pnp_csv,
     _write_pnp_xlsx,
@@ -76,18 +79,39 @@ def test_write_jlc_cpl_csv_uses_jlc_columns_and_mm_guard(tmp_path) -> None:
         "Rotation": "90",
     }
     assert _pnp_format_option_error("jlc-cpl", "mils")
+    assert _pnp_format_option_error("jlc-cpl-xlsx", "mils")
     assert _pnp_format_option_error("jlc-cpl", "mm") == ""
+    assert _pnp_format_option_error("jlc-cpl-xlsx", "mm") == ""
 
 
 def test_write_pnp_xlsx_creates_openxml_workbook(tmp_path) -> None:
-    """Write PnP XLSX without adding a runtime spreadsheet dependency."""
+    """Write PnP XLSX with text cells for spreadsheet-safe values."""
     output = tmp_path / "pnp.xlsx"
 
     _write_pnp_xlsx(output, _sample_placements(), units="mm")
 
-    with zipfile.ZipFile(output) as zf:
-        names = set(zf.namelist())
-        assert "xl/workbook.xml" in names
-        sheet = zf.read("xl/worksheets/sheet1.xml").decode("utf-8")
-    assert "Designator" in sheet
-    assert "R2" in sheet
+    workbook = load_workbook(output)
+    worksheet = cast(Any, workbook.active)
+    assert worksheet["A1"].value == "Designator"
+    assert worksheet["A2"].value == "R2"
+    assert worksheet["A2"].number_format == "@"
+
+
+def test_write_jlc_cpl_xlsx_creates_workbook(tmp_path) -> None:
+    """Write JLC CPL rows as XLSX for upload/review flows."""
+    source = tmp_path / "board.PrjPcb"
+
+    output = _write_legacy_pnp_output(
+        tmp_path,
+        source,
+        _sample_placements(),
+        output_format="jlc-cpl-xlsx",
+        variant=None,
+        units="mm",
+        position_mode="altium-pick-place",
+    )
+
+    workbook = load_workbook(output)
+    worksheet = cast(Any, workbook.active)
+    assert worksheet["A1"].value == "Designator"
+    assert worksheet["B2"].value == "Top"

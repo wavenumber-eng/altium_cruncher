@@ -97,16 +97,19 @@ def test_bom_pnp_config_and_jlc_command_use_public_project(tmp_path: Path) -> No
     _run_cli("bom", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(bom_root))
     assert (bom_root / "bom" / "Hydroscope_base_raw-json.json").exists()
     assert (bom_root / "bom" / "Hydroscope_base_grouped-xlsx.xlsx").exists()
+    assert (bom_root / "bom" / "bom.config.used.json").exists()
 
     pnp_root = tmp_path / "configured-pnp"
     _run_cli("pnp", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(pnp_root))
     assert (pnp_root / "pnp" / "Hydroscope_base_json.json").exists()
     assert (pnp_root / "pnp" / "Hydroscope_base_csv.csv").exists()
+    assert (pnp_root / "pnp" / "bom.config.used.json").exists()
 
     jlc_root = tmp_path / "jlc"
     _run_cli("jlc", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(jlc_root))
-    assert (jlc_root / "jlc" / "Hydroscope_base_jlc-csv.csv").exists()
-    assert (jlc_root / "jlc" / "Hydroscope_base_jlc-cpl.csv").exists()
+    assert (jlc_root / "jlc" / "Hydroscope_base_jlc-xlsx.xlsx").exists()
+    assert (jlc_root / "jlc" / "Hydroscope_base_jlc-cpl-xlsx.xlsx").exists()
+    assert (jlc_root / "jlc" / "bom.config.used.json").exists()
 
 
 def test_output_path_template_uses_public_project_parameters() -> None:

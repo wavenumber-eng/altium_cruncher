@@ -1,12 +1,18 @@
-"""Small dependency-free XLSX table writer."""
+"""Small XLSX table writer shared by manufacturing output commands."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import UTC, datetime
+import re
 from pathlib import Path
-import zipfile
-from xml.sax.saxutils import escape
+from typing import cast
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.worksheet import Worksheet
+
+_ILLEGAL_XML_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
 def write_xlsx_table(
@@ -15,133 +21,93 @@ def write_xlsx_table(
     columns: Sequence[str],
     rows: Sequence[Mapping[str, object]],
     sheet_name: str,
+    highlighted_rows: Sequence[bool] = (),
 ) -> None:
-    """Write a single-sheet XLSX workbook from named rows."""
-    table = [
-        list(columns),
-        *[
-            [str(row.get(column, "") or "") for column in columns]
-            for row in rows
-        ],
+    """Write a single-sheet XLSX workbook from named rows.
+
+    All values are written as strings with Excel's text number format so values
+    such as ``0603`` stay visibly unchanged.
+    """
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    workbook = Workbook()
+    worksheet = cast(Worksheet, workbook.active)
+    worksheet.title = _safe_sheet_name(sheet_name)
+    worksheet.freeze_panes = "A2"
+
+    header_fill = PatternFill(
+        start_color="000000",
+        end_color="000000",
+        fill_type="solid",
+    )
+    dnp_fill = PatternFill(
+        start_color="FFF2CC",
+        end_color="FFF2CC",
+        fill_type="solid",
+    )
+    thin_border = Border(
+        left=Side(style="thin", color="CCCCCC"),
+        right=Side(style="thin", color="CCCCCC"),
+        top=Side(style="thin", color="CCCCCC"),
+        bottom=Side(style="thin", color="CCCCCC"),
+    )
+    header_font = Font(color="FFFFFF", bold=True)
+    text_alignment = Alignment(horizontal="left", vertical="center")
+
+    for column_index, column in enumerate(columns, start=1):
+        cell = worksheet.cell(row=1, column=column_index, value=str(column))
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.border = thin_border
+        cell.alignment = text_alignment
+        cell.number_format = "@"
+
+    for row_index, row in enumerate(rows, start=2):
+        highlighted = _row_highlighted(highlighted_rows, row_index - 2)
+        for column_index, column in enumerate(columns, start=1):
+            value = _sanitize_cell_value(row.get(column, ""))
+            cell = worksheet.cell(row=row_index, column=column_index, value=value)
+            cell.border = thin_border
+            cell.alignment = text_alignment
+            cell.number_format = "@"
+            if highlighted:
+                cell.fill = dnp_fill
+
+    if columns:
+        max_cell = f"{get_column_letter(len(columns))}{max(len(rows) + 1, 1)}"
+        worksheet.auto_filter.ref = f"A1:{max_cell}"
+    _size_columns(worksheet, len(columns), len(rows) + 1)
+    workbook.save(output_file)
+
+
+def _sanitize_cell_value(value: object) -> str:
+    """Return a text-safe value for openpyxl cells."""
+    text = "" if value is None else str(value)
+    return _ILLEGAL_XML_RE.sub("", text)
+
+
+def _safe_sheet_name(sheet_name: str) -> str:
+    """Return an Excel-safe sheet name."""
+    safe = re.sub(r"[\[\]:*?/\\]", "_", sheet_name or "Sheet1").strip()
+    return (safe or "Sheet1")[:31]
+
+
+def _row_highlighted(highlighted_rows: Sequence[bool], zero_based_index: int) -> bool:
+    """Return whether a data row should use highlight styling."""
+    return zero_based_index < len(highlighted_rows) and highlighted_rows[
+        zero_based_index
     ]
-    sheet_xml = _xlsx_sheet_xml(table)
-    created = (
-        datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    )
-
-    with zipfile.ZipFile(output_file, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("[Content_Types].xml", _XLSX_CONTENT_TYPES)
-        zf.writestr("_rels/.rels", _XLSX_ROOT_RELS)
-        zf.writestr("docProps/app.xml", _XLSX_APP_PROPS)
-        zf.writestr("docProps/core.xml", _xlsx_core_props(created))
-        zf.writestr("xl/workbook.xml", _xlsx_workbook(sheet_name))
-        zf.writestr("xl/_rels/workbook.xml.rels", _XLSX_WORKBOOK_RELS)
-        zf.writestr("xl/styles.xml", _XLSX_STYLES)
-        zf.writestr("xl/worksheets/sheet1.xml", sheet_xml)
 
 
-def _xlsx_sheet_xml(rows: list[list[str]]) -> str:
-    """Return worksheet XML for table rows."""
-    row_xml: list[str] = []
-    for row_index, row in enumerate(rows, start=1):
-        cells = []
-        for column_index, value in enumerate(row, start=1):
-            ref = f"{_xlsx_column_name(column_index)}{row_index}"
-            text = escape(str(value or ""))
-            cells.append(f'<c r="{ref}" t="inlineStr"><is><t>{text}</t></is></c>')
-        row_xml.append(f'<row r="{row_index}">{"".join(cells)}</row>')
-    dimension = (
-        f"A1:{_xlsx_column_name(max((len(row) for row in rows), default=1))}"
-        f"{max(len(rows), 1)}"
-    )
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-        f'<dimension ref="{dimension}"/>'
-        '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" '
-        'activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
-        "<sheetData>"
-        f"{''.join(row_xml)}"
-        "</sheetData>"
-        "</worksheet>"
-    )
-
-
-def _xlsx_column_name(index: int) -> str:
-    """Return an Excel column name for a 1-based column index."""
-    if index < 1:
-        raise ValueError("XLSX column indexes are 1-based")
-    name = ""
-    while index:
-        index, rem = divmod(index - 1, 26)
-        name = chr(65 + rem) + name
-    return name
-
-
-def _xlsx_core_props(created: str) -> str:
-    """Return core workbook metadata XML."""
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
-        'xmlns:dc="http://purl.org/dc/elements/1.1/" '
-        'xmlns:dcterms="http://purl.org/dc/terms/" '
-        'xmlns:dcmitype="http://purl.org/dc/dcmitype/" '
-        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-        "<dc:creator>altium_cruncher</dc:creator>"
-        "<cp:lastModifiedBy>altium_cruncher</cp:lastModifiedBy>"
-        f'<dcterms:created xsi:type="dcterms:W3CDTF">{created}</dcterms:created>'
-        f'<dcterms:modified xsi:type="dcterms:W3CDTF">{created}</dcterms:modified>'
-        "</cp:coreProperties>"
-    )
-
-
-def _xlsx_workbook(sheet_name: str) -> str:
-    """Return workbook XML with one named sheet."""
-    safe_name = escape((sheet_name or "Sheet1")[:31])
-    return (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-        f'<sheets><sheet name="{safe_name}" sheetId="1" r:id="rId1"/></sheets>'
-        "</workbook>"
-    )
-
-
-_XLSX_CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-<Default Extension="xml" ContentType="application/xml"/>
-<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
-<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
-<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-</Types>"""
-
-_XLSX_ROOT_RELS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
-<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
-<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
-</Relationships>"""
-
-_XLSX_WORKBOOK_RELS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-</Relationships>"""
-
-_XLSX_STYLES = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>
-<fills count="1"><fill><patternFill patternType="none"/></fill></fills>
-<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
-<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>
-</styleSheet>"""
-
-_XLSX_APP_PROPS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
-<Application>altium_cruncher</Application>
-</Properties>"""
+def _size_columns(worksheet: Worksheet, column_count: int, row_count: int) -> None:
+    """Apply simple width sizing without a larger formatting dependency."""
+    for column_index in range(1, column_count + 1):
+        column_letter = get_column_letter(column_index)
+        max_length = 0
+        for row_index in range(1, row_count + 1):
+            value = worksheet.cell(row=row_index, column=column_index).value
+            max_length = max(max_length, len(str(value or "")))
+        worksheet.column_dimensions[column_letter].width = min(
+            max(max_length + 2, 8),
+            60,
+        )

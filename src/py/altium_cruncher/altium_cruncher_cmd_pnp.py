@@ -22,6 +22,7 @@ from altium_cruncher.bom_pnp_cli_common import (
     project_parameters_from_design,
     warn_for_unknown_variants,
     write_config_template,
+    write_used_config_snapshot,
 )
 from altium_cruncher.bom_pnp_model import (
     BOM_PNP_DEFAULT_CONFIG_NAME,
@@ -122,7 +123,7 @@ def _pnp_output_extension(output_format: str) -> str:
     """Return the file extension for a PnP output format."""
     if output_format in {"json"}:
         return "json"
-    if output_format == "xlsx":
+    if output_format in {"xlsx", "jlc-cpl-xlsx"}:
         return "xlsx"
     return "csv"
 
@@ -208,6 +209,7 @@ def _configured_pnp_artifacts(
             units=units,
             position_mode=position_mode,
         )
+        write_used_config_snapshot(output_file, config)
         written.append(output_file)
     return written
 
@@ -267,13 +269,26 @@ def _write_configured_pnp_artifact(
         )
         _write_named_rows_csv(output_file, JLC_CPL_COLUMNS, rows)
         return
+    if output_kind == "jlc-cpl-xlsx":
+        rows = jlc_cpl_rows(
+            normalized,
+            layer_order=config.layer_order,
+            prefix_order=config.prefix_order,
+        )
+        write_xlsx_table(
+            output_file,
+            columns=JLC_CPL_COLUMNS,
+            rows=rows,
+            sheet_name="JLC CPL",
+        )
+        return
     raise ValueError(f"Unsupported configured PnP output: {output_kind}")
 
 
 def _pnp_format_option_error(output_format: str, units: str) -> str:
     """Return an option error message for incompatible PnP options."""
-    if output_format == "jlc-cpl" and units != "mm":
-        return "jlc-cpl output requires --units mm because JLCPCB CPL uses mm"
+    if output_format in {"jlc-cpl", "jlc-cpl-xlsx"} and units != "mm":
+        return "JLC CPL output requires --units mm because JLCPCB CPL uses mm"
     return ""
 
 
@@ -305,6 +320,16 @@ def _write_legacy_pnp_output(
         return output_file
     if output_format == "jlc-cpl":
         _write_jlc_cpl_csv(output_file, placements, units=units)
+        return output_file
+    if output_format == "jlc-cpl-xlsx":
+        normalized = normalize_pnp_entries(placements, units=units)
+        rows = jlc_cpl_rows(normalized)
+        write_xlsx_table(
+            output_file,
+            columns=JLC_CPL_COLUMNS,
+            rows=rows,
+            sheet_name="JLC CPL",
+        )
         return output_file
     if output_format == "xlsx":
         _write_pnp_xlsx(output_file, placements, units=units)
@@ -385,8 +410,10 @@ def cmd_pnp(args) -> int:
         getattr(args, "exclude_no_bom", False) or config.pnp_exclude_no_bom
     )
     output_format = getattr(args, "format", None) or "csv"
-    jlc_requested = config_mode and "jlc-cpl" in config.pnp_outputs
-    checked_format = "jlc-cpl" if jlc_requested else output_format
+    jlc_requested = config_mode and any(
+        kind in {"jlc-cpl", "jlc-cpl-xlsx"} for kind in config.pnp_outputs
+    )
+    checked_format = "jlc-cpl-xlsx" if jlc_requested else output_format
     option_error = _pnp_format_option_error(checked_format, units)
     if option_error:
         log.error(option_error)
@@ -463,6 +490,7 @@ def register_parser(subparsers):
         "  altium-cruncher pnp project.PrjPcb --format json  # JSON output\n"
         "  altium-cruncher pnp project.PrjPcb --format xlsx\n"
         "  altium-cruncher pnp project.PrjPcb --format jlc-cpl\n"
+        "  altium-cruncher pnp project.PrjPcb --format jlc-cpl-xlsx\n"
         "  altium-cruncher pnp --write-config bom.config\n"
         "  altium-cruncher pnp project.PrjPcb --config bom.config\n"
         "  altium-cruncher pnp project.PrjPcb -o output_dir/",
@@ -481,7 +509,7 @@ def register_parser(subparsers):
     )
     pnp_parser.add_argument(
         "--format",
-        choices=["csv", "json", "xlsx", "jlc-cpl"],
+        choices=["csv", "json", "xlsx", "jlc-cpl", "jlc-cpl-xlsx"],
         default=None,
         help="single output format; overrides multi-output config mode",
     )

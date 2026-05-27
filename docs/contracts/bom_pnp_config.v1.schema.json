@@ -37,7 +37,8 @@
               "grouped-json",
               "grouped-csv",
               "grouped-xlsx",
-              "jlc-csv"
+              "jlc-csv",
+              "jlc-xlsx"
             ]
           }
         },
@@ -46,6 +47,7 @@
         "include_dnp": {"type": "boolean"},
         "split_dnp": {"type": "boolean"},
         "dnp_placement": {"enum": ["inline", "end", "separate"]},
+        "highlight_dnp_rows": {"type": "boolean"},
         "prefix_order": {"type": "array", "items": {"type": "string"}},
         "pcb_line_item": {
           "type": "object",
@@ -67,7 +69,7 @@
       "properties": {
         "outputs": {
           "type": "array",
-          "items": {"enum": ["json", "csv", "xlsx", "jlc-cpl"]}
+          "items": {"enum": ["json", "csv", "xlsx", "jlc-cpl", "jlc-cpl-xlsx"]}
         },
         "output_fields": {"type": "array", "items": {"type": "string"}},
         "units": {"enum": ["mm", "mils"]},

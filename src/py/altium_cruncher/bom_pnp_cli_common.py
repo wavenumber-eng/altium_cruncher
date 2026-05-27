@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+import json
 import logging
 from pathlib import Path
 
@@ -47,6 +48,16 @@ def write_config_template(write_arg: Path | None) -> Path:
     path = (write_arg or Path(BOM_PNP_DEFAULT_CONFIG_NAME)).resolve()
     write_bom_pnp_config(path)
     return path
+
+
+def write_used_config_snapshot(output_file: Path, config: BomPnpConfig) -> Path:
+    """Write the effective BOM/PnP config beside one generated artifact."""
+    config_path = output_file.parent / "bom.config.used.json"
+    config_path.write_text(
+        json.dumps(config.to_json_obj(), indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return config_path
 
 
 def warn_for_unknown_variants(

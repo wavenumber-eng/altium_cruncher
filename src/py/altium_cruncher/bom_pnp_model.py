@@ -71,9 +71,10 @@ _BOM_OUTPUT_KINDS = frozenset(
         "grouped-csv",
         "grouped-xlsx",
         "jlc-csv",
+        "jlc-xlsx",
     }
 )
-_PNP_OUTPUT_KINDS = frozenset({"json", "csv", "xlsx", "jlc-cpl"})
+_PNP_OUTPUT_KINDS = frozenset({"json", "csv", "xlsx", "jlc-cpl", "jlc-cpl-xlsx"})
 _BOM_SOURCE_MODES = frozenset({"schematic", "pcb", "merged"})
 _PNP_POSITION_MODES = frozenset(PNP_POSITION_MODES)
 _DNP_PLACEMENTS = frozenset({"inline", "end", "separate"})
@@ -186,6 +187,7 @@ class BomPnpConfig:
     include_dnp: bool = True
     split_dnp: bool = True
     dnp_placement: str = "inline"
+    highlight_dnp_rows: bool = True
     pcb_line_item_enabled: bool = False
     pcb_line_item_designator: str = "PCB"
     pcb_line_item_fields: dict[str, str] = field(default_factory=dict)
@@ -258,6 +260,10 @@ class BomPnpConfig:
                 _DNP_PLACEMENTS,
                 "DNP placement",
             ),
+            highlight_dnp_rows=_bool_value(
+                bom.get("highlight_dnp_rows"),
+                default=True,
+            ),
             pcb_line_item_enabled=_bool_value(
                 pcb_line_item.get("enabled"),
                 default=False,
@@ -321,6 +327,7 @@ class BomPnpConfig:
                 "include_dnp": self.include_dnp,
                 "split_dnp": self.split_dnp,
                 "dnp_placement": self.dnp_placement,
+                "highlight_dnp_rows": self.highlight_dnp_rows,
                 "prefix_order": list(self.prefix_order),
                 "pcb_line_item": {
                     "enabled": self.pcb_line_item_enabled,
@@ -650,10 +657,50 @@ def ordered_bom_lines(
     """Order grouped BOM lines according to DNP placement policy."""
     placement = _choice(dnp_placement, _DNP_PLACEMENTS, "DNP placement")
     if placement in {"end", "separate"}:
-        fitted = [line for line in lines if not line.dnp]
-        dnp = [line for line in lines if line.dnp]
-        return [*fitted, *dnp]
-    return list(lines)
+        return _renumber_bom_lines(_bom_lines_with_dnp_at_end(lines))
+    return _renumber_bom_lines(_bom_lines_with_matching_dnp(lines))
+
+
+def _bom_lines_with_dnp_at_end(
+    lines: Sequence[GroupedBomLine],
+) -> list[GroupedBomLine]:
+    """Return fitted BOM lines followed by DNP BOM lines."""
+    fitted, dnp = _split_bom_lines_by_dnp(lines)
+    return [*fitted, *dnp]
+
+
+def _bom_lines_with_matching_dnp(
+    lines: Sequence[GroupedBomLine],
+) -> list[GroupedBomLine]:
+    """Return DNP BOM lines immediately after matching fitted lines."""
+    fitted, dnp = _split_bom_lines_by_dnp(lines)
+    dnp_by_key: dict[tuple[tuple[str, str], ...], list[GroupedBomLine]] = {}
+    for line in dnp:
+        dnp_by_key.setdefault(_bom_line_match_key(line), []).append(line)
+
+    ordered: list[GroupedBomLine] = []
+    used_dnp: set[int] = set()
+    for line in fitted:
+        ordered.append(line)
+        for dnp_line in dnp_by_key.get(_bom_line_match_key(line), []):
+            if id(dnp_line) not in used_dnp:
+                ordered.append(dnp_line)
+                used_dnp.add(id(dnp_line))
+    for line in dnp:
+        if id(line) not in used_dnp:
+            ordered.append(line)
+            used_dnp.add(id(line))
+    return ordered
+
+
+def _split_bom_lines_by_dnp(
+    lines: Sequence[GroupedBomLine],
+) -> tuple[list[GroupedBomLine], list[GroupedBomLine]]:
+    """Split BOM lines into fitted and DNP lists without changing order."""
+    return (
+        [line for line in lines if not line.dnp],
+        [line for line in lines if line.dnp],
+    )
 
 
 def filter_bom_components(
@@ -671,11 +718,16 @@ def grouped_bom_table_rows(
     lines: Sequence[GroupedBomLine],
     *,
     fields: Sequence[str] = BOM_GROUPED_DEFAULT_COLUMNS,
-    dnp_placement: str = "inline",
+    dnp_placement: str | None = "inline",
 ) -> list[dict[str, str]]:
     """Return configured table rows for grouped BOM outputs."""
     rows: list[dict[str, str]] = []
-    for line in ordered_bom_lines(lines, dnp_placement=dnp_placement):
+    ordered_lines = (
+        list(lines)
+        if dnp_placement is None
+        else ordered_bom_lines(lines, dnp_placement=dnp_placement)
+    )
+    for line in ordered_lines:
         rows.append({field: _grouped_line_field(line, field) for field in fields})
     return rows
 
@@ -751,6 +803,17 @@ def bom_raw_payload(
         "dnp_count": sum(1 for component in components if component.dnp),
         "components": [component.to_json_obj() for component in components],
     }
+
+
+def flat_raw_bom_payload(bom: Sequence[Mapping[str, object]]) -> list[dict[str, object]]:
+    """Return flat raw BOM components before aliases or grouping are applied."""
+    return [
+        {
+            str(name): _json_compatible_value(value)
+            for name, value in component.items()
+        }
+        for component in bom
+    ]
 
 
 def grouped_bom_payload(
@@ -1201,6 +1264,25 @@ def _grouped_line(
     )
 
 
+def _renumber_bom_lines(lines: Sequence[GroupedBomLine]) -> list[GroupedBomLine]:
+    """Return BOM lines with display item numbers matching row order."""
+    return [
+        GroupedBomLine(
+            item=index,
+            quantity=line.quantity,
+            designators=line.designators,
+            dnp=line.dnp,
+            fields=dict(line.fields),
+        )
+        for index, line in enumerate(lines, start=1)
+    ]
+
+
+def _bom_line_match_key(line: GroupedBomLine) -> tuple[tuple[str, str], ...]:
+    """Return the manufacturable identity key used to pair fitted and DNP rows."""
+    return tuple(sorted(line.fields.items()))
+
+
 def _line_fields(components: Sequence[NormalizedBomComponent]) -> dict[str, str]:
     """Merge canonical fields for a grouped BOM line."""
     fields: dict[str, str] = {}
@@ -1209,6 +1291,20 @@ def _line_fields(components: Sequence[NormalizedBomComponent]) -> dict[str, str]
             if value and name not in fields:
                 fields[name] = value
     return fields
+
+
+def _json_compatible_value(value: object) -> object:
+    """Return a JSON-compatible value while preserving raw field names."""
+    if isinstance(value, Mapping):
+        return {
+            str(name): _json_compatible_value(item)
+            for name, item in value.items()
+        }
+    if isinstance(value, list | tuple):
+        return [_json_compatible_value(item) for item in value]
+    if value is None or isinstance(value, str | int | float | bool):
+        return value
+    return str(value)
 
 
 def _line_comment(fields: Mapping[str, str]) -> str:

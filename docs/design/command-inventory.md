@@ -14,9 +14,9 @@ This inventory records the command set migrated from the private
 | `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
 | `svg` | public | help only | Combined schematic/project SVG wrapper. |
 | `pcblib-footprint-3d` | deferred | none | Broken; do not migrate into first public release. Remove or hide from public CLI/manifest before release. |
-| `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy, and source selection. |
-| `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL, units, variant/no-BOM filtering, and configurable sorting. |
-| `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM and JLC CPL through the shared BOM/PnP implementation paths. |
+| `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, flat raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy/highlighting, and source selection. |
+| `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL CSV/XLSX, units, variant/no-BOM filtering, and configurable sorting. |
+| `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
 | `netlist` | public | `L3_public_workflows` | Key command. Keep current netlist JSON behavior for Altium schematic/project documents. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
 | `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
