@@ -1,183 +1,187 @@
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
 from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
+    PCB_SVG_CONFIG_FILENAME,
+    PCB_SVG_CONFIG_SCHEMA,
     PcbSvgConfig,
     _apply_pcb_layer_selection,
     _apply_pcb_view_selection,
     _resolve_view_render_settings,
     resolve_pcb_svg_configs,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import write_or_update_view_svg
 
 
-def _enabled_sources(config: PcbSvgConfig) -> set[str]:
-    return {view.source for view in config.views if view.enabled}
+def _enabled_views(config: PcbSvgConfig) -> set[str]:
+    return {view.name for view in config.views if view.enabled}
 
 
-def test_pcb_svg_cli_views_enable_requested_content_views():
+def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
+    config = PcbSvgConfig.default()
+    payload = config.to_dict()
+    layer_outputs = cast(dict[str, object], payload["layer_outputs"])
+    views = cast(list[dict[str, object]], payload["views"])
+
+    assert payload["schema"] == PCB_SVG_CONFIG_SCHEMA
+    assert PCB_SVG_CONFIG_FILENAME == "pcb.svg.config.a0"
+    assert layer_outputs["enabled"] is True
+    assert "BOARD_CUTOUTS" in cast(list[str], layer_outputs["include_special_layers"])
+    top_view = next(view for view in views if view["name"] == "top_view")
+    top_layers = cast(list[str], top_view["layers"])
+    assert top_view["group_id"] == "pcb-svg-view-top"
+    assert top_layers[-1] == "ASSEMBLY_HLR_TOP"
+
+
+def test_pcb_svg_default_cutout_style_has_no_text_label() -> None:
+    root = PcbSvgConfig.default().to_dict()
+    global_options = cast(dict[str, object], root["global"])
+    styles = cast(dict[str, dict[str, object]], global_options["styles"])
+    payload = styles["board_cutouts"]
+
+    assert payload["hatch"] is True
+    assert "label_text" not in payload
+    assert "label" not in payload
+
+
+def test_pcb_svg_cli_views_enable_requested_views_and_layer_outputs() -> None:
     config = PcbSvgConfig.default()
 
-    _apply_pcb_view_selection(config, "assembly-top,assembly-bottom")
+    _apply_pcb_view_selection(config, "top,bottom,layers")
 
-    assert _enabled_sources(config) == {"assembly-top", "assembly-bottom"}
+    assert _enabled_views(config) == {"top_view", "bottom_view"}
+    assert config.layer_outputs["enabled"] is True
 
 
-def test_pcb_svg_default_assembly_views_are_copper_only():
+def test_pcb_svg_cli_views_none_disables_all_outputs() -> None:
     config = PcbSvgConfig.default()
 
-    assembly_views = [view for view in config.views if view.source.startswith("assembly")]
+    _apply_pcb_view_selection(config, "none")
 
-    assert assembly_views
-    assert {tuple(view.layer_order or []) for view in assembly_views} == {("copper",)}
-
-
-def test_pcb_svg_default_config_includes_board_cutout_layer_options():
-    config = PcbSvgConfig.default()
-    payload = config.to_dict()["global"]
-
-    assert payload["include_board_cutout_layer"] is True
-    assert payload["board_cutout_layer_hatch"] is True
-    assert "board_cutout_layer_hash_spacing_mm" in payload
-    assert "board_cutout_layer_hash_angle_deg" in payload
-    assert "board_cutout_layer_hash_line_width_mm" in payload
-    assert "board_cutout_layer_outline_style" in payload
-    assert "board_cutout_layer_outline_dash_mm" in payload
-    assert "board_cutout_layer_outline_width_mm" in payload
+    assert _enabled_views(config) == set()
+    assert config.layer_outputs["enabled"] is False
 
 
-def test_pcb_svg_cli_views_all_enables_all_content_views():
+def test_pcb_svg_cli_views_reject_unknown_view() -> None:
     config = PcbSvgConfig.default()
 
-    _apply_pcb_view_selection(config, "all")
-
-    assert _enabled_sources(config) == {
-        "layers",
-        "top",
-        "bottom",
-        "assembly-top",
-        "assembly-bottom",
-    }
-
-
-def test_pcb_svg_cli_views_override_created_default_config(tmp_path):
-    config_path = tmp_path / "pcb-svg.json"
-    input_file = tmp_path / "board.PrjPcb"
-    input_file.write_text("", encoding="utf-8")
-    args = SimpleNamespace(config=config_path, pcb_views="assembly-top,assembly-bottom")
-
-    config_by_input, created_configs = resolve_pcb_svg_configs(args, [input_file])
-
-    assert created_configs == [config_path.resolve()]
-    assert _enabled_sources(config_by_input[input_file.resolve()]) == {
-        "assembly-top",
-        "assembly-bottom",
-    }
-
-
-def test_pcb_svg_cli_views_reject_unknown_view():
-    config = PcbSvgConfig.default()
-
-    with pytest.raises(ValueError, match="Unknown --pcb-views token"):
+    with pytest.raises(ValueError, match="Unknown --views token"):
         _apply_pcb_view_selection(config, "top,mechanical")
 
 
-def test_pcb_svg_cli_layers_filter_layer_view():
+def test_pcb_svg_cli_layers_filter_layer_outputs() -> None:
     config = PcbSvgConfig.default()
 
     _apply_pcb_layer_selection(config, "bottom")
 
-    layer_view = next(view for view in config.views if view.source == "layers")
-    assert layer_view.layers == ["BOTTOM"]
+    assert config.layer_outputs["layers"] == ["BOTTOM"]
 
 
-def test_pcb_svg_cli_layers_override_created_default_config(tmp_path):
-    config_path = tmp_path / "pcb-svg.json"
+def test_pcb_svg_cli_overrides_created_default_config(tmp_path) -> None:
+    config_path = tmp_path / PCB_SVG_CONFIG_FILENAME
     input_file = tmp_path / "board.PrjPcb"
     input_file.write_text("", encoding="utf-8")
-    args = SimpleNamespace(config=config_path, pcb_views="layers", pcb_layers="bottom")
+    args = SimpleNamespace(
+        config=config_path,
+        pcb_views="top,layers",
+        pcb_layers="bottom",
+        pcbdoc=None,
+        pcb_svg_scale=None,
+        pcb_svg_size_unit=None,
+        pcb_clean_output=False,
+    )
 
     config_by_input, created_configs = resolve_pcb_svg_configs(args, [input_file])
 
+    resolved = config_by_input[input_file.resolve()]
     assert created_configs == [config_path.resolve()]
-    layer_view = next(
-        view
-        for view in config_by_input[input_file.resolve()].views
-        if view.source == "layers"
-    )
-    assert layer_view.enabled is True
-    assert layer_view.layers == ["BOTTOM"]
+    assert _enabled_views(resolved) == {"top_view"}
+    assert resolved.layer_outputs["enabled"] is True
+    assert resolved.layer_outputs["layers"] == ["BOTTOM"]
 
 
-def test_pcb_svg_config_parses_board_cutout_layer_options():
+def test_pcb_svg_rejects_v1_config() -> None:
+    with pytest.raises(ValueError, match="Unsupported pcb-svg config schema"):
+        PcbSvgConfig.from_dict({"schema": "wn.pcb.svg.config.v1"})
+
+
+def test_pcb_svg_view_style_override_merges_with_global() -> None:
     config = PcbSvgConfig.from_dict(
         {
-            "schema": "wn.pcb.svg.config.v1",
+            "schema": PCB_SVG_CONFIG_SCHEMA,
             "global": {
-                "include_board_cutout_layer": True,
-                "board_cutout_layer_hatch": True,
-                "board_cutout_layer_hash_spacing_mm": 1.25,
-                "board_cutout_layer_hash_angle_deg": 30,
-                "board_cutout_layer_hash_line_width_mm": 0.12,
-                "board_cutout_layer_outline_style": "dashed",
-                "board_cutout_layer_outline_dash_mm": 0.9,
-                "board_cutout_layer_outline_width_mm": 0.33,
-                "board_cutout_layer_label": True,
-                "board_cutout_layer_label_text": "slot",
+                "styles": {
+                    "drills": {
+                        "enabled": True,
+                        "plated_color": "#111111",
+                        "non_plated_color": "#222222",
+                    }
+                }
             },
-            "views": [{"name": "layers", "source": "layers", "enabled": True}],
+            "views": [
+                {
+                    "name": "top_view",
+                    "layers": ["TOP", "DRILLS", "SLOTS"],
+                    "styles": {
+                        "drills": {"plated_color": "#333333"},
+                        "slots": {"plated_color": "#444444"},
+                    },
+                }
+            ],
         }
     )
 
-    assert config.global_options.include_board_cutout_layer is True
-    assert config.global_options.board_cutout_layer_hatch is True
-    assert config.global_options.board_cutout_layer_hash_spacing_mm == 1.25
-    assert config.global_options.board_cutout_layer_hash_angle_deg == 30
-    assert config.global_options.board_cutout_layer_hash_line_width_mm == 0.12
-    assert config.global_options.board_cutout_layer_outline_style == "dashed"
-    assert config.global_options.board_cutout_layer_outline_dash_mm == 0.9
-    assert config.global_options.board_cutout_layer_outline_width_mm == 0.33
-    assert config.global_options.board_cutout_layer_label is True
-    assert config.global_options.board_cutout_layer_label_text == "slot"
+    resolved = _resolve_view_render_settings(config.global_options, config.views[0])
+
+    styles = cast(dict[str, dict[str, object]], resolved["styles"])
+    assert styles["drills"]["plated_color"] == "#333333"
+    assert styles["drills"]["non_plated_color"] == "#222222"
+    assert styles["slots"]["plated_color"] == "#444444"
 
 
-def test_pcb_svg_config_validates_board_cutout_layer_options():
+def test_pcb_svg_config_validates_cutout_style_options() -> None:
     config = PcbSvgConfig.from_dict(
         {
-            "schema": "wn.pcb.svg.config.v1",
-            "global": {"board_cutout_layer_outline_style": "dotted"},
-            "views": [{"name": "layers", "source": "layers", "enabled": True}],
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "global": {"styles": {"board_cutouts": {"outline_style": "dotted"}}},
+            "views": [{"name": "top_view", "layers": ["BOARD_CUTOUTS"]}],
         }
     )
 
-    with pytest.raises(ValueError, match="board_cutout_layer_outline_style"):
+    with pytest.raises(ValueError, match="board_cutouts.outline_style"):
         _resolve_view_render_settings(config.global_options, config.views[0])
 
 
-def test_pcb_svg_config_validates_board_cutout_hash_spacing():
+def test_pcb_svg_config_validates_cutout_positive_dimensions() -> None:
     config = PcbSvgConfig.from_dict(
         {
-            "schema": "wn.pcb.svg.config.v1",
-            "global": {"board_cutout_layer_hash_spacing_mm": 0.0},
-            "views": [{"name": "layers", "source": "layers", "enabled": True}],
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "global": {"styles": {"board_cutouts": {"hatch_spacing_mm": 0.0}}},
+            "views": [{"name": "top_view", "layers": ["BOARD_CUTOUTS"]}],
         }
     )
 
-    with pytest.raises(ValueError, match="board_cutout_layer_hash_spacing_mm"):
+    with pytest.raises(ValueError, match="board_cutouts.hatch_spacing_mm"):
         _resolve_view_render_settings(config.global_options, config.views[0])
 
 
-def test_pcb_svg_config_validates_board_cutout_line_widths():
-    config = PcbSvgConfig.from_dict(
-        {
-            "schema": "wn.pcb.svg.config.v1",
-            "global": {
-                "board_cutout_layer_hash_line_width_mm": 0.0,
-                "board_cutout_layer_outline_width_mm": 0.0,
-            },
-            "views": [{"name": "layers", "source": "layers", "enabled": True}],
-        }
+def test_pcb_svg_durable_group_update_preserves_user_svg_content(tmp_path) -> None:
+    target = tmp_path / "view.svg"
+    target.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg"><text id="user-note">keep</text>'
+        '<g id="pcb-svg-view-top"><path id="old"/></g></svg>',
+        encoding="utf-8",
+    )
+    replacement = (
+        '<svg xmlns="http://www.w3.org/2000/svg"><g id="scene">'
+        '<g id="pcb-svg-view-top"><path id="new"/></g></g></svg>'
     )
 
-    with pytest.raises(ValueError, match="board_cutout_layer_hash_line_width_mm"):
-        _resolve_view_render_settings(config.global_options, config.views[0])
+    write_or_update_view_svg(target, replacement, group_id="pcb-svg-view-top")
+    text = target.read_text(encoding="utf-8")
+
+    assert "user-note" in text
+    assert 'id="new"' in text
+    assert 'id="old"' not in text

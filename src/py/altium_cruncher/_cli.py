@@ -4,7 +4,7 @@ Altium Cruncher - High-level CLI for Altium file operations.
 Output policy:
     - Every command accepts -o/--output as an output directory.
     - If omitted, artifacts are written under ./output/<command>/.
-    - pcb-svg is config-driven: uses pcb-svg.json (or --config) for view/options policy.
+    - pcb-svg is config-driven: uses pcb.svg.config.a0 (or --config) for view/options policy.
     - pcb-svg emits contract SVG geometry/metadata only; presentation labels live in HTML/report layers.
     - clean normalizes SchDoc/SchLib style attributes using JSON config; PrjPcb inputs apply to all project SchDocs.
 """

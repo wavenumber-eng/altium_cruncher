@@ -66,12 +66,14 @@ SVG command family notes:
 - `pcb-svg` has fixture-backed assembly-view coverage with HLR/geometer using
   Hydroscope embedded STEP models, while the normal layer-output test remains
   in place so HLR work cannot regress layer SVG output;
-- generated `pcb-svg` configs enable a synthetic `BOARD_CUTOUTS` layer from
-  board-profile cutouts by default; boards without cutouts do not write that
-  artifact;
-- `BOARD_CUTOUTS` supports optional labels, configurable hash
-  spacing/direction/line width, configurable outline line width, and solid or
-  dashed outlines;
+- `pcb-svg` uses `pcb.svg.config.a0`; individual layer outputs are separate
+  from composed views, and composed views have explicit layer tokens, durable
+  group ids, and output SVG paths;
+- synthetic layer tokens include `BOARD_OUTLINE`, `BOARD_CUTOUTS`, `DRILLS`,
+  `SLOTS`, `ASSEMBLY_HLR_TOP`, and `ASSEMBLY_HLR_BOTTOM`;
+- `BOARD_CUTOUTS` supports configurable hash spacing/direction/line width,
+  configurable outline line width, and solid or dashed outlines. A0 deliberately
+  omits generated cutout text labels;
 - board cutout hash rendering is implemented through reusable SVG pattern
   helpers so future synthetic layers can fill arbitrary closed paths the same
   way.

@@ -11,3 +11,4 @@ Current contracts:
 - `command_manifest.v0.json`: public CLI command inventory.
 - `interface_design_manifest.v0.json`: major non-dataclass interface inventory.
 - `bom_pnp_config.v1.schema.json`: shared BOM, PnP, and JLC config schema.
+- `pcb_svg_config.a0.schema.json`: experimental explicit PCB SVG config schema.

@@ -1137,15 +1137,18 @@ Current local status:
 - fixture layout notes live in `docs/design/test-assets.html` and
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;
-- `pcb-svg` cutout work now uses `tests/assets/projects/cutouts`, a simple
-  four-cutout fixture with rectangular, circular arc, and rounded T-shaped
-  board-profile holes. Generated default configs enable the synthetic
-  `BOARD_CUTOUTS` layer so cutout-capable boards produce a cutout view by
-  default. The layer supports configurable hash spacing, hash direction, hash
-  line width, outline line width, labels, and solid or dashed outlines through
-  reusable SVG pattern helpers. The standalone cutout layer now honors the
-  resolved `include_board_outline` setting for the outer profile, and composed
-  top/bottom views inherit the same global cutout hatch/outline style options;
+- `pcb-svg` now uses the experimental explicit `pcb.svg.config.a0` contract
+  rather than the early shortcut-based config. The default config separates
+  individual `layer_outputs` from composed `views[]`, gives each view a durable
+  SVG group id and output path, and uses the view `layers` array as draw order.
+  Synthetic layers include `BOARD_OUTLINE`, `BOARD_CUTOUTS`, `DRILLS`, `SLOTS`,
+  `ASSEMBLY_HLR_TOP`, and `ASSEMBLY_HLR_BOTTOM`; HLR renders on top and
+  drills/slots render immediately behind it. HLR mode is per-view
+  (`simple` or `detail`). Cutout labels were removed from A0 output, while
+  hatch spacing, hatch direction, hash line width, outline line width, and
+  solid/dashed outline style remain configurable. The renderer can replace an
+  existing durable view `<g>` so user-authored SVG content around that group can
+  survive regeneration;
 - CLI logging now has root-level `--quiet`, `--verbose`, and `--log-level`
   controls. Normal command progress stays at INFO; Altium Monkey parser
   internals are expected to use DEBUG so manufacturing-output commands can run
@@ -1154,17 +1157,18 @@ Current local status:
   `output/` folder, for example
   `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
-  - `uv run --extra test pytest tests\test_pcb_svg_cutout_layer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes -q`:
-    18 passed;
-  - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_cutout_layer.py tests\test_pcb_svg_cutout_layer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
+  - `uv run --extra test pytest -q tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_command_uses_public_pcbdoc_without_private_context tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes`:
+    15 passed after adding durable-group update coverage and HLR coverage;
+  - `uv run --extra test pytest -q tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_assembly_views_use_geometer_hlr`:
+    1 passed;
+  - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_config.py src\py\altium_cruncher\altium_cruncher_pcb_svg_a0_renderer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
     0 errors;
+  - `uv run --extra test ruff check src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_config.py src\py\altium_cruncher\altium_cruncher_pcb_svg_a0_renderer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
+    clean;
+  - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json --format json`:
+    0 findings;
   - `uv run --extra test pytest -q`: 146 passed, 2 skipped;
   - `uv run --extra test rack run --all`: 42 passed, 1 skipped;
-  - `uv run --extra test ruff check src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_cutout_layer.py tests\test_pcb_svg_cutout_layer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
-    clean;
-  - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json`:
-    0 findings;
-  - `git diff --check`: clean aside from normal Windows line-ending warnings;
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
@@ -1176,10 +1180,10 @@ Current local status:
 - macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
   tracked in `wavenumber-eng/geometer#2`; this is not a BOM/PnP logic blocker,
   but it must be closed before final `altium-cruncher` release signoff.
-- current worktree still has an unrelated untracked
-  `tests/assets/projects/cricket-node/input/pcb-svg.json`; keep it unstaged
-  unless it is deliberately adopted later. The cutouts fixture's bulk
-  Altium-generated `reference_output/` tree is also left unstaged for this
-  slice because the current cutout SVG test only needs the source fixture, and
-  generated ODB/text oracle files contain intentional whitespace that should
-  not be rewritten casually.
+- current worktree still has unrelated fixture/config churn:
+  `tests/assets/projects/cricket-node/input/pcb-svg.json`,
+  `tests/assets/projects/cricket-node/input/pcb-layer-step.json`,
+  `tests/assets/projects/goomba/input/bom.config`,
+  `tests/assets/projects/cutouts/reference_output/`, and the older dirty
+  `tests/assets/projects/cutouts/input/pcb-svg.json`. Keep those unstaged
+  unless they are deliberately adopted later.

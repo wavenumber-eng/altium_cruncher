@@ -178,22 +178,21 @@ def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Pa
     """Exercise pcb-svg against a copied public PcbDoc and explicit config."""
     pcbdoc = tmp_path / "board.PcbDoc"
     shutil.copy2(HYDROSCOPE_PCBDOC, pcbdoc)
-    config = tmp_path / "pcb-svg.json"
+    config = tmp_path / "pcb.svg.config.a0"
     config.write_text(
         json.dumps(
             {
-                "schema": "wn.pcb.svg.config.v1",
+                "schema": "pcb.svg.config.a0",
                 "global": {
                     "include_metadata": True,
                     "show_empty_layers": False,
                 },
-                "views": [
-                    {
-                        "name": "layers",
-                        "source": "layers",
-                        "enabled": True,
-                    }
-                ],
+                "layer_outputs": {
+                    "enabled": True,
+                    "layers": ["TOP"],
+                    "include_special_layers": ["BOARD_OUTLINE", "DRILLS", "SLOTS"],
+                },
+                "views": [],
             },
             indent=2,
         ),
@@ -213,7 +212,7 @@ def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Pa
     )
 
     manifest = json.loads((output_dir / "board__views.json").read_text(encoding="utf-8"))
-    assert manifest["schema"] == "wn.pcb.svg.eg06.view_manifest.v1"
+    assert manifest["schema"] == "pcb.svg.manifest.a0"
     assert manifest["board"] == "board"
     assert (output_dir / "layers" / "board__TOP.svg").exists()
 
@@ -222,31 +221,38 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
     """Exercise assembly top/bottom SVG views with geometer-backed HLR enabled."""
     pcbdoc = tmp_path / "board.PcbDoc"
     shutil.copy2(HYDROSCOPE_PCBDOC, pcbdoc)
-    config = tmp_path / "pcb-svg.json"
+    config = tmp_path / "pcb.svg.config.a0"
     config.write_text(
         json.dumps(
             {
-                "schema": "wn.pcb.svg.config.v1",
+                "schema": "pcb.svg.config.a0",
                 "global": {
                     "include_metadata": True,
-                    "assembly_include_simple": True,
-                    "assembly_include_detail": False,
-                    "assembly_curve_mode": "polyline",
+                    "styles": {
+                        "assembly_hlr": {
+                            "curve_mode": "polyline",
+                        }
+                    },
+                },
+                "layer_outputs": {
+                    "enabled": False,
                 },
                 "views": [
                     {
                         "name": "assembly_top_view",
-                        "source": "assembly-top",
                         "enabled": True,
-                        "assembly_enabled": True,
-                        "layer_order": ["copper"],
+                        "group_id": "pcb-svg-view-assembly-top",
+                        "output_svg": "assembly_top_view/{board}__assembly_top_view.svg",
+                        "layers": ["BOARD_OUTLINE", "TOP", "ASSEMBLY_HLR_TOP"],
+                        "assembly_hlr_mode": "simple",
                     },
                     {
                         "name": "assembly_bottom_view",
-                        "source": "assembly-bottom",
                         "enabled": True,
-                        "assembly_enabled": True,
-                        "layer_order": ["copper"],
+                        "group_id": "pcb-svg-view-assembly-bottom",
+                        "output_svg": "assembly_bottom_view/{board}__assembly_bottom_view.svg",
+                        "layers": ["BOARD_OUTLINE", "BOTTOM", "ASSEMBLY_HLR_BOTTOM"],
+                        "assembly_hlr_mode": "simple",
                     },
                 ],
             },
@@ -270,39 +276,43 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
 
 def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
     """Exercise the cutout fixture with dashed outlines and configured hashes."""
-    config = tmp_path / "pcb-svg-cutouts.json"
+    config = tmp_path / "pcb.svg.config.a0"
     config.write_text(
         json.dumps(
             {
-                "schema": "wn.pcb.svg.config.v1",
+                "schema": "pcb.svg.config.a0",
                 "global": {
                     "include_metadata": True,
-                    "include_board_cutout_layer": True,
-                    "board_cutout_layer_hatch": True,
-                    "board_cutout_layer_hash_spacing_mm": 1.25,
-                    "board_cutout_layer_hash_angle_deg": 30,
-                    "board_cutout_layer_hash_line_width_mm": 0.12,
-                    "board_cutout_layer_outline_style": "dashed",
-                    "board_cutout_layer_outline_dash_mm": 0.9,
-                    "board_cutout_layer_outline_width_mm": 0.33,
-                    "board_cutout_layer_label": True,
-                    "board_cutout_layer_label_text": "cutout",
+                    "styles": {
+                        "board_cutouts": {
+                            "enabled": True,
+                            "hatch": True,
+                            "hatch_spacing_mm": 1.25,
+                            "hatch_angle_deg": 30,
+                            "hatch_line_width_mm": 0.12,
+                            "outline_style": "dashed",
+                            "outline_dash_mm": 0.9,
+                            "outline_width_mm": 0.33,
+                        }
+                    },
+                },
+                "layer_outputs": {
+                    "enabled": True,
+                    "layers": ["BOARD_CUTOUTS"],
+                    "include_special_layers": ["BOARD_OUTLINE"],
                 },
                 "views": [
                     {
-                        "name": "layers",
-                        "source": "layers",
-                        "enabled": True,
-                    },
-                    {
                         "name": "top_view",
-                        "source": "top",
                         "enabled": True,
+                        "output_svg": "top_view/{board}__top_view.svg",
+                        "layers": ["BOARD_OUTLINE", "TOP", "BOARD_CUTOUTS"],
                     },
                     {
                         "name": "bottom_view",
-                        "source": "bottom",
                         "enabled": True,
+                        "output_svg": "bottom_view/{board}__bottom_view.svg",
+                        "layers": ["BOARD_OUTLINE", "BOTTOM", "BOARD_CUTOUTS"],
                     },
                 ],
             },
@@ -322,7 +332,7 @@ def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
     assert 'stroke-width="0.12"' in cutout_svg
     assert 'stroke-dasharray="0.9 0.9"' in cutout_svg
     assert 'stroke-width="0.33"' in cutout_svg
-    assert cutout_svg.count(">cutout</text>") == 4
+    assert ">cutout</text>" not in cutout_svg
     for view_folder in ("top_view", "bottom_view"):
         view_svg = (
             output_dir / view_folder / f"cutout_multiple__{view_folder}.svg"
