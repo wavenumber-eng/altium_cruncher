@@ -127,6 +127,11 @@ def _variant_args(variant: str | None) -> list[str]:
     return ["--variant", variant]
 
 
+def _case_output_dir(root: Path, case: BomPnpOracleCase, command: str) -> Path:
+    """Return the project-first output folder used by workflow tests."""
+    return root / case.name / command / case.variant_label
+
+
 def _legacy_output_name(project: Path, variant: str | None, kind: str, ext: str) -> str:
     """Return a legacy single-format CLI output filename."""
     variant_part = f"_{variant}" if variant else ""
@@ -191,7 +196,7 @@ def _float_text(value: str) -> float:
 def test_bom_raw_json_covers_altium_xml_oracle_designators(tmp_path: Path) -> None:
     """Validate raw BOM source data against Altium XML-BOM oracle designators."""
     for case in ORACLE_CASES:
-        output_dir = tmp_path / "bom" / case.name / case.variant_label
+        output_dir = _case_output_dir(tmp_path, case, "bom")
         _run_cli(
             "bom",
             str(case.project),
@@ -242,7 +247,7 @@ def test_bom_raw_json_covers_altium_xml_oracle_designators(tmp_path: Path) -> No
 def test_pnp_json_matches_altium_metric_oracle_core_geometry(tmp_path: Path) -> None:
     """Validate PnP JSON placement geometry against Altium PNP-METRIC CSV."""
     for case in ORACLE_CASES:
-        output_dir = tmp_path / "pnp" / case.name / case.variant_label
+        output_dir = _case_output_dir(tmp_path, case, "pnp")
         _run_cli(
             "pnp",
             str(case.project),
@@ -301,7 +306,7 @@ def test_pnp_json_matches_altium_metric_oracle_core_geometry(tmp_path: Path) -> 
 def test_jlc_command_writes_paired_outputs_for_primary_fixtures(tmp_path: Path) -> None:
     """Exercise paired JLC BOM/CPL output for hierarchy and high-count fixtures."""
     for case in ORACLE_CASES:
-        output_root = tmp_path / "jlc" / case.name / case.variant_label
+        output_root = _case_output_dir(tmp_path, case, "jlc")
         _run_cli(
             "jlc",
             str(case.project),

@@ -20,7 +20,7 @@ case, and `loz-old-man` as the high component-count case. `XML-BOM` and
 oracle.
 
 Generated test or review artifacts should go under the repository-level
-`output/` folder, organized by command, project/test name, and variant when a
-variant applies.
+`output/` folder, organized by project/test name, command, variant, and output
+kind when needed, for example `output/node_test_array/bom/B4/raw-json`.
 
 See `docs/design/test-assets.html` for the full fixture policy.

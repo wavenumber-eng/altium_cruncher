@@ -54,9 +54,10 @@
       <code>reference_output/no_variant</code> means Altium generated the
       output with no variant applied. Variant-specific outputs should live
       under a folder named for the variant, such as
-      <code>reference_output/B4</code>. BOM, PnP, and JLC tests should mirror
-      this convention when writing review artifacts:
-      <code>output/&lt;command&gt;/&lt;test-or-project&gt;/&lt;variant&gt;/...</code>.
+      <code>reference_output/B4</code>. BOM, PnP, and JLC tests should write
+      generated review artifacts under the repository-level
+      <code>output/</code> folder using project-first layout:
+      <code>output/&lt;test-or-project&gt;/&lt;command&gt;/&lt;variant&gt;/...</code>.
     </p>
   </section>
 

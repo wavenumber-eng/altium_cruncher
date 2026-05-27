@@ -17,6 +17,7 @@ from altium_cruncher.bom_pnp_model import (
     grouped_bom_payload,
     jlc_bom_rows,
     jlc_cpl_rows,
+    load_bom_pnp_config,
     normalize_bom_components,
     normalize_pnp_entries,
     pnp_table_rows,
@@ -244,6 +245,19 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
     assert config.pnp_position_mode == "component-origin"
     assert select_variant_names(["A", "B4"], config) == ["B4"]
     assert output == tmp_path / "bom" / "B4" / "Project_175_TEST_grouped-xlsx.xlsx"
+
+
+def test_bom_pnp_config_loader_accepts_utf8_bom(tmp_path: Path) -> None:
+    """Load configs written by Windows tools that include a UTF-8 BOM."""
+    config_path = tmp_path / "bom.config"
+    config_path.write_text(
+        '{"schema": "wn.altium_cruncher.bom.config.v1"}',
+        encoding="utf-8-sig",
+    )
+
+    config = load_bom_pnp_config(config_path)
+
+    assert config.schema == BOM_PNP_CONFIG_SCHEMA
 
 
 def test_configured_bom_and_pnp_table_rows_use_selected_fields() -> None:

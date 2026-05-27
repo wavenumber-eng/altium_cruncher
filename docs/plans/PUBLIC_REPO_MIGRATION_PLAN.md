@@ -1125,7 +1125,8 @@ Current local status:
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;
 - generated review artifacts for inspection are under
-  `output/bom_pnp_jlc`;
+  the repository-level `output/` folder using project-first layout, for
+  example `output/node_test_array/bom/B4/raw-json`;
 - latest targeted validation:
   - `uv run --extra test pytest -q`: 124 passed, 2 skipped;
   - `uv run --extra test pytest tests\L3_public_workflows -q`: 13 passed,

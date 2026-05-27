@@ -356,7 +356,7 @@ def find_bom_pnp_config_path(start_dir: Path | None = None) -> Path | None:
 
 def load_bom_pnp_config(path: Path) -> BomPnpConfig:
     """Load a BOM/PnP JSON config file."""
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = json.loads(path.read_text(encoding="utf-8-sig"))
     if not isinstance(payload, Mapping):
         raise ValueError(f"BOM/PnP config must be a JSON object: {path}")
     return BomPnpConfig.from_mapping(payload)
