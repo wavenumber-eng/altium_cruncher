@@ -12,11 +12,16 @@ import argparse
 import json
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from altium_monkey.altium_pcb_surface import PCB_SurfaceRole, PCB_SurfaceSide
+from altium_monkey.altium_pcb_surface import (
+    PCB_SurfaceRole,
+    PCB_SurfaceSide,
+    pcb_surface_layer,
+    pcb_surface_layers,
+)
 from altium_monkey.altium_pcb_svg_renderer import PcbSvgRenderOptions, PcbSvgRenderer
 from altium_monkey.altium_record_types import PcbLayer
 
@@ -25,6 +30,10 @@ from altium_cruncher.altium_cruncher_common import (
     find_pcbdocs_in_cwd,
     find_prjpcbs_in_cwd,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_cutout_layer import (
+    CruncherPcbCutoutStyle,
+)
+from altium_cruncher.altium_cruncher_pcb_workflow import CruncherPcbRenderInput
 from altium_cruncher.svg_hatch_patterns import (
     MIN_DASH_MM,
     MIN_HATCH_LINE_WIDTH_MM,
@@ -1521,6 +1530,75 @@ def _build_core_surface_view_options(
     return options, role_order, role_colors
 
 
+def _cutout_style_from_render_kwargs(
+    render_kwargs: PcbSvgResolvedSettings,
+    *,
+    include_overlay: bool = False,
+) -> CruncherPcbCutoutStyle:
+    return CruncherPcbCutoutStyle(
+        include_overlay=include_overlay,
+        include_hatch=bool(render_kwargs["board_cutout_layer_hatch"]),
+        hatch_spacing_mm=float(render_kwargs["board_cutout_layer_hash_spacing_mm"]),
+        hatch_angle_deg=float(render_kwargs["board_cutout_layer_hash_angle_deg"]),
+        hatch_line_width_mm=float(
+            render_kwargs["board_cutout_layer_hash_line_width_mm"]
+        ),
+        include_label=bool(render_kwargs["board_cutout_layer_label"]),
+        label_text=str(render_kwargs["board_cutout_layer_label_text"]),
+        outline_style=str(render_kwargs["board_cutout_layer_outline_style"]),
+        outline_dash_mm=float(render_kwargs["board_cutout_layer_outline_dash_mm"]),
+        outline_width_mm=float(render_kwargs["board_cutout_layer_outline_width_mm"]),
+    )
+
+
+def _render_core_surface_svg_view(
+    render_input: CruncherPcbRenderInput,
+    *,
+    resolved: PcbSvgResolvedSettings,
+    side: PCB_SurfaceSide,
+) -> str:
+    from altium_cruncher.altium_cruncher_pcb_svg_cutout_layer import (
+        CruncherPcbCutoutLayerRenderer,
+    )
+
+    base_options, role_order, role_colors = _build_core_surface_view_options(
+        resolved=resolved,
+        side=side,
+    )
+    layer_order = pcb_surface_layers(
+        side,
+        role_order=role_order,
+        include_missing_roles=True,
+    )
+    layer_colors: dict[PcbLayer, str] = {}
+    for role, color in role_colors.items():
+        layer_colors[pcb_surface_layer(side, role)] = color
+
+    render_kwargs = resolved["render_kwargs"]
+    render_options = replace(
+        base_options,
+        visible_layers=set(layer_order),
+        layer_render_order=layer_order,
+        layer_colors={
+            **dict(getattr(base_options, "layer_colors", {}) or {}),
+            **layer_colors,
+        },
+        mirror_x=(
+            side == PCB_SurfaceSide.BOTTOM and bool(render_kwargs["mirror_bottom_view"])
+        ),
+    )
+    return CruncherPcbCutoutLayerRenderer(
+        render_options,
+        cutout_style=_cutout_style_from_render_kwargs(
+            render_kwargs,
+            include_overlay=True,
+        ),
+    ).render_board(
+        render_input.pcbdoc,
+        project_parameters=render_input.project_parameters,
+    )
+
+
 def _palette_value(
     palette: PcbSvgResolvedSettings | None,
     resolved: PcbSvgResolvedSettings,
@@ -1629,52 +1707,26 @@ def _render_core_pcb_svg_views(
                 project_parameters=render_input.project_parameters,
             )
             if layer_resolved["render_kwargs"]["include_board_cutout_layer"]:
+                cutout_style = _cutout_style_from_render_kwargs(
+                    layer_resolved["render_kwargs"]
+                )
                 cutout_svg = CruncherPcbCutoutLayerRenderer(
                     layer_options
                 ).render_board_cutout_layer(
                     render_input.pcbdoc,
                     project_parameters=render_input.project_parameters,
-                    include_hatch=bool(
-                        layer_resolved["render_kwargs"]["board_cutout_layer_hatch"]
+                    include_hatch=cutout_style.include_hatch,
+                    hatch_spacing_mm=cutout_style.hatch_spacing_mm,
+                    hatch_angle_deg=cutout_style.hatch_angle_deg,
+                    hatch_line_width_mm=cutout_style.hatch_line_width_mm,
+                    include_label=cutout_style.include_label,
+                    label_text=cutout_style.label_text,
+                    include_board_outline=bool(
+                        layer_resolved["render_kwargs"]["include_board_outline"]
                     ),
-                    hatch_spacing_mm=float(
-                        layer_resolved["render_kwargs"][
-                            "board_cutout_layer_hash_spacing_mm"
-                        ]
-                    ),
-                    hatch_angle_deg=float(
-                        layer_resolved["render_kwargs"][
-                            "board_cutout_layer_hash_angle_deg"
-                        ]
-                    ),
-                    hatch_line_width_mm=float(
-                        layer_resolved["render_kwargs"][
-                            "board_cutout_layer_hash_line_width_mm"
-                        ]
-                    ),
-                    include_label=bool(
-                        layer_resolved["render_kwargs"]["board_cutout_layer_label"]
-                    ),
-                    label_text=str(
-                        layer_resolved["render_kwargs"][
-                            "board_cutout_layer_label_text"
-                        ]
-                    ),
-                    outline_style=str(
-                        layer_resolved["render_kwargs"][
-                            "board_cutout_layer_outline_style"
-                        ]
-                    ),
-                    outline_dash_mm=float(
-                        layer_resolved["render_kwargs"][
-                            "board_cutout_layer_outline_dash_mm"
-                        ]
-                    ),
-                    outline_width_mm=float(
-                        layer_resolved["render_kwargs"][
-                            "board_cutout_layer_outline_width_mm"
-                        ]
-                    ),
+                    outline_style=cutout_style.outline_style,
+                    outline_dash_mm=cutout_style.outline_dash_mm,
+                    outline_width_mm=cutout_style.outline_width_mm,
                 )
                 if cutout_svg is not None:
                     layer_svgs[PCB_SVG_BOARD_CUTOUTS_LAYER_NAME] = cutout_svg
@@ -1683,37 +1735,18 @@ def _render_core_pcb_svg_views(
 
         top_resolved = resolved_by_source.get("top")
         if top_resolved is not None:
-            top_options, top_role_order, top_role_colors = (
-                _build_core_surface_view_options(
-                    resolved=top_resolved,
-                    side=PCB_SurfaceSide.TOP,
-                )
-            )
-            board_views["top_view"] = render_input.pcbdoc.to_surface_svg(
-                PCB_SurfaceSide.TOP,
-                role_order=top_role_order,
-                role_colors=top_role_colors,
-                options=top_options,
-                project_parameters=render_input.project_parameters,
+            board_views["top_view"] = _render_core_surface_svg_view(
+                render_input,
+                resolved=top_resolved,
+                side=PCB_SurfaceSide.TOP,
             )
 
         bottom_resolved = resolved_by_source.get("bottom")
         if bottom_resolved is not None:
-            bottom_options, bottom_role_order, bottom_role_colors = (
-                _build_core_surface_view_options(
-                    resolved=bottom_resolved,
-                    side=PCB_SurfaceSide.BOTTOM,
-                )
-            )
-            board_views["bottom_view"] = render_input.pcbdoc.to_surface_svg(
-                PCB_SurfaceSide.BOTTOM,
-                role_order=bottom_role_order,
-                role_colors=bottom_role_colors,
-                options=bottom_options,
-                project_parameters=render_input.project_parameters,
-                mirror_bottom_view=bool(
-                    bottom_resolved["render_kwargs"]["mirror_bottom_view"]
-                ),
+            board_views["bottom_view"] = _render_core_surface_svg_view(
+                render_input,
+                resolved=bottom_resolved,
+                side=PCB_SurfaceSide.BOTTOM,
             )
 
         rendered[render_input.board_key] = board_views

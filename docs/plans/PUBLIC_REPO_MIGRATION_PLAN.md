@@ -1143,7 +1143,9 @@ Current local status:
   `BOARD_CUTOUTS` layer so cutout-capable boards produce a cutout view by
   default. The layer supports configurable hash spacing, hash direction, hash
   line width, outline line width, labels, and solid or dashed outlines through
-  reusable SVG pattern helpers;
+  reusable SVG pattern helpers. The standalone cutout layer now honors the
+  resolved `include_board_outline` setting for the outer profile, and composed
+  top/bottom views inherit the same global cutout hatch/outline style options;
 - CLI logging now has root-level `--quiet`, `--verbose`, and `--log-level`
   controls. Normal command progress stays at INFO; Altium Monkey parser
   internals are expected to use DEBUG so manufacturing-output commands can run
@@ -1152,15 +1154,14 @@ Current local status:
   `output/` folder, for example
   `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
-  - `uv run --extra test pytest tests\L0_public_cli\test_L0_001_cli_entrypoint.py tests\test_pcb_svg_cutout_layer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes -q`:
-    23 passed;
-  - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_cutout_layer.py src\py\altium_cruncher\svg_hatch_patterns.py tests\test_pcb_svg_cutout_layer.py tests\test_svg_hatch_patterns.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
+  - `uv run --extra test pytest tests\test_pcb_svg_cutout_layer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes -q`:
+    18 passed;
+  - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_cutout_layer.py tests\test_pcb_svg_cutout_layer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
     0 errors;
-  - `uv run --extra test pytest -q`: 143 passed, 2 skipped;
+  - `uv run --extra test pytest -q`: 146 passed, 2 skipped;
   - `uv run --extra test rack run --all`: 42 passed, 1 skipped;
-  - `uv run --extra test ruff check .`: clean;
-  - `uv run --extra test pyright src\py\altium_cruncher\_cli.py src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_cutout_layer.py tests\L0_public_cli\test_L0_001_cli_entrypoint.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
-    0 errors;
+  - `uv run --extra test ruff check src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_cutout_layer.py tests\test_pcb_svg_cutout_layer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
+    clean;
   - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json`:
     0 findings;
   - `git diff --check`: clean aside from normal Windows line-ending warnings;

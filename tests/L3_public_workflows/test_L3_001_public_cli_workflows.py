@@ -293,7 +293,17 @@ def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
                         "name": "layers",
                         "source": "layers",
                         "enabled": True,
-                    }
+                    },
+                    {
+                        "name": "top_view",
+                        "source": "top",
+                        "enabled": True,
+                    },
+                    {
+                        "name": "bottom_view",
+                        "source": "bottom",
+                        "enabled": True,
+                    },
                 ],
             },
             indent=2,
@@ -313,6 +323,15 @@ def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
     assert 'stroke-dasharray="0.9 0.9"' in cutout_svg
     assert 'stroke-width="0.33"' in cutout_svg
     assert cutout_svg.count(">cutout</text>") == 4
+    for view_folder in ("top_view", "bottom_view"):
+        view_svg = (
+            output_dir / view_folder / f"cutout_multiple__{view_folder}.svg"
+        ).read_text(encoding="utf-8")
+        assert 'id="board-cutout-hatch"' in view_svg
+        assert 'width="1.25" height="1.25"' in view_svg
+        assert 'patternTransform="rotate(30)"' in view_svg
+        assert 'stroke-dasharray="0.9 0.9"' in view_svg
+        assert 'stroke-width="0.33"' in view_svg
 
 
 def test_clean_command_creates_template_for_public_schdoc_copy(tmp_path: Path) -> None:

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import html
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from altium_monkey.altium_pcb_svg_renderer import PcbSvgRenderer
+from altium_monkey.altium_pcb_svg_renderer import PcbSvgRenderer, PcbSvgRenderOptions
 from altium_cruncher.svg_hatch_patterns import (
     fmt_svg_number,
     svg_hatch_pattern_defs,
@@ -22,8 +23,33 @@ PCB_SVG_BOARD_CUTOUTS_LAYER_NAME = "BOARD_CUTOUTS"
 PCB_SVG_BOARD_CUTOUTS_HATCH_PATTERN_ID = "board-cutout-hatch"
 
 
+@dataclass(frozen=True, slots=True)
+class CruncherPcbCutoutStyle:
+    """Resolved cutout styling shared by standalone and composed PCB SVG views."""
+
+    include_overlay: bool = False
+    include_hatch: bool = False
+    hatch_spacing_mm: float = 2.0
+    hatch_angle_deg: float = 45.0
+    hatch_line_width_mm: float = 0.08
+    include_label: bool = False
+    label_text: str = "cutout"
+    outline_style: str = "solid"
+    outline_dash_mm: float = 1.5
+    outline_width_mm: float = 0.15
+
+
 class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
     """Render board cutouts as a dedicated SVG layer artifact."""
+
+    def __init__(
+        self,
+        options: PcbSvgRenderOptions | None = None,
+        *,
+        cutout_style: CruncherPcbCutoutStyle | None = None,
+    ) -> None:
+        super().__init__(options=options)
+        self.cutout_style = cutout_style or CruncherPcbCutoutStyle()
 
     def render_board_cutout_layer(
         self,
@@ -36,6 +62,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
         hatch_line_width_mm: float = 0.08,
         include_label: bool = False,
         label_text: str = "cutout",
+        include_board_outline: bool = True,
         outline_style: str = "solid",
         outline_dash_mm: float = 1.5,
         outline_width_mm: float = 0.15,
@@ -71,7 +98,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
             ctx,
             view_kind,
             active_layer_ids,
-            include_board_outline=False,
+            include_board_outline=include_board_outline,
             pcbdoc=pcbdoc,
         )
         self._append_svg_defs(  # noqa: SLF001
@@ -83,6 +110,8 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
             extra_defs,
         )
         lines.append(f"  <g {' '.join(self._build_scene_attrs(ctx))}>")  # noqa: SLF001
+        if include_board_outline and self.options.show_board_outline:
+            lines.extend(self._render_board_profile_outline(ctx, outline))
         lines.extend(
             self._render_cutout_paths(
                 ctx,
@@ -98,6 +127,74 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
         lines.append("  </g>")
         lines.append("</svg>")
         return "\n".join(lines)
+
+    def _render_overlay_defs_scene(
+        self,
+        ctx: "PcbSvgRenderContext",
+        pcbdoc: "AltiumPcbDoc",
+    ) -> tuple[list[str], list[str]]:
+        """Inject configured cutout styling into composed top/bottom PCB views."""
+        if not self.cutout_style.include_overlay or not self.options.show_board_outline:
+            return [], []
+        outline = getattr(getattr(pcbdoc, "board", None), "outline", None)
+        cutouts = self._board_cutouts(outline)
+        if not cutouts:
+            return [], []
+
+        defs = (
+            self._cutout_hatch_defs(
+                hatch_spacing_mm=self.cutout_style.hatch_spacing_mm,
+                hatch_angle_deg=self.cutout_style.hatch_angle_deg,
+                hatch_line_width_mm=self.cutout_style.hatch_line_width_mm,
+            )
+            if self.cutout_style.include_hatch
+            else []
+        )
+        scene = self._render_cutout_paths(
+            ctx,
+            cutouts,
+            include_hatch=self.cutout_style.include_hatch,
+            include_label=self.cutout_style.include_label,
+            label_text=self.cutout_style.label_text,
+            outline_style=self.cutout_style.outline_style,
+            outline_dash_mm=self.cutout_style.outline_dash_mm,
+            outline_width_mm=self.cutout_style.outline_width_mm,
+        )
+        return defs, scene
+
+    def _board_cutouts(self, outline: object) -> list[list["BoardOutlineVertex"]]:
+        return list(getattr(outline, "cutouts", []) or [])
+
+    def _render_board_profile_outline(
+        self,
+        ctx: "PcbSvgRenderContext",
+        outline: object,
+    ) -> list[str]:
+        vertices = getattr(outline, "vertices", None)
+        if not outline or not vertices:
+            return []
+
+        main_path = self._path_from_vertices(ctx, vertices)  # noqa: SLF001
+        if not main_path:
+            return []
+
+        stroke_color = html.escape(str(self.options.board_outline_color or "#000000"))
+        attrs = [
+            f'd="{main_path}"',
+            'fill="none"',
+            f'stroke="{stroke_color}"',
+            'stroke-width="0.1"',
+            'stroke-linejoin="round"',
+            'vector-effect="non-scaling-stroke"',
+        ]
+        if self.options.include_metadata:
+            attrs.append('data-feature="board-outline"')
+            attrs.append('data-element-key="board-outline"')
+        return [
+            '    <g id="board-profile-outline">',
+            "      " + f"<path {' '.join(attrs)}/>",
+            "    </g>",
+        ]
 
     def _cutout_hatch_defs(
         self,
@@ -216,6 +313,7 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
 
 __all__ = [
     "CruncherPcbCutoutLayerRenderer",
+    "CruncherPcbCutoutStyle",
     "PCB_SVG_BOARD_CUTOUTS_HATCH_PATTERN_ID",
     "PCB_SVG_BOARD_CUTOUTS_LAYER_ID",
     "PCB_SVG_BOARD_CUTOUTS_LAYER_NAME",
