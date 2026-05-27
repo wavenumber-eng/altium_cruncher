@@ -40,6 +40,7 @@ PCB_SVG_CONTENT_VIEW_SOURCES = {
 PCB_SURFACE_LAYER_ORDER_TOKENS = {"copper", "silkscreen"}
 ASSEMBLY_OVERLAY_KARASHI_YELLOW = "#F59E0B"
 PCB_DEFAULT_SVG_SCALE = 10.0
+PcbSvgResolvedSettings = dict[str, Any]
 
 
 def _coerce_bool(value: Any, default: bool) -> bool:
@@ -74,6 +75,18 @@ def _coerce_optional_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Invalid numeric value in pcb-svg config: {value!r}") from exc
+
+
+def _coerce_optional_bool(value: object, default: bool) -> bool | None:
+    if value is None:
+        return None
+    return _coerce_bool(value, default)
+
+
+def _coerce_optional_int(value: object, default: float) -> int | None:
+    if value is None:
+        return None
+    return int(_coerce_float(value, default))
 
 
 def _coerce_str(value: Any, default: str) -> str:
@@ -222,6 +235,10 @@ class PcbSvgGlobalConfig:
     mirror_bottom_view: bool = True
     clip_to_outline: bool = True
     clip_holes_from_copper: bool = True
+    include_board_cutout_layer: bool = False
+    board_cutout_layer_hatch: bool = False
+    board_cutout_layer_label: bool = False
+    board_cutout_layer_label_text: str = "cutout"
     assembly_enabled: bool = False
     assembly_include_simple: bool = True
     assembly_include_detail: bool = True
@@ -286,6 +303,22 @@ class PcbSvgGlobalConfig:
             clip_holes_from_copper=_coerce_bool(
                 data.get("clip_holes_from_copper"), default.clip_holes_from_copper
             ),
+            include_board_cutout_layer=_coerce_bool(
+                data.get("include_board_cutout_layer"),
+                default.include_board_cutout_layer,
+            ),
+            board_cutout_layer_hatch=_coerce_bool(
+                data.get("board_cutout_layer_hatch"),
+                default.board_cutout_layer_hatch,
+            ),
+            board_cutout_layer_label=_coerce_bool(
+                data.get("board_cutout_layer_label"),
+                default.board_cutout_layer_label,
+            ),
+            board_cutout_layer_label_text=_coerce_str(
+                data.get("board_cutout_layer_label_text"),
+                default.board_cutout_layer_label_text,
+            ),
             assembly_enabled=_coerce_bool(
                 data.get("assembly_enabled"), default.assembly_enabled
             ),
@@ -347,6 +380,10 @@ class PcbSvgGlobalConfig:
             "mirror_bottom_view": self.mirror_bottom_view,
             "clip_to_outline": self.clip_to_outline,
             "clip_holes_from_copper": self.clip_holes_from_copper,
+            "include_board_cutout_layer": self.include_board_cutout_layer,
+            "board_cutout_layer_hatch": self.board_cutout_layer_hatch,
+            "board_cutout_layer_label": self.board_cutout_layer_label,
+            "board_cutout_layer_label_text": self.board_cutout_layer_label_text,
             "assembly_enabled": self.assembly_enabled,
             "assembly_include_simple": self.assembly_include_simple,
             "assembly_include_detail": self.assembly_include_detail,
@@ -399,6 +436,10 @@ class PcbSvgViewConfig:
     mirror_bottom_view: bool | None = None
     clip_to_outline: bool | None = None
     clip_holes_from_copper: bool | None = None
+    include_board_cutout_layer: bool | None = None
+    board_cutout_layer_hatch: bool | None = None
+    board_cutout_layer_label: bool | None = None
+    board_cutout_layer_label_text: str | None = None
     assembly_enabled: bool | None = None
     assembly_include_simple: bool | None = None
     assembly_include_detail: bool | None = None
@@ -452,88 +493,62 @@ class PcbSvgViewConfig:
             drill_overlay_opacity=_coerce_optional_float(
                 data.get("drill_overlay_opacity")
             ),
-            include_metadata=(
-                None
-                if data.get("include_metadata") is None
-                else _coerce_bool(data.get("include_metadata"), True)
+            include_metadata=_coerce_optional_bool(data.get("include_metadata"), True),
+            include_board_outline=_coerce_optional_bool(
+                data.get("include_board_outline"), True
             ),
-            include_board_outline=(
-                None
-                if data.get("include_board_outline") is None
-                else _coerce_bool(data.get("include_board_outline"), True)
+            include_outline_in_layers=_coerce_optional_bool(
+                data.get("include_outline_in_layers"), True
             ),
-            include_outline_in_layers=(
-                None
-                if data.get("include_outline_in_layers") is None
-                else _coerce_bool(data.get("include_outline_in_layers"), True)
+            show_empty_layers=_coerce_optional_bool(
+                data.get("show_empty_layers"), False
             ),
-            show_empty_layers=(
-                None
-                if data.get("show_empty_layers") is None
-                else _coerce_bool(data.get("show_empty_layers"), False)
+            include_polygon_definition_overlays=_coerce_optional_bool(
+                data.get("include_polygon_definition_overlays"), False
             ),
-            include_polygon_definition_overlays=(
-                None
-                if data.get("include_polygon_definition_overlays") is None
-                else _coerce_bool(
-                    data.get("include_polygon_definition_overlays"), False
-                )
+            mirror_bottom_view=_coerce_optional_bool(
+                data.get("mirror_bottom_view"), True
             ),
-            mirror_bottom_view=(
-                None
-                if data.get("mirror_bottom_view") is None
-                else _coerce_bool(data.get("mirror_bottom_view"), True)
+            clip_to_outline=_coerce_optional_bool(data.get("clip_to_outline"), True),
+            clip_holes_from_copper=_coerce_optional_bool(
+                data.get("clip_holes_from_copper"), True
             ),
-            clip_to_outline=(
-                None
-                if data.get("clip_to_outline") is None
-                else _coerce_bool(data.get("clip_to_outline"), True)
+            include_board_cutout_layer=_coerce_optional_bool(
+                data.get("include_board_cutout_layer"), False
             ),
-            clip_holes_from_copper=(
-                None
-                if data.get("clip_holes_from_copper") is None
-                else _coerce_bool(data.get("clip_holes_from_copper"), True)
+            board_cutout_layer_hatch=_coerce_optional_bool(
+                data.get("board_cutout_layer_hatch"), False
             ),
-            assembly_enabled=(
-                None
-                if data.get("assembly_enabled") is None
-                else _coerce_bool(data.get("assembly_enabled"), False)
+            board_cutout_layer_label=_coerce_optional_bool(
+                data.get("board_cutout_layer_label"), False
             ),
-            assembly_include_simple=(
-                None
-                if data.get("assembly_include_simple") is None
-                else _coerce_bool(data.get("assembly_include_simple"), True)
+            board_cutout_layer_label_text=_coerce_optional_str(
+                data.get("board_cutout_layer_label_text")
             ),
-            assembly_include_detail=(
-                None
-                if data.get("assembly_include_detail") is None
-                else _coerce_bool(data.get("assembly_include_detail"), True)
+            assembly_enabled=_coerce_optional_bool(
+                data.get("assembly_enabled"), False
+            ),
+            assembly_include_simple=_coerce_optional_bool(
+                data.get("assembly_include_simple"), True
+            ),
+            assembly_include_detail=_coerce_optional_bool(
+                data.get("assembly_include_detail"), True
             ),
             assembly_curve_mode=_coerce_optional_str(data.get("assembly_curve_mode")),
-            assembly_samples_per_curve=(
-                None
-                if data.get("assembly_samples_per_curve") is None
-                else int(_coerce_float(data.get("assembly_samples_per_curve"), 24.0))
+            assembly_samples_per_curve=_coerce_optional_int(
+                data.get("assembly_samples_per_curve"), 24.0
             ),
-            assembly_round_digits=(
-                None
-                if data.get("assembly_round_digits") is None
-                else int(_coerce_float(data.get("assembly_round_digits"), 3.0))
+            assembly_round_digits=_coerce_optional_int(
+                data.get("assembly_round_digits"), 3.0
             ),
-            assembly_include_visible=(
-                None
-                if data.get("assembly_include_visible") is None
-                else _coerce_bool(data.get("assembly_include_visible"), True)
+            assembly_include_visible=_coerce_optional_bool(
+                data.get("assembly_include_visible"), True
             ),
-            assembly_include_outline=(
-                None
-                if data.get("assembly_include_outline") is None
-                else _coerce_bool(data.get("assembly_include_outline"), True)
+            assembly_include_outline=_coerce_optional_bool(
+                data.get("assembly_include_outline"), True
             ),
-            assembly_union_polygons=(
-                None
-                if data.get("assembly_union_polygons") is None
-                else _coerce_bool(data.get("assembly_union_polygons"), True)
+            assembly_union_polygons=_coerce_optional_bool(
+                data.get("assembly_union_polygons"), True
             ),
             svg_scale=_coerce_optional_float(data.get("svg_scale")),
             svg_size_unit=_coerce_optional_str(data.get("svg_size_unit")),
@@ -568,6 +583,10 @@ class PcbSvgViewConfig:
             "mirror_bottom_view": self.mirror_bottom_view,
             "clip_to_outline": self.clip_to_outline,
             "clip_holes_from_copper": self.clip_holes_from_copper,
+            "include_board_cutout_layer": self.include_board_cutout_layer,
+            "board_cutout_layer_hatch": self.board_cutout_layer_hatch,
+            "board_cutout_layer_label": self.board_cutout_layer_label,
+            "board_cutout_layer_label_text": self.board_cutout_layer_label_text,
             "assembly_enabled": self.assembly_enabled,
             "assembly_include_simple": self.assembly_include_simple,
             "assembly_include_detail": self.assembly_include_detail,
@@ -625,7 +644,7 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             copper_color="#FF000000",
             silkscreen_color="#FF000000",
             description="Assembly Top View",
-            layer_order=["copper", "silkscreen"],
+            layer_order=["copper"],
         ),
         PcbSvgViewConfig(
             name="assembly_bottom_view",
@@ -637,7 +656,7 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             copper_color="#FF000000",
             silkscreen_color="#FF000000",
             description="Assembly Bottom View",
-            layer_order=["copper", "silkscreen"],
+            layer_order=["copper"],
         ),
     ]
 
@@ -1086,7 +1105,7 @@ def _resolve_view_render_settings(
             )
             if layer_order is None:
                 if view_source in {"assembly-top", "assembly-bottom"}:
-                    layer_order = ["copper", "silkscreen"]
+                    layer_order = ["copper"]
                 else:
                     layer_order = ["copper", "silkscreen"]
         if view_source in {"top", "assembly-top"}:
@@ -1155,6 +1174,30 @@ def _resolve_view_render_settings(
         clip_holes_from_copper=bool(
             _view_option_value(
                 view.clip_holes_from_copper, global_options.clip_holes_from_copper
+            )
+        ),
+        include_board_cutout_layer=bool(
+            _view_option_value(
+                view.include_board_cutout_layer,
+                global_options.include_board_cutout_layer,
+            )
+        ),
+        board_cutout_layer_hatch=bool(
+            _view_option_value(
+                view.board_cutout_layer_hatch,
+                global_options.board_cutout_layer_hatch,
+            )
+        ),
+        board_cutout_layer_label=bool(
+            _view_option_value(
+                view.board_cutout_layer_label,
+                global_options.board_cutout_layer_label,
+            )
+        ),
+        board_cutout_layer_label_text=str(
+            _view_option_value(
+                view.board_cutout_layer_label_text,
+                global_options.board_cutout_layer_label_text,
             )
         ),
         assembly_enabled=assembly_enabled,
@@ -1316,11 +1359,89 @@ def _build_core_surface_view_options(
     return options, role_order, role_colors
 
 
+def _palette_value(
+    palette: PcbSvgResolvedSettings | None,
+    resolved: PcbSvgResolvedSettings,
+    key: str,
+) -> Any:
+    if palette is not None:
+        return palette[key]
+    return resolved[key]
+
+
+def _view_color_kwargs_for_source(
+    source: str,
+    resolved: PcbSvgResolvedSettings,
+    *,
+    top_palette: PcbSvgResolvedSettings | None,
+    bottom_palette: PcbSvgResolvedSettings | None,
+) -> PcbSvgResolvedSettings:
+    if source == "top":
+        render_kwargs = dict(resolved["render_kwargs"])
+        return {
+            "top_board_outline_color": resolved["board_outline_color"],
+            "top_board_cutout_color": resolved["board_cutout_color"],
+            "top_copper_color": resolved["copper_color"],
+            "top_silkscreen_color": resolved["silkscreen_color"],
+            "top_plated_drill_color": render_kwargs["plated_drill_color"],
+            "top_non_plated_drill_color": render_kwargs["non_plated_drill_color"],
+            "top_polygon_overlay_color": render_kwargs["polygon_overlay_color"],
+            "top_layer_order": resolved["layer_order"],
+        }
+    if source == "bottom":
+        render_kwargs = dict(resolved["render_kwargs"])
+        return {
+            "bottom_board_outline_color": resolved["board_outline_color"],
+            "bottom_board_cutout_color": resolved["board_cutout_color"],
+            "bottom_copper_color": resolved["copper_color"],
+            "bottom_silkscreen_color": resolved["silkscreen_color"],
+            "bottom_plated_drill_color": render_kwargs["plated_drill_color"],
+            "bottom_non_plated_drill_color": render_kwargs["non_plated_drill_color"],
+            "bottom_polygon_overlay_color": render_kwargs["polygon_overlay_color"],
+            "bottom_layer_order": resolved["layer_order"],
+        }
+    if source == "assembly-top":
+        return {
+            "top_board_outline_color": _palette_value(
+                top_palette, resolved, "board_outline_color"
+            ),
+            "top_board_cutout_color": _palette_value(
+                top_palette, resolved, "board_cutout_color"
+            ),
+            "top_copper_color": _palette_value(top_palette, resolved, "copper_color"),
+            "top_silkscreen_color": _palette_value(
+                top_palette, resolved, "silkscreen_color"
+            ),
+            "assembly_top_layer_order": resolved["layer_order"],
+        }
+    if source == "assembly-bottom":
+        return {
+            "bottom_board_outline_color": _palette_value(
+                bottom_palette, resolved, "board_outline_color"
+            ),
+            "bottom_board_cutout_color": _palette_value(
+                bottom_palette, resolved, "board_cutout_color"
+            ),
+            "bottom_copper_color": _palette_value(
+                bottom_palette, resolved, "copper_color"
+            ),
+            "bottom_silkscreen_color": _palette_value(
+                bottom_palette, resolved, "silkscreen_color"
+            ),
+            "assembly_bottom_layer_order": resolved["layer_order"],
+        }
+    return {}
+
+
 def _render_core_pcb_svg_views(
     design,
     *,
     resolved_by_source: dict[str, dict[str, Any]],
 ) -> dict[str, dict[str, str]]:
+    from altium_cruncher.altium_cruncher_pcb_svg_cutout_layer import (
+        CruncherPcbCutoutLayerRenderer,
+        PCB_SVG_BOARD_CUTOUTS_LAYER_NAME,
+    )
     from altium_cruncher.altium_cruncher_pcb_workflow import iter_pcb_render_inputs
 
     rendered: dict[str, dict[str, str]] = {}
@@ -1345,6 +1466,26 @@ def _render_core_pcb_svg_views(
                 options=layer_options,
                 project_parameters=render_input.project_parameters,
             )
+            if layer_resolved["render_kwargs"]["include_board_cutout_layer"]:
+                cutout_svg = CruncherPcbCutoutLayerRenderer(
+                    layer_options
+                ).render_board_cutout_layer(
+                    render_input.pcbdoc,
+                    project_parameters=render_input.project_parameters,
+                    include_hatch=bool(
+                        layer_resolved["render_kwargs"]["board_cutout_layer_hatch"]
+                    ),
+                    include_label=bool(
+                        layer_resolved["render_kwargs"]["board_cutout_layer_label"]
+                    ),
+                    label_text=str(
+                        layer_resolved["render_kwargs"][
+                            "board_cutout_layer_label_text"
+                        ]
+                    ),
+                )
+                if cutout_svg is not None:
+                    layer_svgs[PCB_SVG_BOARD_CUTOUTS_LAYER_NAME] = cutout_svg
             for layer_name, layer_svg in layer_svgs.items():
                 board_views[f"layer_{layer_name}"] = layer_svg
 
@@ -1455,7 +1596,6 @@ def _cmd_pcb_svg_from_inputs(
             "bottom": bool(global_options.mirror_bottom_view),
             "assembly-bottom": bool(global_options.mirror_bottom_view),
         }
-        surface_style_by_view: dict[str, dict[str, Any]] = {}
         view_description_by_source: dict[str, str] = {}
         view_name_by_source: dict[str, str] = {}
         output_name_by_source: dict[str, str] = {
@@ -1488,6 +1628,18 @@ def _cmd_pcb_svg_from_inputs(
             try:
                 top_palette_resolved = _resolve_view_render_settings(
                     global_options, top_view_for_palette
+                )
+            except ValueError as exc:
+                log.error(f"Invalid pcb-svg config in {input_file.name}: {exc}")
+                return 1
+        bottom_palette_resolved: PcbSvgResolvedSettings | None = None
+        bottom_view_for_palette = next(
+            (view for view in content_views if view.source == "bottom"), None
+        )
+        if bottom_view_for_palette is not None:
+            try:
+                bottom_palette_resolved = _resolve_view_render_settings(
+                    global_options, bottom_view_for_palette
                 )
             except ValueError as exc:
                 log.error(f"Invalid pcb-svg config in {input_file.name}: {exc}")
@@ -1533,116 +1685,29 @@ def _cmd_pcb_svg_from_inputs(
                 view_description_by_source[source] = description
 
             if source == "layers":
-                layer_filter_manifest_value = (
+                resolved_layer_filter: list[str] | str = (
                     sorted(layer.name for layer in resolved["visible_layers"])
                     if resolved["visible_layers"] is not None
                     else "auto:copper+silkscreen"
                 )
+                if resolved["render_kwargs"]["include_board_cutout_layer"]:
+                    if isinstance(resolved_layer_filter, list):
+                        resolved_layer_filter.append("BOARD_CUTOUTS")
+                    else:
+                        resolved_layer_filter = f"{resolved_layer_filter}+BOARD_CUTOUTS"
+                layer_filter_manifest_value = resolved_layer_filter
             if source in {"bottom", "assembly-bottom"}:
                 view_mirror_by_source[source] = bool(
                     resolved["render_kwargs"]["mirror_bottom_view"]
                 )
 
             try:
-                view_color_kwargs: dict[str, Any] = {}
-                if source == "top":
-                    view_color_kwargs = {
-                        "top_board_outline_color": resolved["board_outline_color"],
-                        "top_board_cutout_color": resolved["board_cutout_color"],
-                        "top_copper_color": resolved["copper_color"],
-                        "top_silkscreen_color": resolved["silkscreen_color"],
-                        "top_plated_drill_color": resolved["render_kwargs"][
-                            "plated_drill_color"
-                        ],
-                        "top_non_plated_drill_color": resolved["render_kwargs"][
-                            "non_plated_drill_color"
-                        ],
-                        "top_polygon_overlay_color": resolved["render_kwargs"][
-                            "polygon_overlay_color"
-                        ],
-                        "top_layer_order": resolved["layer_order"],
-                    }
-                    surface_style_by_view["top"] = view_color_kwargs
-                elif source == "bottom":
-                    view_color_kwargs = {
-                        "bottom_board_outline_color": resolved["board_outline_color"],
-                        "bottom_board_cutout_color": resolved["board_cutout_color"],
-                        "bottom_copper_color": resolved["copper_color"],
-                        "bottom_silkscreen_color": resolved["silkscreen_color"],
-                        "bottom_plated_drill_color": resolved["render_kwargs"][
-                            "plated_drill_color"
-                        ],
-                        "bottom_non_plated_drill_color": resolved["render_kwargs"][
-                            "non_plated_drill_color"
-                        ],
-                        "bottom_polygon_overlay_color": resolved["render_kwargs"][
-                            "polygon_overlay_color"
-                        ],
-                        "bottom_layer_order": resolved["layer_order"],
-                    }
-                    surface_style_by_view["bottom"] = view_color_kwargs
-                elif source == "assembly-top":
-                    top_outline_color = (
-                        top_palette_resolved["board_outline_color"]
-                        if top_palette_resolved is not None
-                        else resolved["board_outline_color"]
-                    )
-                    top_cutout_color = (
-                        top_palette_resolved["board_cutout_color"]
-                        if top_palette_resolved is not None
-                        else resolved["board_cutout_color"]
-                    )
-                    top_copper = (
-                        top_palette_resolved["copper_color"]
-                        if top_palette_resolved is not None
-                        else resolved["copper_color"]
-                    )
-                    top_silkscreen = (
-                        top_palette_resolved["silkscreen_color"]
-                        if top_palette_resolved is not None
-                        else resolved["silkscreen_color"]
-                    )
-                    view_color_kwargs = {
-                        "top_board_outline_color": top_outline_color,
-                        "top_board_cutout_color": top_cutout_color,
-                        "top_copper_color": top_copper,
-                        "top_silkscreen_color": top_silkscreen,
-                        "assembly_top_layer_order": resolved["layer_order"],
-                    }
-                    surface_style_by_view["assembly-top"] = {
-                        "assembly_top_layer_order": resolved["layer_order"],
-                    }
-                elif source == "assembly-bottom":
-                    top_outline_color = (
-                        top_palette_resolved["board_outline_color"]
-                        if top_palette_resolved is not None
-                        else resolved["board_outline_color"]
-                    )
-                    top_cutout_color = (
-                        top_palette_resolved["board_cutout_color"]
-                        if top_palette_resolved is not None
-                        else resolved["board_cutout_color"]
-                    )
-                    top_copper = (
-                        top_palette_resolved["copper_color"]
-                        if top_palette_resolved is not None
-                        else resolved["copper_color"]
-                    )
-                    top_silkscreen = (
-                        top_palette_resolved["silkscreen_color"]
-                        if top_palette_resolved is not None
-                        else resolved["silkscreen_color"]
-                    )
-                    view_color_kwargs = {
-                        "bottom_board_outline_color": top_outline_color,
-                        "bottom_board_cutout_color": top_cutout_color,
-                        "bottom_copper_color": top_copper,
-                        "bottom_silkscreen_color": top_silkscreen,
-                        "assembly_bottom_layer_order": resolved["layer_order"],
-                    }
-                    surface_style_by_view["assembly-bottom"] = {
-                        "assembly_bottom_layer_order": resolved["layer_order"],
-                    }
+                view_color_kwargs = _view_color_kwargs_for_source(
+                    source,
+                    resolved,
+                    top_palette=top_palette_resolved,
+                    bottom_palette=bottom_palette_resolved,
+                )
                 render_kwargs = dict(resolved["render_kwargs"])
                 if source in {"layers", "top", "bottom"}:
                     rendered_chunk = _render_core_pcb_svg_views(
@@ -1719,7 +1784,7 @@ def _cmd_pcb_svg_from_inputs(
 
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            view_manifest: dict[str, object] = {
+            view_manifest: dict[str, Any] = {
                 "schema": "wn.pcb.svg.eg06.view_manifest.v1",
                 "board": board_name,
                 "source_input": input_file.name,

@@ -1250,7 +1250,7 @@ def render_pcb_assembly_svg_views(
 
         if "assembly-top" in normalized_views:
             top_role_order = _surface_role_order_from_tokens(
-                assembly_top_layer_order or ["copper", "silkscreen"],
+                assembly_top_layer_order or ["copper"],
                 include_missing_roles=False,
             )
             top_layers_in_order = pcb_surface_layers(
@@ -1302,7 +1302,7 @@ def render_pcb_assembly_svg_views(
 
         if "assembly-bottom" in normalized_views:
             bottom_role_order = _surface_role_order_from_tokens(
-                assembly_bottom_layer_order or ["copper", "silkscreen"],
+                assembly_bottom_layer_order or ["copper"],
                 include_missing_roles=False,
             )
             bottom_layers_in_order = pcb_surface_layers(

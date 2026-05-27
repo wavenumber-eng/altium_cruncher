@@ -216,6 +216,56 @@ def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Pa
     assert (output_dir / "layers" / "board__TOP.svg").exists()
 
 
+def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
+    """Exercise assembly top/bottom SVG views with geometer-backed HLR enabled."""
+    pcbdoc = tmp_path / "board.PcbDoc"
+    shutil.copy2(HYDROSCOPE_PCBDOC, pcbdoc)
+    config = tmp_path / "pcb-svg.json"
+    config.write_text(
+        json.dumps(
+            {
+                "schema": "wn.pcb.svg.config.v1",
+                "global": {
+                    "include_metadata": True,
+                    "assembly_include_simple": True,
+                    "assembly_include_detail": False,
+                    "assembly_curve_mode": "polyline",
+                },
+                "views": [
+                    {
+                        "name": "assembly_top_view",
+                        "source": "assembly-top",
+                        "enabled": True,
+                        "assembly_enabled": True,
+                        "layer_order": ["copper"],
+                    },
+                    {
+                        "name": "assembly_bottom_view",
+                        "source": "assembly-bottom",
+                        "enabled": True,
+                        "assembly_enabled": True,
+                        "layer_order": ["copper"],
+                    },
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    output_dir = tmp_path / "pcb-svg-assembly"
+    _run_cli("pcb-svg", str(pcbdoc), "--config", str(config), "-o", str(output_dir))
+
+    top_svg = (
+        output_dir / "assembly_top_view" / "board__assembly_top_view.svg"
+    ).read_text(encoding="utf-8")
+    assert (output_dir / "assembly_bottom_view" / "board__assembly_bottom_view.svg").exists()
+    assert 'id="assembly-overlay"' in top_svg
+    assert 'data-assembly-symbol="simple"' in top_svg
+    assert 'data-layer-id="1"' in top_svg
+    assert 'id="layer-TOPOVERLAY"' not in top_svg
+
+
 def test_clean_command_creates_template_for_public_schdoc_copy(tmp_path: Path) -> None:
     """Exercise clean command template generation without mutating assets."""
     schdoc = tmp_path / "CPU.SchDoc"

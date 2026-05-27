@@ -61,8 +61,11 @@ SVG command family notes:
   depending on the input type;
 - `svg` help describes that routing behavior and avoids presenting the command
   as a separate renderer;
-- `pcb-svg` needs fixture-backed assembly-view coverage with HLR/geometer and a
-  redistributable project that proves SVG artifacts are created.
+- `pcb-svg` has fixture-backed assembly-view coverage with HLR/geometer using
+  Hydroscope embedded STEP models, while the normal layer-output test remains
+  in place so HLR work cannot regress layer SVG output;
+- `pcb-svg` can emit a synthetic `BOARD_CUTOUTS` layer from board-profile
+  cutouts with optional hatching and labels.
 
 PCB layer STEP notes:
 

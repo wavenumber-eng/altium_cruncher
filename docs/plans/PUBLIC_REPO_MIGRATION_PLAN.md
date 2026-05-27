@@ -292,9 +292,11 @@ Required SVG follow-up:
   both where applicable;
 - add/confirm fixture-backed coverage that `svg <project.PrjPcb>` creates both
   schematic SVG output and PCB SVG output;
-- review `pcb-svg` assembly-view rendering with HLR/geometer enabled;
-- choose a redistributable public test project with embedded 3D models and
-  verify assembly SVG output is created and non-empty;
+- status: `pcb-svg` assembly-view rendering is wired through geometer HLR, and
+  Hydroscope now exercises assembly SVG output from redistributable embedded
+  STEP models;
+- `pcb-svg` layer output can optionally include a synthetic `BOARD_CUTOUTS`
+  layer generated from board-profile cutouts, with optional hatching and labels;
 - keep at least one test that exercises normal PCB layer SVG output so HLR work
   cannot regress existing layer rendering.
 

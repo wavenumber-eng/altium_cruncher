@@ -17,6 +17,10 @@
     "mirror_bottom_view": true,
     "clip_to_outline": true,
     "clip_holes_from_copper": true,
+    "include_board_cutout_layer": false,
+    "board_cutout_layer_hatch": false,
+    "board_cutout_layer_label": false,
+    "board_cutout_layer_label_text": "cutout",
     "assembly_enabled": false,
     "assembly_include_simple": true,
     "assembly_include_detail": true,
@@ -81,8 +85,7 @@
       "silkscreen_color": "#FF000000",
       "description": "Assembly Top View",
       "layer_order": [
-        "copper",
-        "silkscreen"
+        "copper"
       ],
       "assembly_enabled": true
     },
@@ -96,8 +99,7 @@
       "silkscreen_color": "#FF000000",
       "description": "Assembly Bottom View",
       "layer_order": [
-        "copper",
-        "silkscreen"
+        "copper"
       ],
       "assembly_enabled": true
     }

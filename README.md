@@ -82,6 +82,10 @@ The current migrated command set includes:
 - `megamaid`
 - `clean`
 
+`pcb-svg` includes normal layer SVG output, top/bottom assembly SVG views with
+geometer-backed HLR projection of embedded STEP models, and an optional
+synthetic `BOARD_CUTOUTS` layer for board-profile cutouts.
+
 Compact JSON output is a core direction for machine-consumable Altium design
 data, but the first standalone milestone prioritizes command parity and
 cross-platform packaging.

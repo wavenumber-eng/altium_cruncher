@@ -26,3 +26,5 @@
 - Make `raw-json` a flat list of unaliased raw BOM components, write
   `bom.config.used.json` beside configured outputs, add DNP row highlight
   support for grouped XLSX, and emit JLC BOM/CPL XLSX from the `jlc` command.
+- Restore `pcb-svg` assembly-view HLR coverage through `wn-geometer` and add an
+  optional synthetic `BOARD_CUTOUTS` layer with hatching and labels.

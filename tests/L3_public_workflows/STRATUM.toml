@@ -30,7 +30,7 @@ module = "altium_cruncher._cli"
 schematic_outputs = "Sch SVG, BOM, PnP, and netlist commands generate expected artifacts"
 library_outputs = "Extract, split, and merge commands generate valid library artifacts"
 intlib_outputs = "IntLib source extraction writes source libraries, LibPkg, and manifest"
-pcb_outputs = "pcb-svg generates layer SVG outputs from a public PcbDoc"
+pcb_outputs = "pcb-svg generates layer SVG and assembly HLR outputs from a public PcbDoc"
 clean_template = "clean creates a config template without mutating committed assets"
 output_path_templates = "Output path templates can use real PrjPcb project parameters"
 bom_pnp_config = "Shared BOM/PnP config drives multi-output BOM, PnP, and JLC workflows"
@@ -45,6 +45,7 @@ test_output_path_template_uses_public_project_parameters = "Resolve release-styl
 test_library_extract_split_merge_commands_use_public_fixtures = "Exercise extraction and library split/merge commands on Hydroscope"
 test_intlib_extract_command_uses_public_fixture = "Exercise IntLib source extraction on RT_SUPER_C1"
 test_pcb_svg_command_uses_public_pcbdoc_without_private_context = "Exercise pcb-svg against a copied public PcbDoc and explicit config"
+test_pcb_svg_assembly_views_use_geometer_hlr = "Exercise assembly top/bottom SVG views with geometer HLR enabled"
 test_clean_command_creates_template_for_public_schdoc_copy = "Exercise clean template generation without mutating assets"
 
 [[subtests]]

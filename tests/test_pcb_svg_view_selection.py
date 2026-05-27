@@ -22,6 +22,15 @@ def test_pcb_svg_cli_views_enable_requested_content_views():
     assert _enabled_sources(config) == {"assembly-top", "assembly-bottom"}
 
 
+def test_pcb_svg_default_assembly_views_are_copper_only():
+    config = PcbSvgConfig.default()
+
+    assembly_views = [view for view in config.views if view.source.startswith("assembly")]
+
+    assert assembly_views
+    assert {tuple(view.layer_order or []) for view in assembly_views} == {("copper",)}
+
+
 def test_pcb_svg_cli_views_all_enables_all_content_views():
     config = PcbSvgConfig.default()
 
@@ -83,3 +92,23 @@ def test_pcb_svg_cli_layers_override_created_default_config(tmp_path):
     )
     assert layer_view.enabled is True
     assert layer_view.layers == ["BOTTOM"]
+
+
+def test_pcb_svg_config_parses_board_cutout_layer_options():
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": "wn.pcb.svg.config.v1",
+            "global": {
+                "include_board_cutout_layer": True,
+                "board_cutout_layer_hatch": True,
+                "board_cutout_layer_label": True,
+                "board_cutout_layer_label_text": "slot",
+            },
+            "views": [{"name": "layers", "source": "layers", "enabled": True}],
+        }
+    )
+
+    assert config.global_options.include_board_cutout_layer is True
+    assert config.global_options.board_cutout_layer_hatch is True
+    assert config.global_options.board_cutout_layer_label is True
+    assert config.global_options.board_cutout_layer_label_text == "slot"
