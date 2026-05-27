@@ -185,3 +185,49 @@ def test_pcb_svg_durable_group_update_preserves_user_svg_content(tmp_path) -> No
     assert "user-note" in text
     assert 'id="new"' in text
     assert 'id="old"' not in text
+
+
+def test_pcb_svg_missing_durable_group_rewrites_stale_svg(tmp_path) -> None:
+    target = tmp_path / "view.svg"
+    target.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg"><text>cutout</text>'
+        '<g id="legacy-generated-view"><path id="old"/></g></svg>',
+        encoding="utf-8",
+    )
+    replacement = (
+        '<svg xmlns="http://www.w3.org/2000/svg"><g id="scene">'
+        '<g id="pcb-svg-view-top"><path id="new"/></g></g></svg>'
+    )
+
+    write_or_update_view_svg(target, replacement, group_id="pcb-svg-view-top")
+    text = target.read_text(encoding="utf-8")
+
+    assert "cutout" not in text
+    assert "legacy-generated-view" not in text
+    assert 'id="pcb-svg-view-top"' in text
+    assert 'id="new"' in text
+
+
+def test_pcb_svg_group_update_removes_legacy_generated_cutout_labels(tmp_path) -> None:
+    target = tmp_path / "view.svg"
+    target.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg">'
+        '<text id="user-note">keep</text><g id="scene">'
+        '<g id="board-cutouts-layer" data-layer-key="BOARD_CUTOUTS">'
+        '<text data-feature="board-cutout-label">cutout</text></g>'
+        '<g id="pcb-svg-view-top"><path id="old"/></g></g></svg>',
+        encoding="utf-8",
+    )
+    replacement = (
+        '<svg xmlns="http://www.w3.org/2000/svg"><g id="scene">'
+        '<g id="pcb-svg-view-top"><path id="new"/></g></g></svg>'
+    )
+
+    write_or_update_view_svg(target, replacement, group_id="pcb-svg-view-top")
+    text = target.read_text(encoding="utf-8")
+
+    assert "user-note" in text
+    assert "board-cutout-label" not in text
+    assert ">cutout</text>" not in text
+    assert 'id="new"' in text
+    assert 'id="old"' not in text

@@ -908,16 +908,49 @@ def _find_element_by_id(root: ET.Element, group_id: str) -> ET.Element | None:
     return None
 
 
+def _is_svg_group(elem: ET.Element) -> bool:
+    return elem.tag in {"g", f"{{{_SVG_NS}}}g"}
+
+
+def _is_legacy_generated_view_artifact(elem: ET.Element) -> bool:
+    if elem.attrib.get("data-feature") == "board-cutout-label":
+        return True
+    if not _is_svg_group(elem):
+        return False
+    return elem.attrib.get("data-layer-key") is not None or elem.attrib.get("id") == "board-outline"
+
+
+def _remove_legacy_generated_view_artifacts(root: ET.Element, protected_group_id: str) -> None:
+    protected_group = _find_element_by_id(root, protected_group_id)
+    protected_descendant_ids = (
+        {id(elem) for elem in protected_group.iter()} if protected_group is not None else set()
+    )
+    parent_map = {child: parent for parent in root.iter() for child in parent}
+    removals: list[tuple[ET.Element, ET.Element]] = []
+    for elem in root.iter():
+        if id(elem) in protected_descendant_ids:
+            continue
+        if _is_legacy_generated_view_artifact(elem):
+            parent = parent_map.get(elem)
+            if parent is not None:
+                removals.append((parent, elem))
+    for parent, elem in removals:
+        try:
+            parent.remove(elem)
+        except ValueError:
+            continue
+
+
 def _replace_group_in_svg(existing_svg: str, new_svg: str, group_id: str) -> str:
     ET.register_namespace("", _SVG_NS)
     existing_root = ET.fromstring(existing_svg)
     new_group = _extract_svg_group(new_svg, group_id)
-    parent_map = {child: parent for parent in existing_root.iter() for child in parent}
     old_group = _find_element_by_id(existing_root, group_id)
     if old_group is None:
-        scene = _find_element_by_id(existing_root, "scene") or existing_root
-        scene.append(new_group)
+        raise ValueError(f"Existing SVG does not contain durable group {group_id!r}")
     else:
+        _remove_legacy_generated_view_artifacts(existing_root, group_id)
+        parent_map = {child: parent for parent in existing_root.iter() for child in parent}
         parent = parent_map.get(old_group)
         if parent is None:
             raise ValueError(f"Existing SVG group {group_id!r} has no parent")
