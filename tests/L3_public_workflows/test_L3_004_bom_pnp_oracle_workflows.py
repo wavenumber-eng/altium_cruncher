@@ -128,8 +128,8 @@ def _variant_args(variant: str | None) -> list[str]:
 
 
 def _case_output_dir(root: Path, case: BomPnpOracleCase, command: str) -> Path:
-    """Return the project-first output folder used by workflow tests."""
-    return root / case.name / command / case.variant_label
+    """Return the project fixture output folder used by workflow tests."""
+    return root / case.name / "output" / command / case.variant_label
 
 
 def _legacy_output_name(project: Path, variant: str | None, kind: str, ext: str) -> str:

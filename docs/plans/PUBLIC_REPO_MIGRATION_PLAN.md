@@ -1124,9 +1124,9 @@ Current local status:
 - fixture layout notes live in `docs/design/test-assets.html` and
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;
-- generated review artifacts for inspection are under
-  the repository-level `output/` folder using project-first layout, for
-  example `output/node_test_array/bom/B4/raw-json`;
+- generated review artifacts for inspection are under the project fixture's
+  `output/` folder, for example
+  `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
   - `uv run --extra test pytest -q`: 124 passed, 2 skipped;
   - `uv run --extra test pytest tests\L3_public_workflows -q`: 13 passed,

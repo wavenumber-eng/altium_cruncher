@@ -21,8 +21,9 @@
       The <code>tests/assets/projects</code> tree contains redistributable
       Altium projects plus Altium-generated reference outputs used as command
       oracles. Tests should treat these assets as inputs and write all generated
-      artifacts to temporary directories or the repository-level
-      <code>output/</code> review folder.
+      artifacts to temporary directories that mirror the project-local
+      <code>output/</code> layout, or to the project-local <code>output/</code>
+      folder for manual review.
     </p>
   </header>
 
@@ -43,7 +44,7 @@
       </tr>
       <tr>
         <td><code>output/</code></td>
-        <td>Local scratch output only. Tests and agents should prefer the repository-level <code>output/</code> folder for manual review artifacts.</td>
+        <td>Local scratch output only. Tests and agents should put manual review artifacts here, grouped by command, variant, and output kind.</td>
       </tr>
     </table>
   </section>
@@ -54,10 +55,9 @@
       <code>reference_output/no_variant</code> means Altium generated the
       output with no variant applied. Variant-specific outputs should live
       under a folder named for the variant, such as
-      <code>reference_output/B4</code>. BOM, PnP, and JLC tests should write
-      generated review artifacts under the repository-level
-      <code>output/</code> folder using project-first layout:
-      <code>output/&lt;test-or-project&gt;/&lt;command&gt;/&lt;variant&gt;/...</code>.
+      <code>reference_output/B4</code>. BOM, PnP, and JLC review artifacts
+      should use the project-local output folder:
+      <code>tests/assets/projects/&lt;project&gt;/output/&lt;command&gt;/&lt;variant&gt;/...</code>.
     </p>
   </section>
 

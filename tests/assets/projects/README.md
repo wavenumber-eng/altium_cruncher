@@ -13,14 +13,15 @@ Each project follows this layout:
   applied.
 - `reference_output/<variant>/`: Altium output generated with a specific
   variant, such as `B4`.
+- `output/`: transient local test and review output generated from the project.
 
 BOM and PnP tests use `node_test_array` as the primary hierarchy and variant
 case, and `loz-old-man` as the high component-count case. `XML-BOM` and
 `CSV-BOM` are Altium BOM oracles. `PNP-METRIC` is the Altium pick-and-place
 oracle.
 
-Generated test or review artifacts should go under the repository-level
-`output/` folder, organized by project/test name, command, variant, and output
-kind when needed, for example `output/node_test_array/bom/B4/raw-json`.
+Generated test or review artifacts should go under each project fixture's
+`output/` folder, organized by command, variant, and output kind when needed,
+for example `tests/assets/projects/node_test_array/output/bom/B4/raw-json`.
 
 See `docs/design/test-assets.html` for the full fixture policy.
