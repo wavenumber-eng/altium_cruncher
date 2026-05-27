@@ -32,6 +32,20 @@ def test_pcb_svg_default_assembly_views_are_copper_only():
     assert {tuple(view.layer_order or []) for view in assembly_views} == {("copper",)}
 
 
+def test_pcb_svg_default_config_includes_board_cutout_layer_options():
+    config = PcbSvgConfig.default()
+    payload = config.to_dict()["global"]
+
+    assert payload["include_board_cutout_layer"] is True
+    assert payload["board_cutout_layer_hatch"] is True
+    assert "board_cutout_layer_hash_spacing_mm" in payload
+    assert "board_cutout_layer_hash_angle_deg" in payload
+    assert "board_cutout_layer_hash_line_width_mm" in payload
+    assert "board_cutout_layer_outline_style" in payload
+    assert "board_cutout_layer_outline_dash_mm" in payload
+    assert "board_cutout_layer_outline_width_mm" in payload
+
+
 def test_pcb_svg_cli_views_all_enables_all_content_views():
     config = PcbSvgConfig.default()
 

@@ -27,7 +27,7 @@
   `bom.config.used.json` beside configured outputs, add DNP row highlight
   support for grouped XLSX, and emit JLC BOM/CPL XLSX from the `jlc` command.
 - Restore `pcb-svg` assembly-view HLR coverage through `wn-geometer` and add an
-  optional synthetic `BOARD_CUTOUTS` layer with configurable hash density,
-  hash direction, hash and outline stroke widths, dashed or solid outlines, and
-  labels.
+  enabled-by-default synthetic `BOARD_CUTOUTS` layer with configurable hash
+  density, hash direction, hash and outline stroke widths, dashed or solid
+  outlines, and labels.
 - Add global `--quiet`, `--verbose`, and `--log-level` CLI logging controls.

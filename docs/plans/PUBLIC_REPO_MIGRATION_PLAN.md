@@ -1139,10 +1139,11 @@ Current local status:
   `tests/assets/projects/node_test_array/reference_output/B4`;
 - `pcb-svg` cutout work now uses `tests/assets/projects/cutouts`, a simple
   four-cutout fixture with rectangular, circular arc, and rounded T-shaped
-  board-profile holes. The synthetic `BOARD_CUTOUTS` layer supports
-  configurable hash spacing, hash direction, hash line width, outline line
-  width, labels, and solid or dashed outlines through reusable SVG pattern
-  helpers;
+  board-profile holes. Generated default configs enable the synthetic
+  `BOARD_CUTOUTS` layer so cutout-capable boards produce a cutout view by
+  default. The layer supports configurable hash spacing, hash direction, hash
+  line width, outline line width, labels, and solid or dashed outlines through
+  reusable SVG pattern helpers;
 - CLI logging now has root-level `--quiet`, `--verbose`, and `--log-level`
   controls. Normal command progress stays at INFO; Altium Monkey parser
   internals are expected to use DEBUG so manufacturing-output commands can run

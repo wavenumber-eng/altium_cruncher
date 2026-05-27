@@ -241,8 +241,8 @@ class PcbSvgGlobalConfig:
     mirror_bottom_view: bool = True
     clip_to_outline: bool = True
     clip_holes_from_copper: bool = True
-    include_board_cutout_layer: bool = False
-    board_cutout_layer_hatch: bool = False
+    include_board_cutout_layer: bool = True
+    board_cutout_layer_hatch: bool = True
     board_cutout_layer_hash_spacing_mm: float = 2.0
     board_cutout_layer_hash_angle_deg: float = 45.0
     board_cutout_layer_hash_line_width_mm: float = 0.08
