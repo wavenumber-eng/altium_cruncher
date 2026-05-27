@@ -26,7 +26,9 @@ from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
     build_pcb_svg_component_inventory_from_pcbdoc,
     load_pcb_svg_component_inventory,
 )
+from altium_monkey.altium_pcb_enums import PadShape
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
+from altium_monkey.altium_record_types import PcbLayer
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,6 +67,18 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     top_layers = cast(list[str], top_view["layers"])
     assert top_view["group_id"] == "pcb-svg-view-top"
     assert top_layers[-1] == "ASSEMBLY_HLR_TOP"
+    top_pin1_view = next(view for view in views if view["name"] == "top_pin1_view")
+    bottom_pin1_view = next(view for view in views if view["name"] == "bottom_pin1_view")
+    top_hlr_bounds = next(
+        view for view in views if view["name"] == "top_hlr_bounding_boxes"
+    )
+    bottom_hlr_bounds = next(
+        view for view in views if view["name"] == "bottom_hlr_bounding_boxes"
+    )
+    assert top_pin1_view["layers"] == ["BOARD_OUTLINE", "TOP", "PIN1_TOP"]
+    assert bottom_pin1_view["layers"] == ["BOARD_OUTLINE", "BOTTOM", "PIN1_BOTTOM"]
+    assert top_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
+    assert bottom_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
 
 
 def test_pcb_svg_default_cutout_style_has_no_text_label() -> None:
@@ -115,6 +129,23 @@ def test_pcb_svg_cli_views_enable_requested_views_and_layer_outputs() -> None:
 
     assert _enabled_views(config) == {"top_view", "bottom_view"}
     assert config.layer_outputs["enabled"] is True
+
+
+def test_pcb_svg_cli_views_enable_pin1_and_hlr_bounds_aliases() -> None:
+    config = PcbSvgConfig.default()
+
+    _apply_pcb_view_selection(
+        config,
+        "pin1-top,pin1-bottom,top-hlr-bounds,bottom-hlr-bounds",
+    )
+
+    assert _enabled_views(config) == {
+        "top_pin1_view",
+        "bottom_pin1_view",
+        "top_hlr_bounding_boxes",
+        "bottom_hlr_bounding_boxes",
+    }
+    assert config.layer_outputs["enabled"] is False
 
 
 def test_pcb_svg_cli_views_none_disables_all_outputs() -> None:
@@ -319,6 +350,121 @@ def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(
 
     assert 'id="pcb-svg-view-top-no-hlr"' in svg
     assert "ASSEMBLY_HLR" not in svg
+
+
+def test_pcb_svg_pin1_layer_renders_smd_dot_and_a1_pad() -> None:
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    pcbdoc.add_component(
+        designator="U1",
+        footprint="QFN",
+        position_mils=(100.0, 100.0),
+        layer="TOP",
+    )
+    pcbdoc.add_component(
+        designator="J1",
+        footprint="BGA",
+        position_mils=(300.0, 100.0),
+        layer="TOP",
+    )
+    pad_1 = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(100.0, 100.0),
+        width_mils=40.0,
+        height_mils=30.0,
+        layer=PcbLayer.TOP,
+        shape=PadShape.RECTANGLE,
+    )
+    pad_a1 = pcbdoc.add_pad(
+        designator="A1",
+        position_mils=(300.0, 100.0),
+        width_mils=28.0,
+        height_mils=28.0,
+        layer=PcbLayer.TOP,
+        shape=PadShape.CIRCLE,
+    )
+    pad_1.component_index = 0
+    pad_a1.component_index = 1
+    config = PcbSvgConfig.default()
+    view = PcbSvgViewConfig(
+        name="pin1",
+        group_id="pcb-svg-view-pin1",
+        layers=["BOARD_OUTLINE", "TOP", "PIN1_TOP"],
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-layer-key="PIN1_TOP"' in svg
+    assert 'data-feature="pin1-marker"' in svg
+    assert '<circle ' in svg
+    assert 'data-component-designator="U1"' in svg
+    assert 'data-pad-designator="1"' in svg
+    assert 'data-component-designator="J1"' in svg
+    assert 'data-pad-designator="A1"' in svg
+
+
+def test_pcb_svg_hlr_bounding_box_mode_does_not_construct_hlr_renderer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FailingHlrRenderer:
+        def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+            raise AssertionError("HLR renderer should not be constructed")
+
+    monkeypatch.setattr(
+        pcb_svg_a0_renderer,
+        "CruncherPcbAssemblySvgRenderer",
+        FailingHlrRenderer,
+    )
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    pcbdoc.add_component(
+        designator="U1",
+        footprint="SOIC",
+        position_mils=(100.0, 100.0),
+        layer="TOP",
+    )
+    pad = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(100.0, 100.0),
+        width_mils=60.0,
+        height_mils=30.0,
+        layer=PcbLayer.TOP,
+        shape=PadShape.ROUNDED_RECTANGLE,
+    )
+    pad.component_index = 0
+    config = PcbSvgConfig.default()
+    view = PcbSvgViewConfig(
+        name="top_hlr_bounds",
+        group_id="pcb-svg-view-hlr-bounds",
+        layers=["BOARD_OUTLINE", "ASSEMBLY_HLR_TOP"],
+        assembly_hlr_mode="bounding_box",
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-projection-mode="bounding_box"' in svg
+    assert 'data-feature="assembly-bounding-box"' in svg
+    assert 'data-component-designator="U1"' in svg
 
 
 def test_pcb_svg_rejects_v1_config() -> None:

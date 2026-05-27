@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import json
 import logging
+import math
 import xml.etree.ElementTree as ET
 from dataclasses import replace
 from pathlib import Path
@@ -53,9 +54,14 @@ PCB_SVG_DRILLS_LAYER_ID = 9001
 PCB_SVG_SLOTS_LAYER_ID = 9003
 PCB_SVG_ASSEMBLY_HLR_TOP_LAYER_ID = 9004
 PCB_SVG_ASSEMBLY_HLR_BOTTOM_LAYER_ID = 9005
+PCB_SVG_PIN1_TOP_LAYER_ID = 9006
+PCB_SVG_PIN1_BOTTOM_LAYER_ID = 9007
+PCB_SVG_ASSEMBLY_DESIGNATORS_TOP_LAYER_ID = 9008
+PCB_SVG_ASSEMBLY_DESIGNATORS_BOTTOM_LAYER_ID = 9009
 
 _HLR_TOKENS = {"ASSEMBLY_HLR_TOP", "ASSEMBLY_HLR_BOTTOM"}
 _HOLE_TOKENS = {"DRILLS", "SLOTS"}
+_PIN1_TOKENS = {"PIN1_TOP", "PIN1_BOTTOM"}
 _SVG_NS = "http://www.w3.org/2000/svg"
 _MM_TO_MIL = 1.0 / _MIL_TO_MM
 
@@ -152,6 +158,77 @@ def _pad_is_slot(pad: object) -> bool:
     return hole_shape == 2 and hole_size > 0 and slot_size > hole_size
 
 
+def _object_float(value: object, default: float = 0.0) -> float:
+    if isinstance(value, (int, float, str)):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+    return default
+
+
+def _pad_center_mils(pad: object) -> tuple[float, float]:
+    center = getattr(pad, "pad_center_mils", None)
+    if callable(center):
+        try:
+            result = center()
+            if isinstance(result, (list, tuple)) and len(result) >= 2:
+                return (_object_float(result[0]), _object_float(result[1]))
+        except (TypeError, ValueError):
+            pass
+    x_value = getattr(pad, "x_mils", 0.0)
+    y_value = getattr(pad, "y_mils", 0.0)
+    return (_object_float(x_value), _object_float(y_value))
+
+
+def _pad_size_mils(pad: object, layer: PcbLayer) -> tuple[float, float]:
+    layer_size = getattr(pad, "_layer_size", None)
+    if callable(layer_size):
+        try:
+            result = layer_size(layer)
+            if isinstance(result, (list, tuple)) and len(result) >= 2:
+                return (
+                    _object_float(result[0]) / 10000.0,
+                    _object_float(result[1]) / 10000.0,
+                )
+        except (TypeError, ValueError):
+            pass
+    width = getattr(pad, "width_mils", 0.0)
+    height = getattr(pad, "height", 0.0)
+    return (_object_float(width), _object_float(height) / 10000.0)
+
+
+def _pad_renders_on_layer(pad: object, layer: PcbLayer) -> bool:
+    should_render = getattr(pad, "_should_render_on_layer", None)
+    if callable(should_render):
+        try:
+            return bool(should_render(layer))
+        except (TypeError, ValueError):
+            return False
+    return True
+
+
+def _component_side(component: object) -> str:
+    normalized = getattr(component, "get_layer_normalized", None)
+    if callable(normalized):
+        try:
+            side = str(normalized()).strip().lower()
+            if side:
+                return side
+        except (TypeError, ValueError):
+            pass
+    raw_layer = str(getattr(component, "layer", "") or "").strip().lower()
+    if "bottom" in raw_layer:
+        return "bottom"
+    if "top" in raw_layer:
+        return "top"
+    return raw_layer
+
+
+def _component_designator(component: object) -> str:
+    return str(getattr(component, "designator", "") or "").strip()
+
+
 def _normalize_draw_order(tokens: list[str]) -> list[str]:
     body: list[str] = []
     holes: list[str] = []
@@ -170,6 +247,22 @@ def _normalize_draw_order(tokens: list[str]) -> list[str]:
 
 def _safe_svg_id(value: str) -> str:
     return "".join(ch if ch.isalnum() or ch in "._-" else "-" for ch in value).strip("-")
+
+
+def _synthetic_layer_metadata_attrs(
+    layer_id: int,
+    *,
+    key: str,
+    display_name: str,
+    role: str = "annotation",
+) -> list[str]:
+    return [
+        f'data-layer-id="{int(layer_id)}"',
+        f'data-layer-key="{html.escape(key)}"',
+        f'data-layer-name="{html.escape(key)}"',
+        f'data-layer-display-name="{html.escape(display_name)}"',
+        f'data-layer-role="{html.escape(role)}"',
+    ]
 
 
 class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
@@ -453,6 +546,8 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 styles=styles,
                 slot=token == "SLOTS",
             )
+        if token in _PIN1_TOKENS:
+            return self._render_a0_pin1_layer(ctx, pcbdoc, token, styles)
         layer = pcb_svg_physical_layer_from_token(token)
         if layer is None:
             return []
@@ -491,6 +586,10 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             "SLOTS": PCB_SVG_SLOTS_LAYER_ID,
             "ASSEMBLY_HLR_TOP": PCB_SVG_ASSEMBLY_HLR_TOP_LAYER_ID,
             "ASSEMBLY_HLR_BOTTOM": PCB_SVG_ASSEMBLY_HLR_BOTTOM_LAYER_ID,
+            "PIN1_TOP": PCB_SVG_PIN1_TOP_LAYER_ID,
+            "PIN1_BOTTOM": PCB_SVG_PIN1_BOTTOM_LAYER_ID,
+            "ASSEMBLY_DESIGNATORS_TOP": PCB_SVG_ASSEMBLY_DESIGNATORS_TOP_LAYER_ID,
+            "ASSEMBLY_DESIGNATORS_BOTTOM": PCB_SVG_ASSEMBLY_DESIGNATORS_BOTTOM_LAYER_ID,
         }
         for token in tokens:
             if token in synthetic_ids:
@@ -557,7 +656,11 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         if not _style_enabled(styles, "assembly_hlr"):
             return [], []
         side = "top" if token == "ASSEMBLY_HLR_TOP" else "bottom"
-        mode = view.assembly_hlr_mode
+        mode = self._resolved_hlr_projection_mode(view)
+        if mode == "none":
+            return [], []
+        if mode == "bounding_box":
+            return [], self._render_a0_assembly_bounding_boxes(ctx, pcbdoc, side, styles)
         style = styles.get("assembly_hlr", {})
         options = CruncherPcbAssemblySvgRenderOptions(
             visible_layers=set(source_layers),
@@ -593,6 +696,274 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         except Exception as exc:
             log.warning("Skipping %s HLR overlay for %s: %s", side, view.name, exc)
             return [], []
+
+    def _resolved_hlr_projection_mode(self, view: PcbSvgViewConfig) -> str:
+        mode = str(view.assembly_hlr_mode or "detail").strip().lower()
+        if mode == "detail" and self.config.assembly != type(self.config.assembly)():
+            return self.config.assembly.default_projection
+        return mode
+
+    def _render_a0_assembly_bounding_boxes(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        side: str,
+        styles: dict[str, dict[str, object]],
+    ) -> list[str]:
+        layer = PcbLayer.TOP if side == "top" else PcbLayer.BOTTOM
+        color = _style_color(styles, "assembly_hlr", "#F59E0B")
+        stroke_width = _style_float(styles, "assembly_hlr", "line_width_mm", 0.12)
+        boxes = self._component_pad_bounds_by_side(pcbdoc, layer)
+        if not boxes:
+            return []
+
+        layer_id = (
+            PCB_SVG_ASSEMBLY_HLR_TOP_LAYER_ID
+            if side == "top"
+            else PCB_SVG_ASSEMBLY_HLR_BOTTOM_LAYER_ID
+        )
+        attrs = [
+            f'id="assembly-hlr-bounding-boxes-{side}"',
+            'data-projection-mode="bounding_box"',
+        ]
+        if self.options.include_metadata:
+            attrs.extend(
+                _synthetic_layer_metadata_attrs(
+                    layer_id,
+                    key=f"ASSEMBLY_HLR_{side.upper()}",
+                    display_name=f"Assembly HLR {side.title()}",
+                )
+            )
+
+        lines = [f"      <g {' '.join(attrs)}>"]
+        for designator, bounds in boxes:
+            lines.append(
+                "        "
+                + self._component_bounds_rect_svg(
+                    ctx,
+                    bounds,
+                    color=color,
+                    stroke_width_mm=stroke_width,
+                    designator=designator,
+                )
+            )
+        lines.append("      </g>")
+        return lines
+
+    def _component_pad_bounds_by_side(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        layer: PcbLayer,
+    ) -> list[tuple[str, tuple[float, float, float, float]]]:
+        result: list[tuple[str, tuple[float, float, float, float]]] = []
+        for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
+            if _component_side(component) != ("top" if layer == PcbLayer.TOP else "bottom"):
+                continue
+            pads = self._component_layer_pads(pcbdoc, component_index, layer)
+            bounds = self._pad_bounds_mils(pads, layer)
+            if bounds is None:
+                continue
+            result.append((_component_designator(component), bounds))
+        return result
+
+    def _component_layer_pads(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        component_index: int,
+        layer: PcbLayer,
+    ) -> list[object]:
+        return [
+            pad
+            for pad in getattr(pcbdoc, "pads", []) or []
+            if getattr(pad, "component_index", None) == component_index
+            and _pad_renders_on_layer(pad, layer)
+        ]
+
+    def _pad_bounds_mils(
+        self,
+        pads: list[object],
+        layer: PcbLayer,
+    ) -> tuple[float, float, float, float] | None:
+        bounds: list[tuple[float, float, float, float]] = []
+        for pad in pads:
+            x_mils, y_mils = _pad_center_mils(pad)
+            width_mils, height_mils = _pad_size_mils(pad, layer)
+            half_width = max(width_mils, 1.0) / 2.0
+            half_height = max(height_mils, 1.0) / 2.0
+            rotation = math.radians(_object_float(getattr(pad, "rotation", 0.0)))
+            cos_v = abs(math.cos(rotation))
+            sin_v = abs(math.sin(rotation))
+            rotated_half_width = half_width * cos_v + half_height * sin_v
+            rotated_half_height = half_width * sin_v + half_height * cos_v
+            bounds.append(
+                (
+                    x_mils - rotated_half_width,
+                    y_mils - rotated_half_height,
+                    x_mils + rotated_half_width,
+                    y_mils + rotated_half_height,
+                )
+            )
+        if not bounds:
+            return None
+        return (
+            min(item[0] for item in bounds),
+            min(item[1] for item in bounds),
+            max(item[2] for item in bounds),
+            max(item[3] for item in bounds),
+        )
+
+    def _component_bounds_rect_svg(
+        self,
+        ctx: PcbSvgRenderContext,
+        bounds: tuple[float, float, float, float],
+        *,
+        color: str,
+        stroke_width_mm: float,
+        designator: str,
+    ) -> str:
+        left, bottom, right, top = bounds
+        x_svg = ctx.x_to_svg(left)
+        y_svg = ctx.y_to_svg(top)
+        width = max((right - left) * _MIL_TO_MM, 0.01)
+        height = max((top - bottom) * _MIL_TO_MM, 0.01)
+        return (
+            f'<rect x="{ctx.fmt(x_svg)}" y="{ctx.fmt(y_svg)}" '
+            f'width="{ctx.fmt(width)}" height="{ctx.fmt(height)}" '
+            'fill="none" '
+            f'stroke="{html.escape(color)}" '
+            f'stroke-width="{ctx.fmt(stroke_width_mm)}" '
+            f'data-component-designator="{html.escape(designator)}" '
+            'data-feature="assembly-bounding-box"/>'
+        )
+
+    def _render_a0_pin1_layer(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        token: str,
+        styles: dict[str, dict[str, object]],
+    ) -> list[str]:
+        if not _style_enabled(styles, "pin1_marker"):
+            return []
+        layer = PcbLayer.TOP if token == "PIN1_TOP" else PcbLayer.BOTTOM
+        side = "top" if layer == PcbLayer.TOP else "bottom"
+        marker_elements = self._pin1_marker_elements(ctx, pcbdoc, layer, styles)
+        if not marker_elements and not self.options.show_empty_layers:
+            return []
+
+        layer_id = PCB_SVG_PIN1_TOP_LAYER_ID if token == "PIN1_TOP" else PCB_SVG_PIN1_BOTTOM_LAYER_ID
+        attrs = [f'id="pin1-markers-{side}"']
+        if self.options.include_metadata:
+            attrs.extend(
+                _synthetic_layer_metadata_attrs(
+                    layer_id,
+                    key=token,
+                    display_name=f"Pin 1 {side.title()}",
+                )
+            )
+            attrs.append(f'data-primitive-count="{len(marker_elements)}"')
+
+        lines = [f"      <g {' '.join(attrs)}>"]
+        lines.extend(f"        {element}" for element in marker_elements)
+        lines.append("      </g>")
+        return lines
+
+    def _pin1_marker_elements(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        layer: PcbLayer,
+        styles: dict[str, dict[str, object]],
+    ) -> list[str]:
+        side = "top" if layer == PcbLayer.TOP else "bottom"
+        marker_elements: list[str] = []
+        for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
+            if _component_side(component) != side:
+                continue
+            pad = self._pin1_pad_for_component(pcbdoc, component_index, component, layer)
+            if pad is not None:
+                marker_elements.extend(
+                    self._pin1_marker_svg(ctx, component, pad, layer, styles)
+                )
+        return marker_elements
+
+    def _pin1_pad_for_component(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        component_index: int,
+        component: object,
+        layer: PcbLayer,
+    ) -> object | None:
+        pads = self._component_layer_pads(pcbdoc, component_index, layer)
+        if not pads:
+            return None
+
+        override = self.config.components.get(_component_designator(component))
+        preferred: list[str] = []
+        if override is not None and override.pin1_pad:
+            preferred.append(override.pin1_pad)
+        preferred.extend(["1", "A1"])
+        by_designator = {
+            str(getattr(pad, "designator", "") or "").strip().upper(): pad for pad in pads
+        }
+        for pad_name in preferred:
+            pad = by_designator.get(pad_name.strip().upper())
+            if pad is not None:
+                return pad
+        return None
+
+    def _pin1_marker_svg(
+        self,
+        ctx: PcbSvgRenderContext,
+        component: object,
+        pad: object,
+        layer: PcbLayer,
+        styles: dict[str, dict[str, object]],
+    ) -> list[str]:
+        designator = _component_designator(component)
+        pad_designator = str(getattr(pad, "designator", "") or "").strip()
+        color = _style_color(styles, "pin1_marker", "#2563EB")
+        group_attrs = [
+            f'id="pin1-{_safe_svg_id(designator or "component")}-{_safe_svg_id(pad_designator or "pad")}"',
+            'data-feature="pin1-marker"',
+            f'data-component-designator="{html.escape(designator)}"',
+            f'data-pad-designator="{html.escape(pad_designator)}"',
+        ]
+
+        should_fill_pad = _pad_has_hole(pad) or pad_designator.upper() == "A1"
+        if should_fill_pad:
+            to_svg = getattr(pad, "to_svg", None)
+            rendered: list[str] = []
+            if callable(to_svg):
+                raw_rendered = to_svg(
+                    ctx,
+                    stroke=color,
+                    include_metadata=self.options.include_metadata,
+                    for_layer=layer,
+                    render_holes=False,
+                )
+                if isinstance(raw_rendered, (list, tuple)):
+                    rendered = [str(element) for element in raw_rendered]
+            if rendered:
+                return [f"<g {' '.join(group_attrs)}>"] + [
+                    f"  {element}" for element in rendered
+                ] + ["</g>"]
+
+        x_mils, y_mils = _pad_center_mils(pad)
+        width_mils, height_mils = _pad_size_mils(pad, layer)
+        max_dot_mm = max(min(width_mils, height_mils) * _MIL_TO_MM * 0.80, 0.01)
+        requested_dot_mm = _style_float(styles, "pin1_marker", "dot_diameter_mm", 0.55)
+        min_dot_mm = _style_float(styles, "pin1_marker", "min_dot_diameter_mm", 0.25)
+        dot_diameter_mm = max(min(requested_dot_mm, max_dot_mm), min_dot_mm)
+        cx = ctx.x_to_svg(x_mils)
+        cy = ctx.y_to_svg(y_mils)
+        return [
+            (
+                f'<circle cx="{ctx.fmt(cx)}" cy="{ctx.fmt(cy)}" '
+                f'r="{ctx.fmt(dot_diameter_mm / 2.0)}" '
+                f'fill="{html.escape(color)}" stroke="none" {" ".join(group_attrs)}/>'
+            )
+        ]
 
     def _render_a0_board_outline(
         self,

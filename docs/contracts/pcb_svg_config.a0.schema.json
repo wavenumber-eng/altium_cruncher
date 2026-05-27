@@ -117,7 +117,9 @@
             "items": { "type": "string" }
           },
           "mirror": { "type": "boolean" },
-          "assembly_hlr_mode": { "enum": ["simple", "detail", "detailed"] },
+          "assembly_hlr_mode": {
+            "enum": ["simple", "detail", "detailed", "bounding_box", "none"]
+          },
           "styles": { "$ref": "#/$defs/styleTable" },
           "description": { "type": "string" }
         }

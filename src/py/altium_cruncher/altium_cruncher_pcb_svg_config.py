@@ -45,6 +45,7 @@ _STYLE_ORDER = (
     "silkscreen_component_graphics",
     "silkscreen_designators",
     "silkscreen_board_graphics",
+    "pin1_marker",
     "keepout",
     "assembly_hlr",
 )
@@ -263,10 +264,17 @@ def default_pcb_svg_styles() -> dict[str, dict[str, object]]:
         "silkscreen_component_graphics": {"enabled": True, "color": "#000000"},
         "silkscreen_designators": {"enabled": True, "color": "#000000"},
         "silkscreen_board_graphics": {"enabled": True, "color": "#000000"},
+        "pin1_marker": {
+            "enabled": True,
+            "color": "#2563EB",
+            "dot_diameter_mm": 0.55,
+            "min_dot_diameter_mm": 0.25,
+        },
         "keepout": {"enabled": True, "color": "#CC00CC"},
         "assembly_hlr": {
             "enabled": True,
             "color": "#F59E0B",
+            "line_width_mm": 0.12,
             "curve_mode": "native_arcs",
             "samples_per_curve": 24,
             "round_digits": 3,
@@ -437,12 +445,18 @@ class PcbSvgViewConfig:
         if not name:
             raise ValueError("Each pcb-svg view must include a non-empty 'name'")
         mode = str(data.get("assembly_hlr_mode", "detail") or "detail").lower()
-        if mode not in {"simple", "detail", "detailed"}:
+        aliases = {
+            "detailed": "detail",
+            "bounding-box": "bounding_box",
+            "bbox": "bounding_box",
+            "box": "bounding_box",
+            "off": "none",
+        }
+        mode = aliases.get(mode, mode)
+        if mode not in {"simple", "detail", "bounding_box", "none"}:
             raise ValueError(
                 f"Unsupported assembly_hlr_mode {mode!r} for pcb-svg view {name!r}"
             )
-        if mode == "detailed":
-            mode = "detail"
         styles = _coerce_object_mapping(
             data.get("styles"),
             field_name=f"views.{name}.styles",
@@ -811,6 +825,40 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             layers=["BOARD_OUTLINE", "BOARD_CUTOUTS"],
             mirror=False,
             description="Board cutouts",
+        ),
+        PcbSvgViewConfig(
+            name="top_hlr_bounding_boxes",
+            group_id="pcb-svg-view-top-hlr-bounding-boxes",
+            output_svg="views/{board}__top_hlr_bounding_boxes.svg",
+            layers=["BOARD_OUTLINE", "TOP", "ASSEMBLY_HLR_TOP"],
+            mirror=False,
+            assembly_hlr_mode="bounding_box",
+            description="Top copper with HLR pad bounding boxes",
+        ),
+        PcbSvgViewConfig(
+            name="bottom_hlr_bounding_boxes",
+            group_id="pcb-svg-view-bottom-hlr-bounding-boxes",
+            output_svg="views/{board}__bottom_hlr_bounding_boxes.svg",
+            layers=["BOARD_OUTLINE", "BOTTOM", "ASSEMBLY_HLR_BOTTOM"],
+            mirror=True,
+            assembly_hlr_mode="bounding_box",
+            description="Bottom copper with HLR pad bounding boxes",
+        ),
+        PcbSvgViewConfig(
+            name="top_pin1_view",
+            group_id="pcb-svg-view-top-pin1",
+            output_svg="views/{board}__top_pin1_view.svg",
+            layers=["BOARD_OUTLINE", "TOP", "PIN1_TOP"],
+            mirror=False,
+            description="Top copper with pin-1 overlay",
+        ),
+        PcbSvgViewConfig(
+            name="bottom_pin1_view",
+            group_id="pcb-svg-view-bottom-pin1",
+            output_svg="views/{board}__bottom_pin1_view.svg",
+            layers=["BOARD_OUTLINE", "BOTTOM", "PIN1_BOTTOM"],
+            mirror=True,
+            description="Bottom copper with pin-1 overlay",
         ),
     ]
 

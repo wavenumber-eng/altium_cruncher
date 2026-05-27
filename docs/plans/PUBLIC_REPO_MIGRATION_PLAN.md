@@ -1268,9 +1268,13 @@ Current local status:
   individual `layer_outputs` from composed `views[]`, gives each view a durable
   SVG group id and output path, and uses the view `layers` array as draw order.
   Synthetic layers include `BOARD_OUTLINE`, `BOARD_CUTOUTS`, `DRILLS`, `SLOTS`,
-  `ASSEMBLY_HLR_TOP`, and `ASSEMBLY_HLR_BOTTOM`; HLR renders on top and
-  drills/slots render immediately behind it. HLR mode is per-view
-  (`simple` or `detail`). Cutout labels were removed from A0 output, while
+  `ASSEMBLY_HLR_TOP`, `ASSEMBLY_HLR_BOTTOM`, `PIN1_TOP`, and `PIN1_BOTTOM`;
+  HLR renders on top and drills/slots render immediately behind it. HLR mode is
+  per-view (`simple`, `detail`, `bounding_box`, or `none`), and the
+  `bounding_box` path uses component pad bounds without constructing the
+  Geometer-backed HLR renderer. Default composed views now include top/bottom
+  pin-1 overlays and top/bottom HLR bounding-box inspection views. Cutout labels
+  were removed from A0 output, while
   hatch spacing, hatch direction, hash line width, outline line width, and
   solid/dashed outline style remain configurable. The renderer can replace an
   existing durable view `<g>` so user-authored SVG content around that group can
@@ -1287,11 +1291,10 @@ Current local status:
   `output/` folder, for example
   `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
-  - `uv run --extra test pytest -q tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_copper_polygon_style_colors_shape_based_regions tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes`:
-    19 passed after adding board-outline canvas coverage, durable-root
-    metadata refresh coverage, and cutout/hash coverage;
-  - `uv run --extra test pytest -q tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_assembly_views_use_geometer_hlr`:
-    1 passed;
+  - `uv run --extra test pytest -q tests\test_pcb_svg_view_selection.py`:
+    25 passed after adding pin-1 overlay and HLR bounding-box coverage;
+  - `uv run --extra test pytest -q tests\L3_public_workflows\test_L3_001_public_cli_workflows.py -k pcb_svg`:
+    4 passed, 6 deselected;
   - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_config.py src\py\altium_cruncher\altium_cruncher_pcb_svg_a0_renderer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
     0 errors;
   - `uv run --extra test ruff check src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_config.py src\py\altium_cruncher\altium_cruncher_pcb_svg_a0_renderer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:

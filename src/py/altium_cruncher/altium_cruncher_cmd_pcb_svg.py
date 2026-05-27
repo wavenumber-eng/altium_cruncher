@@ -41,6 +41,20 @@ _VIEW_ALIASES = {
     "cutouts": "board_cutouts",
     "board-cutouts": "board_cutouts",
     "board_cutouts": "board_cutouts",
+    "top-pin1": "top_pin1_view",
+    "top-pin-1": "top_pin1_view",
+    "pin1-top": "top_pin1_view",
+    "pin-1-top": "top_pin1_view",
+    "bottom-pin1": "bottom_pin1_view",
+    "bottom-pin-1": "bottom_pin1_view",
+    "pin1-bottom": "bottom_pin1_view",
+    "pin-1-bottom": "bottom_pin1_view",
+    "top-hlr-bounds": "top_hlr_bounding_boxes",
+    "top-hlr-bounding-boxes": "top_hlr_bounding_boxes",
+    "hlr-bounds-top": "top_hlr_bounding_boxes",
+    "bottom-hlr-bounds": "bottom_hlr_bounding_boxes",
+    "bottom-hlr-bounding-boxes": "bottom_hlr_bounding_boxes",
+    "hlr-bounds-bottom": "bottom_hlr_bounding_boxes",
 }
 
 
@@ -143,6 +157,8 @@ def _default_pcb_svg_config_text(
         "// In each view, the layers array is the draw order. HLR renders last, and\n"
         "//   DRILLS/SLOTS render immediately before HLR.\n"
         "// With .PrjPcb input, add global.pcbdoc to select one specific board.\n"
+        "// Default composed views include top/bottom, board_cutouts, top/bottom pin-1,\n"
+        "//   and top/bottom HLR bounding-box inspection views.\n"
         "// Optional component override example:\n"
         "//   \"components\": {\"D15\": {\"projection\": \"bounding_box\", \"cathode_pad\": \"C\"}}\n"
         "// Projection modes: detail, simple, bounding_box, none.\n"
