@@ -1099,6 +1099,7 @@ Current local status:
   - `29834dc Add BOM PnP fixture oracle notes`;
   - `0af8245 Ignore Altium transient project folders`;
   - `5c4181f Complete BOM PnP config workflows`;
+  - `e21a7b6 Add pcb svg board outline canvas mode`;
 - current active slice consumes `altium-monkey==2026.5.26`, exposes
   `pnp.position_mode` plus `--position-mode`, and removes the stale PNP-METRIC
   coordinate exception list;
@@ -1161,8 +1162,9 @@ Current local status:
   `output/` folder, for example
   `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
-  - `uv run --extra test pytest -q tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_command_uses_public_pcbdoc_without_private_context tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes`:
-    15 passed after adding durable-group update coverage and HLR coverage;
+  - `uv run --extra test pytest -q tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_copper_polygon_style_colors_shape_based_regions tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes`:
+    19 passed after adding board-outline canvas coverage, durable-root
+    metadata refresh coverage, and cutout/hash coverage;
   - `uv run --extra test pytest -q tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_assembly_views_use_geometer_hlr`:
     1 passed;
   - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_config.py src\py\altium_cruncher\altium_cruncher_pcb_svg_a0_renderer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
@@ -1171,6 +1173,7 @@ Current local status:
     clean;
   - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json --format json`:
     0 findings;
+  - `git diff --check`: clean aside from existing line-ending warnings;
   - `uv run --extra test pytest -q`: 146 passed, 2 skipped;
   - `uv run --extra test rack run --all`: 42 passed, 1 skipped;
 - CLI help now prints the package version in root and command help, lists
@@ -1184,10 +1187,16 @@ Current local status:
 - macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
   tracked in `wavenumber-eng/geometer#2`; this is not a BOM/PnP logic blocker,
   but it must be closed before final `altium-cruncher` release signoff.
+- active work is paused for an `altium_monkey` PcbDoc authoring API detour.
+  The expected return point is PCB-SVG A0 review: adopt Eli's cricket-node
+  cutout fixture change as a deliberate test asset if useful, then continue
+  command-by-command review toward the first public `altium-cruncher` release;
 - current worktree still has unrelated fixture/config churn:
-  `tests/assets/projects/cricket-node/input/pcb-svg.json`,
+  `tests/assets/projects/cricket-node/input/cricket-node-hw__B.PcbDoc`,
   `tests/assets/projects/cricket-node/input/pcb-layer-step.json`,
+  `tests/assets/projects/cricket-node/input/pcb.svg.config.a0`,
   `tests/assets/projects/goomba/input/bom.config`,
   `tests/assets/projects/cutouts/reference_output/`, and the older dirty
-  `tests/assets/projects/cutouts/input/pcb-svg.json`. Keep those unstaged
+  `tests/assets/projects/cutouts/input/pcb-svg.json` plus
+  `tests/assets/projects/cutouts/input/pcb.svg.config.a0`. Keep those unstaged
   unless they are deliberately adopted later.
