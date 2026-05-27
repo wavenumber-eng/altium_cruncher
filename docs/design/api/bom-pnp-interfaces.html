@@ -31,11 +31,11 @@
     data-test-target="test_bom_pnp_config_parses_outputs_and_templates">
     <h2>BomPnpConfig</h2>
     <h3>Rationale</h3>
-    <p>BOM, PnP, and JLC output need one versioned config shape for aliases, variants, output kinds, and naming templates.</p>
+    <p>BOM, PnP, and JLC output need one versioned config shape for aliases, variants, output kinds, PnP position mode, and naming templates.</p>
     <h3>Purpose</h3>
     <p>Represents the shared JSON config contract consumed by the BOM/PnP command family.</p>
     <h3>Test Requirements</h3>
-    <p>Tests must cover parsing, default serialization, output kind validation, and configured output path resolution.</p>
+    <p>Tests must cover parsing, default serialization, output kind validation, PnP position mode selection, and configured output path resolution.</p>
     <h3>Working Definition</h3>
     <p>Working when a JSON-style mapping can select outputs, resolve paths, and round-trip into a deterministic template.</p>
   </section>
@@ -97,7 +97,7 @@
     <h3>Rationale</h3>
     <p>PnP output uses PCB placement data while sharing BOM-style parameter aliases.</p>
     <h3>Purpose</h3>
-    <p>Represents one normalized placement with units, layer, coordinate, rotation, and canonical fields.</p>
+    <p>Represents one normalized placement with units, selected PnP position mode, layer, coordinate, rotation, and canonical fields.</p>
     <h3>Test Requirements</h3>
     <p>Tests must cover top/bottom ordering, natural designator sorting, JLC CPL formatting, and JSON payload shape.</p>
     <h3>Working Definition</h3>

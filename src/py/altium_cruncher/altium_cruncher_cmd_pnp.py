@@ -7,6 +7,11 @@ import json
 import logging
 from pathlib import Path
 
+from altium_monkey.altium_pnp_position import (
+    PNP_POSITION_MODES,
+    normalize_pnp_position_mode,
+)
+
 from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
@@ -169,6 +174,7 @@ def _configured_pnp_artifacts(
     source: Path,
     variant: str | None,
     units: str,
+    position_mode: str,
     project_parameters: Mapping[str, TemplateValue],
     output_kinds: Sequence[str] | None = None,
     command: str = "pnp",
@@ -200,6 +206,7 @@ def _configured_pnp_artifacts(
             source=source,
             variant=variant,
             units=units,
+            position_mode=position_mode,
         )
         written.append(output_file)
     return written
@@ -214,6 +221,7 @@ def _write_configured_pnp_artifact(
     source: Path,
     variant: str | None,
     units: str,
+    position_mode: str,
 ) -> None:
     """Write one configured PnP artifact."""
     if output_kind == "json":
@@ -222,6 +230,7 @@ def _write_configured_pnp_artifact(
             source=source,
             variant=variant,
             units=units,
+            position_mode=position_mode,
             layer_order=config.layer_order,
             prefix_order=config.prefix_order,
         )
@@ -276,6 +285,7 @@ def _write_legacy_pnp_output(
     output_format: str,
     variant: str | None,
     units: str,
+    position_mode: str,
 ) -> Path:
     """Write one legacy single-format PnP output and return its path."""
     ext = _pnp_output_extension(output_format)
@@ -289,6 +299,7 @@ def _write_legacy_pnp_output(
             source=input_file,
             variant=variant,
             units=units,
+            position_mode=position_mode,
         )
         output_file.write_text(json.dumps(output_data, indent=2), encoding="utf-8")
         return output_file
@@ -367,6 +378,9 @@ def cmd_pnp(args) -> int:
     warn_for_unknown_variants(log, variants_to_process, available_variants)
 
     units = getattr(args, "units", None) or config.pnp_units
+    position_mode = normalize_pnp_position_mode(
+        getattr(args, "position_mode", None) or config.pnp_position_mode
+    )
     exclude_no_bom = (
         getattr(args, "exclude_no_bom", False) or config.pnp_exclude_no_bom
     )
@@ -387,7 +401,12 @@ def cmd_pnp(args) -> int:
     files_written = 0
     for var in variants_to_process:
         try:
-            pnp = design.to_pnp(variant=var, units=units, exclude_no_bom=exclude_no_bom)
+            pnp = design.to_pnp(
+                variant=var,
+                units=units,
+                position_mode=position_mode,
+                exclude_no_bom=exclude_no_bom,
+            )
         except ValueError as e:
             log.error(f"PnP generation failed: {e}")
             return 1
@@ -400,6 +419,7 @@ def cmd_pnp(args) -> int:
                 source=input_file,
                 variant=var,
                 units=units,
+                position_mode=position_mode,
                 project_parameters=project_parameters,
             )
             files_written += len(written)
@@ -412,6 +432,7 @@ def cmd_pnp(args) -> int:
                 output_format=output_format,
                 variant=var,
                 units=units,
+                position_mode=position_mode,
             )
             files_written += 1
             output_names = output_file.name
@@ -438,6 +459,7 @@ def register_parser(subparsers):
         "  altium-cruncher pnp project.PrjPcb --variant V1   # Single variant\n"
         "  altium-cruncher pnp project.PrjPcb --all-variants # All variants\n"
         "  altium-cruncher pnp project.PrjPcb --units mils   # Use mils instead of mm\n"
+        "  altium-cruncher pnp project.PrjPcb --position-mode component-origin\n"
         "  altium-cruncher pnp project.PrjPcb --format json  # JSON output\n"
         "  altium-cruncher pnp project.PrjPcb --format xlsx\n"
         "  altium-cruncher pnp project.PrjPcb --format jlc-cpl\n"
@@ -491,6 +513,12 @@ def register_parser(subparsers):
         choices=["mm", "mils"],
         default=None,
         help="coordinate units (default: config value or mm)",
+    )
+    pnp_parser.add_argument(
+        "--position-mode",
+        choices=list(PNP_POSITION_MODES),
+        default=None,
+        help="placement position mode (default: config value or altium-pick-place)",
     )
     pnp_parser.add_argument(
         "--exclude-no-bom",

@@ -99,15 +99,6 @@ LOZ_OLD_MAN_BASE = BomPnpOracleCase(
     expect_exact_pnp=True,
 )
 ORACLE_CASES = (NODE_TEST_ARRAY_B4, LOZ_OLD_MAN_BASE)
-PNP_COORDINATE_EXCEPTIONS: dict[str, frozenset[str]] = {
-    # Current altium_monkey placement centers differ from Altium PNP-METRIC
-    # oracle centers for these through-hole or complex-origin footprints.
-    # The test allows these known deltas but still blocks new unexpected ones.
-    "node_test_array": frozenset({"J2_1", "J2_2", "J2_3", "J2_4"}),
-    "loz-old-man": frozenset(
-        {"ENC1", "J1", "J2", "J5", "J7", "J8", "J13", "U21", "U22"}
-    ),
-}
 PNP_COORDINATE_TOLERANCE_MM = 0.001
 
 
@@ -272,6 +263,7 @@ def test_pnp_json_matches_altium_metric_oracle_core_geometry(tmp_path: Path) -> 
         payload = json.loads(payload_path.read_text(encoding="utf-8"))
         assert payload["schema"] == "wn.altium_cruncher.pnp.v1"
         assert payload["units"] == "mm"
+        assert payload["position_mode"] == "altium-pick-place"
 
         oracle_by_designator = {
             row["Designator"]: row for row in _pnp_rows(case.pnp_csv)
@@ -303,7 +295,7 @@ def test_pnp_json_matches_altium_metric_oracle_core_geometry(tmp_path: Path) -> 
             ):
                 coordinate_mismatches.add(str(placement["designator"]))
 
-        assert coordinate_mismatches <= PNP_COORDINATE_EXCEPTIONS[case.name]
+        assert coordinate_mismatches == set()
 
 
 def test_jlc_command_writes_paired_outputs_for_primary_fixtures(tmp_path: Path) -> None:

@@ -6,6 +6,11 @@ import argparse
 import logging
 from pathlib import Path
 
+from altium_monkey.altium_pnp_position import (
+    PNP_POSITION_MODES,
+    normalize_pnp_position_mode,
+)
+
 from altium_cruncher.altium_cruncher_cmd_bom import (
     _bom_from_configured_source,
     _configured_bom_artifacts,
@@ -24,10 +29,18 @@ from altium_cruncher.bom_pnp_cli_common import (
 )
 from altium_cruncher.bom_pnp_model import (
     BOM_PNP_DEFAULT_CONFIG_NAME,
+    BomPnpConfig,
     select_variant_names,
 )
 
 log = logging.getLogger(__name__)
+
+
+def _position_mode_arg(args: argparse.Namespace, config: BomPnpConfig) -> str:
+    """Return the effective PnP position mode for JLC CPL output."""
+    return normalize_pnp_position_mode(
+        getattr(args, "position_mode", None) or config.pnp_position_mode
+    )
 
 
 def cmd_jlc(args: argparse.Namespace) -> int:
@@ -54,6 +67,7 @@ def cmd_jlc(args: argparse.Namespace) -> int:
 
     config, _config_path = load_optional_bom_pnp_config(getattr(args, "config", None))
     units = getattr(args, "units", None) or config.pnp_units
+    position_mode = _position_mode_arg(args, config)
     option_error = _pnp_format_option_error("jlc-cpl", units)
     if option_error:
         log.error(option_error)
@@ -79,6 +93,7 @@ def cmd_jlc(args: argparse.Namespace) -> int:
         pnp = design.to_pnp(
             variant=variant,
             units=units,
+            position_mode=position_mode,
             exclude_no_bom=exclude_no_bom,
         )
         bom_files = _configured_bom_artifacts(
@@ -98,6 +113,7 @@ def cmd_jlc(args: argparse.Namespace) -> int:
             source=input_file,
             variant=variant,
             units=units,
+            position_mode=position_mode,
             project_parameters=project_parameters,
             output_kinds=("jlc-cpl",),
             command="jlc",
@@ -147,6 +163,7 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         "  altium-cruncher jlc project.PrjPcb\n"
         "  altium-cruncher jlc project.PrjPcb --variant B4\n"
         "  altium-cruncher jlc project.PrjPcb --all-variants\n"
+        "  altium-cruncher jlc project.PrjPcb --position-mode component-origin\n"
         "  altium-cruncher jlc project.PrjPcb --config bom.config\n"
         "  altium-cruncher jlc --write-config bom.config",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -186,6 +203,12 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         choices=["mm", "mils"],
         default=None,
         help="coordinate units (JLC CPL requires mm)",
+    )
+    parser.add_argument(
+        "--position-mode",
+        choices=list(PNP_POSITION_MODES),
+        default=None,
+        help="placement position mode (default: config value or altium-pick-place)",
     )
     parser.add_argument(
         "--exclude-no-bom",

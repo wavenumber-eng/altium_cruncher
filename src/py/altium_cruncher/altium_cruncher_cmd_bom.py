@@ -69,6 +69,7 @@ class _BomDesign(Protocol):
         variant: str | None = None,
         units: str = "mm",
         exclude_no_bom: bool = False,
+        position_mode: str = "altium-pick-place",
     ) -> Sequence[object]:
         """Return PCB-sourced placement entries."""
         ...
@@ -345,6 +346,7 @@ def _bom_from_configured_source(
         pnp_entries = design.to_pnp(
             variant=variant,
             units="mm",
+            position_mode=config.pnp_position_mode,
             exclude_no_bom=True,
         )
         return [_pnp_entry_to_bom_dict(entry) for entry in pnp_entries]

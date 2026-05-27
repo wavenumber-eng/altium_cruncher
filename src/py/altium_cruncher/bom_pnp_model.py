@@ -8,6 +8,13 @@ import json
 from pathlib import Path
 import re
 
+from altium_monkey.altium_pnp_position import (
+    PNP_POSITION_MODE_ALTIUM_PICK_PLACE,
+    PNP_POSITION_MODES,
+    PnpPositionMode,
+    normalize_pnp_position_mode,
+)
+
 from altium_cruncher.output_path_templates import (
     TemplateValue,
     resolve_output_name,
@@ -68,6 +75,7 @@ _BOM_OUTPUT_KINDS = frozenset(
 )
 _PNP_OUTPUT_KINDS = frozenset({"json", "csv", "xlsx", "jlc-cpl"})
 _BOM_SOURCE_MODES = frozenset({"schematic", "pcb", "merged"})
+_PNP_POSITION_MODES = frozenset(PNP_POSITION_MODES)
 _DNP_PLACEMENTS = frozenset({"inline", "end", "separate"})
 _VARIANT_MODES = frozenset({"base", "all", "named"})
 
@@ -184,6 +192,7 @@ class BomPnpConfig:
     pnp_outputs: tuple[str, ...] = ("json", "csv")
     pnp_output_fields: tuple[str, ...] = PNP_DEFAULT_COLUMNS
     pnp_units: str = "mm"
+    pnp_position_mode: PnpPositionMode = PNP_POSITION_MODE_ALTIUM_PICK_PLACE
     pnp_exclude_no_bom: bool = False
     layer_order: tuple[str, ...] = ("top", "bottom")
     prefix_order: tuple[str, ...] = ()
@@ -272,6 +281,7 @@ class BomPnpConfig:
                 frozenset({"mm", "mils"}),
                 "PnP units",
             ),
+            pnp_position_mode=_pnp_position_mode_from_config(pnp),
             pnp_exclude_no_bom=_bool_value(
                 pnp.get("exclude_no_bom"),
                 default=False,
@@ -322,6 +332,7 @@ class BomPnpConfig:
                 "outputs": list(self.pnp_outputs),
                 "output_fields": list(self.pnp_output_fields),
                 "units": self.pnp_units,
+                "position_mode": self.pnp_position_mode,
                 "exclude_no_bom": self.pnp_exclude_no_bom,
                 "layer_order": list(self.layer_order),
                 "prefix_order": list(self.prefix_order),
@@ -349,6 +360,16 @@ def load_bom_pnp_config(path: Path) -> BomPnpConfig:
     if not isinstance(payload, Mapping):
         raise ValueError(f"BOM/PnP config must be a JSON object: {path}")
     return BomPnpConfig.from_mapping(payload)
+
+
+def _pnp_position_mode_from_config(pnp: Mapping[str, object]) -> PnpPositionMode:
+    """Return the configured PnP position mode."""
+    raw_mode = _string_value(
+        pnp.get("position_mode") or PNP_POSITION_MODE_ALTIUM_PICK_PLACE
+    )
+    return normalize_pnp_position_mode(
+        _choice(raw_mode, _PNP_POSITION_MODES, "PnP position mode")
+    )
 
 
 def write_bom_pnp_config(
@@ -756,6 +777,7 @@ def pnp_payload(
     source: Path,
     variant: str | None,
     units: str,
+    position_mode: str = PNP_POSITION_MODE_ALTIUM_PICK_PLACE,
     layer_order: Sequence[str] = ("top", "bottom"),
     prefix_order: Sequence[str] = (),
 ) -> dict[str, object]:
@@ -765,6 +787,7 @@ def pnp_payload(
         "source": _source_payload(source),
         "variant": variant,
         "units": units,
+        "position_mode": normalize_pnp_position_mode(position_mode),
         "placement_count": len(placements),
         "placements": [
             placement.to_json_obj()

@@ -1034,12 +1034,11 @@ Preferred shape:
      root help points to command-specific help.
    - Active execution slice: BOM/PnP shared normalization, rich JSON config,
      JLC paired output, fixture notes, and oracle-backed tests are committed.
-     Next work is blocked on the upstream `altium-monkey==2026.5.26` PnP
-     position-mode release. Altium Monkey will own the Altium-compatible
-     PNP-METRIC placement calculation and the explicit `component-origin`
-     alternate mode; after that release, `altium-cruncher` should consume the
-     public package and remove any local assumptions about placement centers
-     before continuing to extract/IntLib.
+     The upstream `altium-monkey==2026.5.26` PnP position-mode release is now
+     consumed by `altium-cruncher`; PnP and JLC expose the documented
+     `altium-pick-place` default plus explicit `component-origin` override
+     through CLI/config rather than carrying local placement-center
+     assumptions.
    - Enforce manifest/test/doc coverage.
    - Add `L99_signoff` and package build/install tests.
 
@@ -1089,7 +1088,11 @@ Current local status:
   - `29834dc Add BOM PnP fixture oracle notes`;
   - `0af8245 Ignore Altium transient project folders`;
   - `5c4181f Complete BOM PnP config workflows`;
-- full `pytest` with the EasyEDA extra passes locally: 117 passed, 2 skipped;
+- current active slice consumes `altium-monkey==2026.5.26`, exposes
+  `pnp.position_mode` plus `--position-mode`, and removes the stale PNP-METRIC
+  coordinate exception list;
+- full `pytest` passes locally: 124 passed, 2 skipped;
+- focused EasyEDA optional tests pass locally with the extra: 44 passed;
 - built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
 - `ruff` is clean and `py_signoff` is clean; pyright remains an explicit
@@ -1115,25 +1118,28 @@ Current local status:
 - BOM/PnP oracle tests now exercise `node_test_array` and `loz-old-man`:
   raw BOM JSON is checked against Altium XML-BOM designators and key fields,
   normalized PnP JSON is checked against Altium PNP-METRIC side/rotation/core
-  coordinates. Current known coordinate exceptions are expected to be retired
-  after `altium-cruncher` consumes `altium-monkey==2026.5.26`, where
-  `altium-pick-place` is the documented default and `component-origin` is the
-  explicit alternate mode. Paired JLC BOM/CPL generation is checked;
+  coordinates with no coordinate exception list. `altium-pick-place` is the
+  documented default and `component-origin` is the explicit alternate mode.
+  Paired JLC BOM/CPL generation is checked;
 - fixture layout notes live in `docs/design/test-assets.html` and
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;
 - generated review artifacts for inspection are under
   `output/bom_pnp_jlc`;
 - latest targeted validation:
+  - `uv run --extra test pytest -q`: 124 passed, 2 skipped;
   - `uv run --extra test pytest tests\L3_public_workflows -q`: 13 passed,
     1 skipped;
   - `uv run --extra test rack run --all`: 38 passed, 1 skipped;
-  - `uv run --extra test pyright tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
+  - `uv run --extra test pyright src\py\altium_cruncher\bom_pnp_model.py src\py\altium_cruncher\altium_cruncher_cmd_pnp.py src\py\altium_cruncher\altium_cruncher_cmd_jlc.py src\py\altium_cruncher\altium_cruncher_cmd_bom.py tests\test_bom_pnp_model.py tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
     0 errors;
-  - `uv run --extra test ruff check docs tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
+  - `uv run --extra test ruff check .`:
     clean;
   - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json`:
     0 findings;
+  - `uv run --extra test python -m build`: built wheel and sdist;
+  - `uv run --extra test twine check dist\*`: passed;
+  - `uv run --extra test python tests\support_scripts\install_test.py`: passed;
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;

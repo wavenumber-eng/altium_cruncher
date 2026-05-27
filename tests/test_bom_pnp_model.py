@@ -180,6 +180,7 @@ def test_pnp_normalization_and_jlc_cpl_rows_sort_top_before_bottom() -> None:
         },
     ]
     assert payload["schema"] == "wn.altium_cruncher.pnp.v1"
+    assert payload["position_mode"] == "altium-pick-place"
     assert payload["placement_count"] == 2
     payload_placements = cast(list[dict[str, object]], payload["placements"])
     assert payload_placements[0]["designator"] == "R2"
@@ -217,6 +218,7 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
             "pnp": {
                 "outputs": ["json", "xlsx", "jlc-cpl"],
                 "layer_order": ["bottom", "top"],
+                "position_mode": "component-origin",
             },
             "output": {
                 "dir_template": "{Command}/{VariantName}",
@@ -239,6 +241,7 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
     assert config.schema == BOM_PNP_CONFIG_SCHEMA
     assert config.bom_outputs == ("raw-json", "grouped-xlsx", "jlc-csv")
     assert config.pnp_outputs == ("json", "xlsx", "jlc-cpl")
+    assert config.pnp_position_mode == "component-origin"
     assert select_variant_names(["A", "B4"], config) == ["B4"]
     assert output == tmp_path / "bom" / "B4" / "Project_175_TEST_grouped-xlsx.xlsx"
 

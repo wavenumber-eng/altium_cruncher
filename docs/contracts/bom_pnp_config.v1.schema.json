@@ -71,6 +71,7 @@
         },
         "output_fields": {"type": "array", "items": {"type": "string"}},
         "units": {"enum": ["mm", "mils"]},
+        "position_mode": {"enum": ["altium-pick-place", "component-origin"]},
         "exclude_no_bom": {"type": "boolean"},
         "layer_order": {"type": "array", "items": {"type": "string"}},
         "prefix_order": {"type": "array", "items": {"type": "string"}}
