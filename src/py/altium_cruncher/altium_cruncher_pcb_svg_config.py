@@ -879,6 +879,12 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             ],
             mirror=False,
             assembly_hlr_mode="simple",
+            styles={
+                "assembly_hlr": {
+                    "include_visible": False,
+                    "include_outline": True,
+                }
+            },
             description="Top copper with pin-1 overlay",
         ),
         PcbSvgViewConfig(
@@ -895,6 +901,12 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             ],
             mirror=True,
             assembly_hlr_mode="simple",
+            styles={
+                "assembly_hlr": {
+                    "include_visible": False,
+                    "include_outline": True,
+                }
+            },
             description="Bottom copper with pin-1 overlay",
         ),
     ]

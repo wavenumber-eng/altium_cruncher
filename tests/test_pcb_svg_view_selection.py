@@ -94,6 +94,12 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     ]
     assert top_pin1_view["assembly_hlr_mode"] == "simple"
     assert bottom_pin1_view["assembly_hlr_mode"] == "simple"
+    top_pin1_styles = cast(dict[str, dict[str, object]], top_pin1_view["styles"])
+    bottom_pin1_styles = cast(dict[str, dict[str, object]], bottom_pin1_view["styles"])
+    assert top_pin1_styles["assembly_hlr"]["include_visible"] is False
+    assert top_pin1_styles["assembly_hlr"]["include_outline"] is True
+    assert bottom_pin1_styles["assembly_hlr"]["include_visible"] is False
+    assert bottom_pin1_styles["assembly_hlr"]["include_outline"] is True
     assert top_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
     assert bottom_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
 
@@ -511,6 +517,62 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_a1_pad_and_through_hole() -> None:
     assert 'data-component-designator="J2"' in svg
     assert 'data-primitive="pad-hole"' in svg
     assert 'data-component-designator="TP1"' not in svg
+
+
+def test_pcb_svg_pin1_view_renders_non_plated_zero_annulus_holes() -> None:
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    pcbdoc.add_component(
+        designator="J1",
+        footprint="HDR",
+        position_mils=(100.0, 100.0),
+        layer="TOP",
+    )
+    plated = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(100.0, 100.0),
+        width_mils=55.0,
+        height_mils=55.0,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=28.0,
+        plated=True,
+    )
+    non_plated = pcbdoc.add_pad(
+        designator="M1",
+        position_mils=(160.0, 100.0),
+        width_mils=0.0,
+        height_mils=0.0,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=40.0,
+        plated=False,
+    )
+    plated.component_index = 0
+    non_plated.component_index = 0
+    config = PcbSvgConfig.default()
+    view = PcbSvgViewConfig(
+        name="pin1",
+        group_id="pcb-svg-view-pin1",
+        layers=["BOARD_OUTLINE", "TOP", "DRILLS", "PIN1_TOP"],
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-layer-key="DRILLS"' in svg
+    assert 'data-pad-designator="M1"' in svg
+    assert 'data-hole-plating="non-plated"' in svg
+    assert 'fill="#ADD8E6"' in svg
 
 
 def test_pcb_svg_pin1_layer_honors_disabled_component_override() -> None:

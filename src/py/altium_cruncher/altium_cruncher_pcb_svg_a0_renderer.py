@@ -1775,9 +1775,6 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 continue
             if not pad._should_render_on_layer(layer):  # noqa: SLF001
                 continue
-            width_iu, height_iu = pad._layer_size(layer)  # noqa: SLF001
-            if width_iu <= 0 or height_iu <= 0:
-                continue
             color = _style_plating_color(
                 styles,
                 style_name,
