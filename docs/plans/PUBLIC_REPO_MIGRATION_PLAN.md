@@ -386,9 +386,16 @@ Pin-1 and diode behavior:
 
 Metadata requirements:
 
+- the baseline embedded metadata payload should reuse the existing
+  `AltiumDesign.to_json()` serialization shape wherever project context is
+  available. Do not fork a separate SVG-only project/component/netlist schema
+  unless a field is genuinely SVG-specific;
 - component SVG metadata should include all available component parameters,
   description/comment fields, designator, side, DNP state, projection mode,
   diode detection result, and selected pin/cathode marker source;
+- SVG-specific metadata should layer on top of the design JSON with generated
+  view ids, group ids, canvas transform, source-to-SVG coordinate policy,
+  projection mode decisions, and virtual-layer decisions;
 - the command should print a concise INFO summary of diode auto-detections and
   projection fallbacks, with DEBUG detail for individual parsing decisions.
 
