@@ -47,6 +47,7 @@ ownership links are missing.
 
 Commands with config files or stable machine-readable output need contracts
 under `docs/contracts/` and conformance tests before the command is release-ready.
-Generated JSON remains the default config format for now because it is easy to
-parse and validate. Human guidance belongs in the design doc and schema
-descriptions rather than comments inside generated JSON.
+Generated configs remain strict JSON by default because that is easy to parse
+and validate. Command config readers may accept JSONC comments and trailing
+commas for hand-edited files, but durable contracts and checked-in schema
+examples remain strict JSON.

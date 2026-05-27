@@ -18,6 +18,7 @@ from altium_cruncher.altium_cruncher_pcb_layer_step import (
     PcbLayerStepConfig,
     PcbLayerStepOptions,
     export_pcb_layer_step,
+    load_pcb_layer_step_config,
     resolve_pcb_layer_selector,
     _sample_svg_arc_points_mils,
     _svg_like_board_sweep_degrees,
@@ -78,6 +79,24 @@ def test_pcb_layer_step_options_merge_config_with_cli_overrides() -> None:
     assert options.include_board_outline is False
     assert options.fuse_copper is False
     assert options.fuse_board_outline is False
+
+
+def test_pcb_layer_step_config_loader_accepts_jsonc(tmp_path) -> None:
+    """Load editable layer STEP configs with comments and trailing commas."""
+    config_path = tmp_path / "pcb-layer-step.json"
+    config_path.write_text(
+        """
+        {
+          "schema": "wn.altium_cruncher.pcb_layer_step.config.v1",
+          "layer": "top", // temporarily switch layer while inspecting output
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    config = load_pcb_layer_step_config(config_path)
+
+    assert config.layer == "top"
 
 
 def test_pcb_layer_step_input_resolution_accepts_pcbdoc_and_prjpcb(tmp_path) -> None:

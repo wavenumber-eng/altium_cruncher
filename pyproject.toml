@@ -11,6 +11,7 @@ authors = [
 dependencies = [
     "altium-monkey>=2026.5.26",
     "colorama>=0.4.6",
+    "json-with-comments>=1.2.10",
     "openpyxl>=3.1.0",
     "wn-geometer==2026.5.25",
 ]

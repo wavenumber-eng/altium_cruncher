@@ -24,6 +24,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgViewConfig,
     parse_pcb_layer_selector,
 )
+from altium_cruncher.config_json import load_json_config
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def _write_default_pcb_svg_config(config_path: Path) -> None:
 
 def _load_pcb_svg_config(config_path: Path) -> PcbSvgConfig:
     try:
-        raw_data = json.loads(config_path.read_text(encoding="utf-8"))
+        raw_data = load_json_config(config_path)
     except Exception as exc:
         raise ValueError(f"Failed to parse pcb-svg config '{config_path}': {exc}") from exc
     return PcbSvgConfig.from_dict(raw_data)
@@ -298,7 +299,7 @@ def add_pcb_svg_option_arguments(
         "--config",
         type=Path,
         help=(
-            f"path to {PCB_SVG_CONFIG_SCHEMA} JSON config. If omitted, pcb-svg "
+            f"path to {PCB_SVG_CONFIG_SCHEMA} JSON/JSONC config. If omitted, pcb-svg "
             f"uses {PCB_SVG_CONFIG_FILENAME} next to each input file, creating "
             "a template when missing."
         ),

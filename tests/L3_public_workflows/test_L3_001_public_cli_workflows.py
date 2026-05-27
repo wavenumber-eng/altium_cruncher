@@ -181,7 +181,7 @@ def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Pa
     """Exercise pcb-svg against a copied public PcbDoc and explicit config."""
     pcbdoc = tmp_path / "board.PcbDoc"
     shutil.copy2(HYDROSCOPE_PCBDOC, pcbdoc)
-    config = tmp_path / "pcb.svg.config.a0"
+    config = tmp_path / "pcb.svg.config"
     config.write_text(
         json.dumps(
             {
@@ -224,7 +224,7 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
     """Exercise assembly top/bottom SVG views with geometer-backed HLR enabled."""
     pcbdoc = tmp_path / "board.PcbDoc"
     shutil.copy2(HYDROSCOPE_PCBDOC, pcbdoc)
-    config = tmp_path / "pcb.svg.config.a0"
+    config = tmp_path / "pcb.svg.config"
     config.write_text(
         json.dumps(
             {
@@ -281,7 +281,7 @@ def test_pcb_svg_copper_polygon_style_colors_shape_based_regions(
     tmp_path: Path,
 ) -> None:
     """Verify A0 copper polygon color applies to linked shape-based regions."""
-    config = tmp_path / "pcb.svg.config.a0"
+    config = tmp_path / "pcb.svg.config"
     config.write_text(
         json.dumps(
             {
@@ -328,7 +328,7 @@ def test_pcb_svg_copper_polygon_style_colors_shape_based_regions(
 
 def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
     """Exercise the cutout fixture with dashed outlines and configured hashes."""
-    config = tmp_path / "pcb.svg.config.a0"
+    config = tmp_path / "pcb.svg.config"
     config.write_text(
         json.dumps(
             {

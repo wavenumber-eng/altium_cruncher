@@ -66,7 +66,9 @@ SVG command family notes:
 - `pcb-svg` has fixture-backed assembly-view coverage with HLR/geometer using
   Hydroscope embedded STEP models, while the normal layer-output test remains
   in place so HLR work cannot regress layer SVG output;
-- `pcb-svg` uses `pcb.svg.config.a0`; individual layer outputs are separate
+- `pcb-svg` uses `pcb.svg.config`; user config files may contain JSONC
+  comments and trailing commas, while contracts remain strict JSON. Individual
+  layer outputs are separate
   from composed views, and composed views have explicit layer tokens, durable
   group ids, and output SVG paths;
 - synthetic layer tokens include `BOARD_OUTLINE`, `BOARD_CUTOUTS`, `DRILLS`,

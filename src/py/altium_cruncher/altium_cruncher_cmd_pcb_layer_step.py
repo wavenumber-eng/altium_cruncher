@@ -237,7 +237,7 @@ def register_parser(subparsers):
         "--config",
         type=Path,
         help=(
-            "path to pcb-layer-step JSON config. "
+            "path to pcb-layer-step JSON/JSONC config. "
             f"If omitted, pcb-layer-step looks for {PCB_LAYER_STEP_CONFIG_FILENAME} "
             "next to each input file; if missing, it creates a template and uses defaults."
         ),

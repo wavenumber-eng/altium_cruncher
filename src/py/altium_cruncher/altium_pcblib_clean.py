@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+from altium_cruncher.config_json import load_json_config
 
 PCBLIB_CLEAN_CONFIG_SCHEMA_V1 = "wn.altium.pcblib.clean.config.v1"
 DEFAULT_PCBLIB_CLEAN_CONFIG_FILENAME = "altium-pcblib-clean.json"
@@ -228,8 +228,8 @@ class PcbLibCleanConfig:
     def from_file(cls, path: str | Path) -> PcbLibCleanConfig:
         config_path = Path(path)
         try:
-            raw = json.loads(config_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
+            raw = load_json_config(config_path)
+        except Exception as exc:
             raise ValueError(f"Invalid JSON in PcbLib clean config: {config_path}: {exc}") from exc
         return cls.from_dict(raw)
 

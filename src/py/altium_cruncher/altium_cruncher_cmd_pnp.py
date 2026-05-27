@@ -516,7 +516,7 @@ def register_parser(subparsers):
     pnp_parser.add_argument(
         "--config",
         type=Path,
-        help="BOM/PnP JSON config (default: ./bom.config if present)",
+        help="BOM/PnP JSON/JSONC config (default: ./bom.config if present)",
     )
     pnp_parser.add_argument(
         "--write-config",

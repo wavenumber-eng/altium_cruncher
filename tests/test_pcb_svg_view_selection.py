@@ -9,6 +9,7 @@ from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     PcbSvgConfig,
     _apply_pcb_layer_selection,
     _apply_pcb_view_selection,
+    _load_pcb_svg_config,
     _resolve_view_render_settings,
     resolve_pcb_svg_configs,
 )
@@ -30,7 +31,7 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     views = cast(list[dict[str, object]], payload["views"])
 
     assert payload["schema"] == PCB_SVG_CONFIG_SCHEMA
-    assert PCB_SVG_CONFIG_FILENAME == "pcb.svg.config.a0"
+    assert PCB_SVG_CONFIG_FILENAME == "pcb.svg.config"
     assert layer_outputs["enabled"] is True
     assert "BOARD_CUTOUTS" in cast(list[str], layer_outputs["include_special_layers"])
     top_view = next(view for view in views if view["name"] == "top_view")
@@ -139,6 +140,31 @@ def test_pcb_svg_cli_overrides_created_default_config(tmp_path) -> None:
 def test_pcb_svg_rejects_v1_config() -> None:
     with pytest.raises(ValueError, match="Unsupported pcb-svg config schema"):
         PcbSvgConfig.from_dict({"schema": "wn.pcb.svg.config.v1"})
+
+
+def test_pcb_svg_config_loader_accepts_jsonc(tmp_path) -> None:
+    """Load hand-edited PCB SVG configs with comments and trailing commas."""
+    config_path = tmp_path / "pcb.svg.config"
+    config_path.write_text(
+        """
+        {
+          // users often toggle views while testing generated output
+          "schema": "pcb.svg.config.a0",
+          "views": [
+            {
+              "name": "cutouts",
+              "layers": ["BOARD_OUTLINE", "BOARD_CUTOUTS",],
+            },
+          ],
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    config = _load_pcb_svg_config(config_path)
+
+    assert config.views[0].name == "cutouts"
+    assert config.views[0].layers == ["BOARD_OUTLINE", "BOARD_CUTOUTS"]
 
 
 def test_pcb_svg_view_style_override_merges_with_global() -> None:

@@ -85,8 +85,9 @@ The current migrated command set includes:
 `pcb-svg` includes normal layer SVG output, top/bottom assembly SVG views with
 geometer-backed HLR projection of embedded STEP models, and an optional
 synthetic `BOARD_CUTOUTS` layer for board-profile cutouts. The A0 PCB SVG
-config defaults to a board-outline canvas so SVGs open tightly around the
-board while metadata preserves Altium-coordinate placement and transform data.
+config uses `pcb.svg.config` by default and fits SVGs tightly around the board
+outline while metadata preserves Altium-coordinate placement and transform data.
+User-editable config files may use JSONC comments and trailing commas.
 
 Compact JSON output is a core direction for machine-consumable Altium design
 data, but the first standalone milestone prioritizes command parity and

@@ -15,6 +15,8 @@ from altium_monkey.altium_pcb_enums import PadShape
 from altium_monkey.altium_record_types import PcbLayer
 from altium_monkey.altium_svg_arc_helpers import choose_svg_sweep_flag_for_center
 
+from altium_cruncher.config_json import load_json_config
+
 log = logging.getLogger(__name__)
 
 MIL_TO_MM = 0.0254
@@ -297,9 +299,9 @@ def write_default_pcb_layer_step_config(config_path: Path) -> None:
 
 
 def load_pcb_layer_step_config(config_path: Path) -> PcbLayerStepConfig:
-    """Load a pcb-layer-step JSON config."""
+    """Load a pcb-layer-step JSON or JSONC config."""
     try:
-        raw_data = json.loads(config_path.read_text(encoding="utf-8"))
+        raw_data = load_json_config(config_path)
     except Exception as exc:
         raise ValueError(f"Failed to parse pcb-layer-step config '{config_path}': {exc}") from exc
     return PcbLayerStepConfig.from_dict(raw_data)
@@ -1254,15 +1256,22 @@ def _via_diameter_iu(via: Any, layer: PcbLayer) -> int:
 def _pad_corner_radius_percent(pad: Any, layer: PcbLayer) -> int:
     idx = layer.value - 1
     corner_radius = getattr(pad, "corner_radius", []) or []
-    if 0 <= idx < len(corner_radius) and int(corner_radius[idx] or 0) > 0:
-        return int(corner_radius[idx])
-    return int(getattr(pad, "corner_radius_percentage", 0) or 0)
+    corner_value = 0
+    if 0 <= idx < len(corner_radius):
+        raw_corner = corner_radius[idx]
+        corner_value = int(0 if raw_corner is None else raw_corner)
+    if corner_value > 0:
+        return corner_value
+    raw_percentage = getattr(pad, "corner_radius_percentage", 0)
+    return int(0 if raw_percentage is None else raw_percentage)
 
 
 def _is_poured_polygon_primitive(primitive: Any) -> bool:
     if bool(getattr(primitive, "is_polygon_outline", False)):
         return True
     polygon_index = getattr(primitive, "polygon_index", None)
+    if polygon_index is None:
+        return False
     try:
         polygon_index_int = int(polygon_index)
     except (TypeError, ValueError):

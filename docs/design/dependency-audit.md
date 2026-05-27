@@ -1,7 +1,7 @@
 # Dependency Audit
 
 Status: initial audit
-Last updated: 2026-05-26
+Last updated: 2026-05-27
 
 ## Purpose
 
@@ -16,6 +16,11 @@ before the standalone `altium-cruncher` repo fully replaces the private
   hand-written OpenXML as the command grows support for DNP row highlighting,
   text-preserved package fields such as `0603`, freeze panes, and future review
   formatting.
+- `json-with-comments` is an intentional small runtime dependency for
+  user-editable command configs. It accepts normal JSON plus JSONC comments and
+  trailing commas so users can temporarily disable config sections while
+  comparing output. Generated artifacts and checked-in contract examples remain
+  strict JSON.
 
 ## Toolz
 

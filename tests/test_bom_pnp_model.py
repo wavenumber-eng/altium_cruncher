@@ -300,10 +300,15 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
 
 
 def test_bom_pnp_config_loader_accepts_utf8_bom(tmp_path: Path) -> None:
-    """Load configs written by Windows tools that include a UTF-8 BOM."""
+    """Load Windows-written configs and hand-edited JSONC syntax."""
     config_path = tmp_path / "bom.config"
     config_path.write_text(
-        '{"schema": "wn.altium_cruncher.bom.config.v1"}',
+        """
+        {
+          // user notes are allowed in editable config files
+          "schema": "wn.altium_cruncher.bom.config.v1",
+        }
+        """,
         encoding="utf-8-sig",
     )
 

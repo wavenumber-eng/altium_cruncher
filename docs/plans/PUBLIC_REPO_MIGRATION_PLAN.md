@@ -1,7 +1,7 @@
 # Altium Cruncher Public Repo Migration Plan
 
 Status: bootstrap in progress
-Last updated: 2026-05-26
+Last updated: 2026-05-27
 
 ## Goal
 
@@ -410,6 +410,8 @@ Required config behavior:
 
 - use a JSON config with an explicit schema/type field such as
   `wn.altium_cruncher.bom.config.v1`;
+- user-editable config files may use JSONC comments and trailing commas;
+  generated contracts and checked-in schema examples stay strict JSON;
 - auto-generate `bom.config` in the working folder when no config exists;
 - accept `--config <path>` so a project can keep multiple BOM configs;
 - look for the default config name when `--config` is omitted;
@@ -1138,7 +1140,8 @@ Current local status:
 - fixture layout notes live in `docs/design/test-assets.html` and
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;
-- `pcb-svg` now uses the experimental explicit `pcb.svg.config.a0` contract
+- `pcb-svg` now uses the experimental explicit `pcb.svg.config` user config
+  file with the `pcb.svg.config.a0` contract
   rather than the early shortcut-based config. The default config separates
   individual `layer_outputs` from composed `views[]`, gives each view a durable
   SVG group id and output path, and uses the view `layers` array as draw order.
@@ -1187,16 +1190,19 @@ Current local status:
 - macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
   tracked in `wavenumber-eng/geometer#2`; this is not a BOM/PnP logic blocker,
   but it must be closed before final `altium-cruncher` release signoff.
-- active work is paused for an `altium_monkey` PcbDoc authoring API detour.
-  The expected return point is PCB-SVG A0 review: adopt Eli's cricket-node
-  cutout fixture change as a deliberate test asset if useful, then continue
-  command-by-command review toward the first public `altium-cruncher` release;
+- the `altium_monkey` PcbDoc/PcbLib authoring API detour is complete on
+  `toolz` `origin/dev` at `16dee303`, with Python and native C++ parity for
+  explicit PcbLib mask/paste expansion and text authoring options. Active
+  `altium-cruncher` work has resumed at PCB-SVG A0 review: adopt Eli's
+  cricket-node cutout fixture change as a deliberate test asset if useful,
+  then continue command-by-command review toward the first public
+  `altium-cruncher` release;
 - current worktree still has unrelated fixture/config churn:
   `tests/assets/projects/cricket-node/input/cricket-node-hw__B.PcbDoc`,
   `tests/assets/projects/cricket-node/input/pcb-layer-step.json`,
-  `tests/assets/projects/cricket-node/input/pcb.svg.config.a0`,
+  `tests/assets/projects/cricket-node/input/pcb.svg.config`,
   `tests/assets/projects/goomba/input/bom.config`,
   `tests/assets/projects/cutouts/reference_output/`, and the older dirty
   `tests/assets/projects/cutouts/input/pcb-svg.json` plus
-  `tests/assets/projects/cutouts/input/pcb.svg.config.a0`. Keep those unstaged
+  `tests/assets/projects/cutouts/input/pcb.svg.config`. Keep those unstaged
   unless they are deliberately adopted later.

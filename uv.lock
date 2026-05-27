@@ -9,6 +9,7 @@ source = { editable = "." }
 dependencies = [
     { name = "altium-monkey" },
     { name = "colorama" },
+    { name = "json-with-comments" },
     { name = "openpyxl" },
     { name = "wn-geometer" },
 ]
@@ -42,6 +43,7 @@ requires-dist = [
     { name = "build", marker = "extra == 'test'", specifier = ">=1.2.0" },
     { name = "colorama", specifier = ">=0.4.6" },
     { name = "easyeda-monkey", marker = "extra == 'easyeda'", specifier = ">=2026.5.26" },
+    { name = "json-with-comments", specifier = ">=1.2.10" },
     { name = "openpyxl", specifier = ">=3.1.0" },
     { name = "pyright", marker = "extra == 'test'", specifier = ">=1.1.390" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0.0" },
@@ -353,6 +355,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7b/6f/357efd7602486741aa73ffc0617fb310a29b588ed0fd69c2399acbb85b0c/jeepney-0.9.0.tar.gz", hash = "sha256:cf0e9e845622b81e4a28df94c40345400256ec608d0e55bb8a3feaa9163f5732", size = 106758, upload-time = "2025-02-27T18:51:01.684Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b2/a3/e137168c9c44d18eff0376253da9f1e9234d0239e0ee230d2fee6cea8e55/jeepney-0.9.0-py3-none-any.whl", hash = "sha256:97e5714520c16fc0a45695e5365a2e11b81ea79bba796e26f9f1d178cb182683", size = 49010, upload-time = "2025-02-27T18:51:00.104Z" },
+]
+
+[[package]]
+name = "json-with-comments"
+version = "1.2.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/6d/638e8adbb2b92bb0803c092dd8ae6482945961c8545fc7e2f21c48233928/json_with_comments-1.2.10.tar.gz", hash = "sha256:0020b321cf6c80963c85f95ce985e71332f1797ed49abfd1cd675b3bdee24a28", size = 6788, upload-time = "2024-12-10T05:46:37.415Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/8a/f67dadb0648f00ac2249d3ef32532f0d5a2e72016f8426290ce6fe575870/json_with_comments-1.2.10-py3-none-any.whl", hash = "sha256:d7989c2577b1f8cbba735209f8d388d21017feb42ef30c29c230040f86b42700", size = 6533, upload-time = "2024-12-10T05:46:34.856Z" },
 ]
 
 [[package]]

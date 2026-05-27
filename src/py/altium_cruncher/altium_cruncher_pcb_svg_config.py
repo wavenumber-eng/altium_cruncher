@@ -8,7 +8,7 @@ from pathlib import Path
 
 from altium_monkey.altium_record_types import PcbLayer
 
-PCB_SVG_CONFIG_FILENAME = "pcb.svg.config.a0"
+PCB_SVG_CONFIG_FILENAME = "pcb.svg.config"
 PCB_SVG_CONFIG_SCHEMA = "pcb.svg.config.a0"
 PCB_DEFAULT_SVG_SCALE = 10.0
 PCB_SVG_CANVAS_BOUNDS_MODES = frozenset({"board_outline", "all_geometry"})

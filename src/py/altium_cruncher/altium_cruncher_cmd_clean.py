@@ -21,6 +21,7 @@ from altium_cruncher.altium_pcblib_clean import (
     infer_pcblib_clean_config_path,
 )
 from altium_cruncher.altium_cruncher_common import find_prjpcb_in_cwd
+from altium_cruncher.config_json import load_json_config
 
 log = logging.getLogger(__name__)
 
@@ -123,8 +124,8 @@ def _resolve_clean_config(
             return None, config_path
 
     try:
-        raw = json.loads(config_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+        raw = load_json_config(config_path)
+    except Exception as exc:
         raise ValueError(f"Invalid JSON in clean config: {config_path}: {exc}") from exc
 
     if suffix == ".pcblib":
@@ -563,7 +564,7 @@ def cmd_clean(args) -> int:
 def register_parser(subparsers):
     clean_parser = subparsers.add_parser(
         "clean",
-        help="normalize Altium SchDoc/SchLib/PcbLib assets using JSON config",
+        help="normalize Altium SchDoc/SchLib/PcbLib assets using JSON/JSONC config",
         description=(
             "Normalize schematic symbol/document styles for SchDoc, SchLib, and PrjPcb files, "
             "and clean PcbLib vendor footprint mechanical drafting noise. "
@@ -571,7 +572,7 @@ def register_parser(subparsers):
             "schematic power symbol normalization, schematic net-label normalization, "
             "component designator/parameter font normalization, component free-text normalization, "
             "schematic wire normalization, schematic no-erc normalization, sheet-style normalization, and "
-            "symbol internal-graphics monochrome normalization. For PcbLib input, supports JSON-configured "
+            "symbol internal-graphics monochrome normalization. For PcbLib input, supports JSON/JSONC-configured "
             "mechanical-layer primitive removal, configured text-string removal, and "
             "configured mechanical-region removal while preserving component bodies and embedded models."
         ),
@@ -597,7 +598,7 @@ def register_parser(subparsers):
         "--config",
         type=Path,
         help=(
-            "Path to clean JSON config. "
+            "Path to clean JSON/JSONC config. "
             f"For SchDoc/SchLib/PrjPcb, omitted means {DEFAULT_SCH_CLEAN_CONFIG_FILENAME} "
             "next to input. "
             f"For PcbLib, omitted means workspace config {DEFAULT_PCBLIB_CLEAN_CONFIG_FILENAME} "

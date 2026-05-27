@@ -15,6 +15,7 @@ from altium_monkey.altium_pnp_position import (
     normalize_pnp_position_mode,
 )
 
+from altium_cruncher.config_json import load_json_config
 from altium_cruncher.output_path_templates import (
     TemplateValue,
     resolve_output_name,
@@ -362,8 +363,8 @@ def find_bom_pnp_config_path(start_dir: Path | None = None) -> Path | None:
 
 
 def load_bom_pnp_config(path: Path) -> BomPnpConfig:
-    """Load a BOM/PnP JSON config file."""
-    payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    """Load a BOM/PnP JSON or JSONC config file."""
+    payload = load_json_config(path)
     if not isinstance(payload, Mapping):
         raise ValueError(f"BOM/PnP config must be a JSON object: {path}")
     return BomPnpConfig.from_mapping(payload)

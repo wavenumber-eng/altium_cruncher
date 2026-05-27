@@ -182,7 +182,7 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
     parser.add_argument(
         "--config",
         type=Path,
-        help="BOM/PnP JSON config (default: ./bom.config if present)",
+        help="BOM/PnP JSON/JSONC config (default: ./bom.config if present)",
     )
     parser.add_argument(
         "--write-config",

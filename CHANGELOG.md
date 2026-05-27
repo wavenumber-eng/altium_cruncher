@@ -30,4 +30,6 @@
   enabled-by-default synthetic `BOARD_CUTOUTS` layer with configurable hash
   density, hash direction, hash and outline stroke widths, dashed or solid
   outlines, and labels.
+- Let user-editable command config files load JSONC comments and trailing
+  commas, and use `pcb.svg.config` as the default PCB SVG config filename.
 - Add global `--quiet`, `--verbose`, and `--log-level` CLI logging controls.
