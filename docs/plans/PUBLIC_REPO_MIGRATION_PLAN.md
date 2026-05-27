@@ -1148,7 +1148,11 @@ Current local status:
   hatch spacing, hatch direction, hash line width, outline line width, and
   solid/dashed outline style remain configurable. The renderer can replace an
   existing durable view `<g>` so user-authored SVG content around that group can
-  survive regeneration;
+  survive regeneration. `global.canvas` now controls visual bounds:
+  `board_outline` fits the SVG viewBox to the board profile plus margin, while
+  `all_geometry` keeps the older all-primitive bounds behavior. A0 metadata
+  records the canvas transform and component absolute/origin-relative placement
+  fields so downstream tools can map between Altium mils and SVG millimeters;
 - CLI logging now has root-level `--quiet`, `--verbose`, and `--log-level`
   controls. Normal command progress stays at INFO; Altium Monkey parser
   internals are expected to use DEBUG so manufacturing-output commands can run

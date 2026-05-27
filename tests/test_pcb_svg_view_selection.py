@@ -12,7 +12,11 @@ from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     _resolve_view_render_settings,
     resolve_pcb_svg_configs,
 )
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import write_or_update_view_svg
+from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
+    PcbSvgA0Renderer,
+    write_or_update_view_svg,
+)
+from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
 
 def _enabled_views(config: PcbSvgConfig) -> set[str]:
@@ -44,6 +48,36 @@ def test_pcb_svg_default_cutout_style_has_no_text_label() -> None:
     assert payload["hatch"] is True
     assert "label_text" not in payload
     assert "label" not in payload
+
+
+def test_pcb_svg_default_canvas_uses_board_outline_bounds() -> None:
+    root = PcbSvgConfig.default().to_dict()
+    global_options = cast(dict[str, object], root["global"])
+    canvas = cast(dict[str, object], global_options["canvas"])
+
+    assert canvas == {"bounds": "board_outline", "margin_mm": 1.0}
+
+
+def test_pcb_svg_board_outline_canvas_ignores_off_board_geometry() -> None:
+    config = PcbSvgConfig.default()
+    renderer = PcbSvgA0Renderer(config)
+    outline = SimpleNamespace(
+        vertices=[object()],
+        bounding_box=(1000.0, 2000.0, 2000.0, 3000.0),
+    )
+    pcbdoc = SimpleNamespace(board=SimpleNamespace(outline=outline))
+
+    bounds = renderer._compute_bounds_mils(cast(AltiumPcbDoc, pcbdoc))  # noqa: SLF001
+
+    margin_mils = 1.0 / 0.0254
+    assert bounds == pytest.approx(
+        (
+            1000.0 - margin_mils,
+            2000.0 - margin_mils,
+            2000.0 + margin_mils,
+            3000.0 + margin_mils,
+        )
+    )
 
 
 def test_pcb_svg_cli_views_enable_requested_views_and_layer_outputs() -> None:
@@ -167,15 +201,38 @@ def test_pcb_svg_config_validates_cutout_positive_dimensions() -> None:
         _resolve_view_render_settings(config.global_options, config.views[0])
 
 
+def test_pcb_svg_config_validates_canvas_options() -> None:
+    with pytest.raises(ValueError, match="global.canvas.bounds"):
+        PcbSvgConfig.from_dict(
+            {
+                "schema": PCB_SVG_CONFIG_SCHEMA,
+                "global": {"canvas": {"bounds": "origin_absolute"}},
+                "views": [],
+            }
+        )
+
+    with pytest.raises(ValueError, match="global.canvas.margin_mm"):
+        PcbSvgConfig.from_dict(
+            {
+                "schema": PCB_SVG_CONFIG_SCHEMA,
+                "global": {"canvas": {"margin_mm": -1}},
+                "views": [],
+            }
+        )
+
+
 def test_pcb_svg_durable_group_update_preserves_user_svg_content(tmp_path) -> None:
     target = tmp_path / "view.svg"
     target.write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg"><text id="user-note">keep</text>'
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1">'
+        '<metadata id="pcb-enrichment-a0">old-meta</metadata>'
+        '<text id="user-note">keep</text>'
         '<g id="pcb-svg-view-top"><path id="old"/></g></svg>',
         encoding="utf-8",
     )
     replacement = (
-        '<svg xmlns="http://www.w3.org/2000/svg"><g id="scene">'
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 2">'
+        '<metadata id="pcb-enrichment-a0">new-meta</metadata><g id="scene">'
         '<g id="pcb-svg-view-top"><path id="new"/></g></g></svg>'
     )
 
@@ -183,6 +240,9 @@ def test_pcb_svg_durable_group_update_preserves_user_svg_content(tmp_path) -> No
     text = target.read_text(encoding="utf-8")
 
     assert "user-note" in text
+    assert 'viewBox="0 0 2 2"' in text
+    assert "new-meta" in text
+    assert "old-meta" not in text
     assert 'id="new"' in text
     assert 'id="old"' not in text
 

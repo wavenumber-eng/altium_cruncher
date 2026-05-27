@@ -14,6 +14,14 @@
       "additionalProperties": true,
       "properties": {
         "pcbdoc": { "type": ["string", "null"] },
+        "canvas": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bounds": { "enum": ["board_outline", "all_geometry"] },
+            "margin_mm": { "type": "number", "minimum": 0 }
+          }
+        },
         "include_metadata": { "type": "boolean" },
         "show_empty_layers": { "type": "boolean" },
         "clip_to_outline": { "type": "boolean" },

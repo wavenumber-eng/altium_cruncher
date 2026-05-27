@@ -14,6 +14,8 @@ from altium_monkey.altium_pcb_svg_renderer import (
     _MIL_TO_MM,
     PcbSvgRenderContext,
     PcbSvgRenderOptions,
+    SVG_ENRICHMENT_METADATA_ID,
+    SVG_ENRICHMENT_SCHEMA_ID,
     should_render_via_drill_hole,
 )
 from altium_monkey.altium_record_types import PcbLayer
@@ -55,6 +57,7 @@ PCB_SVG_ASSEMBLY_HLR_BOTTOM_LAYER_ID = 9005
 _HLR_TOKENS = {"ASSEMBLY_HLR_TOP", "ASSEMBLY_HLR_BOTTOM"}
 _HOLE_TOKENS = {"DRILLS", "SLOTS"}
 _SVG_NS = "http://www.w3.org/2000/svg"
+_MM_TO_MIL = 1.0 / _MIL_TO_MM
 
 
 def _style_enabled(styles: dict[str, dict[str, object]], name: str) -> bool:
@@ -190,6 +193,143 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         )
         super().__init__(options=options)
 
+    def _compute_bounds_mils(
+        self,
+        pcbdoc: "AltiumPcbDoc",
+    ) -> tuple[float, float, float, float]:
+        canvas = self.config.global_options.canvas
+        if canvas.bounds != "board_outline":
+            return super()._compute_bounds_mils(pcbdoc)  # noqa: SLF001
+
+        outline_bounds = self._compute_board_outline_canvas_bounds_mils(pcbdoc)
+        if outline_bounds is None:
+            return super()._compute_bounds_mils(pcbdoc)  # noqa: SLF001
+
+        margin_mils = canvas.margin_mm * _MM_TO_MIL
+        min_x, min_y, max_x, max_y = outline_bounds
+        return (
+            min_x - margin_mils,
+            min_y - margin_mils,
+            max_x + margin_mils,
+            max_y + margin_mils,
+        )
+
+    def _compute_board_outline_canvas_bounds_mils(
+        self,
+        pcbdoc: "AltiumPcbDoc",
+    ) -> tuple[float, float, float, float] | None:
+        outline = getattr(getattr(pcbdoc, "board", None), "outline", None)
+        if outline is None or not getattr(outline, "vertices", None):
+            return None
+        try:
+            min_x, min_y, max_x, max_y = outline.bounding_box
+        except (TypeError, ValueError, AttributeError):
+            return None
+        return (float(min_x), float(min_y), float(max_x), float(max_y))
+
+    def _canvas_metadata_attrs(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: "AltiumPcbDoc",
+    ) -> list[str]:
+        origin_x, origin_y = self._board_origin_mils(pcbdoc)
+        return [
+            f'data-canvas-bounds-mode="{html.escape(self.config.global_options.canvas.bounds)}"',
+            f'data-canvas-min-x-mils="{ctx.fmt(ctx.min_x_mils)}"',
+            f'data-canvas-min-y-mils="{ctx.fmt(ctx.min_y_mils)}"',
+            f'data-canvas-max-x-mils="{ctx.fmt(ctx.max_x_mils)}"',
+            f'data-canvas-max-y-mils="{ctx.fmt(ctx.max_y_mils)}"',
+            f'data-altium-origin-x-mils="{ctx.fmt(origin_x)}"',
+            f'data-altium-origin-y-mils="{ctx.fmt(origin_y)}"',
+        ]
+
+    def _canvas_metadata_payload(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: "AltiumPcbDoc",
+    ) -> dict[str, object]:
+        origin_x, origin_y = self._board_origin_mils(pcbdoc)
+        return {
+            "bounds_mode": self.config.global_options.canvas.bounds,
+            "bounds_mils": [
+                ctx.min_x_mils,
+                ctx.min_y_mils,
+                ctx.max_x_mils,
+                ctx.max_y_mils,
+            ],
+            "margin_mm": self.config.global_options.canvas.margin_mm,
+            "altium_origin_mils": [origin_x, origin_y],
+            "svg_units": "mm",
+            "geometry_transform": {
+                "x_svg_mm": "(x_absolute_mils - canvas_min_x_mils) * 0.0254",
+                "y_svg_mm": "(canvas_max_y_mils - y_absolute_mils) * 0.0254",
+            },
+            "metadata_coordinate_policy": (
+                "component x_mils/y_mils are source absolute mils; "
+                "x_origin_relative_mils/y_origin_relative_mils subtract the Altium origin"
+            ),
+        }
+
+    @staticmethod
+    def _board_origin_mils(pcbdoc: "AltiumPcbDoc") -> tuple[float, float]:
+        board = getattr(pcbdoc, "board", None)
+        if board is None:
+            return (0.0, 0.0)
+        try:
+            return (float(getattr(board, "origin_x", 0.0)), float(getattr(board, "origin_y", 0.0)))
+        except (TypeError, ValueError):
+            return (0.0, 0.0)
+
+    def _append_svg_metadata(
+        self,
+        lines: list[str],
+        ctx: PcbSvgRenderContext,
+        view_kind: str,
+        active_layer_ids: list[int],
+        *,
+        include_board_outline: bool,
+        pcbdoc: "AltiumPcbDoc",
+    ) -> None:
+        if not self.options.include_metadata:
+            return
+
+        enrichment_payload = ctx.enrichment_metadata_payload(
+            view_kind=view_kind,
+            included_layer_ids=active_layer_ids,
+            includes_board_outline=bool(
+                include_board_outline and self.options.show_board_outline
+            ),
+            pcbdoc_filename=pcbdoc.filepath.name if pcbdoc.filepath else None,
+        )
+        enrichment_payload["canvas"] = self._canvas_metadata_payload(ctx, pcbdoc)
+        payload_json = json.dumps(
+            enrichment_payload,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        lines.append(
+            f'  <metadata id="{SVG_ENRICHMENT_METADATA_ID}" '
+            f'data-schema="{SVG_ENRICHMENT_SCHEMA_ID}">'
+        )
+        lines.append(f"    {html.escape(payload_json, quote=False)}")
+        lines.append("  </metadata>")
+
+    def _build_component_metadata(
+        self,
+        pcbdoc: "AltiumPcbDoc",
+    ) -> tuple[dict[int, str], dict[int, str], dict[int, dict[str, object]]]:
+        designators, uids, components = super()._build_component_metadata(pcbdoc)  # noqa: SLF001
+        origin_x, origin_y = self._board_origin_mils(pcbdoc)
+        for entry in components.values():
+            x_value = entry.get("x_mils")
+            y_value = entry.get("y_mils")
+            if isinstance(x_value, (int, float)) and isinstance(y_value, (int, float)):
+                entry["x_absolute_mils"] = float(x_value)
+                entry["y_absolute_mils"] = float(y_value)
+                entry["x_origin_relative_mils"] = float(x_value) - origin_x
+                entry["y_origin_relative_mils"] = float(y_value) - origin_y
+        return designators, uids, components
+
     def render_view_svg(
         self,
         pcbdoc: AltiumPcbDoc,
@@ -238,6 +378,7 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         )
         active_layer_ids = self._active_layer_ids(tokens)
         svg_attrs = self._build_svg_document_attrs(ctx, pcbdoc, view.name)  # noqa: SLF001
+        svg_attrs.extend(self._canvas_metadata_attrs(ctx, pcbdoc))
 
         lines = [f"<svg {' '.join(svg_attrs)}>"]
         self._append_svg_metadata(  # noqa: SLF001
@@ -942,14 +1083,41 @@ def _remove_legacy_generated_view_artifacts(root: ET.Element, protected_group_id
             continue
 
 
+def _replace_generated_metadata(existing_root: ET.Element, new_root: ET.Element) -> None:
+    new_metadata = _find_element_by_id(new_root, SVG_ENRICHMENT_METADATA_ID)
+    old_metadata = _find_element_by_id(existing_root, SVG_ENRICHMENT_METADATA_ID)
+    parent_map = {child: parent for parent in existing_root.iter() for child in parent}
+    if new_metadata is None:
+        if old_metadata is not None:
+            parent = parent_map.get(old_metadata)
+            if parent is not None:
+                parent.remove(old_metadata)
+        return
+    if old_metadata is None:
+        existing_root.insert(0, new_metadata)
+        return
+    parent = parent_map.get(old_metadata)
+    if parent is None:
+        return
+    index = list(parent).index(old_metadata)
+    parent.remove(old_metadata)
+    parent.insert(index, new_metadata)
+
+
 def _replace_group_in_svg(existing_svg: str, new_svg: str, group_id: str) -> str:
     ET.register_namespace("", _SVG_NS)
     existing_root = ET.fromstring(existing_svg)
-    new_group = _extract_svg_group(new_svg, group_id)
+    new_root = ET.fromstring(new_svg)
+    new_group = _find_element_by_id(new_root, group_id)
+    if new_group is None:
+        raise ValueError(f"Generated SVG does not contain expected group id {group_id!r}")
     old_group = _find_element_by_id(existing_root, group_id)
     if old_group is None:
         raise ValueError(f"Existing SVG does not contain durable group {group_id!r}")
     else:
+        existing_root.attrib.clear()
+        existing_root.attrib.update(new_root.attrib)
+        _replace_generated_metadata(existing_root, new_root)
         _remove_legacy_generated_view_artifacts(existing_root, group_id)
         parent_map = {child: parent for parent in existing_root.iter() for child in parent}
         parent = parent_map.get(old_group)

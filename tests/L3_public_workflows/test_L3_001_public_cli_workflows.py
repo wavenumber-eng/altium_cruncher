@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -286,6 +287,7 @@ def test_pcb_svg_copper_polygon_style_colors_shape_based_regions(
             {
                 "schema": "pcb.svg.config.a0",
                 "global": {
+                    "canvas": {"bounds": "board_outline", "margin_mm": 0.5},
                     "styles": {
                         "copper_traces": {"color": "#111111"},
                         "copper_polygons": {"color": "#12AB34"},
@@ -315,6 +317,13 @@ def test_pcb_svg_copper_polygon_style_colors_shape_based_regions(
     assert 'data-primitive="shapebased-region"' in top_svg
     assert 'fill="#12AB34" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"' in top_svg
     assert 'fill="#000000" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"' not in top_svg
+    assert 'data-canvas-bounds-mode="board_outline"' in top_svg
+    assert '"canvas":{"altium_origin_mils":' in top_svg
+    assert '"x_absolute_mils":' in top_svg
+    assert '"x_origin_relative_mils":' in top_svg
+    view_box_match = re.search(r'viewBox="0 0 ([0-9.]+) ([0-9.]+)"', top_svg)
+    assert view_box_match is not None
+    assert float(view_box_match.group(1)) < 100.0
 
 
 def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:

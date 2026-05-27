@@ -11,6 +11,7 @@ from altium_monkey.altium_record_types import PcbLayer
 PCB_SVG_CONFIG_FILENAME = "pcb.svg.config.a0"
 PCB_SVG_CONFIG_SCHEMA = "pcb.svg.config.a0"
 PCB_DEFAULT_SVG_SCALE = 10.0
+PCB_SVG_CANVAS_BOUNDS_MODES = frozenset({"board_outline", "all_geometry"})
 
 PCB_SVG_SPECIAL_LAYERS = frozenset(
     {
@@ -66,6 +67,13 @@ def _coerce_float(value: object, default: float) -> float:
         return float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Invalid numeric value in pcb-svg config: {value!r}") from exc
+
+
+def _coerce_nonnegative_float(value: object, default: float, *, field_name: str) -> float:
+    result = _coerce_float(value, default)
+    if result < 0.0:
+        raise ValueError(f"pcb-svg config field '{field_name}' must be non-negative")
+    return result
 
 
 def _coerce_optional_str(value: object) -> str | None:
@@ -235,10 +243,56 @@ def _coerce_object_mapping(value: object, *, field_name: str) -> dict[str, objec
 
 
 @dataclass(slots=True)
+class PcbSvgCanvasConfig:
+    """Canvas normalization policy for PCB SVG viewBox coordinates."""
+
+    bounds: str = "board_outline"
+    margin_mm: float = 1.0
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgCanvasConfig":
+        if data is None:
+            return cls()
+        if not isinstance(data, dict):
+            raise ValueError("pcb-svg config field 'global.canvas' must be an object")
+        bounds = str(data.get("bounds", "board_outline") or "board_outline").strip().lower()
+        aliases = {
+            "board": "board_outline",
+            "outline": "board_outline",
+            "board_profile": "board_outline",
+            "legacy": "all_geometry",
+            "all": "all_geometry",
+            "rendered_view": "all_geometry",
+            "rendered_geometry": "all_geometry",
+        }
+        bounds = aliases.get(bounds, bounds)
+        if bounds not in PCB_SVG_CANVAS_BOUNDS_MODES:
+            raise ValueError(
+                "pcb-svg config field 'global.canvas.bounds' must be "
+                "'board_outline' or 'all_geometry'"
+            )
+        return cls(
+            bounds=bounds,
+            margin_mm=_coerce_nonnegative_float(
+                data.get("margin_mm"),
+                1.0,
+                field_name="global.canvas.margin_mm",
+            ),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "bounds": self.bounds,
+            "margin_mm": self.margin_mm,
+        }
+
+
+@dataclass(slots=True)
 class PcbSvgGlobalConfig:
     """Global pcb-svg A0 options applied to layer outputs and views."""
 
     pcbdoc: str | None = None
+    canvas: PcbSvgCanvasConfig = field(default_factory=PcbSvgCanvasConfig)
     include_metadata: bool = True
     show_empty_layers: bool = False
     clip_to_outline: bool = True
@@ -258,6 +312,9 @@ class PcbSvgGlobalConfig:
         default = cls()
         return cls(
             pcbdoc=_coerce_optional_str(data.get("pcbdoc")),
+            canvas=PcbSvgCanvasConfig.from_dict(
+                _coerce_object_mapping(data.get("canvas"), field_name="global.canvas")
+            ),
             include_metadata=_coerce_bool(
                 data.get("include_metadata"), default.include_metadata
             ),
@@ -285,6 +342,7 @@ class PcbSvgGlobalConfig:
     def to_dict(self) -> dict[str, object]:
         return {
             "pcbdoc": self.pcbdoc,
+            "canvas": self.canvas.to_dict(),
             "include_metadata": self.include_metadata,
             "show_empty_layers": self.show_empty_layers,
             "clip_to_outline": self.clip_to_outline,
@@ -523,10 +581,12 @@ def resolve_config_output_path(output_dir: Path, pattern: str, *, board: str, vi
 
 __all__ = [
     "PCB_DEFAULT_SVG_SCALE",
+    "PCB_SVG_CANVAS_BOUNDS_MODES",
     "PCB_SVG_CONFIG_FILENAME",
     "PCB_SVG_CONFIG_SCHEMA",
     "PCB_SVG_SPECIAL_LAYERS",
     "PcbSvgConfig",
+    "PcbSvgCanvasConfig",
     "PcbSvgGlobalConfig",
     "PcbSvgViewConfig",
     "default_pcb_svg_styles",
