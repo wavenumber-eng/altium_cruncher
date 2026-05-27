@@ -880,12 +880,27 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
             if _component_side(component) != side:
                 continue
+            if self._component_pad_designator_count(pcbdoc, component_index) <= 1:
+                continue
             pad = self._pin1_pad_for_component(pcbdoc, component_index, component, layer)
             if pad is not None:
                 marker_elements.extend(
                     self._pin1_marker_svg(ctx, component, pad, layer, styles)
                 )
         return marker_elements
+
+    def _component_pad_designator_count(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        component_index: int,
+    ) -> int:
+        designators = {
+            str(getattr(pad, "designator", "") or "").strip().upper()
+            for pad in getattr(pcbdoc, "pads", []) or []
+            if getattr(pad, "component_index", None) == component_index
+            and str(getattr(pad, "designator", "") or "").strip()
+        }
+        return len(designators)
 
     def _pin1_pad_for_component(
         self,
@@ -934,13 +949,14 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         if should_fill_pad:
             to_svg = getattr(pad, "to_svg", None)
             rendered: list[str] = []
+            render_holes = _pad_has_hole(pad)
             if callable(to_svg):
                 raw_rendered = to_svg(
                     ctx,
                     stroke=color,
                     include_metadata=self.options.include_metadata,
                     for_layer=layer,
-                    render_holes=False,
+                    render_holes=render_holes,
                 )
                 if isinstance(raw_rendered, (list, tuple)):
                     rendered = [str(element) for element in raw_rendered]

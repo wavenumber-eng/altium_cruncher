@@ -75,8 +75,20 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     bottom_hlr_bounds = next(
         view for view in views if view["name"] == "bottom_hlr_bounding_boxes"
     )
-    assert top_pin1_view["layers"] == ["BOARD_OUTLINE", "TOP", "PIN1_TOP"]
-    assert bottom_pin1_view["layers"] == ["BOARD_OUTLINE", "BOTTOM", "PIN1_BOTTOM"]
+    assert top_pin1_view["layers"] == [
+        "BOARD_OUTLINE",
+        "TOP",
+        "PIN1_TOP",
+        "ASSEMBLY_HLR_TOP",
+    ]
+    assert bottom_pin1_view["layers"] == [
+        "BOARD_OUTLINE",
+        "BOTTOM",
+        "PIN1_BOTTOM",
+        "ASSEMBLY_HLR_BOTTOM",
+    ]
+    assert top_pin1_view["assembly_hlr_mode"] == "simple"
+    assert bottom_pin1_view["assembly_hlr_mode"] == "simple"
     assert top_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
     assert bottom_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
 
@@ -352,7 +364,7 @@ def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(
     assert "ASSEMBLY_HLR" not in svg
 
 
-def test_pcb_svg_pin1_layer_renders_smd_dot_and_a1_pad() -> None:
+def test_pcb_svg_pin1_layer_renders_smd_dot_a1_pad_and_through_hole() -> None:
     pcbdoc = AltiumPcbDoc()
     pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
     pcbdoc.add_component(
@@ -367,9 +379,29 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_and_a1_pad() -> None:
         position_mils=(300.0, 100.0),
         layer="TOP",
     )
+    pcbdoc.add_component(
+        designator="J2",
+        footprint="HDR",
+        position_mils=(500.0, 100.0),
+        layer="TOP",
+    )
+    pcbdoc.add_component(
+        designator="TP1",
+        footprint="TESTPOINT",
+        position_mils=(700.0, 100.0),
+        layer="TOP",
+    )
     pad_1 = pcbdoc.add_pad(
         designator="1",
         position_mils=(100.0, 100.0),
+        width_mils=40.0,
+        height_mils=30.0,
+        layer=PcbLayer.TOP,
+        shape=PadShape.RECTANGLE,
+    )
+    pad_2 = pcbdoc.add_pad(
+        designator="2",
+        position_mils=(150.0, 100.0),
         width_mils=40.0,
         height_mils=30.0,
         layer=PcbLayer.TOP,
@@ -383,8 +415,47 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_and_a1_pad() -> None:
         layer=PcbLayer.TOP,
         shape=PadShape.CIRCLE,
     )
+    pad_a2 = pcbdoc.add_pad(
+        designator="A2",
+        position_mils=(340.0, 100.0),
+        width_mils=28.0,
+        height_mils=28.0,
+        layer=PcbLayer.TOP,
+        shape=PadShape.CIRCLE,
+    )
+    pad_th_1 = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(500.0, 100.0),
+        width_mils=55.0,
+        height_mils=55.0,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=28.0,
+    )
+    pad_th_2 = pcbdoc.add_pad(
+        designator="2",
+        position_mils=(560.0, 100.0),
+        width_mils=55.0,
+        height_mils=55.0,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=28.0,
+    )
+    pad_tp = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(700.0, 100.0),
+        width_mils=35.0,
+        height_mils=35.0,
+        layer=PcbLayer.TOP,
+        shape=PadShape.CIRCLE,
+    )
     pad_1.component_index = 0
+    pad_2.component_index = 0
     pad_a1.component_index = 1
+    pad_a2.component_index = 1
+    pad_th_1.component_index = 2
+    pad_th_2.component_index = 2
+    pad_tp.component_index = 3
     config = PcbSvgConfig.default()
     view = PcbSvgViewConfig(
         name="pin1",
@@ -411,6 +482,9 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_and_a1_pad() -> None:
     assert 'data-pad-designator="1"' in svg
     assert 'data-component-designator="J1"' in svg
     assert 'data-pad-designator="A1"' in svg
+    assert 'data-component-designator="J2"' in svg
+    assert 'data-primitive="pad-hole"' in svg
+    assert 'data-component-designator="TP1"' not in svg
 
 
 def test_pcb_svg_hlr_bounding_box_mode_does_not_construct_hlr_renderer(

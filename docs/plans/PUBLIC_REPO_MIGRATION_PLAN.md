@@ -1273,8 +1273,10 @@ Current local status:
   per-view (`simple`, `detail`, `bounding_box`, or `none`), and the
   `bounding_box` path uses component pad bounds without constructing the
   Geometer-backed HLR renderer. Default composed views now include top/bottom
-  pin-1 overlays and top/bottom HLR bounding-box inspection views. Cutout labels
-  were removed from A0 output, while
+  pin-1 overlays with simple HLR outlines and top/bottom HLR bounding-box
+  inspection views. Pin-1 overlays skip free pads and single-pad components,
+  and through-hole pin-1 pads preserve visible drill/slot openings. Cutout
+  labels were removed from A0 output, while
   hatch spacing, hatch direction, hash line width, outline line width, and
   solid/dashed outline style remain configurable. The renderer can replace an
   existing durable view `<g>` so user-authored SVG content around that group can
@@ -1292,7 +1294,7 @@ Current local status:
   `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
   - `uv run --extra test pytest -q tests\test_pcb_svg_view_selection.py`:
-    25 passed after adding pin-1 overlay and HLR bounding-box coverage;
+    25 passed after adding pin-1 overlay rules and HLR bounding-box coverage;
   - `uv run --extra test pytest -q tests\L3_public_workflows\test_L3_001_public_cli_workflows.py -k pcb_svg`:
     4 passed, 6 deselected;
   - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_config.py src\py\altium_cruncher\altium_cruncher_pcb_svg_a0_renderer.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
