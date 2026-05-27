@@ -46,6 +46,7 @@ test_library_extract_split_merge_commands_use_public_fixtures = "Exercise extrac
 test_intlib_extract_command_uses_public_fixture = "Exercise IntLib source extraction on RT_SUPER_C1"
 test_pcb_svg_command_uses_public_pcbdoc_without_private_context = "Exercise pcb-svg against a copied public PcbDoc and explicit config"
 test_pcb_svg_assembly_views_use_geometer_hlr = "Exercise assembly top/bottom SVG views with geometer HLR enabled"
+test_pcb_svg_cutout_layer_uses_configured_hashes = "Exercise configurable cutout hatches and dashed outlines on the cutouts fixture"
 test_clean_command_creates_template_for_public_schdoc_copy = "Exercise clean template generation without mutating assets"
 
 [[subtests]]

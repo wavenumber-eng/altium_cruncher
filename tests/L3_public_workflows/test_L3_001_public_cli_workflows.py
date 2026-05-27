@@ -30,6 +30,8 @@ RT_SUPER_C1_INTLIB = (
     PACKAGE_ROOT / "tests" / "assets" / "intlib" / "rt_super_c1" / "input"
     / "RT_SUPER_C1.IntLib"
 )
+CUTOUTS_DIR = PACKAGE_ROOT / "tests" / "assets" / "projects" / "cutouts"
+CUTOUTS_PCBDOC = CUTOUTS_DIR / "input" / "cutout_multiple.PcbDoc"
 
 
 def _run_cli(*args: str) -> str:
@@ -264,6 +266,49 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
     assert 'data-assembly-symbol="simple"' in top_svg
     assert 'data-layer-id="1"' in top_svg
     assert 'id="layer-TOPOVERLAY"' not in top_svg
+
+
+def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
+    """Exercise the cutout fixture with dashed outlines and configured hashes."""
+    config = tmp_path / "pcb-svg-cutouts.json"
+    config.write_text(
+        json.dumps(
+            {
+                "schema": "wn.pcb.svg.config.v1",
+                "global": {
+                    "include_metadata": True,
+                    "include_board_cutout_layer": True,
+                    "board_cutout_layer_hatch": True,
+                    "board_cutout_layer_hash_spacing_mm": 1.25,
+                    "board_cutout_layer_hash_angle_deg": 30,
+                    "board_cutout_layer_outline_style": "dashed",
+                    "board_cutout_layer_outline_dash_mm": 0.9,
+                    "board_cutout_layer_label": True,
+                    "board_cutout_layer_label_text": "cutout",
+                },
+                "views": [
+                    {
+                        "name": "layers",
+                        "source": "layers",
+                        "enabled": True,
+                    }
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    output_dir = CUTOUTS_DIR / "output" / "pcb-svg" / "cutout-layer"
+
+    _run_cli("pcb-svg", str(CUTOUTS_PCBDOC), "--config", str(config), "-o", str(output_dir))
+
+    cutout_svg_path = output_dir / "layers" / "cutout_multiple__BOARD_CUTOUTS.svg"
+    cutout_svg = cutout_svg_path.read_text(encoding="utf-8")
+    assert cutout_svg.count('data-feature="board-cutout"') == 4
+    assert 'width="1.25" height="1.25"' in cutout_svg
+    assert 'patternTransform="rotate(30)"' in cutout_svg
+    assert 'stroke-dasharray="0.9 0.9"' in cutout_svg
+    assert cutout_svg.count(">cutout</text>") == 4
 
 
 def test_clean_command_creates_template_for_public_schdoc_copy(tmp_path: Path) -> None:

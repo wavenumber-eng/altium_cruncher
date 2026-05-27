@@ -18,7 +18,9 @@ Each project follows this layout:
 BOM and PnP tests use `node_test_array` as the primary hierarchy and variant
 case, and `loz-old-man` as the high component-count case. `XML-BOM` and
 `CSV-BOM` are Altium BOM oracles. `PNP-METRIC` is the Altium pick-and-place
-oracle.
+oracle. The `cutouts` project is the primary `pcb-svg` fixture for board
+profile cutouts; it contains four interior cutouts covering line and arc
+geometry.
 
 Generated test or review artifacts should go under each project fixture's
 `output/` folder, organized by command, variant, and output kind when needed,

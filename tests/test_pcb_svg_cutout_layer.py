@@ -56,6 +56,30 @@ def test_cutout_layer_renderer_emits_hatched_labeled_cutouts() -> None:
     assert ">cutout</text>" in svg
 
 
+def test_cutout_layer_renderer_honors_hash_and_outline_options() -> None:
+    renderer = CruncherPcbCutoutLayerRenderer(
+        PcbSvgRenderOptions(
+            include_metadata=True,
+            board_cutout_color="#FF0000",
+        )
+    )
+
+    svg = renderer.render_board_cutout_layer(
+        _pcbdoc_with_cutout(),
+        include_hatch=True,
+        hatch_spacing_mm=1.25,
+        hatch_angle_deg=30.0,
+        outline_style="dashed",
+        outline_dash_mm=0.9,
+    )
+
+    assert svg is not None
+    assert 'width="1.25" height="1.25"' in svg
+    assert 'patternTransform="rotate(30)"' in svg
+    assert 'stroke-dasharray="0.9 0.9"' in svg
+    assert 'data-outline-style="dashed"' in svg
+
+
 def test_cutout_layer_renderer_skips_boards_without_cutouts() -> None:
     pcbdoc = AltiumPcbDoc()
     pcbdoc.board = AltiumBoard(

@@ -65,7 +65,11 @@ SVG command family notes:
   Hydroscope embedded STEP models, while the normal layer-output test remains
   in place so HLR work cannot regress layer SVG output;
 - `pcb-svg` can emit a synthetic `BOARD_CUTOUTS` layer from board-profile
-  cutouts with optional hatching and labels.
+  cutouts with optional labels, configurable hash spacing/direction, and solid
+  or dashed outlines;
+- board cutout hash rendering is implemented through reusable SVG pattern
+  helpers so future synthetic layers can fill arbitrary closed paths the same
+  way.
 
 PCB layer STEP notes:
 

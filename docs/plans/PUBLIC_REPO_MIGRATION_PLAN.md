@@ -297,6 +297,12 @@ Required SVG follow-up:
   STEP models;
 - `pcb-svg` layer output can optionally include a synthetic `BOARD_CUTOUTS`
   layer generated from board-profile cutouts, with optional hatching and labels;
+- current cutout work is using `tests/assets/projects/cutouts`, a focused
+  four-cutout fixture with circular, rectangular, and rounded T-shaped board
+  cutouts, to harden cutout layer styling and geometry coverage;
+- cutout styling should support solid or dashed outlines plus configurable
+  hatch/hash spacing and direction through reusable SVG pattern helpers so the
+  same mechanism can be reused by later derived layers;
 - keep at least one test that exercises normal PCB layer SVG output so HLR work
   cannot regress existing layer rendering.
 
@@ -1131,27 +1137,27 @@ Current local status:
 - fixture layout notes live in `docs/design/test-assets.html` and
   `tests/assets/projects/README.md`; checked-in B4 oracle outputs are under
   `tests/assets/projects/node_test_array/reference_output/B4`;
+- `pcb-svg` cutout work now uses `tests/assets/projects/cutouts`, a simple
+  four-cutout fixture with rectangular, circular arc, and rounded T-shaped
+  board-profile holes. The synthetic `BOARD_CUTOUTS` layer supports
+  configurable hash spacing, hash direction, labels, and solid or dashed
+  outlines through reusable SVG pattern helpers;
 - generated review artifacts for inspection are under the project fixture's
   `output/` folder, for example
   `tests/assets/projects/node_test_array/output/bom/B4/raw-json`;
 - latest targeted validation:
-  - `uv run --extra test pytest tests\test_bom_pnp_model.py tests\test_bom_outputs.py tests\test_pnp_outputs.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_bom_pnp_config_and_jlc_command_use_public_project tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py -q`:
-    21 passed;
-  - `uv run --extra test pyright src\py\altium_cruncher\bom_pnp_model.py src\py\altium_cruncher\bom_pnp_cli_common.py src\py\altium_cruncher\altium_cruncher_cmd_bom.py src\py\altium_cruncher\altium_cruncher_cmd_pnp.py src\py\altium_cruncher\altium_cruncher_cmd_jlc.py src\py\altium_cruncher\simple_xlsx.py tests\test_bom_pnp_model.py tests\test_bom_outputs.py tests\test_pnp_outputs.py tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
+  - `uv run --extra test pytest tests\test_pcb_svg_view_selection.py tests\test_svg_hatch_patterns.py tests\test_pcb_svg_cutout_layer.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes -q`:
+    17 passed;
+  - `uv run --extra test pytest tests\L3_public_workflows\test_L3_001_public_cli_workflows.py::test_pcb_svg_cutout_layer_uses_configured_hashes -q`:
+    1 passed;
+  - `uv run --extra test pyright src\py\altium_cruncher\altium_cruncher_cmd_pcb_svg.py src\py\altium_cruncher\altium_cruncher_pcb_svg_cutout_layer.py src\py\altium_cruncher\svg_hatch_patterns.py tests\test_pcb_svg_cutout_layer.py tests\test_svg_hatch_patterns.py tests\test_pcb_svg_view_selection.py tests\L3_public_workflows\test_L3_001_public_cli_workflows.py`:
     0 errors;
-  - `uv run --extra test pytest -q`: 124 passed, 2 skipped;
-  - `uv run --extra test pytest tests\L3_public_workflows -q`: 13 passed,
-    1 skipped;
-  - `uv run --extra test rack run --all`: 38 passed, 1 skipped;
-  - `uv run --extra test pyright src\py\altium_cruncher\bom_pnp_model.py src\py\altium_cruncher\altium_cruncher_cmd_pnp.py src\py\altium_cruncher\altium_cruncher_cmd_jlc.py src\py\altium_cruncher\altium_cruncher_cmd_bom.py tests\test_bom_pnp_model.py tests\L3_public_workflows\test_L3_004_bom_pnp_oracle_workflows.py`:
-    0 errors;
-  - `uv run --extra test ruff check .`:
-    clean;
+  - `uv run --extra test pytest -q`: 140 passed, 2 skipped;
+  - `uv run --extra test rack run --all`: 40 passed, 1 skipped;
+  - `uv run --extra test ruff check .`: clean;
   - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json`:
     0 findings;
-  - `uv run --extra test python -m build`: built wheel and sdist;
-  - `uv run --extra test twine check dist\*`: passed;
-  - `uv run --extra test python tests\support_scripts\install_test.py`: passed;
+  - `git diff --check`: clean aside from normal Windows line-ending warnings;
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
@@ -1163,8 +1169,10 @@ Current local status:
 - macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
   tracked in `wavenumber-eng/geometer#2`; this is not a BOM/PnP logic blocker,
   but it must be closed before final `altium-cruncher` release signoff.
-- current worktree still has unrelated/generated Altium fixture churn from
-  reference generation. Keep those files unstaged unless they are deliberately
-  adopted as new reference assets. A full worktree `git diff --check` also
-  reports the unrelated `rt_super_c1/input/reference_gen.OutJob` blank EOF
-  issue; scoped checks over committed files passed.
+- current worktree still has an unrelated untracked
+  `tests/assets/projects/cricket-node/input/pcb-svg.json`; keep it unstaged
+  unless it is deliberately adopted later. The cutouts fixture's bulk
+  Altium-generated `reference_output/` tree is also left unstaged for this
+  slice because the current cutout SVG test only needs the source fixture, and
+  generated ODB/text oracle files contain intentional whitespace that should
+  not be rewritten casually.
