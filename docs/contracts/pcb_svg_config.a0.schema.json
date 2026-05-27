@@ -150,6 +150,11 @@
       "properties": {
         "side": { "enum": ["top", "bottom"] },
         "projection": { "$ref": "#/$defs/projectionMode" },
+        "assembly_hlr": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "pin1_enabled": { "type": "boolean" },
         "pin1_pad": { "type": "string" },
         "cathode_pad": { "type": "string" },
         "diode": { "type": "boolean" },

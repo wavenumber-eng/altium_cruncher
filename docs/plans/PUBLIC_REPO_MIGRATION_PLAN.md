@@ -1277,7 +1277,13 @@ Current local status:
   inspection views. Pin-1 overlays skip free pads and single-pad components,
   through-hole pin-1 pads preserve visible drill/slot openings, and BGA/LGA
   letter-number pads use a deterministic pin-1 candidate with per-component
-  `pin1_pad` manual overrides. Cutout labels were removed from A0 output, while
+  `pin1_pad` manual overrides. Component overrides now also support
+  `pin1_enabled=false`, per-designator HLR `projection` modes, and
+  per-designator `assembly_hlr` style/geometer overrides. The generated JSONC
+  header documents `bounding_box`, `simple`, `detail`, and `none`, includes HLR
+  style/geometer pass-through examples, and notes that simple/detail fall back
+  to pad bounds for parts without usable STEP geometry. Cutout labels
+  were removed from A0 output, while
   hatch spacing, hatch direction, hash line width, outline line width, and
   solid/dashed outline style remain configurable. The renderer can replace an
   existing durable view `<g>` so user-authored SVG content around that group can

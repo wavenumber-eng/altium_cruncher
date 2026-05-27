@@ -34,6 +34,9 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     pcb_svg_physical_layer_from_token,
     resolve_config_output_path,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_assembly_projection import (
+    AssemblyProjectionOptions,
+)
 from altium_cruncher.altium_cruncher_pcb_svg_cutout_layer import (
     CruncherPcbCutoutLayerRenderer,
     PCB_SVG_BOARD_CUTOUTS_LAYER_ID,
@@ -68,6 +71,18 @@ _HOLE_TOKENS = {"DRILLS", "SLOTS"}
 _PIN1_TOKENS = {"PIN1_TOP", "PIN1_BOTTOM"}
 _SVG_NS = "http://www.w3.org/2000/svg"
 _MM_TO_MIL = 1.0 / _MIL_TO_MM
+_ASSEMBLY_HLR_EDGE_FLAG_KEYS = {
+    "edge_v_sharp",
+    "edge_v_outline",
+    "edge_v_smooth",
+    "edge_v_sewn",
+    "edge_v_iso",
+    "edge_h_sharp",
+    "edge_h_outline",
+    "edge_h_smooth",
+    "edge_h_sewn",
+    "edge_h_iso",
+}
 
 
 def _style_enabled(styles: dict[str, dict[str, object]], name: str) -> bool:
@@ -663,9 +678,105 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         mode = self._resolved_hlr_projection_mode(view)
         if mode == "none":
             return [], []
+        override_modes = self._component_projection_overrides_for_side(pcbdoc, side)
+        component_styles = self._component_assembly_hlr_styles_for_side(
+            pcbdoc,
+            side,
+            styles,
+        )
         if mode == "bounding_box":
-            return [], self._render_a0_assembly_bounding_boxes(ctx, pcbdoc, side, styles)
+            return self._render_hlr_bounding_box_mode(
+                ctx,
+                pcbdoc,
+                side=side,
+                styles=styles,
+                override_modes=override_modes,
+                component_styles=component_styles,
+            )
+        options = self._build_hlr_render_options(
+            side=side,
+            mode=mode,
+            styles=styles,
+            source_layers=source_layers,
+            override_modes=override_modes,
+            component_styles=component_styles,
+        )
+        renderer = CruncherPcbAssemblySvgRenderer(options)
+        try:
+            defs, scene = renderer._render_overlay_defs_scene(ctx, pcbdoc)  # noqa: SLF001
+            scene = self._apply_hlr_component_projection_overrides(
+                ctx,
+                pcbdoc,
+                side,
+                scene,
+                styles,
+                override_modes,
+                component_styles,
+            )
+            return defs, scene
+        except Exception as exc:
+            log.warning("Skipping %s HLR overlay for %s: %s", side, view.name, exc)
+            return [], []
+
+    def _render_hlr_bounding_box_mode(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        *,
+        side: str,
+        styles: dict[str, dict[str, object]],
+        override_modes: dict[str, str],
+        component_styles: dict[str, dict[str, object]],
+    ) -> tuple[list[str], list[str]]:
+        excluded = {
+            designator
+            for designator, projection in override_modes.items()
+            if projection == "none"
+        }
+        return [], self._render_a0_assembly_bounding_boxes(
+            ctx,
+            pcbdoc,
+            side,
+            styles,
+            exclude_designators=excluded,
+            component_styles=component_styles,
+        )
+
+    def _build_hlr_render_options(
+        self,
+        *,
+        side: str,
+        mode: str,
+        styles: dict[str, dict[str, object]],
+        source_layers: list[PcbLayer],
+        override_modes: dict[str, str],
+        component_styles: dict[str, dict[str, object]],
+    ) -> CruncherPcbAssemblySvgRenderOptions:
         style = styles.get("assembly_hlr", {})
+        emitted_modes = self._hlr_emitted_modes(mode, override_modes)
+        component_projection_options = {
+            designator: self._assembly_projection_options_from_style(
+                side=side,
+                style=component_style,
+            )
+            for designator, component_style in component_styles.items()
+        }
+        component_stroke_styles = {
+            designator: {
+                "color": _style_color(
+                    {"assembly_hlr": component_style},
+                    "assembly_hlr",
+                    "#F59E0B",
+                ),
+                "line_width_mm": _style_float(
+                    {"assembly_hlr": component_style},
+                    "assembly_hlr",
+                    "line_width_mm",
+                    0.12,
+                ),
+            }
+            for designator, component_style in component_styles.items()
+        }
         options = CruncherPcbAssemblySvgRenderOptions(
             visible_layers=set(source_layers),
             layer_render_order=source_layers,
@@ -674,9 +785,13 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             mirror_x=False,
             include_assembly_overlay=True,
             assembly_view_side=side,
-            assembly_include_simple=mode == "simple",
-            assembly_include_detail=mode == "detail",
+            assembly_include_simple="simple" in emitted_modes,
+            assembly_include_detail="detail" in emitted_modes,
             assembly_curve_mode=str(style.get("curve_mode") or "native_arcs"),
+            assembly_projection_algorithm=self._optional_assembly_hlr_str(
+                style,
+                "projection_algorithm",
+            ),
             assembly_samples_per_curve=_style_int(
                 styles,
                 "assembly_hlr",
@@ -689,17 +804,174 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 "round_digits",
                 3,
             ),
-            assembly_include_visible=bool(style.get("include_visible", True)),
-            assembly_include_outline=bool(style.get("include_outline", True)),
-            assembly_union_polygons=bool(style.get("union_polygons", True)),
+            assembly_mesh_linear_deflection=self._optional_assembly_hlr_float(
+                style,
+                "mesh_linear_deflection",
+            ),
+            assembly_mesh_angular_deflection=self._optional_assembly_hlr_float(
+                style,
+                "mesh_angular_deflection",
+            ),
+            assembly_mesh_relative=self._optional_assembly_hlr_bool(
+                style,
+                "mesh_relative",
+            ),
+            assembly_hlr_angle_tolerance=self._optional_assembly_hlr_float(
+                style,
+                "hlr_angle_tolerance",
+            ),
+            assembly_edge_flags={
+                key: _style_bool({"assembly_hlr": style}, "assembly_hlr", key, False)
+                for key in _ASSEMBLY_HLR_EDGE_FLAG_KEYS
+                if key in style
+            }
+            or None,
+            assembly_include_visible=_style_bool(
+                {"assembly_hlr": style},
+                "assembly_hlr",
+                "include_visible",
+                True,
+            ),
+            assembly_include_outline=_style_bool(
+                {"assembly_hlr": style},
+                "assembly_hlr",
+                "include_outline",
+                True,
+            ),
+            assembly_union_polygons=_style_bool(
+                {"assembly_hlr": style},
+                "assembly_hlr",
+                "union_polygons",
+                True,
+            ),
             assembly_overlay_color=str(style.get("color") or "#F59E0B"),
+            assembly_line_width_mm=_style_float(
+                {"assembly_hlr": style},
+                "assembly_hlr",
+                "line_width_mm",
+                0.12,
+            ),
+            assembly_component_projection_options=component_projection_options or None,
+            assembly_component_stroke_styles=component_stroke_styles or None,
         )
-        renderer = CruncherPcbAssemblySvgRenderer(options)
+        return options
+
+    def _assembly_projection_options_from_style(
+        self,
+        *,
+        side: str,
+        style: dict[str, object],
+    ) -> AssemblyProjectionOptions:
+        projection_side = "bottom" if side == "bottom" else "top"
+        curve_mode = str(style.get("curve_mode") or "native_arcs").strip().lower()
+        if curve_mode not in {"native_arcs", "polyline"}:
+            curve_mode = "native_arcs"
+        style_table = {"assembly_hlr": style}
+        return AssemblyProjectionOptions(
+            side=projection_side,
+            projection_algorithm=self._optional_assembly_hlr_str(
+                style,
+                "projection_algorithm",
+            ),
+            curve_mode="polyline" if curve_mode == "polyline" else "native_arcs",
+            samples_per_curve=_style_int(
+                style_table,
+                "assembly_hlr",
+                "samples_per_curve",
+                24,
+            ),
+            round_digits=_style_int(
+                style_table,
+                "assembly_hlr",
+                "round_digits",
+                3,
+            ),
+            include_visible=_style_bool(
+                style_table,
+                "assembly_hlr",
+                "include_visible",
+                True,
+            ),
+            include_outline=_style_bool(
+                style_table,
+                "assembly_hlr",
+                "include_outline",
+                True,
+            ),
+            union_polygons=_style_bool(
+                style_table,
+                "assembly_hlr",
+                "union_polygons",
+                True,
+            ),
+            mesh_linear_deflection=self._optional_assembly_hlr_float(
+                style,
+                "mesh_linear_deflection",
+            ),
+            mesh_angular_deflection=self._optional_assembly_hlr_float(
+                style,
+                "mesh_angular_deflection",
+            ),
+            mesh_relative=self._optional_assembly_hlr_bool(
+                style,
+                "mesh_relative",
+            ),
+            hlr_angle_tolerance=self._optional_assembly_hlr_float(
+                style,
+                "hlr_angle_tolerance",
+            ),
+            edge_flags={
+                key: _style_bool(style_table, "assembly_hlr", key, False)
+                for key in _ASSEMBLY_HLR_EDGE_FLAG_KEYS
+                if key in style
+            }
+            or None,
+        )
+
+    @staticmethod
+    def _hlr_emitted_modes(mode: str, override_modes: dict[str, str]) -> set[str]:
+        emitted_modes = {mode}
+        emitted_modes.update(
+            projection
+            for projection in override_modes.values()
+            if projection in {"simple", "detail"}
+        )
+        return emitted_modes
+
+    @staticmethod
+    def _optional_assembly_hlr_str(
+        style: dict[str, object],
+        key: str,
+    ) -> str | None:
+        value = style.get(key)
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    @staticmethod
+    def _optional_assembly_hlr_float(
+        style: dict[str, object],
+        key: str,
+    ) -> float | None:
+        value = style.get(key)
+        if value is None:
+            return None
+        if not isinstance(value, (int, float, str)):
+            raise ValueError(f"Invalid pcb-svg assembly_hlr.{key}")
         try:
-            return renderer._render_overlay_defs_scene(ctx, pcbdoc)  # noqa: SLF001
-        except Exception as exc:
-            log.warning("Skipping %s HLR overlay for %s: %s", side, view.name, exc)
-            return [], []
+            return float(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid pcb-svg assembly_hlr.{key}") from exc
+
+    @staticmethod
+    def _optional_assembly_hlr_bool(
+        style: dict[str, object],
+        key: str,
+    ) -> bool | None:
+        if key not in style:
+            return None
+        return _style_bool({"assembly_hlr": style}, "assembly_hlr", key, False)
 
     def _resolved_hlr_projection_mode(self, view: PcbSvgViewConfig) -> str:
         mode = str(view.assembly_hlr_mode or "detail").strip().lower()
@@ -713,11 +985,20 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         pcbdoc: AltiumPcbDoc,
         side: str,
         styles: dict[str, dict[str, object]],
+        *,
+        include_designators: set[str] | None = None,
+        exclude_designators: set[str] | None = None,
+        component_styles: dict[str, dict[str, object]] | None = None,
     ) -> list[str]:
         layer = PcbLayer.TOP if side == "top" else PcbLayer.BOTTOM
         color = _style_color(styles, "assembly_hlr", "#F59E0B")
         stroke_width = _style_float(styles, "assembly_hlr", "line_width_mm", 0.12)
-        boxes = self._component_pad_bounds_by_side(pcbdoc, layer)
+        boxes = self._component_pad_bounds_by_side(
+            pcbdoc,
+            layer,
+            include_designators=include_designators,
+            exclude_designators=exclude_designators,
+        )
         if not boxes:
             return []
 
@@ -741,13 +1022,29 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
 
         lines = [f"      <g {' '.join(attrs)}>"]
         for designator, bounds in boxes:
+            box_color = color
+            box_stroke_width = stroke_width
+            component_style = (component_styles or {}).get(designator)
+            if component_style:
+                component_style_table = {"assembly_hlr": component_style}
+                box_color = _style_color(
+                    component_style_table,
+                    "assembly_hlr",
+                    color,
+                )
+                box_stroke_width = _style_float(
+                    component_style_table,
+                    "assembly_hlr",
+                    "line_width_mm",
+                    stroke_width,
+                )
             lines.append(
                 "        "
                 + self._component_bounds_rect_svg(
                     ctx,
                     bounds,
-                    color=color,
-                    stroke_width_mm=stroke_width,
+                    color=box_color,
+                    stroke_width_mm=box_stroke_width,
                     designator=designator,
                 )
             )
@@ -758,17 +1055,142 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         self,
         pcbdoc: AltiumPcbDoc,
         layer: PcbLayer,
+        *,
+        include_designators: set[str] | None = None,
+        exclude_designators: set[str] | None = None,
     ) -> list[tuple[str, tuple[float, float, float, float]]]:
         result: list[tuple[str, tuple[float, float, float, float]]] = []
         for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
             if _component_side(component) != ("top" if layer == PcbLayer.TOP else "bottom"):
                 continue
+            designator = _component_designator(component)
+            if include_designators is not None and designator not in include_designators:
+                continue
+            if exclude_designators is not None and designator in exclude_designators:
+                continue
             pads = self._component_layer_pads(pcbdoc, component_index, layer)
             bounds = self._pad_bounds_mils(pads, layer)
             if bounds is None:
                 continue
-            result.append((_component_designator(component), bounds))
+            result.append((designator, bounds))
         return result
+
+    def _component_projection_overrides_for_side(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        side: str,
+    ) -> dict[str, str]:
+        result: dict[str, str] = {}
+        components = getattr(pcbdoc, "components", []) or []
+        sides_by_designator = {
+            _component_designator(component): _component_side(component)
+            for component in components
+            if _component_designator(component)
+        }
+        for designator, override in self.config.components.items():
+            if override.projection is None:
+                continue
+            override_side = override.side or sides_by_designator.get(designator)
+            if override_side == side:
+                result[designator] = override.projection
+        return result
+
+    def _component_assembly_hlr_styles_for_side(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        side: str,
+        styles: dict[str, dict[str, object]],
+    ) -> dict[str, dict[str, object]]:
+        result: dict[str, dict[str, object]] = {}
+        components = getattr(pcbdoc, "components", []) or []
+        sides_by_designator = {
+            _component_designator(component): _component_side(component)
+            for component in components
+            if _component_designator(component)
+        }
+        base_style = dict(styles.get("assembly_hlr", {}))
+        for designator, override in self.config.components.items():
+            if not override.assembly_hlr:
+                continue
+            override_side = override.side or sides_by_designator.get(designator)
+            if override_side == side:
+                merged = dict(base_style)
+                merged.update(override.assembly_hlr)
+                result[designator] = merged
+        return result
+
+    def _apply_hlr_component_projection_overrides(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        side: str,
+        scene: list[str],
+        styles: dict[str, dict[str, object]],
+        overrides: dict[str, str],
+        component_styles: dict[str, dict[str, object]],
+    ) -> list[str]:
+        if not overrides:
+            return scene
+        filtered = self._filter_hlr_component_scene(scene, overrides)
+        bounding_designators = {
+            designator
+            for designator, projection in overrides.items()
+            if projection == "bounding_box"
+        }
+        if bounding_designators:
+            filtered.extend(
+                self._render_a0_assembly_bounding_boxes(
+                    ctx,
+                    pcbdoc,
+                    side,
+                    styles,
+                    include_designators=bounding_designators,
+                    component_styles=component_styles,
+                )
+            )
+        return filtered
+
+    def _filter_hlr_component_scene(
+        self,
+        scene: list[str],
+        overrides: dict[str, str],
+    ) -> list[str]:
+        filtered: list[str] = []
+        active_projection: str | None = None
+        skip_component_depth = 0
+        for line in scene:
+            if skip_component_depth > 0:
+                skip_component_depth += line.count("<g ")
+                skip_component_depth -= line.count("</g>")
+                continue
+            projection = self._override_projection_for_hlr_line(line, overrides)
+            if projection in {"none", "bounding_box"}:
+                skip_component_depth = max(line.count("<g ") - line.count("</g>"), 1)
+                continue
+            if projection in {"simple", "detail"}:
+                active_projection = projection
+            elif line.startswith("    </g>"):
+                active_projection = None
+            if (
+                active_projection in {"simple", "detail"}
+                and 'data-assembly-mode="' in line
+                and f'data-assembly-mode="{active_projection}"' not in line
+            ):
+                continue
+            filtered.append(line)
+        return filtered
+
+    def _override_projection_for_hlr_line(
+        self,
+        line: str,
+        overrides: dict[str, str],
+    ) -> str | None:
+        for designator, projection in overrides.items():
+            escaped = html.escape(designator)
+            token = _safe_svg_id(designator)
+            if f'data-component="{escaped}"' in line or f"assembly-comp-{token}-" in line:
+                return projection
+        return None
 
     def _component_layer_pads(
         self,
@@ -883,6 +1305,9 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         marker_elements: list[str] = []
         for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
             if _component_side(component) != side:
+                continue
+            override = self.config.components.get(_component_designator(component))
+            if override is not None and override.pin1_enabled is False:
                 continue
             if self._component_pad_designator_count(pcbdoc, component_index) <= 1:
                 continue

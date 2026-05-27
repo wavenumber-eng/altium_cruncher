@@ -79,12 +79,16 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     assert top_pin1_view["layers"] == [
         "BOARD_OUTLINE",
         "TOP",
+        "DRILLS",
+        "SLOTS",
         "PIN1_TOP",
         "ASSEMBLY_HLR_TOP",
     ]
     assert bottom_pin1_view["layers"] == [
         "BOARD_OUTLINE",
         "BOTTOM",
+        "DRILLS",
+        "SLOTS",
         "PIN1_BOTTOM",
         "ASSEMBLY_HLR_BOTTOM",
     ]
@@ -249,6 +253,12 @@ def test_pcb_svg_config_accepts_virtual_assembly_options() -> None:
                 "D15": {
                     "side": "top",
                     "projection": "none",
+                    "assembly_hlr": {
+                        "color": "#FF0000",
+                        "line_width_mm": 0.2,
+                        "mesh_linear_deflection": 0.01,
+                    },
+                    "pin1_enabled": False,
                     "pin1_pad": "1",
                     "cathode_pad": "C",
                     "diode": True,
@@ -270,6 +280,9 @@ def test_pcb_svg_config_accepts_virtual_assembly_options() -> None:
     assert config.dnp.hatch_spacing_mm == 1.25
     assert config.diodes.numeric_cathode_pad == "1"
     assert config.components["D15"].cathode_pad == "C"
+    assert config.components["D15"].pin1_enabled is False
+    assert config.components["D15"].assembly_hlr["color"] == "#FF0000"
+    assert config.components["D15"].assembly_hlr["mesh_linear_deflection"] == 0.01
     assert config.views[0].layers == ["BOARD_OUTLINE", "PIN1_TOP"]
     payload = config.to_dict()
     assert "assembly" in payload
@@ -332,9 +345,12 @@ def test_pcb_svg_config_template_comments_include_cricket_node_inventory() -> No
 
     assert "// Component inventory (designator: side, footprint, auto pin-1):" in text
     assert "//   D15: top, footprint=LED-0805-RED, pin1=none" in text
+    assert "Component override examples:" in text
+    assert '"TP1": {"pin1_enabled": false}' in text
+    assert "drills.non_plated_color" in text
     assert "// Auto-detected diode candidates:" in text
     assert "//   D15: two-pin, side=top, pads=A,C, cathode=C" in text
-    assert '"components": {"U5": {"pin1_pad": "B1"}}' in text
+    assert '"U5": {"pin1_pad": "B1", "assembly_hlr": {"color": "#2563EB"}}' in text
 
 
 def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(
@@ -497,6 +513,52 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_a1_pad_and_through_hole() -> None:
     assert 'data-component-designator="TP1"' not in svg
 
 
+def test_pcb_svg_pin1_layer_honors_disabled_component_override() -> None:
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    pcbdoc.add_component(
+        designator="U1",
+        footprint="QFN",
+        position_mils=(100.0, 100.0),
+        layer="TOP",
+    )
+    for designator, x_mils in [("1", 100.0), ("2", 140.0)]:
+        pad = pcbdoc.add_pad(
+            designator=designator,
+            position_mils=(x_mils, 100.0),
+            width_mils=35.0,
+            height_mils=35.0,
+            layer=PcbLayer.TOP,
+            shape=PadShape.CIRCLE,
+        )
+        pad.component_index = 0
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "components": {"U1": {"pin1_enabled": False}},
+        }
+    )
+    view = PcbSvgViewConfig(
+        name="pin1",
+        group_id="pcb-svg-view-pin1",
+        layers=["BOARD_OUTLINE", "PIN1_TOP"],
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-feature="pin1-marker"' not in svg
+
+
 def test_pcb_svg_pin1_layer_renders_bga_lga_grid_candidate_and_override() -> None:
     pcbdoc = AltiumPcbDoc()
     pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
@@ -617,6 +679,203 @@ def test_pcb_svg_hlr_bounding_box_mode_does_not_construct_hlr_renderer(
     assert 'data-projection-mode="bounding_box"' in svg
     assert 'data-feature="assembly-bounding-box"' in svg
     assert 'data-component-designator="U1"' in svg
+
+
+def test_pcb_svg_hlr_bounding_box_mode_honors_component_none_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FailingHlrRenderer:
+        def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+            raise AssertionError("HLR renderer should not be constructed")
+
+    monkeypatch.setattr(
+        pcb_svg_a0_renderer,
+        "CruncherPcbAssemblySvgRenderer",
+        FailingHlrRenderer,
+    )
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    for index, designator in enumerate(["J1", "U1"]):
+        pcbdoc.add_component(
+            designator=designator,
+            footprint="HDR",
+            position_mils=(100.0 + index * 200.0, 100.0),
+            layer="TOP",
+        )
+        pad = pcbdoc.add_pad(
+            designator="1",
+            position_mils=(100.0 + index * 200.0, 100.0),
+            width_mils=60.0,
+            height_mils=30.0,
+            layer=PcbLayer.TOP,
+            shape=PadShape.ROUNDED_RECTANGLE,
+        )
+        pad.component_index = index
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "components": {"J1": {"projection": "none"}},
+        }
+    )
+    view = PcbSvgViewConfig(
+        name="top_hlr_bounds",
+        group_id="pcb-svg-view-hlr-bounds",
+        layers=["BOARD_OUTLINE", "ASSEMBLY_HLR_TOP"],
+        assembly_hlr_mode="bounding_box",
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-component-designator="J1"' not in svg
+    assert 'data-component-designator="U1"' in svg
+
+
+def test_pcb_svg_hlr_bounding_box_mode_honors_component_style_override() -> None:
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    for index, designator in enumerate(["J1", "U1"]):
+        pcbdoc.add_component(
+            designator=designator,
+            footprint="HDR",
+            position_mils=(100.0 + index * 200.0, 100.0),
+            layer="TOP",
+        )
+        pad = pcbdoc.add_pad(
+            designator="1",
+            position_mils=(100.0 + index * 200.0, 100.0),
+            width_mils=60.0,
+            height_mils=30.0,
+            layer=PcbLayer.TOP,
+            shape=PadShape.ROUNDED_RECTANGLE,
+        )
+        pad.component_index = index
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "global": {
+                "styles": {
+                    "assembly_hlr": {
+                        "color": "#00AA00",
+                        "line_width_mm": 0.1,
+                    }
+                }
+            },
+            "components": {
+                "J1": {
+                    "assembly_hlr": {
+                        "color": "#FF0000",
+                        "line_width_mm": 0.33,
+                    }
+                }
+            },
+        }
+    )
+    view = PcbSvgViewConfig(
+        name="top_hlr_bounds",
+        group_id="pcb-svg-view-hlr-bounds",
+        layers=["BOARD_OUTLINE", "ASSEMBLY_HLR_TOP"],
+        assembly_hlr_mode="bounding_box",
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert (
+        'stroke="#FF0000" stroke-width="0.33" '
+        'data-component-designator="J1"'
+    ) in svg
+    assert (
+        'stroke="#00AA00" stroke-width="0.1" '
+        'data-component-designator="U1"'
+    ) in svg
+
+
+def test_pcb_svg_hlr_component_style_override_builds_projection_options() -> None:
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.add_component(
+        designator="U1",
+        footprint="QFN",
+        position_mils=(100.0, 100.0),
+        layer="TOP",
+    )
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "components": {
+                "U1": {
+                    "assembly_hlr": {
+                        "color": "#123456",
+                        "line_width_mm": 0.22,
+                        "projection_algorithm": "exact",
+                        "curve_mode": "polyline",
+                        "samples_per_curve": 18,
+                        "round_digits": 4,
+                        "mesh_linear_deflection": 0.01,
+                        "mesh_angular_deflection": 0.5,
+                        "mesh_relative": False,
+                        "hlr_angle_tolerance": 0.0174533,
+                        "edge_h_outline": False,
+                    }
+                }
+            },
+        }
+    )
+    renderer = PcbSvgA0Renderer(config)
+    styles = config.resolved_styles_for_view(
+        PcbSvgViewConfig(
+            name="top_hlr",
+            group_id="pcb-svg-view-top-hlr",
+            layers=["ASSEMBLY_HLR_TOP"],
+            assembly_hlr_mode="detail",
+            mirror=False,
+        )
+    )
+    component_styles = renderer._component_assembly_hlr_styles_for_side(  # noqa: SLF001
+        pcbdoc,
+        "top",
+        styles,
+    )
+
+    options = renderer._build_hlr_render_options(  # noqa: SLF001
+        side="top",
+        mode="detail",
+        styles=styles,
+        source_layers=[PcbLayer.TOP],
+        override_modes={},
+        component_styles=component_styles,
+    )
+
+    component_options = (options.assembly_component_projection_options or {})["U1"]
+    component_stroke = (options.assembly_component_stroke_styles or {})["U1"]
+    assert component_options.projection_algorithm == "exact"
+    assert component_options.curve_mode == "polyline"
+    assert component_options.samples_per_curve == 18
+    assert component_options.round_digits == 4
+    assert component_options.mesh_linear_deflection == 0.01
+    assert component_options.mesh_angular_deflection == 0.5
+    assert component_options.mesh_relative is False
+    assert component_options.hlr_angle_tolerance == 0.0174533
+    assert component_options.edge_flags == {"edge_h_outline": False}
+    assert component_stroke == {"color": "#123456", "line_width_mm": 0.22}
 
 
 def test_pcb_svg_rejects_v1_config() -> None:

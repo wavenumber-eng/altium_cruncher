@@ -658,6 +658,8 @@ class PcbSvgComponentOverride:
 
     side: str | None = None
     projection: str | None = None
+    assembly_hlr: dict[str, object] = field(default_factory=dict)
+    pin1_enabled: bool | None = None
     pin1_pad: str | None = None
     cathode_pad: str | None = None
     diode: bool | None = None
@@ -682,12 +684,27 @@ class PcbSvgComponentOverride:
                 "detail",
                 field_name=f"components.{designator}.projection",
             )
+        assembly_hlr_raw = data.get("assembly_hlr")
+        assembly_hlr: dict[str, object] = {}
+        if assembly_hlr_raw is not None:
+            if not isinstance(assembly_hlr_raw, Mapping):
+                raise ValueError(
+                    f"pcb-svg config field 'components.{designator}.assembly_hlr' "
+                    "must be an object"
+                )
+            assembly_hlr = dict(assembly_hlr_raw)
         return cls(
             side=_coerce_component_side(
                 data.get("side"),
                 field_name=f"components.{designator}.side",
             ),
             projection=projection,
+            assembly_hlr=assembly_hlr,
+            pin1_enabled=(
+                None
+                if data.get("pin1_enabled") is None
+                else _coerce_bool(data.get("pin1_enabled"), True)
+            ),
             pin1_pad=_coerce_optional_str(data.get("pin1_pad")),
             cathode_pad=_coerce_optional_str(data.get("cathode_pad")),
             diode=(
@@ -713,6 +730,10 @@ class PcbSvgComponentOverride:
             result["side"] = self.side
         if self.projection is not None:
             result["projection"] = self.projection
+        if self.assembly_hlr:
+            result["assembly_hlr"] = dict(self.assembly_hlr)
+        if self.pin1_enabled is not None:
+            result["pin1_enabled"] = self.pin1_enabled
         if self.pin1_pad is not None:
             result["pin1_pad"] = self.pin1_pad
         if self.cathode_pad is not None:
@@ -848,7 +869,14 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             name="top_pin1_view",
             group_id="pcb-svg-view-top-pin1",
             output_svg="views/{board}__top_pin1_view.svg",
-            layers=["BOARD_OUTLINE", "TOP", "PIN1_TOP", "ASSEMBLY_HLR_TOP"],
+            layers=[
+                "BOARD_OUTLINE",
+                "TOP",
+                "DRILLS",
+                "SLOTS",
+                "PIN1_TOP",
+                "ASSEMBLY_HLR_TOP",
+            ],
             mirror=False,
             assembly_hlr_mode="simple",
             description="Top copper with pin-1 overlay",
@@ -857,7 +885,14 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             name="bottom_pin1_view",
             group_id="pcb-svg-view-bottom-pin1",
             output_svg="views/{board}__bottom_pin1_view.svg",
-            layers=["BOARD_OUTLINE", "BOTTOM", "PIN1_BOTTOM", "ASSEMBLY_HLR_BOTTOM"],
+            layers=[
+                "BOARD_OUTLINE",
+                "BOTTOM",
+                "DRILLS",
+                "SLOTS",
+                "PIN1_BOTTOM",
+                "ASSEMBLY_HLR_BOTTOM",
+            ],
             mirror=True,
             assembly_hlr_mode="simple",
             description="Bottom copper with pin-1 overlay",
