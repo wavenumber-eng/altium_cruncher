@@ -11,6 +11,7 @@ from altium_cruncher.altium_cruncher_pcb_workflow import (
     iter_pcb_render_inputs,
     load_design_for_pcb_input,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_pin1 import choose_pin1_pad_designator
 
 if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -36,6 +37,7 @@ class PcbSvgComponentInventoryEntry:
     diode_candidate: bool
     diode_reason: str
     cathode_pad: str | None
+    pin1_pad: str | None
 
     @property
     def is_two_pin_diode(self) -> bool:
@@ -177,6 +179,7 @@ def build_pcb_svg_component_inventory_from_pcbdoc(
                 diode_candidate=bool(reason),
                 diode_reason=reason,
                 cathode_pad=_cathode_pad(pads),
+                pin1_pad=choose_pin1_pad_designator(pads),
             )
         )
     return PcbSvgComponentInventory(

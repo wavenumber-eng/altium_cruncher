@@ -38,6 +38,10 @@ from altium_cruncher.altium_cruncher_pcb_svg_cutout_layer import (
     CruncherPcbCutoutLayerRenderer,
     PCB_SVG_BOARD_CUTOUTS_LAYER_ID,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_pin1 import (
+    choose_pin1_pad_designator,
+    is_grid_pad_designator,
+)
 from altium_cruncher.altium_cruncher_pcb_workflow import (
     CruncherPcbRenderInput,
     iter_pcb_render_inputs,
@@ -914,18 +918,20 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             return None
 
         override = self.config.components.get(_component_designator(component))
-        preferred: list[str] = []
-        if override is not None and override.pin1_pad:
-            preferred.append(override.pin1_pad)
-        preferred.extend(["1", "A1"])
+        selected = choose_pin1_pad_designator(
+            [
+                str(getattr(pad, "designator", "") or "").strip()
+                for pad in pads
+                if str(getattr(pad, "designator", "") or "").strip()
+            ],
+            override=override.pin1_pad if override is not None else None,
+        )
+        if selected is None:
+            return None
         by_designator = {
             str(getattr(pad, "designator", "") or "").strip().upper(): pad for pad in pads
         }
-        for pad_name in preferred:
-            pad = by_designator.get(pad_name.strip().upper())
-            if pad is not None:
-                return pad
-        return None
+        return by_designator.get(selected.upper())
 
     def _pin1_marker_svg(
         self,
@@ -945,7 +951,7 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             f'data-pad-designator="{html.escape(pad_designator)}"',
         ]
 
-        should_fill_pad = _pad_has_hole(pad) or pad_designator.upper() == "A1"
+        should_fill_pad = _pad_has_hole(pad) or is_grid_pad_designator(pad_designator)
         if should_fill_pad:
             to_svg = getattr(pad, "to_svg", None)
             rendered: list[str] = []

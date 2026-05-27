@@ -84,14 +84,15 @@ def _component_inventory_lines(
 ) -> list[str]:
     if not inventories:
         return []
-    lines = ["// Component inventory (designator: side, footprint):\n"]
+    lines = ["// Component inventory (designator: side, footprint, auto pin-1):\n"]
     for inventory in inventories:
         if len(inventories) > 1:
             lines.append(f"// Board {inventory.board_key}:\n")
         for component in inventory.components:
+            pin1 = component.pin1_pad or "none"
             lines.append(
                 f"//   {component.designator}: {component.side}, "
-                f"footprint={_comment_safe(component.footprint)}\n"
+                f"footprint={_comment_safe(component.footprint)}, pin1={pin1}\n"
             )
     return lines
 
@@ -161,6 +162,8 @@ def _default_pcb_svg_config_text(
         "//   and top/bottom HLR bounding-box inspection views.\n"
         "// Optional component override example:\n"
         "//   \"components\": {\"D15\": {\"projection\": \"bounding_box\", \"cathode_pad\": \"C\"}}\n"
+        "// Manual pin-1 override example:\n"
+        "//   \"components\": {\"U5\": {\"pin1_pad\": \"B1\"}}\n"
         "// Projection modes: detail, simple, bounding_box, none.\n"
         f"{inventory_hints}"
         "// Set layer_outputs.enabled=false if you only want composed views.\n"

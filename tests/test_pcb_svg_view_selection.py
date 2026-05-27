@@ -26,6 +26,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
     build_pcb_svg_component_inventory_from_pcbdoc,
     load_pcb_svg_component_inventory,
 )
+from altium_cruncher.altium_cruncher_pcb_svg_pin1 import choose_pin1_pad_designator
 from altium_monkey.altium_pcb_enums import PadShape
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 from altium_monkey.altium_record_types import PcbLayer
@@ -158,6 +159,13 @@ def test_pcb_svg_cli_views_enable_pin1_and_hlr_bounds_aliases() -> None:
         "bottom_hlr_bounding_boxes",
     }
     assert config.layer_outputs["enabled"] is False
+
+
+def test_pcb_svg_pin1_selector_supports_bga_lga_and_manual_override() -> None:
+    pads = ["74", "A8", "A10", "B1", "C1", "AA24"]
+
+    assert choose_pin1_pad_designator(pads) == "B1"
+    assert choose_pin1_pad_designator(pads, override="A10") == "A10"
 
 
 def test_pcb_svg_cli_views_none_disables_all_outputs() -> None:
@@ -308,6 +316,7 @@ def test_pcb_svg_component_inventory_detects_sides_and_diodes() -> None:
     )
 
     assert [component.designator for component in inventory.components] == ["D1", "R1"]
+    assert inventory.components[0].pin1_pad is None
     diode = inventory.diode_candidates[0]
     assert diode.designator == "D1"
     assert diode.side == "top"
@@ -321,10 +330,11 @@ def test_pcb_svg_config_template_comments_include_cricket_node_inventory() -> No
 
     text = _default_pcb_svg_config_text(cast(tuple[PcbSvgComponentInventory, ...], inventories))
 
-    assert "// Component inventory (designator: side, footprint):" in text
-    assert "//   D15: top, footprint=LED-0805-RED" in text
+    assert "// Component inventory (designator: side, footprint, auto pin-1):" in text
+    assert "//   D15: top, footprint=LED-0805-RED, pin1=none" in text
     assert "// Auto-detected diode candidates:" in text
     assert "//   D15: two-pin, side=top, pads=A,C, cathode=C" in text
+    assert '"components": {"U5": {"pin1_pad": "B1"}}' in text
 
 
 def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(
@@ -460,7 +470,7 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_a1_pad_and_through_hole() -> None:
     view = PcbSvgViewConfig(
         name="pin1",
         group_id="pcb-svg-view-pin1",
-        layers=["BOARD_OUTLINE", "TOP", "PIN1_TOP"],
+        layers=["BOARD_OUTLINE", "PIN1_TOP"],
         mirror=False,
     )
     renderer = PcbSvgA0Renderer(config)
@@ -485,6 +495,74 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_a1_pad_and_through_hole() -> None:
     assert 'data-component-designator="J2"' in svg
     assert 'data-primitive="pad-hole"' in svg
     assert 'data-component-designator="TP1"' not in svg
+
+
+def test_pcb_svg_pin1_layer_renders_bga_lga_grid_candidate_and_override() -> None:
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    pcbdoc.add_component(
+        designator="U5",
+        footprint="NRF52840-QIAA-R",
+        position_mils=(100.0, 100.0),
+        layer="TOP",
+    )
+    for designator, x_mils in [
+        ("74", 50.0),
+        ("A8", 100.0),
+        ("A10", 150.0),
+        ("B1", 200.0),
+        ("C1", 250.0),
+    ]:
+        pad = pcbdoc.add_pad(
+            designator=designator,
+            position_mils=(x_mils, 100.0),
+            width_mils=22.0,
+            height_mils=22.0,
+            layer=PcbLayer.TOP,
+            shape=PadShape.CIRCLE,
+        )
+        pad.component_index = 0
+    view = PcbSvgViewConfig(
+        name="pin1",
+        group_id="pcb-svg-view-pin1",
+        layers=["BOARD_OUTLINE", "PIN1_TOP"],
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(PcbSvgConfig.default())
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=renderer.config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-component-designator="U5"' in svg
+    assert 'data-pad-designator="B1"' in svg
+    assert 'data-pad-designator="A8"' not in svg
+
+    override_config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "components": {"U5": {"pin1_pad": "A10"}},
+        }
+    )
+    renderer = PcbSvgA0Renderer(override_config)
+    override_svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=override_config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-pad-designator="A10"' in override_svg
+    assert 'data-pad-designator="B1"' not in override_svg
 
 
 def test_pcb_svg_hlr_bounding_box_mode_does_not_construct_hlr_renderer(
