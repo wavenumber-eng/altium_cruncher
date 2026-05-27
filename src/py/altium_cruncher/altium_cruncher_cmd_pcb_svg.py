@@ -40,11 +40,29 @@ _VIEW_ALIASES = {
 }
 
 
+def _default_pcb_svg_config_text() -> str:
+    """Return the JSONC text used for auto-created PCB SVG configs."""
+    payload = json.dumps(PcbSvgConfig.default().to_dict(), indent=2)
+    return (
+        "// altium-cruncher pcb-svg configuration\n"
+        "// This file is JSONC: // comments, /* block comments */, and trailing commas are accepted.\n"
+        "// Schema: pcb.svg.config.a0\n"
+        "// Common physical layer tokens: TOP, BOTTOM, TOPOVERLAY, BOTTOMOVERLAY, TOPPASTE,\n"
+        "//   BOTTOMPASTE, TOPSOLDER, BOTTOMSOLDER, and MECHANICAL_1..MECHANICAL_32.\n"
+        "// Synthetic layer tokens: BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS,\n"
+        "//   ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM.\n"
+        "// In each view, the layers array is the draw order. HLR renders last, and\n"
+        "//   DRILLS/SLOTS render immediately before HLR.\n"
+        "// Set layer_outputs.enabled=false if you only want composed views.\n"
+        f"{payload}\n"
+    )
+
+
 def _write_default_pcb_svg_config(config_path: Path) -> None:
     """Write an editable A0 pcb-svg config template."""
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(
-        json.dumps(PcbSvgConfig.default().to_dict(), indent=2),
+        _default_pcb_svg_config_text(),
         encoding="utf-8",
     )
 

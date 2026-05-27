@@ -131,7 +131,11 @@ def test_pcb_svg_cli_overrides_created_default_config(tmp_path) -> None:
     config_by_input, created_configs = resolve_pcb_svg_configs(args, [input_file])
 
     resolved = config_by_input[input_file.resolve()]
+    created_text = config_path.read_text(encoding="utf-8")
     assert created_configs == [config_path.resolve()]
+    assert created_text.startswith("// altium-cruncher pcb-svg configuration")
+    assert "Common physical layer tokens" in created_text
+    assert "Synthetic layer tokens" in created_text
     assert _enabled_views(resolved) == {"top_view"}
     assert resolved.layer_outputs["enabled"] is True
     assert resolved.layer_outputs["layers"] == ["BOTTOM"]
