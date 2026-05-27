@@ -53,6 +53,7 @@ def _default_pcb_svg_config_text() -> str:
         "//   ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM.\n"
         "// In each view, the layers array is the draw order. HLR renders last, and\n"
         "//   DRILLS/SLOTS render immediately before HLR.\n"
+        "// With .PrjPcb input, add global.pcbdoc to select one specific board.\n"
         "// Set layer_outputs.enabled=false if you only want composed views.\n"
         f"{payload}\n"
     )

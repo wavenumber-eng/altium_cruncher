@@ -1,12 +1,14 @@
 from types import SimpleNamespace
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
+import altium_cruncher.altium_cruncher_pcb_svg_a0_renderer as pcb_svg_a0_renderer
 from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     PCB_SVG_CONFIG_FILENAME,
     PCB_SVG_CONFIG_SCHEMA,
     PcbSvgConfig,
+    PcbSvgViewConfig,
     _apply_pcb_layer_selection,
     _apply_pcb_view_selection,
     _load_pcb_svg_config,
@@ -27,11 +29,13 @@ def _enabled_views(config: PcbSvgConfig) -> set[str]:
 def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     config = PcbSvgConfig.default()
     payload = config.to_dict()
+    global_options = cast(dict[str, object], payload["global"])
     layer_outputs = cast(dict[str, object], payload["layer_outputs"])
     views = cast(list[dict[str, object]], payload["views"])
 
     assert payload["schema"] == PCB_SVG_CONFIG_SCHEMA
     assert PCB_SVG_CONFIG_FILENAME == "pcb.svg.config"
+    assert "pcbdoc" not in global_options
     assert layer_outputs["enabled"] is True
     assert "BOARD_CUTOUTS" in cast(list[str], layer_outputs["include_special_layers"])
     top_view = next(view for view in views if view["name"] == "top_view")
@@ -136,9 +140,48 @@ def test_pcb_svg_cli_overrides_created_default_config(tmp_path) -> None:
     assert created_text.startswith("// altium-cruncher pcb-svg configuration")
     assert "Common physical layer tokens" in created_text
     assert "Synthetic layer tokens" in created_text
+    assert "add global.pcbdoc" in created_text
+    assert '"pcbdoc": null' not in created_text
     assert _enabled_views(resolved) == {"top_view"}
     assert resolved.layer_outputs["enabled"] is True
     assert resolved.layer_outputs["layers"] == ["BOTTOM"]
+
+
+def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FailingHlrRenderer:
+        def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+            raise AssertionError("HLR renderer should not be constructed")
+
+    monkeypatch.setattr(
+        pcb_svg_a0_renderer,
+        "CruncherPcbAssemblySvgRenderer",
+        FailingHlrRenderer,
+    )
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    config = PcbSvgConfig.default()
+    view = PcbSvgViewConfig(
+        name="top_no_hlr",
+        group_id="pcb-svg-view-top-no-hlr",
+        layers=["BOARD_OUTLINE", "TOP", "DRILLS", "SLOTS"],
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert 'id="pcb-svg-view-top-no-hlr"' in svg
+    assert "ASSEMBLY_HLR" not in svg
 
 
 def test_pcb_svg_rejects_v1_config() -> None:

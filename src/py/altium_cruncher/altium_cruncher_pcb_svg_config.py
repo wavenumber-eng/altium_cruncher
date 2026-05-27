@@ -340,8 +340,7 @@ class PcbSvgGlobalConfig:
         )
 
     def to_dict(self) -> dict[str, object]:
-        return {
-            "pcbdoc": self.pcbdoc,
+        result: dict[str, object] = {
             "canvas": self.canvas.to_dict(),
             "include_metadata": self.include_metadata,
             "show_empty_layers": self.show_empty_layers,
@@ -353,6 +352,9 @@ class PcbSvgGlobalConfig:
             "clean_output": self.clean_output,
             "styles": self.styles,
         }
+        if self.pcbdoc is not None:
+            result["pcbdoc"] = self.pcbdoc
+        return result
 
 
 @dataclass(slots=True)
