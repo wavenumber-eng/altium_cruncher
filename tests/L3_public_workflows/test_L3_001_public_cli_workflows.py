@@ -32,6 +32,8 @@ RT_SUPER_C1_INTLIB = (
 )
 CUTOUTS_DIR = PACKAGE_ROOT / "tests" / "assets" / "projects" / "cutouts"
 CUTOUTS_PCBDOC = CUTOUTS_DIR / "input" / "cutout_multiple.PcbDoc"
+CRICKET_NODE_DIR = PACKAGE_ROOT / "tests" / "assets" / "projects" / "cricket-node"
+CRICKET_NODE_PCBDOC = CRICKET_NODE_DIR / "input" / "cricket-node-hw__B.PcbDoc"
 
 
 def _run_cli(*args: str) -> str:
@@ -272,6 +274,47 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
     assert 'data-assembly-symbol="simple"' in top_svg
     assert 'data-layer-id="1"' in top_svg
     assert 'id="layer-TOPOVERLAY"' not in top_svg
+
+
+def test_pcb_svg_copper_polygon_style_colors_shape_based_regions(
+    tmp_path: Path,
+) -> None:
+    """Verify A0 copper polygon color applies to linked shape-based regions."""
+    config = tmp_path / "pcb.svg.config.a0"
+    config.write_text(
+        json.dumps(
+            {
+                "schema": "pcb.svg.config.a0",
+                "global": {
+                    "styles": {
+                        "copper_traces": {"color": "#111111"},
+                        "copper_polygons": {"color": "#12AB34"},
+                    }
+                },
+                "layer_outputs": {"enabled": False},
+                "views": [
+                    {
+                        "name": "top_view",
+                        "enabled": True,
+                        "output_svg": "views/{board}__top_view.svg",
+                        "layers": ["TOP"],
+                    }
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    output_dir = tmp_path / "pcb-svg"
+
+    _run_cli("pcb-svg", str(CRICKET_NODE_PCBDOC), "--config", str(config), "-o", str(output_dir))
+
+    top_svg = (output_dir / "views" / "cricket-node-hw__B__top_view.svg").read_text(
+        encoding="utf-8"
+    )
+    assert 'data-primitive="shapebased-region"' in top_svg
+    assert 'fill="#12AB34" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"' in top_svg
+    assert 'fill="#000000" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"' not in top_svg
 
 
 def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:

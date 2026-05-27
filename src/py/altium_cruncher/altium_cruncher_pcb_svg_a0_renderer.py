@@ -211,6 +211,7 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             mirror_x=mirror,
             board_outline_color=_style_color(styles, "board_outline", "#000000"),
             board_cutout_color=_style_color(styles, "board_cutouts", "#FF0000"),
+            polygon_overlay_color=_style_color(styles, "copper_polygons", "#888888"),
         )
         self.options = options
 
