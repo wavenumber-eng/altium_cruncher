@@ -8,7 +8,7 @@ This inventory records the command set migrated from the private
 
 | Command | Initial status | Public test coverage | Notes |
 | --- | --- | --- | --- |
-| `version` | public | `L0_public_cli` | Package/CLI version reporting. |
+| `version` | public | `L0_public_cli` | Package/CLI version reporting, including controlled runtime dependency versions for `altium-monkey` and `wn-geometer`. |
 | `sch-svg` | public | `L3_public_workflows` | Schematic SVG export. |
 | `pcb-svg` | public | `L3_public_workflows` | PCB SVG export and board-view generation. |
 | `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
@@ -18,11 +18,11 @@ This inventory records the command set migrated from the private
 | `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
 | `design` | public | `L3_public_workflows` | Key command. Exports AltiumDesign JSON for schematic/project documents, including netlist data, components, hierarchy, SVG IDs, and lookup indexes. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
-| `easyeda-import` | optional-experimental | optional fixture lane | Experimental. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; current tests cover SchLib import, optional PcbLib footprint import, reports, and previews from saved fixtures. |
+| `easyeda-import` | optional-experimental | optional fixture lane | Experimental. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; default output includes SchLib, PcbLib footprint, and downloaded 3D assets when available. 3D model placement into PcbLib is not implemented. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
-| `clean` | public | `L3_public_workflows` | Keep. Needs detailed config documentation plus fixture-backed CLI tests for template creation, actual clean application, output/backup behavior, and PcbLib removal rules. |
+| `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
 
 The command manifest lives at `docs/contracts/command_manifest.v0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
@@ -31,6 +31,8 @@ test ownership.
 Shared help requirements for every command:
 
 - top-level and command-specific help should print the package version;
+- `version` and `--version` should report `altium-cruncher`,
+  `altium-monkey`, and `wn-geometer` versions;
 - command lists should be alphabetical;
 - help output should include readable spacing between version, usage, commands,
   and options;
@@ -175,11 +177,14 @@ EasyEDA command notes:
 
 - `easyeda-import` is an optional experimental command until release ownership
   is complete;
-- `easyeda-import` currently generates `SchLib` output by default and
-  generates `PcbLib` footprint output when `--footprint` or `--full` is used;
+- `easyeda-import` currently generates `SchLib` and `PcbLib` footprint output
+  by default;
+- `easyeda-import` downloads EasyEDA OBJ/STEP 3D model assets when a 3D model
+  reference exists and network fetches are enabled, but does not attach/place
+  those models into the generated Altium `PcbLib`;
 - optional tests cover saved JSON input, generated `SchLib`, generated
-  `PcbLib` when requested, reports, preview artifacts, and fixture-wide review
-  HTML/SVG output;
+  default `PcbLib`, reports, preview artifacts, mocked 3D model downloads, and
+  fixture-wide review HTML/SVG output;
 - live API/cache behavior still needs separate optional or network-marked
   coverage before removing the experimental label;
 - `easyeda-review` and `easyeda-footprint-review` are not public CLI commands;
@@ -230,11 +235,12 @@ Clean notes:
 - release docs must explain both config schemas:
   `wn.altium.clean.config.v1` for `SchDoc`/`SchLib`/`PrjPcb`, and
   `wn.altium.pcblib.clean.config.v1` for `PcbLib`;
-- docs must cover config auto-generation, output path behavior, backup
+- docs cover explicit `--init-config`, config auto-generation, output path behavior, backup
   behavior, color/font/line-width/no-ERC value formats, every schematic
   normalization section, and every PcbLib removal section;
-- current tests are not enough: they cover SchDoc template generation, a few
-  SchLib helper-ordering cases, and PcbLib config-path discovery;
+- current tests cover SchDoc template generation, explicit schematic/PcbLib
+  `--init-config`, per-option JSONC template comments, a few SchLib
+  helper-ordering cases, and PcbLib config-path discovery;
 - add CLI tests for actual SchLib/SchDoc clean application, project fanout when
   cleared fixtures exist, PcbLib mechanical/text/region removal, generated
   config contract conformance, and backup/output semantics;

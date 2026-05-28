@@ -8,7 +8,9 @@ objectives = [
     "Package version metadata matches the release date contract",
     "CLI version output matches package metadata",
     "Python signoff does not regress against the accepted baseline",
+    "CLI parser commands, the command manifest, and CLI design docs stay synchronized",
     "Registered CLI commands have matching HTML design documentation",
+    "Public config files have machine-readable schemas and generated-template conformance tests",
     "Dataclasses and major interfaces have design docs and Rack test ownership",
 ]
 
@@ -50,12 +52,29 @@ test_case_type = "audit_meta"
 
 [subtests.objectives]
 design_index = "Master docs/design/index.html and CLI/API indexes exist"
+command_inventory = "Actual parser commands match command manifest and CLI design docs exactly"
 cli_docs = "Every registered CLI command has a matching docs/design/cli HTML page"
 command_modules = "Every command except version has a dedicated command module"
 config_contracts = "Command docs declare whether config contracts are required"
 
 [subtests.approach]
 pytest = "Inspect command manifest and matching design documentation"
+
+[[subtests]]
+id = "L99_005"
+file = "test_L99_005_config_contracts.py"
+name = "Config Contract Signoff"
+description = "Validate public CLI config contracts and generated config template conformance"
+concerns = ["release", "contracts", "docs", "signoff"]
+test_case_type = "audit_meta"
+
+[subtests.objectives]
+contract_links = "Every CLI design doc declares none or an existing schema contract"
+schema_validity = "Every docs/contracts/*.schema.json file is a valid JSON Schema"
+generated_templates = "Generated default configs validate against their declared schemas"
+
+[subtests.approach]
+pytest = "Inspect command docs and validate generated config payloads with jsonschema"
 
 [[subtests]]
 id = "L99_004"

@@ -9,6 +9,8 @@ Active plans:
 - `EASYEDA_MONKEY_PUBLIC_REPO_PLAN.md` - prerequisite plan for standing up
   `easyeda-monkey` with the same signoff, tests, docs, and release discipline
   before wiring EasyEDA behavior back into `altium-cruncher`.
+- `WN_HW_INSTALLER_INTEGRATION.md` - private workspace setup/update integration
+  notes for exposing the public CLI executable.
 
 Historical private research plans with machine-local paths should not be copied
 into this public repo. Durable EasyEDA behavior that ships here should be

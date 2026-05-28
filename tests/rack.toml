@@ -39,6 +39,7 @@ description = "Release-signoff lane with package build and contract checks"
 
 [dependencies]
 python_packages = [
+    "jsonschema",
     "pytest",
     "pytest-json-report",
     "wn-rack",

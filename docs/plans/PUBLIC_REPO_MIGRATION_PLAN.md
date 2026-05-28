@@ -971,6 +971,11 @@ Current behavior to preserve:
   `wn.altium.clean.config.v1`;
 - `.PcbLib` uses the footprint-library clean config schema
   `wn.altium.pcblib.clean.config.v1`;
+- `--init-config` writes the inferred or requested config template and exits
+  without loading or cleaning an input file;
+- `--config-type schematic|pcblib` selects the template type for
+  no-input `--init-config`; input suffixes infer the type when a file is given;
+- `--force-config` allows explicit template overwrite with `--init-config`;
 - omitted config auto-resolves and, if missing, writes a template then exits
   without mutating the input;
 - `.PrjPcb` input applies schematic cleaning across project `SchDoc` files;
@@ -984,10 +989,10 @@ Current implementation notes:
 
 - generated schematic and PcbLib clean templates are now JSONC with comments
   that describe config lifecycle, safe rerun practice, supported color/font
-  forms, and each major rule section;
-- `docs/design/cli/clean.html` now documents config discovery, first-run
-  template behavior, schematic rules, PcbLib rules, output/backup semantics,
-  and current test coverage;
+  forms, each major rule section, and each nested option;
+- `docs/design/cli/clean.html` now documents explicit `--init-config`,
+  config discovery, first-run template behavior, schematic rules, PcbLib rules,
+  output/backup semantics, and current test coverage;
 - tests verify that generated clean templates contain comments and still parse
   through the shared JSONC config loader.
 
@@ -1021,14 +1026,16 @@ Config documentation required before release:
 
 Current test coverage analysis:
 
-- `tests/L3_public_workflows/test_L3_001_public_cli_workflows.py` only checks
-  that `clean` creates an `altium-clean.json` template for a copied public
-  `SchDoc`;
+- `tests/L3_public_workflows/test_L3_001_public_cli_workflows.py` checks that
+  `clean` creates an `altium-clean.json` template for a copied public `SchDoc`
+  and that explicit `--init-config` can write schematic and PcbLib templates
+  without loading or cleaning an input file;
 - `tests/test_schlib_clean_order.py` directly tests helper behavior for
   SchLib body rectangle ordering and reparse safety, but it does not run the
   public CLI;
 - `tests/test_pcblib_clean_config.py` tests workspace/config-path discovery for
-  PcbLib clean config, but it does not apply PcbLib cleaning;
+  PcbLib clean config and verifies per-option JSONC comments, but it does not
+  apply PcbLib cleaning;
 - there is not yet enough public CLI coverage for actual clean application,
   backup/output behavior, project fanout, PcbLib primitive removal, or config
   contract conformance.
@@ -1046,7 +1053,7 @@ Required release tests:
 - add a CLI test for `.PcbLib` clean that removes known mechanical/text/region
   noise while preserving component bodies, embedded models, keepouts, board
   cutouts, and custom-pad regions as configured;
-- add config contract tests that load generated templates and verify their
+- keep config contract tests that load generated templates and verify their
   schema fields and documented keys;
 - avoid byte-for-byte comparisons unless a fixture is explicitly declared
   stable at that level; semantic reparse and targeted field/primitive checks
@@ -1072,12 +1079,15 @@ on private modules.
 Current command status:
 
 - `easyeda-import` is the only EasyEDA public CLI command and is optional
-  experimental. It generates `SchLib` output by default and `PcbLib` footprint
-  output with `--footprint` or `--full`;
+  experimental. It generates `SchLib` and `PcbLib` footprint output by default;
+- `easyeda-import` downloads EasyEDA OBJ/STEP 3D model assets when available,
+  but 3D model placement/attachment into the generated Altium `PcbLib` is not
+  implemented;
 - `easyeda-review` and `easyeda-footprint-review` are not public CLI commands;
   their implementations are kept for tests and internal review tooling only;
-- optional fixture tests exist for saved JSON schematic import, footprint
-  import, import reports/previews, and both review commands;
+- optional fixture tests exist for saved JSON schematic import, default
+  footprint import, mocked 3D model asset download, import reports/previews,
+  and both review commands;
 - none of these commands should be treated as release-owned until the optional
   extra lane and live API/cache behavior have been audited.
 
@@ -1134,8 +1144,10 @@ EasyEDA command audit requirements:
   path;
 - keep proving `easyeda-import` writes a reparseable `SchLib`, writes reports,
   and writes preview artifacts when requested;
-- keep proving `easyeda-import --footprint` or `--full` writes a reparseable
-  `PcbLib` and footprint report;
+- keep proving default `easyeda-import` writes a reparseable `PcbLib` and
+  footprint report;
+- keep proving EasyEDA 3D model assets are downloaded when referenced while
+  documenting that placement/attachment into `PcbLib` is not implemented;
 - keep proving the internal review helpers generate deterministic HTML/SVG
   review artifacts from fixtures;
 - keep all EasyEDA fixtures under the standard `input/`, `reference_output/`,

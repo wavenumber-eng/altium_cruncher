@@ -1,6 +1,6 @@
 # WN Workspace Installer Integration
 
-Status: draft
+Status: draft planning note
 Last updated: 2026-05-26
 
 ## Purpose

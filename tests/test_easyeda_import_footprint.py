@@ -12,6 +12,7 @@ pytest.importorskip("easyeda_monkey")
 from altium_cruncher.altium_cruncher_cmd_easyeda_footprint_review import (
     cmd_easyeda_footprint_review,
 )
+import altium_cruncher.altium_cruncher_cmd_easyeda_import as easyeda_import_cmd
 from altium_cruncher.altium_cruncher_cmd_easyeda_import import cmd_easyeda_import
 from altium_cruncher.easyeda_altium_footprint import (
     EasyEdaFootprintImportPolicy,
@@ -304,9 +305,11 @@ def test_easyeda_import_cli_generates_pcblib_report_and_footprint_preview(
             schlib_name=None,
             footprint=True,
             full=False,
+            symbol_only=False,
             footprint_name=None,
             pcblib_name=None,
             preview=True,
+            no_3d_model_download=False,
             pin_grid_mils=100.0,
             no_align_pin_grid=False,
             use_source_pin_electrical=False,
@@ -323,6 +326,7 @@ def test_easyeda_import_cli_generates_pcblib_report_and_footprint_preview(
     case_dir = tmp_path / "C963370"
     assert (case_dir / "C963370.SchLib").exists()
     assert (case_dir / "C963370.PcbLib").exists()
+    assert not (case_dir / "easyeda-3d-models.json").exists()
 
     report = json.loads(
         (case_dir / "easyeda-footprint-report.json").read_text(encoding="utf-8")
@@ -340,6 +344,69 @@ def test_easyeda_import_cli_generates_pcblib_report_and_footprint_preview(
     assert "Overlay" in (preview_dir / "footprint-compare.svg").read_text(
         encoding="utf-8"
     )
+
+
+def test_easyeda_import_cli_downloads_3d_models_without_placing_them(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    requested_urls: list[str] = []
+
+    def fake_download(url: str) -> bytes:
+        requested_urls.append(url)
+        if "qAxj6KHrDKw4blvCG8QJPs7Y" in url:
+            return b"ISO-10303-21;\nEND-ISO-10303-21;\n"
+        return b"v 0 0 0\n"
+
+    monkeypatch.setattr(easyeda_import_cmd, "_download_easyeda_model_bytes", fake_download)
+
+    result = cmd_easyeda_import(
+        argparse.Namespace(
+            lcsc_id="C21190",
+            input_json=_fixture_path("C21190__resistor_0603_1k.json"),
+            cache_dir=None,
+            no_fetch=False,
+            symbol_name=None,
+            schlib_name=None,
+            footprint=False,
+            full=False,
+            symbol_only=False,
+            footprint_name=None,
+            pcblib_name=None,
+            preview=False,
+            no_3d_model_download=False,
+            pin_grid_mils=100.0,
+            no_align_pin_grid=False,
+            use_source_pin_electrical=False,
+            use_source_pin_ieee_symbols=False,
+            pin_name_visibility="source",
+            pin_designator_visibility="source",
+            pin_text_orientation="default",
+            rotate_vertical_pin_text=False,
+            output=tmp_path,
+        )
+    )
+
+    assert result == 0
+    case_dir = tmp_path / "C21190"
+    assert (case_dir / "C21190.SchLib").exists()
+    assert (case_dir / "C21190.PcbLib").exists()
+    assert (case_dir / "3d_models" / "R0603.obj").exists()
+    assert (case_dir / "3d_models" / "R0603.step").exists()
+    assert len(requested_urls) == 2
+
+    manifest = json.loads((case_dir / "easyeda-3d-models.json").read_text(encoding="utf-8"))
+    assert manifest["placement_implemented"] is False
+    assert manifest["models"][0]["uuid"] == "6bd5cd867e9542ebae21caaf5d2d4c4d"
+    assert manifest["models"][0]["placement_status"] == "downloaded_not_attached"
+    files = {
+        key: str(value).replace("\\", "/")
+        for key, value in manifest["models"][0]["files"].items()
+    }
+    assert files == {
+        "obj": "3d_models/R0603.obj",
+        "step": "3d_models/R0603.step",
+    }
 
 
 @pytest.mark.parametrize("fixture_name", STRESS_FOOTPRINT_FIXTURES)

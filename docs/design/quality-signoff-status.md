@@ -21,18 +21,14 @@ Last updated: 2026-05-26
 
 ## Active Design-Doc Gate
 
-`L99_signoff` now includes hard checks for command design docs and public
-dataclass / major-interface design ownership. The checks are intentionally
-expected to fail until command-specific `docs/design/cli/*.html` pages and
-API/interface design sections are added.
+`L99_signoff` now includes hard checks for command design docs, config contract
+links, config schema validation, generated-template conformance, and public
+dataclass / major-interface design ownership.
 
 Current known gaps:
 
-- command design docs are missing for the migrated command manifest;
-- public dataclasses do not yet have `data-interface` sections under
-  `docs/design/api/`;
-- machine-readable config contracts for commands such as `pcb-svg`,
-  `pcb-layer-step`, and `clean` are still pending.
+- keep command design docs, config contracts, and public API/interface sections
+  synchronized as commands move into the release boundary.
 
 ## Pyright Backlog
 

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>pcb-layer-step command</title><link rel="stylesheet" href="../styles.css"></head>
-<body data-doc-kind="cli-design" data-command="pcb-layer-step" data-config-contract="pending">
+<body data-doc-kind="cli-design" data-command="pcb-layer-step" data-config-contract="docs/contracts/pcb_layer_step_config.v2.schema.json">
 <main>
 <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
 <header><p class="status">CLI command design</p><h1>pcb-layer-step</h1><p class="lede">Generates a compact fixture-alignment STEP model from selected Altium PCB layer geometry.</p></header>
@@ -18,7 +18,7 @@ altium-cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --config pcb-la
 
 <section id="geometer-boundary"><h2>Geometer Boundary</h2><p>The command feeds Geometer <code>geometry.planar_step.request.a0</code>: colored planar bodies with <code>z_mm</code>, <code>thickness_mm</code>, closed regions, optional region holes, optional body cutouts, and optional <code>fuse_regions</code>. Geometer should remain PCB-agnostic. It should not know about designators, pads, vias, test points, polygons, board origins, or drill policy. Those decisions belong in <code>altium_cruncher</code> before request construction.</p><p>The first fixture-alignment feature set does not require Geometer changes. Annular drill rings can be represented as regions with holes. Designator-based colors can be represented by splitting geometry into multiple colored bodies. Whole-model fixture placement remains intentionally out of scope because the request is already normalized to the DUT board placement origin. Future Geometer enhancements may be useful for root/body transforms or per-region names/colors, but they are not release blockers for this command.</p></section>
 
-<section id="config"><h2>JSONC Config</h2><p>The generated config should be JSONC and include block comments with editing guidance. The target schema is a multi-output config: one file can define several outputs using an array of the same output configuration shape. A default section may provide shared values, but each output entry should be able to override layer, filename, colors, feature filters, drill policy, fusion, and Z/thickness settings.</p><pre><code>{
+<section id="config"><h2>JSONC Config</h2><p>The generated config is JSONC and includes block comments with editing guidance. The machine-readable contract is <code>docs/contracts/pcb_layer_step_config.v2.schema.json</code>. The target schema is a multi-output config: one file can define several outputs using an array of the same output configuration shape. A default section may provide shared values, but each output entry should be able to override layer, filename, colors, feature filters, drill policy, fusion, and Z/thickness settings.</p><pre><code>{
   /* pcb-layer-step is intended for fixture alignment models.
      Keep the model small: include board outline, test pads, and only the copper
      features useful for pogo-pin verification. */

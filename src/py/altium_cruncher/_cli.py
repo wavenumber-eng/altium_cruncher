@@ -27,7 +27,7 @@ if __package__ in {None, ""}:
 from colorama import Fore, Style
 
 from altium_cruncher.logging_utils import setup_cli_logging
-from altium_cruncher._version import cli_version_text
+from altium_cruncher._version import cli_version_report, cli_version_text
 
 from altium_cruncher.altium_cruncher_cmd_bom import (
     register_parser as register_bom_parser,
@@ -141,6 +141,21 @@ class CruncherArgumentParser(argparse.ArgumentParser):
         )
 
 
+class VersionReportAction(argparse.Action):
+    """Print the full version report without argparse whitespace normalization."""
+
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | list[str] | None,
+        option_string: str | None = None,
+    ) -> None:
+        del namespace, values, option_string
+        print(cli_version_report())
+        parser.exit(0)
+
+
 def _configure_root_help_color(
     parser: CruncherArgumentParser,
     subparsers: argparse._SubParsersAction,
@@ -150,7 +165,7 @@ def _configure_root_help_color(
 
 
 def _cmd_version(_args: argparse.Namespace) -> int:
-    print(cli_version_text())
+    print(cli_version_report())
     return 0
 
 
@@ -215,8 +230,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--version",
-        action="version",
-        version=cli_version_text(),
+        nargs=0,
+        action=VersionReportAction,
         help="Print version information and exit",
     )
     logging_group = parser.add_mutually_exclusive_group()

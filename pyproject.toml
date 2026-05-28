@@ -9,7 +9,7 @@ authors = [
     { name = "Wavenumber LLC" },
 ]
 dependencies = [
-    "altium-monkey>=2026.5.26",
+    "altium-monkey==2026.5.26",
     "colorama>=0.4.6",
     "json-with-comments>=1.2.10",
     "openpyxl>=3.1.0",
@@ -21,6 +21,7 @@ easyeda = [
     "easyeda-monkey>=2026.5.26",
 ]
 test = [
+    "jsonschema>=4.0.0",
     "pytest>=8.0.0",
     "wn-rack>=1.1.0",
     "pyright>=1.1.390",
@@ -31,6 +32,7 @@ test = [
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.0.0",
     "pytest>=8.0.0",
     "wn-rack>=1.1.0",
     "pyright>=1.1.390",

@@ -39,7 +39,9 @@ uv run altium-cruncher --help
 uv run python -m altium_cruncher version
 ```
 
-The EasyEDA import command is optional and experimental. Install the `easyeda`
+The EasyEDA import command is optional and experimental. It generates SchLib,
+PcbLib footprint, and downloaded 3D model assets by default, but 3D model
+placement into the generated PcbLib is not implemented. Install the `easyeda`
 extra when that workflow is needed:
 
 ```powershell

@@ -1,0 +1,485 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/pcb_layer_step_config.v2.schema.json",
+  "title": "Altium Cruncher PCB Layer STEP Config",
+  "description": "JSON/JSONC configuration contract for fixture-alignment PCB layer STEP exports.",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": {
+      "enum": [
+        "wn.altium_cruncher.pcb_layer_step.config.v1",
+        "wn.altium_cruncher.pcb_layer_step.config.v2"
+      ]
+    },
+    "defaults": {
+      "$ref": "#/$defs/outputOptions"
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/outputOptions"
+      }
+    },
+    "options": {
+      "$ref": "#/$defs/outputOptions"
+    },
+    "name": {
+      "type": ["string", "null"]
+    },
+    "output_step": {
+      "type": ["string", "null"]
+    },
+    "pcbdoc": {
+      "type": ["string", "null"]
+    },
+    "layer": {
+      "$ref": "#/$defs/layerSelector"
+    },
+    "thickness_mm": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "z_mm": {
+      "type": "number"
+    },
+    "copper_color": {
+      "$ref": "#/$defs/color"
+    },
+    "outline_width_mm": {
+      "type": "number",
+      "minimum": 0
+    },
+    "outline_color": {
+      "$ref": "#/$defs/color"
+    },
+    "board_cutout_color": {
+      "$ref": "#/$defs/color"
+    },
+    "include_board_cutouts": {
+      "type": "boolean"
+    },
+    "include_copper": {
+      "type": "boolean"
+    },
+    "include_board_outline": {
+      "type": "boolean"
+    },
+    "include_poured_polygons": {
+      "type": "boolean"
+    },
+    "cut_holes": {
+      "type": "boolean"
+    },
+    "drill_hole_mode": {
+      "$ref": "#/$defs/drillMode"
+    },
+    "max_boolean_drill_cuts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "drill_hole_color": {
+      "$ref": "#/$defs/color"
+    },
+    "drill_plated_hole_color": {
+      "$ref": "#/$defs/color"
+    },
+    "drill_non_plated_hole_color": {
+      "$ref": "#/$defs/color"
+    },
+    "drill_overlay_thickness_mm": {
+      "type": "number",
+      "minimum": 0
+    },
+    "drill_minimum_diameter_mm": {
+      "type": "number",
+      "minimum": 0
+    },
+    "drill_hole_shape": {
+      "$ref": "#/$defs/drillShape"
+    },
+    "drill_ring_width_mm": {
+      "type": "number",
+      "minimum": 0
+    },
+    "drill_plated_ring_shape": {
+      "$ref": "#/$defs/platedRingShape"
+    },
+    "fuse_copper": {
+      "type": "boolean"
+    },
+    "fuse_board_outline": {
+      "type": "boolean"
+    },
+    "arc_segments": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "include_tracks": {
+      "type": "boolean"
+    },
+    "include_arcs": {
+      "type": "boolean"
+    },
+    "include_fills": {
+      "type": "boolean"
+    },
+    "include_regions": {
+      "type": "boolean"
+    },
+    "include_vias": {
+      "type": "boolean"
+    },
+    "include_component_pads": {
+      "type": "boolean"
+    },
+    "include_free_pads": {
+      "type": "boolean"
+    },
+    "include_designators": {
+      "$ref": "#/$defs/stringList"
+    },
+    "pad_color_rules": {
+      "$ref": "#/$defs/padRules"
+    },
+    "board_outline": {
+      "$ref": "#/$defs/boardOutline"
+    },
+    "features": {
+      "$ref": "#/$defs/features"
+    },
+    "colors": {
+      "$ref": "#/$defs/colors"
+    },
+    "drills": {
+      "$ref": "#/$defs/drills"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": ["outputs"]
+      },
+      "then": {
+        "properties": {
+          "schema": {
+            "const": "wn.altium_cruncher.pcb_layer_step.config.v2"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "outputOptions": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "$ref": "#/$defs/outputOptions"
+        },
+        "name": {
+          "type": ["string", "null"]
+        },
+        "output_step": {
+          "type": ["string", "null"]
+        },
+        "pcbdoc": {
+          "type": ["string", "null"]
+        },
+        "layer": {
+          "$ref": "#/$defs/layerSelector"
+        },
+        "thickness_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "z_mm": {
+          "type": "number"
+        },
+        "copper_color": {
+          "$ref": "#/$defs/color"
+        },
+        "outline_width_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "outline_color": {
+          "$ref": "#/$defs/color"
+        },
+        "board_cutout_color": {
+          "$ref": "#/$defs/color"
+        },
+        "include_board_cutouts": {
+          "type": "boolean"
+        },
+        "include_copper": {
+          "type": "boolean"
+        },
+        "include_board_outline": {
+          "type": "boolean"
+        },
+        "include_poured_polygons": {
+          "type": "boolean"
+        },
+        "cut_holes": {
+          "type": "boolean"
+        },
+        "drill_hole_mode": {
+          "$ref": "#/$defs/drillMode"
+        },
+        "max_boolean_drill_cuts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "drill_hole_color": {
+          "$ref": "#/$defs/color"
+        },
+        "drill_plated_hole_color": {
+          "$ref": "#/$defs/color"
+        },
+        "drill_non_plated_hole_color": {
+          "$ref": "#/$defs/color"
+        },
+        "drill_overlay_thickness_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "drill_minimum_diameter_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "drill_hole_shape": {
+          "$ref": "#/$defs/drillShape"
+        },
+        "drill_ring_width_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "drill_plated_ring_shape": {
+          "$ref": "#/$defs/platedRingShape"
+        },
+        "fuse_copper": {
+          "type": "boolean"
+        },
+        "fuse_board_outline": {
+          "type": "boolean"
+        },
+        "arc_segments": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "include_tracks": {
+          "type": "boolean"
+        },
+        "include_arcs": {
+          "type": "boolean"
+        },
+        "include_fills": {
+          "type": "boolean"
+        },
+        "include_regions": {
+          "type": "boolean"
+        },
+        "include_vias": {
+          "type": "boolean"
+        },
+        "include_component_pads": {
+          "type": "boolean"
+        },
+        "include_free_pads": {
+          "type": "boolean"
+        },
+        "include_designators": {
+          "$ref": "#/$defs/stringList"
+        },
+        "pad_color_rules": {
+          "$ref": "#/$defs/padRules"
+        },
+        "board_outline": {
+          "$ref": "#/$defs/boardOutline"
+        },
+        "features": {
+          "$ref": "#/$defs/features"
+        },
+        "colors": {
+          "$ref": "#/$defs/colors"
+        },
+        "drills": {
+          "$ref": "#/$defs/drills"
+        }
+      },
+      "additionalProperties": false
+    },
+    "layerSelector": {
+      "type": ["string", "integer", "null"]
+    },
+    "color": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stringList": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      ]
+    },
+    "boardOutline": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "cutout_color": {
+          "$ref": "#/$defs/color"
+        },
+        "cutouts_color": {
+          "$ref": "#/$defs/color"
+        },
+        "cutouts": {
+          "type": "boolean"
+        },
+        "width_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "fuse": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "tracks": {
+          "type": "boolean"
+        },
+        "arcs": {
+          "type": "boolean"
+        },
+        "fills": {
+          "type": "boolean"
+        },
+        "polygons": {
+          "type": "boolean"
+        },
+        "regions": {
+          "type": "boolean"
+        },
+        "vias": {
+          "type": "boolean"
+        },
+        "component_pads": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "enum": ["none", "all", "matching_designators"]
+                },
+                "include_designators": {
+                  "$ref": "#/$defs/stringList"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "free_pads": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "colors": {
+      "type": "object",
+      "properties": {
+        "default_copper": {
+          "$ref": "#/$defs/color"
+        },
+        "pad_rules": {
+          "$ref": "#/$defs/padRules"
+        }
+      },
+      "additionalProperties": false
+    },
+    "padRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["designators", "color"],
+        "properties": {
+          "designators": {
+            "$ref": "#/$defs/stringList"
+          },
+          "color": {
+            "$ref": "#/$defs/color"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "drills": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/drillMode"
+        },
+        "minimum_diameter_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "shape": {
+          "$ref": "#/$defs/drillShape"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "plated_color": {
+          "$ref": "#/$defs/color"
+        },
+        "non_plated_color": {
+          "$ref": "#/$defs/color"
+        },
+        "ring_width_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "plated_ring_shape": {
+          "$ref": "#/$defs/platedRingShape"
+        },
+        "overlay_thickness_mm": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "drillMode": {
+      "enum": ["auto", "cut", "overlay", "none"]
+    },
+    "drillShape": {
+      "enum": ["solid", "ring"]
+    },
+    "platedRingShape": {
+      "enum": ["annulus", "pad"]
+    }
+  }
+}

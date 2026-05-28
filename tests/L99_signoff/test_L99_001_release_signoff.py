@@ -7,10 +7,11 @@ import subprocess
 import sys
 import tomllib
 from datetime import date
+from importlib.metadata import version as distribution_version
 from pathlib import Path
 
 import altium_cruncher
-from altium_cruncher._version import cli_version_text
+from altium_cruncher._version import cli_version_report, cli_version_text
 
 
 def _project_root() -> Path:
@@ -24,6 +25,10 @@ def _project_root() -> Path:
 PACKAGE_ROOT = _project_root()
 EXPECTED_VERSION = "2026.5.26"
 EXPECTED_RELEASE_DATE = date(2026, 5, 26)
+CONTROLLED_DEPENDENCIES = {
+    "altium-monkey": "2026.5.26",
+    "wn-geometer": "2026.5.25",
+}
 
 
 def test_version_contract_matches_date_based_release() -> None:
@@ -47,6 +52,15 @@ def test_version_contract_matches_date_based_release() -> None:
     }
 
 
+def test_controlled_dependency_pins_match_latest_release_versions() -> None:
+    """Verify controlled dependencies are pinned to audited release versions."""
+    pyproject = tomllib.loads((PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    dependencies = set(pyproject["project"]["dependencies"])
+
+    for distribution_name, expected_version in CONTROLLED_DEPENDENCIES.items():
+        assert f"{distribution_name}=={expected_version}" in dependencies
+
+
 def test_cli_emits_package_version() -> None:
     """Verify that CLI version commands emit the canonical package version text."""
     for args in (("--version",), ("version",)):
@@ -58,8 +72,13 @@ def test_cli_emits_package_version() -> None:
         )
 
         assert completed.returncode == 0, completed.stderr
-        assert completed.stdout.strip() == cli_version_text()
+        assert completed.stdout.strip() == cli_version_report()
         assert completed.stdout.startswith("altium-cruncher ")
+        assert completed.stdout.splitlines()[0] == cli_version_text()
+
+        for distribution_name, expected_version in CONTROLLED_DEPENDENCIES.items():
+            assert f"{distribution_name} {expected_version}" in completed.stdout
+            assert distribution_version(distribution_name) == expected_version
 
 
 def test_changelog_mentions_package_version() -> None:

@@ -4,12 +4,12 @@
 <body data-doc-kind="cli-design" data-command="easyeda-import" data-config-contract="none">
 <main>
 <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
-<header><p class="status">CLI command design - experimental</p><h1>easyeda-import</h1><p class="lede">Experimental command that generates Altium schematic-library and optional PCB-library artifacts from EasyEDA/LCSC component data.</p></header>
+<header><p class="status">CLI command design - experimental</p><h1>easyeda-import</h1><p class="lede">Experimental command that generates Altium schematic-library, PCB-library footprint, and downloaded 3D model assets from EasyEDA/LCSC component data.</p></header>
 <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher easyeda-import C2040 --input-json C2040.json -o output/easyeda-import
-altium-cruncher easyeda-import C2040 --full --preview</code></pre></section>
-<section id="arguments"><h2>Arguments</h2><p><code>lcsc_id</code> identifies the part. <code>--input-json</code>, <code>--cache-dir</code>, and <code>--no-fetch</code> control data loading. Symbol, footprint, pin-policy, and preview flags control generated artifacts. The command requires the optional <code>easyeda</code> dependency extra and is not first-release stable.</p></section>
-<section id="output"><h2>Output</h2><p>The command writes generated <code>SchLib</code>, optional <code>PcbLib</code>, JSON mapping reports, and optional SVG previews into the output directory.</p></section>
-<section id="tests"><h2>Tests</h2><p>Optional EasyEDA tests validate symbol import, footprint import, reports, previews, and saved fixture inputs without requiring live API access, but this command remains experimental until release ownership is complete.</p></section>
+altium-cruncher easyeda-import C2040 --symbol-only</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>lcsc_id</code> identifies the part. <code>--input-json</code>, <code>--cache-dir</code>, and <code>--no-fetch</code> control data loading. Full output is the default: generated <code>SchLib</code>, generated <code>PcbLib</code>, and downloaded 3D model assets when available. <code>--symbol-only</code> skips footprint and 3D asset output. <code>--no-3d-model-download</code> skips model download. The command requires the optional <code>easyeda</code> dependency extra and is not first-release stable.</p></section>
+<section id="output"><h2>Output</h2><p>The command writes generated <code>SchLib</code>, generated <code>PcbLib</code>, JSON mapping reports, optional SVG previews, and <code>3d_models/</code> assets plus <code>easyeda-3d-models.json</code> when a model can be downloaded. 3D model placement or attachment into the generated Altium <code>PcbLib</code> is not implemented.</p></section>
+<section id="tests"><h2>Tests</h2><p>Optional EasyEDA tests validate symbol import, default footprint import, reports, previews, saved fixture inputs, and mocked 3D model asset download without requiring live API access, but this command remains experimental until release ownership is complete.</p></section>
 </main>
 </body>
 </html>
