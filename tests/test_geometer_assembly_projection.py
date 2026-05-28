@@ -11,7 +11,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_assembly_projection import (
 ROOT = Path(__file__).resolve().parents[1]
 STEP_FIXTURE = (
     ROOT
-    / "examples"
+    / "tests"
     / "assets"
     / "3d"
     / "RESC1608X06N.step"

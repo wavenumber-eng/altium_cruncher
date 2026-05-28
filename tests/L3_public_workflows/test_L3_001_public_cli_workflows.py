@@ -23,7 +23,7 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-HYDROSCOPE_DIR = PACKAGE_ROOT / "examples" / "assets" / "projects" / "hydroscope"
+HYDROSCOPE_DIR = PACKAGE_ROOT / "tests" / "assets" / "projects" / "hydroscope" / "input"
 HYDROSCOPE_PROJECT = HYDROSCOPE_DIR / "Hydroscope.PrjPcb"
 HYDROSCOPE_SCHDOC = HYDROSCOPE_DIR / "CPU.SchDoc"
 HYDROSCOPE_SCHLIB = HYDROSCOPE_DIR / "Hydroscope.SCHLIB"
@@ -152,7 +152,7 @@ def test_output_path_template_uses_public_project_parameters() -> None:
     )
 
     assert str(resolved) == (
-        "releases/A/TZ-SB-0001 - Sonic Density Sensor Mainboard - A"
+        "releases/A/TZ-SB-0001 - Hydroscope Mainboard - A"
     )
 
 

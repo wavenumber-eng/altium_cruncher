@@ -19,10 +19,11 @@ PNG_BYTES = b"\x89PNG\r\n\x1a\nembedded-png"
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 HYDROSCOPE_PROJECT = (
     PACKAGE_ROOT
-    / "examples"
+    / "tests"
     / "assets"
     / "projects"
     / "hydroscope"
+    / "input"
     / "Hydroscope.PrjPcb"
 )
 

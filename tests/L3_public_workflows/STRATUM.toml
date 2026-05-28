@@ -21,7 +21,7 @@ name = "Public CLI Workflows"
 description = "Run selected public CLI commands against the Hydroscope fixture and validate outputs"
 concerns = ["cli", "contracts", "release"]
 test_case_type = "reference"
-test_cases = "../../examples/assets/projects/hydroscope"
+test_cases = "../../tests/assets/projects/hydroscope/input"
 
 [subtests.code_under_test]
 module = "altium_cruncher._cli"
@@ -79,7 +79,7 @@ name = "Megamaid Workflow"
 description = "Run megamaid against Hydroscope and validate embedded assets and manifest counts"
 concerns = ["cli", "contracts", "release"]
 test_case_type = "reference"
-test_cases = "../../examples/assets/projects/hydroscope"
+test_cases = "../../tests/assets/projects/hydroscope/input"
 
 [subtests.code_under_test]
 module = "altium_cruncher.altium_cruncher_cmd_megamaid"

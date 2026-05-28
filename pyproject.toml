@@ -60,7 +60,6 @@ include = [
     "CONTRIBUTING.md",
     "docs/**",
     "docs/contracts/**",
-    "examples/**",
     "tests/**",
     "pyproject.toml",
 ]
