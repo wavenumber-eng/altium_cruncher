@@ -292,6 +292,8 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
 
     assert config.schema == BOM_PNP_CONFIG_SCHEMA
     assert config.bom_outputs == ("raw-json", "grouped-xlsx", "jlc-csv", "jlc-xlsx")
+    assert BomPnpConfig().bom_output_fields[0] == "dnp"
+    assert "item" not in BomPnpConfig().bom_output_fields
     assert config.pnp_outputs == ("json", "xlsx", "jlc-cpl", "jlc-cpl-xlsx")
     assert config.highlight_dnp_rows is False
     assert config.pnp_position_mode == "component-origin"

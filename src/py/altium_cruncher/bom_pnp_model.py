@@ -43,10 +43,9 @@ JLC_CPL_COLUMNS: tuple[str, ...] = (
     "Rotation",
 )
 BOM_GROUPED_DEFAULT_COLUMNS: tuple[str, ...] = (
-    "item",
+    "dnp",
     "quantity",
     "designators",
-    "dnp",
     "manufacturer",
     "manufacturer_part_number",
     "value",

@@ -73,9 +73,6 @@ def write_xlsx_table(
             if highlighted:
                 cell.fill = dnp_fill
 
-    if columns:
-        max_cell = f"{get_column_letter(len(columns))}{max(len(rows) + 1, 1)}"
-        worksheet.auto_filter.ref = f"A1:{max_cell}"
     _size_columns(worksheet, len(columns), len(rows) + 1)
     workbook.save(output_file)
 

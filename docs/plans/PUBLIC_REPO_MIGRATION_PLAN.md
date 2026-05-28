@@ -1206,8 +1206,8 @@ The first migration slice is complete when:
 - `uv tool install` can expose the CLI from a built wheel;
 - `wn-hw` setup/update can expose the CLI executable without a manual PATH fix;
 - Rack tests run from the standalone repo;
-- CI runs on Windows and Linux; macOS CI is deferred until the `wn-geometer`
-  mac wheel tag matches available GitHub-hosted runners;
+- CI runs on Windows, Linux, and macOS with compatible public dependency
+  wheels;
 - at least one stable command is migrated with fixture-backed coverage;
 - the command inventory clearly states which commands remain private,
   deferred, or blocked.
@@ -1252,7 +1252,11 @@ Current local status:
   JSON/CSV/XLSX, and JLC CPL CSV/XLSX; configured outputs write
   `bom.config.used.json` beside generated artifacts. Focused unit tests cover
   the model and L3 covers Hydroscope BOM/PnP config plus paired `jlc` output
-  execution;
+  execution. The grouped BOM XLSX default now starts with DNP state, omits the
+  line-number `item` column unless explicitly configured, uses inverse knockout
+  headers, preserves text cells, and leaves Excel filter dropdowns disabled for
+  BOM, PnP, JLC BOM, and JLC CPL spreadsheets. The `jlc` default keeps paired
+  BOM/CPL files as siblings in the same output folder;
 - BOM/PnP oracle tests now exercise `node_test_array` and `loz-old-man`:
   raw BOM JSON is checked against Altium XML-BOM designators and key fields,
   normalized PnP JSON is checked against Altium PNP-METRIC side/rotation/core
@@ -1327,9 +1331,9 @@ Current local status:
   extraction fixture, and the Hydroscope `megamaid` showcase workflow;
 - `wn-hw` setup/update integration and public GitHub CI remain the major first
   release blockers;
-- macOS CI remains blocked by the `wn-geometer==2026.5.25` wheel tag mismatch
-  tracked in `wavenumber-eng/geometer#2`; this is not a BOM/PnP logic blocker,
-  but it must be closed before final `altium-cruncher` release signoff.
+- the `wn-geometer` macOS wheel tag issue tracked in
+  `wavenumber-eng/geometer#2` is resolved, so macOS CI is no longer blocked by
+  that dependency compatibility issue.
 - the `altium_monkey` PcbDoc/PcbLib authoring API detour is complete on
   `toolz` `origin/dev` at `16dee303`, with Python and native C++ parity for
   explicit PcbLib mask/paste expansion and text authoring options. Active
@@ -1337,10 +1341,10 @@ Current local status:
   cricket-node cutout fixture change as a deliberate test asset if useful,
   then continue command-by-command review toward the first public
   `altium-cruncher` release;
+- current fixture decision: adopt Eli's Cricket Node cutout test asset changes
+  (`tests/assets/projects/cricket-node/input/cricket-node-hw__B.PcbDoc` and
+  its local `pcb.svg.config`) in the next fixture commit;
 - current worktree still has unrelated fixture/config churn:
-  `tests/assets/projects/cricket-node/input/cricket-node-hw__B.PcbDoc`,
-  `tests/assets/projects/cricket-node/input/pcb-layer-step.json`,
-  `tests/assets/projects/cricket-node/input/pcb.svg.config`,
   `tests/assets/projects/goomba/input/bom.config`,
   `tests/assets/projects/cutouts/reference_output/`, and the older dirty
   `tests/assets/projects/cutouts/input/pcb-svg.json` plus

@@ -64,9 +64,16 @@ def test_write_bom_xlsx_creates_openxml_workbook(tmp_path) -> None:
         assert "xl/workbook.xml" in names
         assert "xl/worksheets/sheet1.xml" in names
         sheet = zf.read("xl/worksheets/sheet1.xml").decode("utf-8")
-    assert "Designator" in sheet
+    assert "DNP" in sheet
     assert "Tolerance" in sheet
     assert "100nF" in sheet
+
+    worksheet = cast(Any, load_workbook(output).active)
+    assert worksheet["A1"].value == "DNP"
+    assert worksheet["A2"].value == "Yes"
+    assert worksheet["A1"].fill.fill_type == "solid"
+    assert worksheet["A1"].font.bold is True
+    assert worksheet.auto_filter.ref is None
 
 
 def test_xlsx_table_preserves_text_and_highlights_selected_rows(tmp_path) -> None:
@@ -89,6 +96,9 @@ def test_xlsx_table_preserves_text_and_highlights_selected_rows(tmp_path) -> Non
     assert worksheet["B2"].number_format == "@"
     assert worksheet["A2"].fill.fgColor.rgb != "00FFF2CC"
     assert worksheet["A3"].fill.fgColor.rgb == "00FFF2CC"
+    assert worksheet["A1"].fill.fill_type == "solid"
+    assert worksheet["A1"].font.bold is True
+    assert worksheet.auto_filter.ref is None
 
 
 def test_write_bom_output_supports_grouped_json_and_jlc_csv(tmp_path) -> None:
@@ -147,3 +157,4 @@ def test_write_bom_output_supports_grouped_json_and_jlc_csv(tmp_path) -> None:
     assert worksheet["A1"].value == "Comment"
     assert worksheet["D2"].value == "C25804"
     assert worksheet["D2"].number_format == "@"
+    assert worksheet.auto_filter.ref is None

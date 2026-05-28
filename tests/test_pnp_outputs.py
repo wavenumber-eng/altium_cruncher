@@ -95,6 +95,7 @@ def test_write_pnp_xlsx_creates_openxml_workbook(tmp_path) -> None:
     assert worksheet["A1"].value == "Designator"
     assert worksheet["A2"].value == "R2"
     assert worksheet["A2"].number_format == "@"
+    assert worksheet.auto_filter.ref is None
 
 
 def test_write_jlc_cpl_xlsx_creates_workbook(tmp_path) -> None:
@@ -115,3 +116,4 @@ def test_write_jlc_cpl_xlsx_creates_workbook(tmp_path) -> None:
     worksheet = cast(Any, workbook.active)
     assert worksheet["A1"].value == "Designator"
     assert worksheet["B2"].value == "Top"
+    assert worksheet.auto_filter.ref is None

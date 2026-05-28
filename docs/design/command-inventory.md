@@ -102,6 +102,10 @@ BOM notes:
   `bom_cruncher` behavior, not only the current flat CSV/JSON/XLSX command;
 - required outputs are raw JSON every run, JLC BOM, grouped JSON BOM, and
   grouped XLSX BOM;
+- default grouped XLSX BOM review output puts DNP status first, omits the
+  line-number `item` column unless explicitly configured, keeps text cells
+  spreadsheet-safe, uses inverse knockout headers, and does not enable Excel
+  filter dropdowns;
 - BOM config should be JSON with a schema/type field, auto-generated as
   `bom.config`, overridable with `--config`, and covered by a machine-readable
   contract;
@@ -134,6 +138,8 @@ JLC notes:
 
 - `jlc` generates JLC BOM plus JLC CPL from one project/config
   invocation;
+- default `jlc` output writes the paired BOM and CPL XLSX files as siblings in
+  the same output folder;
 - tests should prove meta-command output matches the equivalent independent
   `bom` and `pnp` JLC modes.
 

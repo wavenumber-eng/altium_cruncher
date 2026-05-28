@@ -35,9 +35,9 @@
     <h3>Purpose</h3>
     <p>Represents the shared JSON config contract consumed by the BOM/PnP command family.</p>
     <h3>Test Requirements</h3>
-    <p>Tests must cover parsing, default serialization, output kind validation, DNP display policy, PnP position mode selection, and configured output path resolution.</p>
+    <p>Tests must cover parsing, default serialization, output kind validation, DNP display policy, default grouped BOM columns, PnP position mode selection, and configured output path resolution.</p>
     <h3>Working Definition</h3>
-    <p>Working when a JSON-style mapping can select outputs, resolve paths, and round-trip into a deterministic template.</p>
+    <p>Working when a JSON-style mapping can select outputs, resolve paths, and round-trip into a deterministic template. Default grouped BOM review output starts with DNP state and omits line numbers unless the user explicitly adds the <code>item</code> field.</p>
   </section>
 
   <section
@@ -83,7 +83,7 @@
     <h3>Purpose</h3>
     <p>Represents one grouped BOM line with quantity, designator list, DNP state, and resolved fields.</p>
     <h3>Test Requirements</h3>
-    <p>Tests must cover alias-based grouping, natural designator ordering, DNP line separation, DNP row placement, and DNP XLSX highlighting.</p>
+    <p>Tests must cover alias-based grouping, natural designator ordering, DNP line separation, DNP row placement, DNP XLSX highlighting, text-safe spreadsheet cells, inverse knockout headers, and the absence of Excel filter dropdowns.</p>
     <h3>Working Definition</h3>
     <p>Working when fitted and DNP components can be grouped into stable line items for JSON, XLSX, and JLC output while preserving review-visible DNP state.</p>
   </section>
