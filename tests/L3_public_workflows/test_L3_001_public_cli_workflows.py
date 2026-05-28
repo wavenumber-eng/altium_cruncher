@@ -56,6 +56,12 @@ def _run_cli(*args: str) -> str:
     return combined
 
 
+def test_cli_help_mentions_intlib_extract_support() -> None:
+    help_text = _run_cli("--help")
+
+    assert "extract symbols, footprints, or IntLib sources" in help_text
+
+
 def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -> None:
     """Exercise Sch SVG, BOM, PnP, and netlist commands on Hydroscope."""
     sch_svg_dir = tmp_path / "sch-svg"
@@ -173,6 +179,9 @@ def test_library_extract_split_merge_commands_use_public_fixtures(tmp_path: Path
 
 def test_intlib_extract_command_uses_public_fixture(tmp_path: Path) -> None:
     """Exercise IntLib source extraction on a redistributable fixture."""
+    from altium_monkey.altium_pcblib import AltiumPcbLib
+    from altium_monkey.altium_schlib import AltiumSchLib
+
     output_dir = tmp_path / "intlib"
 
     _run_cli("extract", str(RT_SUPER_C1_INTLIB), "-o", str(output_dir))
@@ -191,6 +200,11 @@ def test_intlib_extract_command_uses_public_fixture(tmp_path: Path) -> None:
     assert (output_dir / "SchLib" / "RT_SUPER_C1.SCHLIB").exists()
     assert (output_dir / "PCBLib" / "RT_SUPER_C1.PcbLib").exists()
     assert (output_dir / "RT_SUPER_C1.LibPkg").exists()
+
+    schlib = AltiumSchLib(output_dir / "SchLib" / "RT_SUPER_C1.SCHLIB")
+    pcblib = AltiumPcbLib(output_dir / "PCBLib" / "RT_SUPER_C1.PcbLib")
+    assert len(schlib.symbols) == manifest["component_count"]
+    assert isinstance(pcblib.footprints, list)
 
 
 def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Path) -> None:

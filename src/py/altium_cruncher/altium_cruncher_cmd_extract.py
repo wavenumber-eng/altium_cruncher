@@ -420,7 +420,7 @@ def cmd_extract(args) -> int:
 def register_parser(subparsers):
     extract_parser = subparsers.add_parser(
         "extract",
-        help="extract symbols or footprints from Altium design documents",
+        help="extract symbols, footprints, or IntLib sources from Altium design documents",
         description=(
             "Extract embedded symbols from SchDoc/PrjPcb to SchLib files, "
             "footprints from PcbDoc to PcbLib files, or source libraries from IntLib."
