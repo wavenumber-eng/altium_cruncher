@@ -1,7 +1,7 @@
 # Altium Cruncher Public Repo Migration Plan
 
 Status: bootstrap in progress
-Last updated: 2026-05-27
+Last updated: 2026-05-28
 
 ## Goal
 
@@ -461,6 +461,18 @@ Initial `pcb-layer-step` coverage:
 
 - status: implemented as `L3_002` with a minimized `cricket-node` PcbDoc
   fixture under `tests/assets/projects/cricket-node/input`;
+- fixture-alignment design is documented in
+  `docs/design/cli/pcb-layer-step.html`: the command is scoped to lightweight
+  DUT bottom-layer reference models for pogo-pin fixture review, not full PCB
+  mechanical export;
+- generated configs now use JSONC schema v2 with `outputs[]` so one config can
+  emit multiple fixture variants with separate filenames, feature filters,
+  drill policy, colors, Z offset, and fusion settings;
+- feature filtering now covers tracks, arcs, fills, poured polygons, regions,
+  vias, component pads, free pads, and case-insensitive designator patterns such
+  as `TP*`, `J*`, `U1`, and `U2`;
+- pad color rules split matching pads into separate Geometer bodies; the
+  Cricket Node fixture validates `TP*` pads colored red as `test_points`;
 - generate bottom-layer copper STEP through the command handler with a small
   geometer writer stub so tests verify command behavior without checking in
   large generated STEP artifacts;
@@ -471,7 +483,12 @@ Initial `pcb-layer-step` coverage:
   command now has `drill_hole_mode` with `auto`, `cut`, `overlay`, and `none`.
   Auto mode uses exact boolean cuts for small hole counts and a visible drill
   overlay for large boards such as `cricket-node`; the manifest records the
-  effective mode and overlay/cut counts.
+  effective mode and overlay/cut counts. Overlay drills can be filtered by
+  minimum diameter and rendered as independent-color solid or ring bodies.
+- local Cricket Node size check on 2026-05-28 generated four real STEP variants:
+  fused traces/no drills was about 21.1 MB; non-fused traces/no drills was about
+  9.1 MB; TP-only/no drills was about 1.9 MB; TP-only with `>0.85 mm` drill
+  rings was about 4.1 MB with 63 drill overlays.
 - verify the command creates a non-empty STEP artifact and any stable report or
   manifest output expected for the command;
 - later golden/reference checks should compare against `reference_output/` once

@@ -25,6 +25,10 @@ from altium_cruncher.altium_cruncher_pcb_workflow import (
     iter_pcb_render_inputs,
     load_design_for_pcb_input,
 )
+from altium_cruncher.output_path_templates import (
+    OutputPathTemplateError,
+    resolve_output_relative_path,
+)
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +40,9 @@ def cmd_pcb_layer_step(args) -> int:
         return 1
 
     try:
-        config_by_input, created_configs = resolve_pcb_layer_step_configs(args, input_files)
+        config_by_input, created_configs = resolve_pcb_layer_step_configs(
+            args, input_files
+        )
     except ValueError as exc:
         log.error(str(exc))
         return 1
@@ -44,62 +50,107 @@ def cmd_pcb_layer_step(args) -> int:
     if created_configs:
         for config_path in created_configs:
             log.info("Created pcb-layer-step config template: %s", config_path)
-        log.info("pcb-layer-step config template created and defaulted for this invocation.")
+        log.info(
+            "pcb-layer-step config template created and defaulted for this invocation."
+        )
 
     output_dir = _resolve_output_dir(args.output, "pcb-layer-step")
     written = 0
     for input_file in input_files:
-        config = config_by_input[input_file.resolve()]
-        try:
-            options = _options_from_config_and_args(config, args)
-        except ValueError as exc:
-            log.error(str(exc))
+        generated = _generate_layer_steps_for_input(
+            input_file=input_file,
+            config=config_by_input[input_file.resolve()],
+            output_dir=output_dir,
+            args=args,
+        )
+        if generated is None:
             return 1
-        pcbdoc_selector = getattr(args, "pcbdoc", None) or config.pcbdoc
-        try:
-            design, _source_tag = load_design_for_pcb_input(
-                input_file,
-                project_context=getattr(args, "project_context", "auto"),
-            )
-            render_inputs = iter_pcb_render_inputs(
-                design,
-                pcbdoc_selector=pcbdoc_selector,
-            )
-        except Exception as exc:
-            log.error("Failed loading PCB input %s: %s", input_file.name, exc)
-            return 1
-
-        for render_input in render_inputs:
-            output_path = output_dir / layer_step_output_name(
-                render_input.board_key, options.layer
-            )
-            try:
-                result = export_pcb_layer_step(
-                    render_input.pcbdoc,
-                    output_path,
-                    options=options,
-                    board_name=render_input.board_key,
-                    source_input=str(render_input.pcb_path),
-                )
-            except Exception as exc:
-                log.error(
-                    "Failed generating PCB layer STEP for %s (%s): %s",
-                    render_input.board_key,
-                    options.layer.to_display_name(),
-                    exc,
-                )
-                return 1
-            written += 2
-            log.info(
-                "PCB layer STEP (%s %s): %s, %s",
-                render_input.board_key,
-                options.layer.to_json_name(),
-                result.output_path.name,
-                result.manifest_path.name,
-            )
+        written += generated
 
     log.info("Generated %d PCB layer STEP artifact file(s) in %s", written, output_dir)
     return 0
+
+
+def _generate_layer_steps_for_input(
+    *,
+    input_file: Path,
+    config: PcbLayerStepConfig,
+    output_dir: Path,
+    args: argparse.Namespace,
+) -> int | None:
+    pcbdoc_selector = getattr(args, "pcbdoc", None) or config.pcbdoc
+    try:
+        design, _source_tag = load_design_for_pcb_input(
+            input_file,
+            project_context=getattr(args, "project_context", "auto"),
+        )
+        render_inputs = iter_pcb_render_inputs(
+            design,
+            pcbdoc_selector=pcbdoc_selector,
+        )
+    except Exception as exc:
+        log.error("Failed loading PCB input %s: %s", input_file.name, exc)
+        return None
+
+    written = 0
+    for render_input in render_inputs:
+        generated = _generate_layer_steps_for_render_input(
+            render_input=render_input,
+            config=config,
+            output_dir=output_dir,
+            args=args,
+        )
+        if generated is None:
+            return None
+        written += generated
+    return written
+
+
+def _generate_layer_steps_for_render_input(
+    *,
+    render_input: object,
+    config: PcbLayerStepConfig,
+    output_dir: Path,
+    args: argparse.Namespace,
+) -> int | None:
+    written = 0
+    for output_config in _iter_output_configs(config):
+        try:
+            options = _options_from_config_and_args(output_config, args)
+            output_path = _output_path_for_config(
+                output_dir,
+                render_input.board_key,
+                output_config,
+                options,
+            )
+        except (OutputPathTemplateError, ValueError) as exc:
+            log.error(str(exc))
+            return None
+        try:
+            result = export_pcb_layer_step(
+                render_input.pcbdoc,
+                output_path,
+                options=options,
+                board_name=render_input.board_key,
+                source_input=str(render_input.pcb_path),
+            )
+        except Exception as exc:
+            log.error(
+                "Failed generating PCB layer STEP for %s (%s): %s",
+                render_input.board_key,
+                options.layer.to_display_name(),
+                exc,
+            )
+            return None
+        written += 2
+        log.info(
+            "PCB layer STEP (%s %s): %s, %s",
+            render_input.board_key,
+            options.layer.to_json_name(),
+            result.output_path.name,
+            result.manifest_path.name,
+        )
+    return written
 
 
 def resolve_pcb_layer_step_configs(
@@ -139,7 +190,37 @@ def resolve_pcb_layer_step_configs(
     return config_by_input, sorted(set(created_paths))
 
 
-def _options_from_config_and_args(config: PcbLayerStepConfig, args) -> PcbLayerStepOptions:
+def _iter_output_configs(config: PcbLayerStepConfig) -> tuple[PcbLayerStepConfig, ...]:
+    return config.outputs or (config,)
+
+
+def _output_path_for_config(
+    output_dir: Path,
+    board_key: str,
+    output_config: PcbLayerStepConfig,
+    options: PcbLayerStepOptions,
+) -> Path:
+    if not output_config.output_step:
+        return output_dir / layer_step_output_name(board_key, options.layer)
+    relative = resolve_output_relative_path(
+        output_config.output_step,
+        {},
+        tokens={
+            "board": board_key,
+            "Board": board_key,
+            "layer": options.layer.to_json_name().lower(),
+            "Layer": options.layer.to_json_name(),
+            "output": output_config.name or "",
+            "Output": output_config.name or "",
+        },
+        missing="empty",
+    )
+    return output_dir.joinpath(*relative.parts)
+
+
+def _options_from_config_and_args(
+    config: PcbLayerStepConfig, args
+) -> PcbLayerStepOptions:
     layer = resolve_pcb_layer_selector(getattr(args, "layer", None) or config.layer)
     return PcbLayerStepOptions(
         layer=layer,
@@ -159,7 +240,9 @@ def _options_from_config_and_args(config: PcbLayerStepConfig, args) -> PcbLayerS
         include_poured_polygons=False
         if bool(getattr(args, "exclude_poured_polygons", False))
         else config.include_poured_polygons,
-        cut_holes=False if bool(getattr(args, "no_hole_cuts", False)) else config.cut_holes,
+        cut_holes=False
+        if bool(getattr(args, "no_hole_cuts", False))
+        else config.cut_holes,
         drill_hole_mode="none"
         if bool(getattr(args, "no_hole_cuts", False))
         else str(_arg_or_config(args, "drill_hole_mode", config.drill_hole_mode)),
@@ -180,11 +263,35 @@ def _options_from_config_and_args(config: PcbLayerStepConfig, args) -> PcbLayerS
                 config.drill_overlay_thickness_mm,
             )
         ),
-        fuse_copper=False if bool(getattr(args, "no_fuse", False)) else config.fuse_copper,
+        drill_minimum_diameter_mm=float(
+            _arg_or_config(
+                args,
+                "drill_minimum_diameter_mm",
+                config.drill_minimum_diameter_mm,
+            )
+        ),
+        drill_hole_shape=str(
+            _arg_or_config(args, "drill_hole_shape", config.drill_hole_shape)
+        ),
+        drill_ring_width_mm=float(
+            _arg_or_config(args, "drill_ring_width_mm", config.drill_ring_width_mm)
+        ),
+        fuse_copper=False
+        if bool(getattr(args, "no_fuse", False))
+        else config.fuse_copper,
         fuse_board_outline=False
         if bool(getattr(args, "no_fuse", False))
         else config.fuse_board_outline,
         arc_segments=int(_arg_or_config(args, "arc_segments", config.arc_segments)),
+        include_tracks=config.include_tracks,
+        include_arcs=config.include_arcs,
+        include_fills=config.include_fills,
+        include_regions=config.include_regions,
+        include_vias=config.include_vias,
+        include_component_pads=config.include_component_pads,
+        include_free_pads=config.include_free_pads,
+        include_designators=config.include_designators,
+        pad_color_rules=config.pad_color_rules,
     )
 
 
@@ -353,6 +460,24 @@ def register_parser(subparsers):
         type=float,
         default=None,
         help="thickness for fast drill-overlay disks in millimeters (default: 0.001)",
+    )
+    parser.add_argument(
+        "--drill-minimum-diameter-mm",
+        type=float,
+        default=None,
+        help="only render drills larger than this diameter in millimeters",
+    )
+    parser.add_argument(
+        "--drill-hole-shape",
+        choices=["solid", "ring"],
+        default=None,
+        help="overlay drill shape: solid disk/capsule or annular ring",
+    )
+    parser.add_argument(
+        "--drill-ring-width-mm",
+        type=float,
+        default=None,
+        help="annular ring width when --drill-hole-shape ring is active",
     )
     parser.add_argument(
         "--no-fuse",

@@ -4,12 +4,82 @@
 <body data-doc-kind="cli-design" data-command="pcb-layer-step" data-config-contract="pending">
 <main>
 <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
-<header><p class="status">CLI command design</p><h1>pcb-layer-step</h1><p class="lede">Generates a colored STEP model for one selected PCB layer using Altium PCB geometry and geometer planar extrusion.</p></header>
-<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher pcb-layer-step board.PcbDoc --layer bottom --copper-color #3D85C6 --outline-color #CCCCCC -o output/step
+<header><p class="status">CLI command design</p><h1>pcb-layer-step</h1><p class="lede">Generates a compact fixture-alignment STEP model from selected Altium PCB layer geometry.</p></header>
+
+<section id="purpose"><h2>Purpose</h2><p><code>pcb-layer-step</code> is a factory-test fixture alignment tool, not a full PCB-to-STEP exporter. The primary workflow is a device-under-test board with bottom-side test pads and a fixture or breakout board with spring-loaded pogo pins. The command produces a lightweight 3D reference model of the DUT layer so the fixture designer can place that model in the test-board CAD design and verify pogo-pin locations against DUT test pads.</p><p>Cricket Node is the reference use case. The useful model usually needs only the board outline for visual reference, selected bottom copper, and highlighted test-point pads. Dense via fields, complete pours, and full fabrication detail are optional because they often slow generation, increase STEP size, or distract from pogo alignment.</p></section>
+
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher pcb-layer-step board.PcbDoc --layer bottom --config pcb-layer-step.json -o output/step
 altium-cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --config pcb-layer-step.json</code></pre></section>
-<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.PcbDoc</code> or <code>.PrjPcb</code>. Options select layer, project context, board document, colors, extrusion thickness, outline behavior, drill-hole handling, polygon inclusion, and fusion. <code>--drill-hole-mode auto</code> is the default. Auto mode uses precise boolean drill cuts for small hole counts and switches to fast drill overlays for dense boards. <code>--drill-hole-mode cut</code> forces exact cutouts, <code>overlay</code> forces visible overlay disks, and <code>none</code> omits drill visualization. <code>--max-boolean-drill-cuts</code> controls the auto threshold.</p></section>
-<section id="output"><h2>Output</h2><p>The command writes a STEP file plus JSON manifest. The manifest records layer, color options, geometry counts, backend, source input, generated filenames, configured drill-hole mode, effective drill-hole mode, boolean drill-cut count, and drill-overlay count. Board cutouts remain boolean cutouts; dense pad/via drill sets may be represented as a thin colored overlay body to keep public CLI runs responsive.</p></section>
-<section id="tests"><h2>Tests</h2><p>L3 uses a minimized cricket-node PcbDoc to verify bottom-layer command behavior, color propagation, and dense-board drill overlay request shape. Unit tests cover JSON/JSONC config loading, layer selectors, arc sampling, geometer request shape, primitive preservation, and automatic drill-overlay fallback.</p></section>
+
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts a <code>.PcbDoc</code> or <code>.PrjPcb</code>. CLI options select the PCB document, project-context mode, layer, output directory, Z offset, layer thickness, copper color, board-outline color and width, polygon inclusion, board-outline inclusion, drill-hole mode, drill diameter filter, drill overlay shape, drill overlay color, drill ring width, and copper/outline fusion. CLI values override the active output config where both are supplied.</p><p>JSONC config controls the fixture-specific behavior: multi-output filenames, feature classes, component-designator filters, per-designator pad color rules, drill policy, and fusion defaults. <code>--drill-hole-mode none</code> omits drill visualization, <code>cut</code> subtracts hole regions from copper, <code>overlay</code> emits a separate colored drill-reference body, and <code>auto</code> preserves the compatibility behavior of cutting small drill sets and using overlays for dense boards.</p></section>
+
+<section id="coordinate-policy"><h2>Coordinates</h2><p>The generated planar regions stay in the Altium board-origin-relative XY coordinate frame. The command should not apply fixture-placement translation or rotation before calling Geometer. Placement of the generated STEP model into the fixture board remains a CAD-side assembly operation. Z placement is configurable through <code>z_mm</code>; it defines the bottom Z plane passed to Geometer for each emitted body. <code>thickness_mm</code> controls extrusion thickness.</p></section>
+
+<section id="geometer-boundary"><h2>Geometer Boundary</h2><p>The command feeds Geometer <code>geometry.planar_step.request.a0</code>: colored planar bodies with <code>z_mm</code>, <code>thickness_mm</code>, closed regions, optional region holes, optional body cutouts, and optional <code>fuse_regions</code>. Geometer should remain PCB-agnostic. It should not know about designators, pads, vias, test points, polygons, or drill policy. Those decisions belong in <code>altium_cruncher</code> before request construction.</p><p>The first fixture-alignment feature set does not require Geometer changes. Annular drill rings can be represented as regions with holes. Designator-based colors can be represented by splitting geometry into multiple colored bodies. Whole-model XY offset is intentionally out of scope because the request already uses the Altium origin. Future Geometer enhancements may be useful for root/body transforms or per-region names/colors, but they are not release blockers for this command.</p></section>
+
+<section id="config"><h2>JSONC Config</h2><p>The generated config should be JSONC and include block comments with editing guidance. The target schema is a multi-output config: one file can define several outputs using an array of the same output configuration shape. A default section may provide shared values, but each output entry should be able to override layer, filename, colors, feature filters, drill policy, fusion, and Z/thickness settings.</p><pre><code>{
+  /* pcb-layer-step is intended for fixture alignment models.
+     Keep the model small: include board outline, test pads, and only the copper
+     features useful for pogo-pin verification. */
+  "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
+  "defaults": {
+    "pcbdoc": null,
+    "layer": "bottom",
+    "z_mm": 0.0,
+    "thickness_mm": 0.035,
+    "include_board_outline": true,
+    "board_outline": {
+      "color": "#111111",
+      "width_mm": 0.2,
+      "fuse": true
+    }
+  },
+  "outputs": [
+    {
+      "name": "fixture_alignment",
+      "output_step": "{board}__fixture_alignment.step",
+      "features": {
+        "tracks": true,
+        "arcs": true,
+        "fills": false,
+        "polygons": false,
+        "regions": false,
+        "vias": false,
+        "component_pads": {
+          "mode": "matching_designators",
+          "include_designators": ["TP*", "J*", "U1", "U2"]
+        },
+        "free_pads": false
+      },
+      "colors": {
+        "default_copper": "#B87333",
+        "pad_rules": [
+          {"designators": ["TP*"], "color": "#FF0000", "body": "test_points"}
+        ]
+      },
+      "drills": {
+        "mode": "overlay",
+        "minimum_diameter_mm": 0.85,
+        "shape": "ring",
+        "color": "#666666",
+        "ring_width_mm": 0.12
+      },
+      "fuse_copper": false
+    }
+  ]
+}</code></pre><p>The v2 shape should preserve a migration path from the existing single-output config. The loader can accept the current flat object as one implicit output, but generated templates should use <code>outputs[]</code> so repeated fixture artifacts do not require repeated command invocations.</p></section>
+
+<section id="feature-model"><h2>Feature Model</h2><p>The command should collect typed source features before creating Geometer regions. A typed feature keeps source kind, layer, optional component designator, optional pad designator, optional hole diameter, and generated planar region. This is the key design change needed for filtering and colorization.</p><p>Supported feature categories should include tracks, arcs, fills, poured polygons, non-polygon regions, shape-based regions, component pads, free pads, vias, board outline, and board cutouts. Defaults should favor fixture alignment: bottom layer, board outline included, component pads included by designator rules, vias excluded, pours excluded unless requested, and traces configurable.</p></section>
+
+<section id="designator-selection"><h2>Designator Selection</h2><p>Designator filtering should support both broad families and explicit parts. The expected matching form is a list of case-insensitive shell-style patterns and exact names, such as <code>TP*</code>, <code>J*</code>, <code>U1</code>, and <code>U2</code>. Component-owned pads use the owning PCB component designator. Free pads may use their pad designator but should be opt-in because they are not tied to a component placement.</p><p>Color rules should be evaluated after inclusion filtering. Rules can match the same designator patterns and assign a STEP body color. Because Geometer colors are body-level, matching pads should be grouped into separate bodies such as <code>test_points</code> rather than relying on per-region color. For Cricket Node, the design validation target is all <code>TP*</code> component pads colored red.</p></section>
+
+<section id="drill-policy"><h2>Drill Policy</h2><p>Drills are not automatically useful in fixture alignment models because normal boards contain many vias. Drill handling should be explicit and independent of via-copper inclusion. The requested modes are <code>none</code>, <code>cut</code>, and <code>overlay</code>, with <code>auto</code> retained as a compatibility mode. A minimum drill diameter filter should allow large mechanical holes to remain while ordinary vias are ignored. The Cricket Node validation target is <code>minimum_diameter_mm: 0.85</code>.</p><p>Overlay drills may be rendered as <code>solid</code> disks/capsules or as <code>ring</code> regions with holes. Rings are preferred for mechanical-hole reference because they identify the hole location without looking like copper. Boolean cuts are most accurate but can be expensive on dense boards. Overlay bodies are faster and usually sufficient for fixture review.</p></section>
+
+<section id="fusion"><h2>Fusion</h2><p><code>fuse_regions</code> is a Geometer body option that performs planar union before extrusion. Fusion can remove internal overlap edges, but it may lose source arc fidelity and may not always reduce STEP size. The fixture-alignment config should keep fusion independently configurable for copper, board outline, drill overlays, and colored pad groups. The release tests should compare generated STEP sizes for fused and non-fused Cricket Node variants before choosing defaults.</p></section>
+
+<section id="output"><h2>Output</h2><p>Each configured output writes a STEP file plus JSON manifest. The manifest should record the selected layer, source board, coordinate policy, Z/thickness settings, enabled feature classes, designator filters, color rules, drill policy, fusion settings, body counts, region counts, drill counts before and after diameter filtering, and generated byte size. For multi-output configs, each output should have an independent manifest next to its STEP file.</p></section>
+
+<section id="tests"><h2>Tests</h2><p>L3 should continue using the minimized Cricket Node PcbDoc. The next design validation pass should generate size and request-shape comparisons for fused versus non-fused copper, drills omitted versus drills filtered at greater than <code>0.85 mm</code>, drill overlays as independently colored ring bodies, traces included versus excluded, and <code>TP*</code> pads colored red. Unit tests should cover JSONC block-comment config loading, multi-output config expansion, designator matching for <code>TP*</code>, <code>J*</code>, <code>U1</code>, and <code>U2</code>, feature-category filtering, drill diameter filtering, ring-region creation, and Geometer request grouping by body color.</p></section>
 </main>
 </body>
 </html>
