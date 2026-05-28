@@ -73,6 +73,11 @@ SVG command family notes:
   group ids, and output SVG paths;
 - synthetic layer tokens include `BOARD_OUTLINE`, `BOARD_CUTOUTS`, `DRILLS`,
   `SLOTS`, `ASSEMBLY_HLR_TOP`, and `ASSEMBLY_HLR_BOTTOM`;
+- `ASSEMBLY_HLR_TOP`/`ASSEMBLY_HLR_BOTTOM` and `PIN1_TOP`/`PIN1_BOTTOM`
+  have initial A0 rendering implementations;
+- `ASSEMBLY_DESIGNATORS_TOP`/`ASSEMBLY_DESIGNATORS_BOTTOM`, DNP visual
+  treatment, diode line art/cathode overlays, and richer project-level SVG
+  metadata are planned but not implemented yet;
 - `BOARD_CUTOUTS` supports configurable hash spacing/direction/line width,
   configurable outline line width, and solid or dashed outlines. A0 deliberately
   omits generated cutout text labels;
