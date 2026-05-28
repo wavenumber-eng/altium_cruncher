@@ -68,7 +68,6 @@ The current migrated command set includes:
 - `pcb-svg`
 - `pcb-layer-step`
 - `svg`
-- `pcblib-footprint-3d`
 - `bom`
 - `pnp`
 - `jlc`

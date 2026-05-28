@@ -130,19 +130,18 @@ def test_cli_help_colorizes_root_command_names_with_altium_amber() -> None:
             "positional arguments:",
             "  <command>             Available commands",
             "    bom                 generate BOM",
-            "    pcblib-footprint-3d",
-            "                        generate preview",
+            "    pcb-layer-step      generate STEP geometry",
         ]
     )
 
     colored = _color_command_names_in_help(
         help_text,
-        ("bom", "pcblib-footprint-3d"),
+        ("bom", "pcb-layer-step"),
     )
     color = f"{Style.BRIGHT}{Fore.YELLOW}"
 
     assert f"    {color}bom{Style.RESET_ALL}                 generate BOM" in colored
-    assert f"    {color}pcblib-footprint-3d{Style.RESET_ALL}" in colored
+    assert f"    {color}pcb-layer-step{Style.RESET_ALL}      generate STEP geometry" in colored
 
 
 def test_cli_parser_error_formatter_supports_red_terminal_output() -> None:

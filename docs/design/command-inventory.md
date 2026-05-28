@@ -13,7 +13,6 @@ This inventory records the command set migrated from the private
 | `pcb-svg` | public | `L3_public_workflows` | PCB SVG export and board-view generation. |
 | `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
 | `svg` | public | help only | Combined schematic/project SVG wrapper. |
-| `pcblib-footprint-3d` | deferred | none | Broken; do not migrate into first public release. Remove or hide from public CLI/manifest before release. |
 | `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, flat raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy/highlighting, and source selection. |
 | `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL CSV/XLSX, units, variant/no-BOM filtering, and configurable sorting. |
 | `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
@@ -238,7 +237,3 @@ Clean notes:
   config contract conformance, and backup/output semantics;
 - before/after preview or GUI-assisted rule development is useful but should be
   tracked as a post-release issue, not a first-release blocker.
-
-Deferred command notes:
-
-- `pcblib-footprint-3d` should not be treated as public for the first release.

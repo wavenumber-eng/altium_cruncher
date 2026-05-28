@@ -1061,21 +1061,6 @@ Post-release issue candidate:
 - this should be a GUI or HTML report workflow and should not block the first
   public CLI release.
 
-## Deferred Commands
-
-`pcblib-footprint-3d` is broken and should not be migrated into the first public
-release command set.
-
-Required follow-up:
-
-- remove or hide the command from the public manifest and top-level CLI before
-  release;
-- keep any implementation code only if it is clearly internal or quarantined
-  behind a non-public/deferred status;
-- do not write first-release command docs for it;
-- add a future repair plan only after a redistributable PcbLib+STEP fixture and
-  expected behavior are available.
-
 ## EasyEDA Commands
 
 Some newer commands convert EasyEDA designs and currently depend on private

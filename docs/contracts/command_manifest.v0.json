@@ -13,7 +13,6 @@
     {"name": "merge", "status": "public", "requires_extra": null},
     {"name": "pcb-layer-step", "status": "public", "requires_extra": null},
     {"name": "pcb-svg", "status": "public", "requires_extra": null},
-    {"name": "pcblib-footprint-3d", "status": "public", "requires_extra": null},
     {"name": "pnp", "status": "public", "requires_extra": null},
     {"name": "sch-svg", "status": "public", "requires_extra": null},
     {"name": "split", "status": "public", "requires_extra": null},
