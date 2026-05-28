@@ -10,6 +10,53 @@ PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT = """{
   /* pcb-layer-step creates compact fixture-alignment models, not full
      fabrication STEP exports. Keep only the features that help verify pogo-pin
      alignment against DUT pads. */
+  /*
+     Config shape:
+       - defaults: shared settings copied into every output.
+       - outputs: one or more output definitions. Each output accepts the same
+         fields as defaults and overrides only what it needs.
+
+     Common output fields:
+       name, output_step, pcbdoc, layer, z_mm, thickness_mm,
+       copper_color, include_copper, include_board_outline,
+       include_board_cutouts, include_poured_polygons, cut_holes,
+       drill_hole_mode, max_boolean_drill_cuts, drill_hole_color,
+       drill_plated_hole_color, drill_non_plated_hole_color,
+       drill_overlay_thickness_mm, drill_minimum_diameter_mm,
+       drill_hole_shape, drill_ring_width_mm, drill_plated_ring_shape,
+       fuse_copper, fuse_board_outline, arc_segments, include_tracks,
+       include_arcs, include_fills, include_regions, include_vias,
+       include_component_pads, include_free_pads, include_designators,
+       pad_color_rules.
+
+     Structured sections:
+       board_outline: color, cutout_color, cutouts, width_mm, fuse.
+       features: tracks, arcs, fills, polygons, regions, vias, free_pads,
+         component_pads: {mode, include_designators}.
+       colors: default_copper, pad_rules.
+       drills: mode, minimum_diameter_mm, shape, color, plated_color,
+         non_plated_color, ring_width_mm, plated_ring_shape,
+         overlay_thickness_mm.
+
+     Designator lists are case-insensitive shell-style patterns. Examples:
+       ["TP*"], ["TP*", "J*", "U1", "U2"], ["M*"].
+
+     Drill modes:
+       none: omit drill visualization.
+       cut: subtract drill holes from copper bodies.
+       overlay: render separate visible drill bodies.
+       auto: cut small drill sets and use overlays for dense boards.
+
+     Drill shapes:
+       solid: render drill disks/capsules.
+       ring: render rings with the drill hole removed.
+       plated_ring_shape "annulus": use a fixed-width ring.
+       plated_ring_shape "pad": use the full plated pad outline as the ring.
+
+     CLI overrides are available for the main layer, color, outline, drill,
+     fusion, and Z/thickness settings. Run:
+       altium-cruncher pcb-layer-step --help
+  */
   "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
   "defaults": {
     "pcbdoc": null,

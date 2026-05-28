@@ -479,6 +479,13 @@ Initial `pcb-layer-step` coverage:
 - drill overlays can split plated and non-plated holes into independently
   colored bodies, and plated pad holes can render ring overlays from the full
   pad shape for mounting-hole components such as Cricket Node `M1`;
+- `pcb-layer-step` now defaults to board-only `.PrjPcb` loading so fixture STEP
+  output does not parse schematics unless the caller explicitly requests
+  `--project-context schematic` or `auto`;
+- `--init-config` writes the fully commented JSONC template and exits without
+  loading PCB data, giving users a fast way to inspect and edit defaults;
+- the command logs progress around input loading, feature collection, drill-mode
+  selection, and Geometer STEP writes so long-running boards show activity;
 - generate bottom-layer copper STEP through the command handler with a small
   geometer writer stub so tests verify command behavior without checking in
   large generated STEP artifacts;

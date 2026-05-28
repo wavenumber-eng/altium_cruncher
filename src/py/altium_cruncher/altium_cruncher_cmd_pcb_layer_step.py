@@ -35,6 +35,9 @@ log = logging.getLogger(__name__)
 
 def cmd_pcb_layer_step(args) -> int:
     """Generate a STEP alignment model for one selected PCB layer."""
+    if bool(getattr(args, "init_config", False)):
+        return _cmd_init_pcb_layer_step_config(args)
+
     input_files = _resolve_input_files(args.file)
     if not input_files:
         return 1
@@ -79,10 +82,16 @@ def _generate_layer_steps_for_input(
     args: argparse.Namespace,
 ) -> int | None:
     pcbdoc_selector = getattr(args, "pcbdoc", None) or config.pcbdoc
+    project_context = getattr(args, "project_context", "none")
     try:
+        log.info(
+            "Loading PCB input %s (project context: %s)",
+            input_file.name,
+            project_context,
+        )
         design, _source_tag = load_design_for_pcb_input(
             input_file,
-            project_context=getattr(args, "project_context", "auto"),
+            project_context=project_context,
         )
         render_inputs = iter_pcb_render_inputs(
             design,
@@ -92,6 +101,7 @@ def _generate_layer_steps_for_input(
         log.error("Failed loading PCB input %s: %s", input_file.name, exc)
         return None
 
+    log.info("Resolved %d PCB document(s) for layer STEP output", len(render_inputs))
     written = 0
     for render_input in render_inputs:
         generated = _generate_layer_steps_for_render_input(
@@ -126,6 +136,12 @@ def _generate_layer_steps_for_render_input(
         except (OutputPathTemplateError, ValueError) as exc:
             log.error(str(exc))
             return None
+        log.info(
+            "Generating PCB layer STEP request for %s (%s) -> %s",
+            render_input.board_key,
+            options.layer.to_json_name(),
+            output_path.name,
+        )
         try:
             result = export_pcb_layer_step(
                 render_input.pcbdoc,
@@ -151,6 +167,32 @@ def _generate_layer_steps_for_render_input(
             result.manifest_path.name,
         )
     return written
+
+
+def _cmd_init_pcb_layer_step_config(args: argparse.Namespace) -> int:
+    paths = _init_config_paths(args)
+    if not paths:
+        return 1
+    for config_path in paths:
+        if config_path.exists() and not bool(getattr(args, "force_config", False)):
+            log.info("pcb-layer-step config already exists: %s", config_path)
+            continue
+        write_default_pcb_layer_step_config(config_path)
+        log.info("Wrote pcb-layer-step config template: %s", config_path)
+    return 0
+
+
+def _init_config_paths(args: argparse.Namespace) -> list[Path]:
+    if getattr(args, "config", None):
+        return [Path(args.config).resolve()]
+    if getattr(args, "file", None):
+        input_files = _resolve_input_files(args.file)
+        if not input_files:
+            return []
+        return sorted(
+            {path.parent / PCB_LAYER_STEP_CONFIG_FILENAME for path in input_files}
+        )
+    return [Path.cwd() / PCB_LAYER_STEP_CONFIG_FILENAME]
 
 
 def resolve_pcb_layer_step_configs(
@@ -388,6 +430,7 @@ def register_parser(subparsers):
             "and a separate board-outline body."
         ),
         epilog="Examples:\n"
+        "  altium-cruncher pcb-layer-step --init-config --config pcb-layer-step.json\n"
         "  altium-cruncher pcb-layer-step board.PcbDoc\n"
         "  altium-cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --layer bottom\n"
         "  altium-cruncher pcb-layer-step board.PcbDoc --exclude-poured-polygons\n"
@@ -415,6 +458,16 @@ def register_parser(subparsers):
         ),
     )
     parser.add_argument(
+        "--init-config",
+        action="store_true",
+        help="write a pcb-layer-step JSONC config template and exit without loading PCB data",
+    )
+    parser.add_argument(
+        "--force-config",
+        action="store_true",
+        help="with --init-config, overwrite an existing config template",
+    )
+    parser.add_argument(
         "--doc",
         "--pcbdoc",
         dest="pcbdoc",
@@ -424,8 +477,11 @@ def register_parser(subparsers):
     parser.add_argument(
         "--project-context",
         choices=["auto", "none", "schematic"],
-        default="auto",
-        help="project-context mode for standalone PcbDoc inputs (default: auto)",
+        default="none",
+        help=(
+            "project-context mode. pcb-layer-step defaults to board-only loading "
+            "and does not parse schematics unless 'schematic' or 'auto' is requested"
+        ),
     )
     parser.add_argument(
         "--layer",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import sys
 from types import SimpleNamespace
 
@@ -12,8 +13,10 @@ from altium_monkey.altium_record_types import PcbLayer
 from altium_cruncher.altium_cruncher_cmd_pcb_layer_step import (
     _options_from_config_and_args,
     _resolve_input_files,
+    cmd_pcb_layer_step,
     resolve_pcb_layer_step_configs,
 )
+from altium_cruncher.altium_cruncher_pcb_workflow import load_design_for_pcb_input
 from altium_cruncher.altium_cruncher_pcb_layer_step import (
     PCB_LAYER_STEP_CONFIG_SCHEMA_V2,
     PcbLayerStepConfig,
@@ -23,6 +26,17 @@ from altium_cruncher.altium_cruncher_pcb_layer_step import (
     resolve_pcb_layer_selector,
     _sample_svg_arc_points_mils,
     _svg_like_board_sweep_degrees,
+)
+
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+CRICKET_PRJPCB = (
+    PACKAGE_ROOT
+    / "tests"
+    / "assets"
+    / "projects"
+    / "cricket-node"
+    / "input"
+    / "11-10028__cricket-node-hw__B.PrjPcb"
 )
 
 
@@ -62,6 +76,50 @@ def test_pcb_layer_step_config_auto_created_next_to_input(tmp_path) -> None:
     assert len(config.outputs) == 1
     assert config.outputs[0].include_designators == ("TP*",)
     assert config.outputs[0].pad_color_rules[0].color == "#FF0000"
+
+
+def test_pcb_layer_step_init_config_writes_template_without_loading_input(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = cmd_pcb_layer_step(
+        SimpleNamespace(
+            init_config=True,
+            force_config=False,
+            config=None,
+            file=None,
+        )
+    )
+
+    config_path = tmp_path / "pcb-layer-step.json"
+    config_text = config_path.read_text(encoding="utf-8")
+    assert result == 0
+    assert "Common output fields:" in config_text
+    assert "drill_plated_ring_shape" in config_text
+    assert "altium-cruncher pcb-layer-step --help" in config_text
+
+
+def test_pcb_layer_step_prjpcb_board_only_context_skips_schematic_loading(
+    monkeypatch,
+) -> None:
+    import altium_monkey.altium_schdoc as schdoc_module
+
+    def fail_on_schematic_load(*args, **kwargs):
+        raise AssertionError("pcb-layer-step should not parse SchDocs")
+
+    monkeypatch.setattr(schdoc_module, "AltiumSchDoc", fail_on_schematic_load)
+
+    design, source_tag = load_design_for_pcb_input(
+        CRICKET_PRJPCB,
+        project_context="none",
+    )
+
+    assert source_tag == "prjpcb_board_only"
+    assert design.schdocs == []
+    assert [path.name for path in design.get_pcbdoc_paths()] == [
+        "cricket-node-hw__B.PcbDoc"
+    ]
 
 
 def test_pcb_layer_step_options_merge_config_with_cli_overrides() -> None:

@@ -797,9 +797,13 @@ def export_pcb_layer_step(
     layer = opts.layer
     resolved_board_name = board_name or _board_name_from_pcbdoc(pcbdoc)
 
+    layer_name = layer.to_json_name()
+    log.info("Collecting %s layer geometry for %s", layer_name, resolved_board_name)
     features = _collect_layer_features(pcbdoc, layer, opts)
     drill_features = _collect_drill_features(pcbdoc, layer, opts)
     drill_hole_mode = _effective_drill_hole_mode(opts, len(drill_features))
+    feature_counts = (len(features), len(drill_features), drill_hole_mode)
+    log.info("Collected features: layer=%d drill=%d mode=%s", *feature_counts)
     bodies, counts = _build_step_bodies(
         pcbdoc=pcbdoc,
         opts=opts,
@@ -816,6 +820,7 @@ def export_pcb_layer_step(
         "name": _step_name(resolved_board_name),
         "bodies": bodies,
     }
+    log.info("Writing STEP with %d bodies: %s", len(bodies), output_path.name)
     geometer.write_planar_step(request, output_path)
 
     manifest_path = output_path.with_suffix(".json")
