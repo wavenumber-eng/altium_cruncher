@@ -100,22 +100,20 @@ this combined application package.
 The standalone package must also work through the WN workspace setup/update
 flow, not only through direct developer commands.
 
-`wn-hw` integration is a first-release blocker:
+`wn-hw` integration is implemented locally as a first-release handoff item:
 
-- add a standalone `altium_cruncher` repo/dependency entry to the workspace
-  manifest when the public repo is ready to consume;
-- install the released package with pinned `uv tool install --force`
-  invocations;
-- allow editable `uv tool install --force --editable <checkout>` overrides for
-  local development;
-- ensure the resulting script/executable directory is on PATH after
-  `setup.ps1`/`setup.sh` and after `update.ps1`/`update.sh`;
-- standardize workspace workflows on the single public console name
+- `wn-hw` commit `b2b8fbb` adds a manifest-level `tools` entry for
+  `altium-cruncher==2026.5.28`;
+- setup/update install the released package with pinned `uv tool install
+  --force` invocations;
+- setup/update and activation record the uv tool executable directory for
+  PowerShell and POSIX shells;
+- workspace workflows standardize on the single public console name
   `altium-cruncher`; the import/module name remains `altium_cruncher`;
-- add an installer test that starts from the workspace shell and runs
-  `altium-cruncher --version`;
-- remove old `uv run --project ... toolz/altium_cruncher` assumptions from
-  WN docs/scripts only after the standalone executable path is verified.
+- installer validation still needs a second Windows PC and macOS smoke test
+  after the package is published;
+- editable `uv tool install --force --editable <checkout>` local-development
+  overrides remain deferred.
 
 ## Dependency Policy
 
@@ -1237,11 +1235,12 @@ Preferred shape:
    - Update README, command inventory, contracts, and release notes.
 
 7. Wire into `wn-hw`.
-   - Status: not started; documented as a first-release blocker.
-   - Add standalone `altium_cruncher` as a cloned dependency.
-   - Update workspace scripts/configuration.
-   - Ensure setup/update exposes the console executable path.
-   - Add a workspace installer test for the public console script name.
+   - Status: implemented locally in `wn-hw` commit `b2b8fbb`.
+   - Add manifest-level uv-tool config for `altium-cruncher==2026.5.28`.
+   - Update workspace setup/update scripts and activation path handling.
+   - Dry-run PowerShell and POSIX setup/update validation passes locally.
+   - Remaining validation: published-package install on a second Windows PC,
+     then macOS.
 
 8. Remove from `toolz`.
    - Status: blocked until public repo is pushed, CI is green, and app/workspace
@@ -1387,7 +1386,9 @@ Current local status:
 - L3 now covers the Hydroscope public workflows, the minimized cricket-node
   `pcb-layer-step` bottom-layer fixture, the `RT_SUPER_C1.IntLib` source
   extraction fixture, and the Hydroscope `megamaid` showcase workflow;
-- `wn-hw` setup/update integration remains the major first-release blocker;
+- `wn-hw` setup/update integration is implemented locally in `wn-hw` commit
+  `b2b8fbb`; published-package install validation remains pending on a second
+  Windows PC and macOS;
 - GitHub CI is configured for PRs and `main` pushes on Ubuntu and Windows.
   A remote run still needs to be observed after pushing the public repo branch;
 - macOS CI remains deferred for the first public release until hosted-runner
