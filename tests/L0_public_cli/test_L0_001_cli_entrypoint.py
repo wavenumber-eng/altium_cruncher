@@ -8,6 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from colorama import Fore, Style
+
+from altium_cruncher._cli import _color_command_names_in_help
 from altium_cruncher._version import __version__, cli_version_text
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -99,6 +102,28 @@ def test_cli_help_lists_commands_alphabetically() -> None:
 
     assert result.returncode == 0, result.stderr
     assert help_commands == sorted(expected_commands)
+
+
+def test_cli_help_colorizes_root_command_names_with_altium_amber() -> None:
+    """Verify terminal help highlights root command names in amber/yellow."""
+    help_text = "\n".join(
+        [
+            "positional arguments:",
+            "  <command>             Available commands",
+            "    bom                 generate BOM",
+            "    pcblib-footprint-3d",
+            "                        generate preview",
+        ]
+    )
+
+    colored = _color_command_names_in_help(
+        help_text,
+        ("bom", "pcblib-footprint-3d"),
+    )
+    color = f"{Style.BRIGHT}{Fore.YELLOW}"
+
+    assert f"    {color}bom{Style.RESET_ALL}                 generate BOM" in colored
+    assert f"    {color}pcblib-footprint-3d{Style.RESET_ALL}" in colored
 
 
 def test_cli_command_help_starts_for_manifest_commands() -> None:

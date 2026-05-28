@@ -11,6 +11,8 @@ Output policy:
 
 import argparse
 import logging
+import os
+import re
 import sys
 from pathlib import Path
 from typing import cast
@@ -21,6 +23,8 @@ if __package__ in {None, ""}:
     if sys.path and Path(sys.path[0]).resolve() == this_dir:
         sys.path.pop(0)
     sys.path.insert(0, str(this_dir.parent))
+
+from colorama import Fore, Style
 
 from altium_cruncher.logging_utils import setup_cli_logging
 from altium_cruncher._version import cli_version_text
@@ -77,13 +81,55 @@ LOG_LEVEL_BY_NAME = {
 }
 
 
+def _help_color_enabled(stream: object | None = None) -> bool:
+    """Return whether help text should include ANSI color escapes."""
+    if os.environ.get("NO_COLOR") is not None or os.environ.get("TERM") == "dumb":
+        return False
+    output_stream = sys.stdout if stream is None else stream
+    isatty = getattr(output_stream, "isatty", None)
+    return bool(callable(isatty) and isatty())
+
+
+def _color_command_names_in_help(help_text: str, command_names: tuple[str, ...]) -> str:
+    """Color command names in the root argparse command list."""
+    if not command_names:
+        return help_text
+    command_pattern = "|".join(re.escape(command) for command in command_names)
+    line_pattern = re.compile(
+        rf"^(?P<indent>\s{{4}})(?P<command>{command_pattern})(?P<rest>(?:\s{{2,}}.*)?)$",
+        re.MULTILINE,
+    )
+
+    def replace(match: re.Match[str]) -> str:
+        command = match.group("command")
+        color = f"{Style.BRIGHT}{Fore.YELLOW}"
+        return f"{match.group('indent')}{color}{command}{Style.RESET_ALL}{match.group('rest')}"
+
+    return line_pattern.sub(replace, help_text)
+
+
 class CruncherArgumentParser(argparse.ArgumentParser):
     """Argument parser that prints the package version in help output."""
+
+    command_names_for_help_color: tuple[str, ...] = ()
 
     def format_help(self) -> str:
         """Return help text with a visible version line at the top."""
         help_text = super().format_help().rstrip()
+        if _help_color_enabled():
+            help_text = _color_command_names_in_help(
+                help_text,
+                self.command_names_for_help_color,
+            )
         return f"{cli_version_text()}\n\n{help_text}\n"
+
+
+def _configure_root_help_color(
+    parser: CruncherArgumentParser,
+    subparsers: argparse._SubParsersAction,
+) -> None:
+    """Attach root command names used for colorized terminal help."""
+    parser.command_names_for_help_color = tuple(str(command) for command in subparsers.choices)
 
 
 def _cmd_version(_args: argparse.Namespace) -> int:
@@ -219,6 +265,7 @@ def main() -> None:
 
     version_parser = subparsers.add_parser("version", help="Print version information")
     version_parser.set_defaults(handler=_cmd_version)
+    _configure_root_help_color(parser, subparsers)
 
     args, unknown_args = parser.parse_known_args()
     if unknown_args:
