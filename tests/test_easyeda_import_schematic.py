@@ -356,6 +356,7 @@ def test_easyeda_import_cli_generates_schlib_report_and_preview(tmp_path: Path) 
             no_fetch=True,
             symbol_name=None,
             schlib_name=None,
+            symbol_only=False,
             preview=True,
             pin_grid_mils=100.0,
             no_align_pin_grid=False,
@@ -366,6 +367,8 @@ def test_easyeda_import_cli_generates_schlib_report_and_preview(tmp_path: Path) 
     assert result == 0
     case_dir = tmp_path / "C2040"
     assert (case_dir / "C2040.SchLib").exists()
+    assert (case_dir / "C2040.PcbLib").exists()
+    assert not (case_dir / "easyeda-3d-models.json").exists()
     report = json.loads((case_dir / "easyeda-import-report.json").read_text(encoding="utf-8"))
     assert report["symbol_name"] == "RP2040"
     assert report["pin_count"] == 57

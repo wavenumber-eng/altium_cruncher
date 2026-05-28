@@ -1,0 +1,848 @@
+Wire List
+
+<<< Component List >>>
+2.2µF                           C1             C0603_0.90MM_MD
+4.7µF                           C2             C0603_1.00MM_MD
+0.47µF                          C3             C0402_0.55MM_HD
+1µF                             C4             C0402_0.55MM_HD
+2.2µF                           C5             C0603_0.90MM_MD
+0.1uF 6v                        C6             C0201_PERFECT
+10µF                            C7             C0603_0.90MM_MD
+1µF                             C8             C0402_0.55MM_HD
+10µF                            C9             C0603_0.90MM_MD
+1µF                             C10            C0402_0.55MM_HD
+8pF                             C11            C0402_0.55MM_HD
+0.1uF 6v                        C12            C0201_PERFECT
+0.1uF 6v                        C13            C0201_PERFECT
+0.1uF 6v                        C14            C0201_PERFECT
+0.1uF 6v                        C15            C0201_PERFECT
+0.1uF 6v                        C16            C0201_PERFECT
+0.1uF 6v                        C17            C0201_PERFECT
+2.2µF                           C18            C0603_0.90MM_MD
+8pF                             C19            C0402_0.55MM_HD
+0.1uF 6v                        C20            C0201_PERFECT
+0.1uF 6v                        C21            C0201_PERFECT
+0.1uF 6v                        C22            C0201_PERFECT
+0.1uF 6v                        C23            C0201_PERFECT
+0.1uF 6v                        C24            C0201_PERFECT
+0.1uF 6v                        C25            C0201_PERFECT
+0.1uF 6v                        C26            C0201_PERFECT
+0.1uF 6v                        C27            C0201_PERFECT
+0.1uF 6v                        C28            C0201_PERFECT
+0.1uF 6v                        C29            C0201_PERFECT
+0.1uF 6v                        C30            C0201_PERFECT
+0.1uF 6v                        C31            C0201_PERFECT
+0.1uF 6v                        C32            C0201_PERFECT
+0.1uF 6v                        C33            C0201_PERFECT
+0.1uF 6v                        C34            C0201_PERFECT
+0.1uF 6v                        C35            C0201_PERFECT
+0.1uF 6v                        C36            C0201_PERFECT
+0.1uF 6v                        C37            C0201_PERFECT
+0.1uF 6v                        C38            C0201_PERFECT
+0.1uF 6v                        C39            C0201_PERFECT
+0.1uF 6v                        C40            C0201_PERFECT
+0.1uF 6v                        C41            C0201_PERFECT
+0.1µF                           C42            C0402_0.55MM_MD
+0.1µF                           C43            C0402_0.55MM_MD
+8pF                             C44            C0402_0.55MM_HD
+8pF                             C45            C0402_0.55MM_HD
+BAT760-7                        D1             D_SOD-323_P
+BAT760-7                        D2             D_SOD-323_P
+LED 1.6X0.8MM 570NM GRN CLR SMD D3             LED_0603 - GREEN
+LED 1.6X0.8MM 630NM RED CLR SMD D4             LED_0603 - RED
+TC2030-CTL-NL                   J1             TC2030 NO LATCH
+FTSH-105-01-L-DV-K-TR           J2             FTSH-105-01-L-DV-K-TR
+2.2µH 1.5A                      L2             L_NRH3012
+2.2µH 1.5A                      L3             L_NRH3012
+10k                             R1             R0402_0.40MM_HD
+20k                             R2             R0402_0.40MM_HD
+2.2k                            R3             R0402_0.40MM_HD
+2.2k                            R4             R0402_0.40MM_HD
+20k                             R5             R0402_0.40MM_HD
+0                               R6             R0402_0.40MM_HD
+0                               R7             R0402_0.40MM_HD
+100k                            R8             R0402_0.40MM_HD
+0                               R10            R0402_0.40MM_HD
+100k                            R12            R0402_0.40MM_HD
+100k                            R13            R0402_0.40MM_HD
+100k                            R14            R0402_0.40MM_HD
+100k                            R15            R0402_0.40MM_HD
+1k                              R16            R0402_0.40MM_HD
+100k                            R17            R0402_0.40MM_HD
+100k                            R18            R0402_0.40MM_HD
+1k                              R19            R0402_0.40MM_HD
+1k                              R20            R0402_0.40MM_HD
+0                               R21            R0402_0.40MM_HD
+0                               R22            R0402_0.40MM_HD
+0                               R23            R0402_0.40MM_HD
+SOLDER_HOLE                     T1             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T2             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T3             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T4             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T5             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T6             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T7             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T8             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T9             MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T10            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T11            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T12            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T13            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T14            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T15            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T16            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T17            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T18            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T19            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T20            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T21            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T22            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T23            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T24            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T25            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T26            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T27            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T28            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T29            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T30            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T31            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T32            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T33            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T34            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T35            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T36            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T37            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T38            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T39            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T40            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T41            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T42            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T43            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T44            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T45            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T46            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T47            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T48            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T49            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T50            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T51            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T52            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T53            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T54            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T55            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T56            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T57            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T58            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T59            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T60            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T61            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T62            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T63            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T64            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T65            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T66            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T67            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T68            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T69            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T70            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T71            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T72            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T73            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T74            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T75            MACHINE_PIN_SOLDERHOLE
+SOLDER_HOLE                     T76            MACHINE_PIN_SOLDERHOLE
+MIMXRT685SFVKB                  U1             VFBGA176
+PCA9420BSAZ                     U2             PCA9420
+SN74AUC1G07DBVR                 U3             SOT23-5
+PRTR5V0U2X,215                  U4             SOT143B
+W25Q16JWXHIQ                    U5             W25Q_XSON_8
+W25Q64JVSSIQ                    U6             SOIC127P830X200-8L
+32.768kHz                       X1             XTAL_3215
+24MHz                           X2             XTAL-2.5x2.0mm
+
+<<< Wire List >>>
+
+  NODE  REFERENCE  PIN #   PIN NAME       PIN TYPE    PART VALUE
+
+[00133] VDD-CORE
+        C26        2       2              PASSIVE     0.1uF 6v
+        C27        2       2              PASSIVE     0.1uF 6v
+        C28        2       2              PASSIVE     0.1uF 6v
+        C29        2       2              PASSIVE     0.1uF 6v
+        C30        2       2              PASSIVE     0.1uF 6v
+        C31        2       2              PASSIVE     0.1uF 6v
+        C32        2       2              PASSIVE     0.1uF 6v
+        C33        2       2              PASSIVE     0.1uF 6v
+        C34        2       2              PASSIVE     0.1uF 6v
+        C35        2       2              PASSIVE     0.1uF 6v
+        R7         2       2              PASSIVE     0
+        U1         C5      VDDCORE        POWER       MIMXRT685SFVKB
+        U1         D9      VDDCORE        POWER       MIMXRT685SFVKB
+        U1         F14     VDDCORE        POWER       MIMXRT685SFVKB
+        U1         J4      VDDCORE        POWER       MIMXRT685SFVKB
+        U1         J14     VDDCORE        POWER       MIMXRT685SFVKB
+        U1         P9      VDDCORE        POWER       MIMXRT685SFVKB
+        U1         R5      VDDCORE        POWER       MIMXRT685SFVKB
+        U1         R14     VDDCORE        POWER       MIMXRT685SFVKB
+
+[00132] USB_D_P
+        T45        1       1              PASSIVE     SOLDER_HOLE
+        U1         R17     USB1_DP        I/O         MIMXRT685SFVKB
+        U4         3       IO2            PASSIVE     PRTR5V0U2X,215
+
+[00131] USB_D_N
+        T43        1       1              PASSIVE     SOLDER_HOLE
+        U1         T17     USB1_DM        I/O         MIMXRT685SFVKB
+        U4         2       IO1            PASSIVE     PRTR5V0U2X,215
+
+[00130] TEMP-SENSE
+        T51        1       1              PASSIVE     SOLDER_HOLE
+        U2         14      TS             INPUT       PCA9420BSAZ
+
+[00129] SWO
+        J1         6       SWO            PASSIVE     TC2030-CTL-NL
+        J2         6       SWO/TDO        PASSIVE     FTSH-105-01-L-DV-K-TR
+        U1         L16     PIO2_24/SWO/GPIPASSIVE     MIMXRT685SFVKB
+
+[00128] SWIO
+        J1         2       SWDIO          PASSIVE     TC2030-CTL-NL
+        J2         2       SWDIO/TMS      PASSIVE     FTSH-105-01-L-DV-K-TR
+        U1         L15     PIO2_26/SWDIO  PASSIVE     MIMXRT685SFVKB
+
+[00127] SWCLK
+        J1         4       SWDCLK         PASSIVE     TC2030-CTL-NL
+        J2         4       SWDCLK/TCK     PASSIVE     FTSH-105-01-L-DV-K-TR
+        U1         L17     PIO2_25/SWCLK  PASSIVE     MIMXRT685SFVKB
+
+[00126] SD-RESET-N
+        T35        1       1              PASSIVE     SOLDER_HOLE
+        U1         T15     PIO2_10/SD0_RESPASSIVE     MIMXRT685SFVKB
+
+[00125] SD-DETECT-N
+        T36        1       1              PASSIVE     SOLDER_HOLE
+        U1         R13     PIO2_9/SD0_CARDPASSIVE     MIMXRT685SFVKB
+
+[00124] SD-D3
+        T33        1       1              PASSIVE     SOLDER_HOLE
+        U1         T12     PIO2_3/SD0_D3/SPASSIVE     MIMXRT685SFVKB
+
+[00123] SD-D2
+        T32        1       1              PASSIVE     SOLDER_HOLE
+        U1         U11     PIO2_2/SD0_D2/SPASSIVE     MIMXRT685SFVKB
+
+[00122] SD-D1
+        T31        1       1              PASSIVE     SOLDER_HOLE
+        U1         T11     PIO2_1/SD0_D1/SPASSIVE     MIMXRT685SFVKB
+
+[00121] SD-D0
+        T30        1       1              PASSIVE     SOLDER_HOLE
+        U1         R11     PIO2_0/SD0_D0/SPASSIVE     MIMXRT685SFVKB
+
+[00120] SD-CMD
+        T29        1       1              PASSIVE     SOLDER_HOLE
+        U1         R9      PIO1_31/SD0_CMDPASSIVE     MIMXRT685SFVKB
+
+[00119] SD-CLK
+        T34        1       1              PASSIVE     SOLDER_HOLE
+        U1         P10     PIO1_30/SD0_CLKPASSIVE     MIMXRT685SFVKB
+
+[00118] RST-EXT
+        J1         3       RST            PASSIVE     TC2030-CTL-NL
+        J2         10      R\S\T\         PASSIVE     FTSH-105-01-L-DV-K-TR
+        R8         1       1              PASSIVE     100k
+        T49        1       1              PASSIVE     SOLDER_HOLE
+        U3         2       A              PASSIVE     SN74AUC1G07DBVR
+
+[00117] RED-LED
+        R20        2       2              PASSIVE     1k
+        U1         B3      PIO0_27/FC3_SSEPASSIVE     MIMXRT685SFVKB
+
+[00116] PMIC-SDA
+        R4         1       1              PASSIVE     2.2k
+        U1         F16     PMIC_I2C_SDA   I/O         MIMXRT685SFVKB
+        U2         6       SDA            I/O         PCA9420BSAZ
+
+[00115] PMIC-SCL
+        R3         1       1              PASSIVE     2.2k
+        U1         E16     PMIC_I2C_SCL   OUTPUT      MIMXRT685SFVKB
+        U2         5       SCL            INPUT       PCA9420BSAZ
+
+[00114] PMIC-RESETN
+        R5         1       1              PASSIVE     20k
+        U1         B15     R\E\S\E\T\N\\  INPUT       MIMXRT685SFVKB
+        U2         11      SYSRSTN        OUTPUT      PCA9420BSAZ
+        U3         4       Y              PASSIVE     SN74AUC1G07DBVR
+
+[00113] PMIC-ON
+        T52        1       1              PASSIVE     SOLDER_HOLE
+        U2         4       ON             INPUT       PCA9420BSAZ
+
+[00112] PMIC-MODE1
+        U1         B16     PMIC_MODE1     OUTPUT      MIMXRT685SFVKB
+        U2         8       MODESEL1       INPUT       PCA9420BSAZ
+
+[00111] PMIC-MODE0
+        U1         C15     PMIC_MODE0     OUTPUT      MIMXRT685SFVKB
+        U2         7       MODESEL0       INPUT       PCA9420BSAZ
+
+[00110] PMIC-INTB
+        R2         1       1              PASSIVE     20k
+        U1         A15     P\M\I\C\_\I\R\QINPUT       MIMXRT685SFVKB
+        U2         10      INTB           OUTPUT      PCA9420BSAZ
+
+[00109] PIO2-6
+        T39        1       1              PASSIVE     SOLDER_HOLE
+        U1         U15     PIO2_6/SD0_D5/SPASSIVE     MIMXRT685SFVKB
+
+[00108] PIO2-5
+        T38        1       1              PASSIVE     SOLDER_HOLE
+        U1         U13     PIO2_5/SD0_D4/SPASSIVE     MIMXRT685SFVKB
+
+[00107] PIO2-4
+        T37        1       1              PASSIVE     SOLDER_HOLE
+        U1         T13     PIO2_4/SD0_WR_PPASSIVE     MIMXRT685SFVKB
+
+[00106] PDM-DATA67
+        T27        1       1              PASSIVE     SOLDER_HOLE
+        U1         P5      PIO2_23/PDM_DATPASSIVE     MIMXRT685SFVKB
+
+[00105] PDM-DATA45
+        T25        1       1              PASSIVE     SOLDER_HOLE
+        U1         P3      PIO2_22/PDM_DATPASSIVE     MIMXRT685SFVKB
+
+[00104] PDM-DATA23
+        T23        1       1              PASSIVE     SOLDER_HOLE
+        U1         R3      PIO2_21/PDM_DATPASSIVE     MIMXRT685SFVKB
+
+[00103] PDM-DATA01
+        T21        1       1              PASSIVE     SOLDER_HOLE
+        U1         U2      PIO2_20/PDM_DATPASSIVE     MIMXRT685SFVKB
+
+[00102] PDM-CLK67
+        T28        1       1              PASSIVE     SOLDER_HOLE
+        U1         T2      PIO2_19/PDM_CLKPASSIVE     MIMXRT685SFVKB
+
+[00101] PDM-CLK45
+        T26        1       1              PASSIVE     SOLDER_HOLE
+        U1         R2      PIO2_18/PDM_CLKPASSIVE     MIMXRT685SFVKB
+
+[00100] PDM-CLK23
+        T24        1       1              PASSIVE     SOLDER_HOLE
+        U1         U1      PIO2_17/PDM_CLKPASSIVE     MIMXRT685SFVKB
+
+[00099] PDM-CLK01
+        T22        1       1              PASSIVE     SOLDER_HOLE
+        U1         R1      PIO2_16/PDM_CLKPASSIVE     MIMXRT685SFVKB
+
+[00083] NetR1_2
+        R1         2       2              PASSIVE     10k
+        U1         A16     LDO_ENABLE     INPUT       MIMXRT685SFVKB
+
+[00082] NetL3_1
+        L3         1       1              PASSIVE     2.2µH 1.5A
+        U2         1       LX2            POWER       PCA9420BSAZ
+
+[00081] NetL2_1
+        L2         1       1              PASSIVE     2.2µH 1.5A
+        U2         22      LX1            POWER       PCA9420BSAZ
+
+[00078] NetD4_A
+        D4         A       A              PASSIVE     LED 1.6X0.8MM 630NM RED CLR SMD
+        R20        1       1              PASSIVE     1k
+
+[00077] NetD3_A
+        D3         A       A              PASSIVE     LED 1.6X0.8MM 570NM GRN CLR SMD
+        R19        1       1              PASSIVE     1k
+
+[00076] NetC45_1
+        C45        1       1              PASSIVE     8pF
+        U1         B17     RTCXIN         INPUT       MIMXRT685SFVKB
+        X1         2       out            PASSIVE     32.768kHz
+
+[00075] NetC44_1
+        C44        1       1              PASSIVE     8pF
+        U1         A17     RTCXOUT        OUTPUT      MIMXRT685SFVKB
+        X1         1       inp            PASSIVE     32.768kHz
+
+[00074] NetC19_2
+        C19        2       1              PASSIVE     8pF
+        U1         B13     XTALOUT        OUTPUT      MIMXRT685SFVKB
+        X2         3       OSC3           PASSIVE     24MHz
+
+[00073] NetC11_2
+        C11        2       1              PASSIVE     8pF
+        U1         B14     XTALIN         INPUT       MIMXRT685SFVKB
+        X2         1       OSC1           PASSIVE     24MHz
+
+[00072] NetC9_2
+        C9         2       1              PASSIVE     10µF
+        L3         2       2              PASSIVE     2.2µH 1.5A
+        R10        1       1              PASSIVE     0
+        U2         3       SW2_OUT        INPUT       PCA9420BSAZ
+
+[00071] NetC7_2
+        C7         2       1              PASSIVE     10µF
+        L2         2       2              PASSIVE     2.2µH 1.5A
+        R7         1       1              PASSIVE     0
+        U2         19      SW1_OUT        INPUT       PCA9420BSAZ
+
+[00070] NetC2_1
+        C2         1       1              PASSIVE     4.7µF
+        C5         1       1              PASSIVE     2.2µF
+        C8         1       1              PASSIVE     1µF
+        U2         2       PSYS2          POWER       PCA9420BSAZ
+        U2         17      ASYS           POWER       PCA9420BSAZ
+        U2         20      PSYS1          POWER       PCA9420BSAZ
+
+[00069] NetC1_2
+        C1         2       1              PASSIVE     2.2µF
+        D1         2       K              PASSIVE     BAT760-7
+        D2         2       K              PASSIVE     BAT760-7
+        U2         16      VIN            POWER       PCA9420BSAZ
+
+[00068] MCLK
+        T48        1       1              PASSIVE     SOLDER_HOLE
+        U1         K16     PIO1_10/MCLK/FRPASSIVE     MIMXRT685SFVKB
+
+[00067] ISP2
+        R14        1       1              PASSIVE     100k
+        R18        2       2              PASSIVE     100k
+        T19        1       1              PASSIVE     SOLDER_HOLE
+        U1         N4      PIO1_17/HS_SPI_PASSIVE     MIMXRT685SFVKB
+
+[00066] ISP1
+        R13        1       1              PASSIVE     100k
+        R17        2       2              PASSIVE     100k
+        T18        1       1              PASSIVE     SOLDER_HOLE
+        U1         M4      PIO1_16/HS_SPI_PASSIVE     MIMXRT685SFVKB
+
+[00065] ISP0
+        R12        1       1              PASSIVE     100k
+        R15        2       2              PASSIVE     100k
+        T17        1       1              PASSIVE     SOLDER_HOLE
+        U1         N3      PIO1_15/HS_SPI_PASSIVE     MIMXRT685SFVKB
+
+[00064] I3C0-SDA
+        R16        2       2              PASSIVE     1k
+        T40        1       1              PASSIVE     SOLDER_HOLE
+        U1         P16     PIO2_30/I3C0_SDPASSIVE     MIMXRT685SFVKB
+
+[00063] I3C0-SCL
+        T41        1       1              PASSIVE     SOLDER_HOLE
+        U1         N17     PIO2_29/I3C0_SCPASSIVE     MIMXRT685SFVKB
+
+[00062] I3C0-PUR
+        R16        1       1              PASSIVE     1k
+        U1         B6      PIO2_31/I3C0_PUPASSIVE     MIMXRT685SFVKB
+
+[00061] HS-SPI-SSEL0
+        T16        1       1              PASSIVE     SOLDER_HOLE
+        U1         N2      PIO1_14/HS_SPI_PASSIVE     MIMXRT685SFVKB
+
+[00060] HS-SPI-SCK
+        T13        1       1              PASSIVE     SOLDER_HOLE
+        U1         L2      PIO1_11/HS_SPI_PASSIVE     MIMXRT685SFVKB
+
+[00059] HS-SPI-MOSI
+        T15        1       1              PASSIVE     SOLDER_HOLE
+        U1         N1      PIO1_13/HS_SPI_PASSIVE     MIMXRT685SFVKB
+
+[00058] HS-SPI-MISO
+        T14        1       1              PASSIVE     SOLDER_HOLE
+        U1         M2      PIO1_12/HS_SPI_PASSIVE     MIMXRT685SFVKB
+
+[00057] GREEN-LED
+        R19        2       2              PASSIVE     1k
+        U1         A1      PIO0_19/FC2_SSEPASSIVE     MIMXRT685SFVKB
+
+[00056] GND
+        C1         1       1              PASSIVE     2.2µF
+        C2         2       1              PASSIVE     4.7µF
+        C3         1       1              PASSIVE     0.47µF
+        C4         1       1              PASSIVE     1µF
+        C5         2       1              PASSIVE     2.2µF
+        C6         1       1              PASSIVE     0.1uF 6v
+        C7         1       1              PASSIVE     10µF
+        C8         2       1              PASSIVE     1µF
+        C9         1       1              PASSIVE     10µF
+        C10        1       1              PASSIVE     1µF
+        C11        1       1              PASSIVE     8pF
+        C12        1       1              PASSIVE     0.1uF 6v
+        C13        1       1              PASSIVE     0.1uF 6v
+        C14        1       1              PASSIVE     0.1uF 6v
+        C15        1       1              PASSIVE     0.1uF 6v
+        C16        1       1              PASSIVE     0.1uF 6v
+        C17        1       1              PASSIVE     0.1uF 6v
+        C18        1       1              PASSIVE     2.2µF
+        C19        1       1              PASSIVE     8pF
+        C20        1       1              PASSIVE     0.1uF 6v
+        C21        1       1              PASSIVE     0.1uF 6v
+        C22        1       1              PASSIVE     0.1uF 6v
+        C23        1       1              PASSIVE     0.1uF 6v
+        C24        1       1              PASSIVE     0.1uF 6v
+        C25        1       1              PASSIVE     0.1uF 6v
+        C26        1       1              PASSIVE     0.1uF 6v
+        C27        1       1              PASSIVE     0.1uF 6v
+        C28        1       1              PASSIVE     0.1uF 6v
+        C29        1       1              PASSIVE     0.1uF 6v
+        C30        1       1              PASSIVE     0.1uF 6v
+        C31        1       1              PASSIVE     0.1uF 6v
+        C32        1       1              PASSIVE     0.1uF 6v
+        C33        1       1              PASSIVE     0.1uF 6v
+        C34        1       1              PASSIVE     0.1uF 6v
+        C35        1       1              PASSIVE     0.1uF 6v
+        C36        1       1              PASSIVE     0.1uF 6v
+        C37        1       1              PASSIVE     0.1uF 6v
+        C38        1       1              PASSIVE     0.1uF 6v
+        C39        1       1              PASSIVE     0.1uF 6v
+        C40        1       1              PASSIVE     0.1uF 6v
+        C41        1       1              PASSIVE     0.1uF 6v
+        C42        2       1              PASSIVE     0.1µF
+        C43        2       1              PASSIVE     0.1µF
+        C44        2       1              PASSIVE     8pF
+        C45        2       1              PASSIVE     8pF
+        D3         C       C              PASSIVE     LED 1.6X0.8MM 570NM GRN CLR SMD
+        D4         C       C              PASSIVE     LED 1.6X0.8MM 630NM RED CLR SMD
+        J1         5       GND            PASSIVE     TC2030-CTL-NL
+        J2         3       GND            PASSIVE     FTSH-105-01-L-DV-K-TR
+        J2         5       GND            PASSIVE     FTSH-105-01-L-DV-K-TR
+        J2         9       GND_DETECT     PASSIVE     FTSH-105-01-L-DV-K-TR
+        R1         1       1              PASSIVE     10k
+        R15        1       1              PASSIVE     100k
+        R17        1       1              PASSIVE     100k
+        R18        1       1              PASSIVE     100k
+        T54        1       1              PASSIVE     SOLDER_HOLE
+        U1         C2      VREFN          POWER       MIMXRT685SFVKB
+        U1         C3      VSSA           POWER       MIMXRT685SFVKB
+        U1         D5      VSS            POWER       MIMXRT685SFVKB
+        U1         D12     VSSA           POWER       MIMXRT685SFVKB
+        U1         D15     VSS            POWER       MIMXRT685SFVKB
+        U1         E12     VSS            POWER       MIMXRT685SFVKB
+        U1         E14     VSS            POWER       MIMXRT685SFVKB
+        U1         F7      VSS            POWER       MIMXRT685SFVKB
+        U1         F11     VSS            POWER       MIMXRT685SFVKB
+        U1         G6      VSS            POWER       MIMXRT685SFVKB
+        U1         G12     VSS            POWER       MIMXRT685SFVKB
+        U1         H8      VSS            POWER       MIMXRT685SFVKB
+        U1         H9      VSS            POWER       MIMXRT685SFVKB
+        U1         H10     VSS            POWER       MIMXRT685SFVKB
+        U1         J8      VSS            POWER       MIMXRT685SFVKB
+        U1         J10     VSS            POWER       MIMXRT685SFVKB
+        U1         K8      VSS            POWER       MIMXRT685SFVKB
+        U1         K9      VSS            POWER       MIMXRT685SFVKB
+        U1         K10     VSS            POWER       MIMXRT685SFVKB
+        U1         L6      VSS            POWER       MIMXRT685SFVKB
+        U1         L12     VSS            POWER       MIMXRT685SFVKB
+        U1         M7      VSS            POWER       MIMXRT685SFVKB
+        U1         M11     VSS            POWER       MIMXRT685SFVKB
+        U1         M13     VSS            POWER       MIMXRT685SFVKB
+        U1         N14     VSS            POWER       MIMXRT685SFVKB
+        U1         P13     VSS            POWER       MIMXRT685SFVKB
+        U2         9       AGND1          POWER       PCA9420BSAZ
+        U2         21      AGND2          POWER       PCA9420BSAZ
+        U2         23      PGND1          POWER       PCA9420BSAZ
+        U2         24      PGND2          POWER       PCA9420BSAZ
+        U2         25      EXP            POWER       PCA9420BSAZ
+        U3         3       GND            PASSIVE     SN74AUC1G07DBVR
+        U4         1       GND            PASSIVE     PRTR5V0U2X,215
+        U5         4       GND            POWER       W25Q16JWXHIQ
+        U5         9       EP             PASSIVE     W25Q16JWXHIQ
+        U6         4       GND            PASSIVE     W25Q64JVSSIQ
+        X2         2,4     OSC1           PASSIVE     24MHz
+
+[00055] FLEXSPI0B-CLK
+        T20        1       1              PASSIVE     SOLDER_HOLE
+        U1         U3      PIO1_29/FLEXSPIPASSIVE     MIMXRT685SFVKB
+
+[00054] FLEXSPI0A-SS0-N
+        U1         T4      PIO1_19/FLEXSPIPASSIVE     MIMXRT685SFVKB
+        U5         1       CS#            INPUT       W25Q16JWXHIQ
+        U6         1       \C\E\          PASSIVE     W25Q64JVSSIQ
+
+[00053] FLEXSPI0A-SCK
+        U1         T9      PIO1_18/FLEXSPIPASSIVE     MIMXRT685SFVKB
+        U5         6       SCLK           INPUT       W25Q16JWXHIQ
+        U6         6       SCK            PASSIVE     W25Q64JVSSIQ
+
+[00052] FLEXSPI0A-DQS
+        U1         U9      PIO1_28/FLEXSPIPASSIVE     MIMXRT685SFVKB
+
+[00051] FLEXSPI0A-D7
+        U1         T8      PIO1_27/FLEXSPIPASSIVE     MIMXRT685SFVKB
+
+[00050] FLEXSPI0A-D6
+        U1         R7      PIO1_26/FLEXSPIPASSIVE     MIMXRT685SFVKB
+
+[00049] FLEXSPI0A-D5
+        U1         U7      PIO1_25/FLEXSPIPASSIVE     MIMXRT685SFVKB
+
+[00048] FLEXSPI0A-D4
+        U1         T7      PIO1_24/FLEXSPIPASSIVE     MIMXRT685SFVKB
+
+[00047] FLEXSPI0A-D3
+        U1         P7      PIO1_23/FLEXSPIPASSIVE     MIMXRT685SFVKB
+        U5         7       SIO3/HOLD#     INPUT       W25Q16JWXHIQ
+        U6         7       H\O\L\D\ (IO3) PASSIVE     W25Q64JVSSIQ
+
+[00046] FLEXSPI0A-D2
+        U1         P6      PIO1_22/FLEXSPIPASSIVE     MIMXRT685SFVKB
+        U5         3       SIO2/WP#       INPUT       W25Q16JWXHIQ
+        U6         3       \W\P\ (IO2)    PASSIVE     W25Q64JVSSIQ
+
+[00045] FLEXSPI0A-D1
+        U1         U5      PIO1_21/FLEXSPIPASSIVE     MIMXRT685SFVKB
+        U5         2       SO/SIO1        I/O         W25Q16JWXHIQ
+        U6         2       SO (IO1)       PASSIVE     W25Q64JVSSIQ
+
+[00044] FLEXSPI0A-D0
+        U1         T5      PIO1_20/FLEXSPIPASSIVE     MIMXRT685SFVKB
+        U5         5       SI/SIO0        I/O         W25Q16JWXHIQ
+        U6         5       SI (IO0)       PASSIVE     W25Q64JVSSIQ
+
+[00043] FC5-TXD
+        T46        1       1              PASSIVE     SOLDER_HOLE
+        U1         G17     PIO1_4/FC5_TXD_PASSIVE     MIMXRT685SFVKB
+
+[00042] FC5-SSEL0
+        T44        1       1              PASSIVE     SOLDER_HOLE
+        U1         J17     PIO1_6/FC5_CTS_PASSIVE     MIMXRT685SFVKB
+
+[00041] FC5-SCK
+        T47        1       1              PASSIVE     SOLDER_HOLE
+        U1         G16     PIO1_3/FC5_SCK PASSIVE     MIMXRT685SFVKB
+
+[00040] FC5-RXD
+        T42        1       1              PASSIVE     SOLDER_HOLE
+        U1         J16     PIO1_5/FC5_RXD_PASSIVE     MIMXRT685SFVKB
+
+[00039] FC4-WS
+        T67        1       1              PASSIVE     SOLDER_HOLE
+        U1         B10     PIO0_29/FC4_TXDPASSIVE     MIMXRT685SFVKB
+
+[00038] FC4-SSEL1
+        T63        1       1              PASSIVE     SOLDER_HOLE
+        U1         E17     PIO1_0/FC4_RTS_PASSIVE     MIMXRT685SFVKB
+
+[00037] FC4-SSEL0
+        T66        1       1              PASSIVE     SOLDER_HOLE
+        U1         A11     PIO0_31/FC4_CTSPASSIVE     MIMXRT685SFVKB
+
+[00036] FC4-SDA
+        T65        1       1              PASSIVE     SOLDER_HOLE
+        U1         C11     PIO0_30/FC4_RXDPASSIVE     MIMXRT685SFVKB
+
+[00035] FC4-CLK
+        T64        1       1              PASSIVE     SOLDER_HOLE
+        U1         D11     PIO0_28/FC4_SCKPASSIVE     MIMXRT685SFVKB
+
+[00034] FC3-WS
+        T71        1       1              PASSIVE     SOLDER_HOLE
+        U1         D8      PIO0_22/FC3_TXDPASSIVE     MIMXRT685SFVKB
+
+[00033] FC3-SSEL1
+        T69        1       1              PASSIVE     SOLDER_HOLE
+        U1         A9      PIO0_25/FC3_RTSPASSIVE     MIMXRT685SFVKB
+
+[00032] FC3-SSEL0
+        T68        1       1              PASSIVE     SOLDER_HOLE
+        U1         B9      PIO0_24/FC3_CTSPASSIVE     MIMXRT685SFVKB
+
+[00031] FC3-SDA
+        T70        1       1              PASSIVE     SOLDER_HOLE
+        U1         C9      PIO0_23/FC3_RXDPASSIVE     MIMXRT685SFVKB
+
+[00030] FC3-CLK
+        T72        1       1              PASSIVE     SOLDER_HOLE
+        U1         C7      PIO0_21/FC3_SCKPASSIVE     MIMXRT685SFVKB
+
+[00029] FC2-WS
+        T61        1       1              PASSIVE     SOLDER_HOLE
+        U1         A5      PIO0_15/FC2_TXDPASSIVE     MIMXRT685SFVKB
+
+[00028] FC2-SSEL1
+        T60        1       1              PASSIVE     SOLDER_HOLE
+        U1         B7      PIO0_18/FC2_RTSPASSIVE     MIMXRT685SFVKB
+
+[00027] FC2-SSEL0
+        T58        1       1              PASSIVE     SOLDER_HOLE
+        U1         D7      PIO0_17/FC2_CTSPASSIVE     MIMXRT685SFVKB
+
+[00026] FC2-SDA
+        T59        1       1              PASSIVE     SOLDER_HOLE
+        U1         D6      PIO0_16/FC2_RXDPASSIVE     MIMXRT685SFVKB
+
+[00025] FC2-CLK
+        T62        1       1              PASSIVE     SOLDER_HOLE
+        U1         A3      PIO0_14/FC2_SCKPASSIVE     MIMXRT685SFVKB
+
+[00024] FC1-TXD
+        T11        1       1              PASSIVE     SOLDER_HOLE
+        U1         K4      PIO0_8/FC1_TXD_PASSIVE     MIMXRT685SFVKB
+
+[00023] FC1-SSEL1
+        T12        1       1              PASSIVE     SOLDER_HOLE
+        U1         L1      PIO0_11/FC1_RTSPASSIVE     MIMXRT685SFVKB
+
+[00022] FC1-SSEL0
+        T9         1       1              PASSIVE     SOLDER_HOLE
+        U1         J3      PIO0_10/FC1_CTSPASSIVE     MIMXRT685SFVKB
+
+[00021] FC1-RXD
+        T10        1       1              PASSIVE     SOLDER_HOLE
+        U1         L3      PIO0_9/FC1_RXD_PASSIVE     MIMXRT685SFVKB
+
+[00020] FC1-CLK
+        T8         1       1              PASSIVE     SOLDER_HOLE
+        U1         J2      PIO0_7/FC1_SCK/PASSIVE     MIMXRT685SFVKB
+
+[00019] FC0-TXD
+        T4         1       1              PASSIVE     SOLDER_HOLE
+        U1         G2      PIO0_1/FC0_TXD_PASSIVE     MIMXRT685SFVKB
+
+[00018] FC0-SSEL1
+        T7         1       1              PASSIVE     SOLDER_HOLE
+        U1         J1      PIO0_4/FC0_RTS_PASSIVE     MIMXRT685SFVKB
+
+[00017] FC0-SSEL0
+        T6         1       1              PASSIVE     SOLDER_HOLE
+        U1         H2      PIO0_3/FC0_CTS_PASSIVE     MIMXRT685SFVKB
+
+[00016] FC0-RXD
+        T3         1       1              PASSIVE     SOLDER_HOLE
+        U1         G4      PIO0_2/FC0_RXD_PASSIVE     MIMXRT685SFVKB
+
+[00015] FC0-CLK
+        T5         1       1              PASSIVE     SOLDER_HOLE
+        U1         G1      PIO0_0/FC0_SCK/PASSIVE     MIMXRT685SFVKB
+
+[00014] ADC0-12
+        T76        1       1              PASSIVE     SOLDER_HOLE
+        U1         B1      PIO1_9/FC5_SSELPASSIVE     MIMXRT685SFVKB
+
+[00013] ADC0-8
+        T2         1       1              PASSIVE     SOLDER_HOLE
+        U1         E1      PIO0_6/FC0_SSELPASSIVE     MIMXRT685SFVKB
+
+[00012] ADC0-4
+        T73        1       1              PASSIVE     SOLDER_HOLE
+        U1         B5      PIO1_8/FC5_SSELPASSIVE     MIMXRT685SFVKB
+
+[00011] ADC0-3
+        T75        1       1              PASSIVE     SOLDER_HOLE
+        U1         A2      PIO0_26/FC3_SSEPASSIVE     MIMXRT685SFVKB
+
+[00010] ADC0-1
+        T74        1       1              PASSIVE     SOLDER_HOLE
+        U1         E3      PIO0_12/FC1_SSEPASSIVE     MIMXRT685SFVKB
+
+[00009] +VREF
+        C6         2       2              PASSIVE     0.1uF 6v
+        R21        2       2              PASSIVE     0
+        T1         1       1              PASSIVE     SOLDER_HOLE
+        U1         D2      VREFP          POWER       MIMXRT685SFVKB
+
+[00008] +VIN
+        D1         1       A              PASSIVE     BAT760-7
+        T57        1       1              PASSIVE     SOLDER_HOLE
+
+[00007] +VDDIO
+        C12        2       2              PASSIVE     0.1uF 6v
+        C13        2       2              PASSIVE     0.1uF 6v
+        C14        2       2              PASSIVE     0.1uF 6v
+        C15        2       2              PASSIVE     0.1uF 6v
+        C16        2       2              PASSIVE     0.1uF 6v
+        C17        2       2              PASSIVE     0.1uF 6v
+        C20        2       2              PASSIVE     0.1uF 6v
+        C21        2       2              PASSIVE     0.1uF 6v
+        C22        2       2              PASSIVE     0.1uF 6v
+        C23        2       2              PASSIVE     0.1uF 6v
+        C24        2       2              PASSIVE     0.1uF 6v
+        C25        2       2              PASSIVE     0.1uF 6v
+        C42        1       1              PASSIVE     0.1µF
+        C43        1       1              PASSIVE     0.1µF
+        J1         1       VCC            PASSIVE     TC2030-CTL-NL
+        J2         1       VCC            PASSIVE     FTSH-105-01-L-DV-K-TR
+        R3         2       2              PASSIVE     2.2k
+        R4         2       2              PASSIVE     2.2k
+        R8         2       2              PASSIVE     100k
+        R12        2       2              PASSIVE     100k
+        R13        2       2              PASSIVE     100k
+        R14        2       2              PASSIVE     100k
+        R22        2       2              PASSIVE     0
+        R23        2       2              PASSIVE     0
+        T50        1       1              PASSIVE     SOLDER_HOLE
+        U1         E6      VDDIO_1        POWER       MIMXRT685SFVKB
+        U1         E8      VDDIO_1        POWER       MIMXRT685SFVKB
+        U1         E10     VDDIO_1        POWER       MIMXRT685SFVKB
+        U1         F5      VDDIO_0        POWER       MIMXRT685SFVKB
+        U1         H5      VDDIO_0        POWER       MIMXRT685SFVKB
+        U1         H13     VDDIO_1        POWER       MIMXRT685SFVKB
+        U1         H14     VDDIO_1        POWER       MIMXRT685SFVKB
+        U1         K5      VDDIO_0        POWER       MIMXRT685SFVKB
+        U1         K13     VDDIO_1        POWER       MIMXRT685SFVKB
+        U1         L14     VDDIO_1        POWER       MIMXRT685SFVKB
+        U1         M5      VDDIO_0        POWER       MIMXRT685SFVKB
+        U1         N6      VDDIO_0        POWER       MIMXRT685SFVKB
+        U1         N8      VDDIO_0        POWER       MIMXRT685SFVKB
+        U1         N10     VDDIO_0        POWER       MIMXRT685SFVKB
+        U1         N12     VDDIO_2        POWER       MIMXRT685SFVKB
+        U1         P11     VDDIO_2        POWER       MIMXRT685SFVKB
+        U1         P12     VDDIO_2        POWER       MIMXRT685SFVKB
+        U5         8       VCC            POWER       W25Q16JWXHIQ
+        U6         8       VCC            PASSIVE     W25Q64JVSSIQ
+
+[00006] +VBATT_BU
+        C3         2       1              PASSIVE     0.47µF
+        R6         1       1              PASSIVE     0
+        T53        1       1              PASSIVE     SOLDER_HOLE
+        U2         13      VBAT_BKUP      POWER       PCA9420BSAZ
+
+[00005] +VBATT
+        C4         2       1              PASSIVE     1µF
+        R6         2       2              PASSIVE     0
+        T56        1       1              PASSIVE     SOLDER_HOLE
+        U2         18      VBAT           POWER       PCA9420BSAZ
+
+[00004] +5vUSB
+        D2         1       A              PASSIVE     BAT760-7
+        T55        1       1              PASSIVE     SOLDER_HOLE
+        U1         R16     USB1_VBUS      INPUT       MIMXRT685SFVKB
+        U4         4       VCC            PASSIVE     PRTR5V0U2X,215
+
+[00003] +3v3
+        C18        2       1              PASSIVE     2.2µF
+        R22        1       1              PASSIVE     0
+        U1         N16     USB1_VDD3V3    POWER       MIMXRT685SFVKB
+        U2         15      LDO2_OUT       POWER       PCA9420BSAZ
+
+[00002] +1v8-AO
+        C10        2       1              PASSIVE     1µF
+        R2         2       2              PASSIVE     20k
+        R5         2       2              PASSIVE     20k
+        U1         C13     VDD_AO1V8      POWER       MIMXRT685SFVKB
+        U1         D13     VDD_AO1V8      POWER       MIMXRT685SFVKB
+        U2         12      LDO1_OUT       POWER       PCA9420BSAZ
+        U3         5       VCC            PASSIVE     SN74AUC1G07DBVR
+
+[00001] +1v8
+        C36        2       2              PASSIVE     0.1uF 6v
+        C37        2       2              PASSIVE     0.1uF 6v
+        C38        2       2              PASSIVE     0.1uF 6v
+        C39        2       2              PASSIVE     0.1uF 6v
+        C40        2       2              PASSIVE     0.1uF 6v
+        C41        2       2              PASSIVE     0.1uF 6v
+        R10        2       2              PASSIVE     0
+        R21        1       1              PASSIVE     0
+        R23        1       1              PASSIVE     0
+        U1         A13     VDD1V8_1       POWER       MIMXRT685SFVKB
+        U1         B11     VDD1V8         POWER       MIMXRT685SFVKB
+        U1         C4      VDDA_BIAS      POWER       MIMXRT685SFVKB
+        U1         C16     VDD1V8         POWER       MIMXRT685SFVKB
+        U1         C17     VDD1V8         POWER       MIMXRT685SFVKB
+        U1         E4      VDDA_ADC1V8    POWER       MIMXRT685SFVKB
+        U1         E15     VDD1V8         POWER       MIMXRT685SFVKB
+        U1         F13     VDD1V8         POWER       MIMXRT685SFVKB
+        U1         G14     VDD1V8         POWER       MIMXRT685SFVKB
+        U1         L4      VDD1V8         POWER       MIMXRT685SFVKB
+        U1         R15     VDD1V8         POWER       MIMXRT685SFVKB
+

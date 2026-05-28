@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Altium Cruncher Design Index</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-doc-kind="design-index">
+<main>
+  <nav class="nav">
+    <a href="index.html">Design Index</a>
+    <a href="api/index.html">API</a>
+    <a href="cli/index.html">CLI</a>
+    <a href="../adrs/README.md">ADRs</a>
+  </nav>
+
+  <header>
+    <p class="status">Public design documentation entry point</p>
+    <h1>Altium Cruncher Design Index</h1>
+    <p class="lede">
+      This folder holds architecture, interface, test, and contract design
+      documentation for the package. HTML design documents are intentionally
+      simple so humans can read them in a browser and tools can inspect them
+      with straightforward text or HTML parsers.
+    </p>
+  </header>
+
+  <section>
+    <h2>Policy</h2>
+    <ul>
+      <li>Every public CLI command must have a matching design document under <code>docs/design/cli/</code>.</li>
+      <li>The CLI design document filename must match the command name.</li>
+      <li>Signoff fails when a registered command lacks its design document.</li>
+      <li>Commands with config files must also have a machine-readable contract and validation tests.</li>
+      <li>Public dataclasses and major interfaces must have API design docs with Rack test ownership.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Indexes</h2>
+    <table>
+      <tr>
+        <th>Area</th>
+        <th>Entry Point</th>
+        <th>Purpose</th>
+      </tr>
+      <tr>
+        <td>API</td>
+        <td><a href="api/index.html">api/index.html</a></td>
+        <td>Public dataclass and major-interface design, rationale, test requirements, and Rack ownership.</td>
+      </tr>
+      <tr>
+        <td>CLI</td>
+        <td><a href="cli/index.html">cli/index.html</a></td>
+        <td>Public command design, invocation, arguments, outputs, and tests.</td>
+      </tr>
+      <tr>
+        <td>Test Assets</td>
+        <td><a href="test-assets.html">test-assets.html</a></td>
+        <td>Fixture layout, generated Altium oracle outputs, variant folders, and output hygiene.</td>
+      </tr>
+      <tr>
+        <td>ADRs</td>
+        <td><a href="../adrs/README.md">adrs/README.md</a></td>
+        <td>Accepted architecture decisions and compatibility policy.</td>
+      </tr>
+    </table>
+  </section>
+</main>
+</body>
+</html>

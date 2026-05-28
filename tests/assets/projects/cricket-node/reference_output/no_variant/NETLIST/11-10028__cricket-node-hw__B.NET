@@ -1,0 +1,832 @@
+Wire List
+
+<<< Component List >>>
+0.1µF                           C1             C0402_0.55MM_HD
+0.1µF                           C2             C0402_0.55MM_HD
+0.1µF                           C3             C0402_0.55MM_HD
+0.1µF                           C4             C0402_0.55MM_HD
+0.1µF                           C5             C0603_0.90MM_MD
+4.7µF                           C6             C0805_1.40MM_MD
+100µF                           C7             C_ALU_F
+10µF                            C8             C1210_2.80MM_MD
+47nF                            C9             C0402_0.55MM_HD
+47nF                            C10            C0402_0.55MM_HD
+1µF                             C11            C0603_0.90MM_HD
+150µF                           C12            C_ALU_D
+150µF                           C13            C_ALU_D
+150µF                           C14            C_ALU_D
+10000pF                         C15            C0603_0.90MM_MD
+1000pF                          C16            C0402_0.55MM_HD
+0.1µF                           C17            C0402_0.55MM_HD
+0.1µF                           C18            C0402_0.55MM_HD
+100pF                           C19            C0402_0.55MM_HD
+4.7µF                           C20            C0805_1.40MM_MD
+8pF                             C21            C0402_0.55MM_HD
+8pF                             C22            C0402_0.55MM_HD
+8pF                             C23            C0402_0.55MM_HD
+8pF                             C24            C0402_0.55MM_HD
+0.1µF                           C25            C0603_0.90MM_MD
+0.1µF                           C26            C0603_0.90MM_MD
+10µF                            C27            C0805_1.40MM_MD
+0.1µF                           C28            C0603_0.90MM_MD
+BZX84C12-7-F                    D1             D_SOT-23-3_P
+BZX84B16-7-F                    D2             D_SOT-23-3_P
+BAS16-7-F                       D3             D_SOT-23-3_P
+PESD1IVN24-AX                   D4             D_SOD-323_P
+PESD5V0S1BA-115                 D5             D_SOD-323_P
+BAS16-7-F                       D6             D_SOT-23-3_P
+BAS16-7-F                       D7             D_SOT-23-3_P
+PESD5V0S1BA-115                 D8             D_SOD-323_P
+BZX84B16-7-F                    D9             D_SOT-23-3_P
+BZX84B16-7-F                    D11            D_SOT-23-3_P
+PESD5V0S1BA-115                 D12            D_SOD-323_P
+PESD5V0S1BA-115                 D13            D_SOD-323_P
+PESD5V0S1BA-115                 D14            D_SOD-323_P
+APT2012SURCK                    D15            LED-0805-RED
+APT2012CGCK                     D16            LED-0805-GREEN
+WIREPAD-18AWG-4X-3.5MM          J1             WIREPAD-18AWG-4X-3.5MM
+WIREPAD-18AWG-4X-3.5MM          J2             WIREPAD-18AWG-4X-3.5MM
+WIREPAD-22AWG-6X-3.5MM          J3             WIREPAD-22AWG-6X-3.5MM
+WIREPAD-22AWG-4X-3.5MM          J4             WIREPAD-22AWG-4X-3.5MM
+WIREPAD-22AWG-3X-3.5MM          J5             WIREPAD-22AWG-3X-3.5MM
+WIREPAD-22AWG-2X-3.5MM          J6             WIREPAD-22AWG-2X-3.5MM
+TAG-CONNECT-SWD                 J7             TC2030
+USB4145-03-0230-C               J8             USB4145-03-0230-C
+20021121-00010T4LF              J9             FTSH-105-05-F-DV
+10uH                            L1             C0603_0.90MM_MD
+15nH                            L2             C0402_0.55MM_MD
+10uH                            L3             C0603_0.90MM_MD
+6.8 uH 3.84A                    L4             L_MSS1038
+MPZ2012S221AT000                L5             L0805_1.45MM_MD
+MPZ2012S221AT000                L6             L0805_1.45MM_MD
+M2.5                            M1             M2.5
+M2.5                            M2             M2.5
+M2.5                            M3             M2.5
+M2.5                            M4             M2.5
+BSS84-7-F                       Q1             SOT-23
+BSS84-7-F                       Q2             SOT-23
+2N7002P,215                     Q3             SOT-23
+2N7002P,215                     Q4             SOT-23
+BSS138K                         Q5             SOT-23
+ZXMP4A16GTA                     Q6             SOT223
+BSS84-7-F                       Q7             SOT-23
+2N7002P,215                     Q8             SOT-23
+2N7002P,215                     Q9             SOT-23
+2N7002P,215                     Q10            SOT-23
+100kO                           R1             R0603_0.55MM_MD
+100kO                           R2             R0603_0.55MM_MD
+10kO                            R3             R0603_0.55MM_MD
+10kO                            R4             R0603_0.55MM_MD
+1MO                             R5             R0603_0.55MM_MD
+1MO                             R6             R0603_0.55MM_MD
+1kO                             R7             R0603_0.55MM_MD
+100kO                           R8             R0603_0.55MM_MD
+100O                            R9             R0603_0.55MM_MD
+1MO                             R10            R0603_0.55MM_MD
+10kO                            R11            R0603_0.55MM_MD
+100O                            R12            R0603_0.55MM_MD
+0O                              R13            R0805_0.70MM_HD
+100kO                           R14            R0603_0.55MM_MD
+0O                              R15            R0805_0.70MM_HD
+0O                              R16            R0805_0.70MM_HD
+523kO                           R17            R0603_0.55MM_MD
+10kO                            R18            R0603_0.55MM_MD
+100kO                           R19            R0603_0.55MM_MD
+100kO                           R20            R0603_0.55MM_MD
+100kO                           R21            R0603_0.55MM_MD
+49.9kO                          R22            R0603_0.55MM_MD
+100k                            R23            R0603_0.55MM_MD
+100kO                           R24            R0603_0.55MM_MD
+10kO                            R25            R0603_0.55MM_MD
+100kO                           R26            R0603_0.55MM_MD
+100O                            R27            R0603_0.55MM_MD
+10kO                            R28            R0603_0.55MM_MD
+1MO                             R29            R0603_0.55MM_MD
+100O                            R30            R0603_0.55MM_MD
+100kO                           R31            R0603_0.55MM_MD
+100O                            R32            R0603_0.55MM_MD
+100kO                           R33            R0603_0.55MM_MD
+330O                            R34            R0603_0.55MM_HD
+330O                            R35            R0603_0.55MM_HD
+5.1kO                           R36            R0603_0.55MM_MD
+5.1kO                           R37            R0603_0.55MM_MD
+100kO                           R38            R0603_0.55MM_MD
+SMT Testpoint 1MM               TP1            SMT_TP-1MM
+SMT Testpoint 1MM               TP2            SMT_TP-1MM
+SMT Testpoint 1MM               TP3            SMT_TP-1MM
+SMT Testpoint 1MM               TP4            SMT_TP-1MM
+SMT Testpoint 1MM               TP5            SMT_TP-1MM
+SMT Testpoint 1MM               TP6            SMT_TP-1MM
+SMT Testpoint 1MM               TP7            SMT_TP-1MM
+SMT Testpoint 1MM               TP8            SMT_TP-1MM
+SMT Testpoint 1MM               TP9            SMT_TP-1MM
+SMT Testpoint 1MM               TP10           SMT_TP-1MM
+SMT Testpoint 1MM               TP11           SMT_TP-1MM
+SMT Testpoint 1MM               TP12           SMT_TP-1MM
+SMT Testpoint 1MM               TP13           SMT_TP-1MM
+SMT Testpoint 1MM               TP14           SMT_TP-1MM
+SMT Testpoint 1MM               TP15           SMT_TP-1MM
+SMT Testpoint 1MM               TP16           SMT_TP-1MM
+SMT Testpoint 1MM               TP17           SMT_TP-1MM
+SMT Testpoint 1MM               TP18           SMT_TP-1MM
+SMT Testpoint 1MM               TP19           SMT_TP-1MM
+SMT Testpoint 1MM               TP20           SMT_TP-1MM
+SMT Testpoint 1MM               TP21           SMT_TP-1MM
+SMT Testpoint 1MM               TP22           SMT_TP-1MM
+SMT Testpoint 1MM               TP23           SMT_TP-1MM
+SMT Testpoint 1MM               TP24           SMT_TP-1MM
+SMT Testpoint 1MM               TP25           SMT_TP-1MM
+SMT Testpoint 1MM               TP26           SMT_TP-1MM
+SMT Testpoint 1MM               TP27           SMT_TP-1MM
+AP22804AW5-7                    U1             SOT23-5
+TJA1021T/20/CM,118              U2             SOIC127P600X175-8N
+SN74LV1T34DBVR                  U3             SOT23-5
+SN74LV1T34DBVR                  U4             SOT23-5
+NRF52840-QIAA-R                 U5             AQFN50P700X700X85_HS-74N
+AP64352SP-13                    U7             SO8-EP
+AP22804AW5-7                    U8             SOT23-5
+SN74LV1T34DBVR                  U9             SOT23-5
+SN74LV1T34DBVR                  U10            SOT23-5
+TLV271CW5-7                     U11            sot23-5
+MX25R6435FZNIL0                 U12            SON127P600X80_HS-9N
+FM25L16B-GTR                    U13            SOIC 8
+MAX98357AETE+T                  U14            QFN50P300X300X80_HS-17N-2
+PRTR5V0U2X,215                  U15            SOT143B
+32MHz                           X1             XTAL_2016
+32KHz                           X2             XTAL_3215
+
+<<< Wire List >>>
+
+  NODE  REFERENCE  PIN #   PIN NAME       PIN TYPE    PART VALUE
+
+[00131] VDD
+        C1         2       1              PASSIVE     0.1µF
+        C2         2       1              PASSIVE     0.1µF
+        C3         2       1              PASSIVE     0.1µF
+        C4         2       1              PASSIVE     0.1µF
+        C6         2       1              PASSIVE     4.7µF
+        C25        2       1              PASSIVE     0.1µF
+        C28        2       1              PASSIVE     0.1µF
+        J7         1       VCC            PASSIVE     TAG-CONNECT-SWD
+        J9         1       VCC            PASSIVE     20021121-00010T4LF
+        L1         1       1              PASSIVE     10uH
+        R11        1       1              PASSIVE     10kO
+        R14        2       2              PASSIVE     100kO
+        R38        2       2              PASSIVE     100kO
+        TP17       1       1              PASSIVE     SMT Testpoint 1MM
+        U4         5       VCC            PASSIVE     SN74LV1T34DBVR
+        U5         A22     VDD            POWER       NRF52840-QIAA-R
+        U5         AD14    VDD            POWER       NRF52840-QIAA-R
+        U5         AD23    VDD            POWER       NRF52840-QIAA-R
+        U5         B1      VDD            POWER       NRF52840-QIAA-R
+        U5         W1      VDD            POWER       NRF52840-QIAA-R
+        U10        5       VCC            PASSIVE     SN74LV1T34DBVR
+        U12        8       VCC            PASSIVE     MX25R6435FZNIL0
+        U13        8       VCC            PASSIVE     FM25L16B-GTR
+
+[00130] USB-DEVICE-D_P
+        J8         A6      DP1            I/O         USB4145-03-0230-C
+        J8         B6      DP2            I/O         USB4145-03-0230-C
+        TP3        1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AD6     D+             I/O         NRF52840-QIAA-R
+        U15        2       IO1            PASSIVE     PRTR5V0U2X,215
+
+[00129] USB-DEVICE-D_N
+        J8         A7      DN1            I/O         USB4145-03-0230-C
+        J8         B7      DN2            I/O         USB4145-03-0230-C
+        TP4        1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AD4     D-             I/O         NRF52840-QIAA-R
+        U15        3       IO2            PASSIVE     PRTR5V0U2X,215
+
+[00128] SWDIO
+        J7         2       SWDIO          PASSIVE     TAG-CONNECT-SWD
+        J9         2       SWDIO/TMS      PASSIVE     20021121-00010T4LF
+        TP21       1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AC24    SWDIO          I/O         NRF52840-QIAA-R
+
+[00127] SWDCLK
+        J7         4       SWDCLK         PASSIVE     TAG-CONNECT-SWD
+        J9         4       SWDCLK/TCK     PASSIVE     20021121-00010T4LF
+        TP22       1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AA24    SWDCLK         INPUT       NRF52840-QIAA-R
+
+[00126] SP-
+        J6         1       1              PASSIVE     WIREPAD-22AWG-2X-3.5MM
+        L6         2       2              PASSIVE     MPZ2012S221AT000
+        TP15       1       1              PASSIVE     SMT Testpoint 1MM
+
+[00125] SP+
+        J6         2       2              PASSIVE     WIREPAD-22AWG-2X-3.5MM
+        L5         2       2              PASSIVE     MPZ2012S221AT000
+        TP14       1       1              PASSIVE     SMT Testpoint 1MM
+
+[00124] RESET
+        J7         3       RST            PASSIVE     TAG-CONNECT-SWD
+        J9         10      R\S\T\         PASSIVE     20021121-00010T4LF
+        TP23       1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AC13    P0.18/RESET    I/O         NRF52840-QIAA-R
+
+[00123] P1.14
+        U5         B15     P1.14          I/O         NRF52840-QIAA-R
+
+[00122] P1.12
+        U5         B17     P1.12          I/O         NRF52840-QIAA-R
+
+[00121] P1.10
+        U5         A20     P1.10          I/O         NRF52840-QIAA-R
+
+[00120] P1.09
+        U5         R1      P1.09          I/O         NRF52840-QIAA-R
+        U14        14      LRCLK          INPUT       MAX98357AETE+T
+
+[00119] P1.08
+        U5         P2      P1.08          I/O         NRF52840-QIAA-R
+
+[00118] P1.01
+        Q9         1       G              PASSIVE     2N7002P,215
+        U5         Y23     P1.01          I/O         NRF52840-QIAA-R
+
+[00117] P0.26
+        U5         G1      P0.26          I/O         NRF52840-QIAA-R
+
+[00116] P0.24
+        U5         AD20    P0.24          I/O         NRF52840-QIAA-R
+        U12        1       C\S\           PASSIVE     MX25R6435FZNIL0
+
+[00115] P0.23
+        U5         AC19    P0.23          I/O         NRF52840-QIAA-R
+        U12        7       SIO3/R\E\S\E\T\PASSIVE     MX25R6435FZNIL0
+
+[00114] P0.22
+        U5         AD18    P0.22          I/O         NRF52840-QIAA-R
+        U12        2       SIO1/SO        PASSIVE     MX25R6435FZNIL0
+
+[00113] P0.21
+        U5         AC17    P0.21          I/O         NRF52840-QIAA-R
+        U12        5       SIO0/SI        PASSIVE     MX25R6435FZNIL0
+
+[00112] P0.20
+        U5         AD16    P0.20          I/O         NRF52840-QIAA-R
+        U12        3       SIO2/W\P\      PASSIVE     MX25R6435FZNIL0
+
+[00111] P0.19
+        U5         AC15    P0.19          I/O         NRF52840-QIAA-R
+
+[00110] P0.17
+        U5         AD12    P0.17          I/O         NRF52840-QIAA-R
+
+[00109] P0.16
+        U5         AC11    P0.16          I/O         NRF52840-QIAA-R
+
+[00108] P0.15
+        TP20       1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AD10    P0.15          I/O         NRF52840-QIAA-R
+
+[00107] P0.14
+        U5         AC9     P0.14          I/O         NRF52840-QIAA-R
+        U12        6       SCLK           PASSIVE     MX25R6435FZNIL0
+
+[00106] P0.13
+        TP19       1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AD8     P0.13          I/O         NRF52840-QIAA-R
+
+[00105] P0.12
+        U5         U1      P0.12          I/O         NRF52840-QIAA-R
+        U14        1       DIN            INPUT       MAX98357AETE+T
+
+[00104] P0.07
+        U5         M2      P0.07          I/O         NRF52840-QIAA-R
+        U14        16      BCLK           INPUT       MAX98357AETE+T
+
+[00103] P0.05
+        U5         K2      P0.05/AIN3     I/O         NRF52840-QIAA-R
+        U14        4       SD_MODE        INPUT       MAX98357AETE+T
+
+[00102] P0.03
+        Q8         1       G              PASSIVE     2N7002P,215
+        R29        2       2              PASSIVE     1MO
+        U5         B13     P0.03/AIN1     I/O         NRF52840-QIAA-R
+        U11        5       VCC            PASSIVE     TLV271CW5-7
+
+[00101] P0.02
+        U5         A12     P0.02/AIN0     I/O         NRF52840-QIAA-R
+        U11        1       OUT            PASSIVE     TLV271CW5-7
+        U11        4       -              PASSIVE     TLV271CW5-7
+
+[00100] P0.01
+        C24        2       1              PASSIVE     8pF
+        U5         F2      P0.01/XL2      I/O         NRF52840-QIAA-R
+        X2         1       OSC1           PASSIVE     32KHz
+
+[00099] P0.00
+        C23        2       1              PASSIVE     8pF
+        U5         D2      P0.00/XL1      I/O         NRF52840-QIAA-R
+        X2         2       OSC2           PASSIVE     32KHz
+
+[00098] NP1-EXT
+        D12        2       C              PASSIVE     PESD5V0S1BA-115
+        J4         2       2              PASSIVE     WIREPAD-22AWG-4X-3.5MM
+        R27        2       2              PASSIVE     100O
+        TP10       1       1              PASSIVE     SMT Testpoint 1MM
+
+[00097] NP1-EN
+        U5         J1      P0.04/AIN2     I/O         NRF52840-QIAA-R
+        U8         4       EN             PASSIVE     AP22804AW5-7
+
+[00096] NP1
+        U5         L1      P0.06          I/O         NRF52840-QIAA-R
+        U9         2       A              PASSIVE     SN74LV1T34DBVR
+
+[00095] NP0-EXT
+        D5         2       C              PASSIVE     PESD5V0S1BA-115
+        J3         2       2              PASSIVE     WIREPAD-22AWG-6X-3.5MM
+        R9         2       2              PASSIVE     100O
+        TP6        1       1              PASSIVE     SMT Testpoint 1MM
+
+[00094] NP0-EN
+        U1         4       EN             PASSIVE     AP22804AW5-7
+        U5         B19     P1.11          I/O         NRF52840-QIAA-R
+
+[00093] NP0
+        U3         2       A              PASSIVE     SN74LV1T34DBVR
+        U5         P23     P1.07          I/O         NRF52840-QIAA-R
+
+[00089] NetR38_1
+        R38        1       1              PASSIVE     100kO
+        U13        7       H\O\L\D\       PASSIVE     FM25L16B-GTR
+
+[00088] NetR33_1
+        R33        1       1              PASSIVE     100kO
+        U14        2       GAIN_SLOT      INPUT       MAX98357AETE+T
+
+[00087] NetR30_1
+        R30        1       1              PASSIVE     100O
+        U10        2       A              PASSIVE     SN74LV1T34DBVR
+
+[00086] NetR27_1
+        R27        1       1              PASSIVE     100O
+        U9         4       Y              PASSIVE     SN74LV1T34DBVR
+
+[00085] NetR26_1
+        R26        1       1              PASSIVE     100kO
+        R28        1       1              PASSIVE     10kO
+        U11        3       +              PASSIVE     TLV271CW5-7
+
+[00084] NetR22_1
+        R22        1       1              PASSIVE     49.9kO
+        U7         4       RT/CLK         PASSIVE     AP64352SP-13
+
+[00083] NetR17_1
+        R17        1       1              PASSIVE     523kO
+        R23        1       1              PASSIVE     100k
+        U7         5       FB             PASSIVE     AP64352SP-13
+
+[00082] NetR14_1
+        R14        1       1              PASSIVE     100kO
+        U13        3       W\P\           PASSIVE     FM25L16B-GTR
+
+[00081] NetR13_1
+        R13        1       1              PASSIVE     0O
+        U5         Y2      VDDH           POWER       NRF52840-QIAA-R
+
+[00080] NetR12_1
+        R12        1       1              PASSIVE     100O
+        U4         2       A              PASSIVE     SN74LV1T34DBVR
+
+[00079] NetR9_1
+        R9         1       1              PASSIVE     100O
+        U3         4       Y              PASSIVE     SN74LV1T34DBVR
+
+[00078] NetQ10_3
+        Q10        3       D              PASSIVE     2N7002P,215
+        R35        1       1              PASSIVE     330O
+
+[00077] NetQ9_3
+        Q9         3       D              PASSIVE     2N7002P,215
+        R34        1       1              PASSIVE     330O
+
+[00076] NetQ8_3
+        Q8         3       D              PASSIVE     2N7002P,215
+        R25        2       2              PASSIVE     10kO
+
+[00075] NetQ7_3
+        Q7         3       D              PASSIVE     BSS84-7-F
+        R26        2       2              PASSIVE     100kO
+
+[00074] NetQ5_3
+        Q5         3       D              PASSIVE     BSS138K
+        R8         2       2              PASSIVE     100kO
+        U2         3       WAKE_N         PASSIVE     TJA1021T/20/CM,118
+
+[00073] NetQ4_3
+        Q4         3       D              PASSIVE     2N7002P,215
+        R4         2       2              PASSIVE     10kO
+
+[00072] NetQ3_3
+        Q3         3       D              PASSIVE     2N7002P,215
+        R3         2       2              PASSIVE     10kO
+
+[00071] NetQ1_3
+        Q1         3       D              PASSIVE     BSS84-7-F
+        R8         1       1              PASSIVE     100kO
+        U2         7       VBAT           PASSIVE     TJA1021T/20/CM,118
+
+[00066] NetL6_1
+        L6         1       1              PASSIVE     MPZ2012S221AT000
+        U14        9       OUTP           OUTPUT      MAX98357AETE+T
+
+[00065] NetL5_1
+        L5         1       1              PASSIVE     MPZ2012S221AT000
+        U14        10      OUTN           OUTPUT      MAX98357AETE+T
+
+[00064] NetL3_2
+        L3         2       2              PASSIVE     10uH
+        U5         B3      DCC            OUTPUT      NRF52840-QIAA-R
+
+[00063] NetL2_2
+        L2         2       2              PASSIVE     15nH
+        L3         1       1              PASSIVE     10uH
+
+[00062] NetL1_2
+        L1         2       2              PASSIVE     10uH
+        U5         AB2     DCCH           POWER       NRF52840-QIAA-R
+
+[00053] NetD16_C
+        D16        C       C              PASSIVE     APT2012CGCK
+        R35        2       2              PASSIVE     330O
+
+[00052] NetD15_C
+        D15        C       C              PASSIVE     APT2012SURCK
+        R34        2       2              PASSIVE     330O
+
+[00051] NetD11_1
+        D11        1       A              PASSIVE     BZX84B16-7-F
+        Q7         1       G              PASSIVE     BSS84-7-F
+        R24        1       1              PASSIVE     100kO
+        R25        1       1              PASSIVE     10kO
+
+[00050] NetD9_1
+        D9         1       A              PASSIVE     BZX84B16-7-F
+        Q6         1       G              PASSIVE     ZXMP4A16GTA
+        R18        1       1              PASSIVE     10kO
+
+[00049] NetD6_3
+        D6         3       K              PASSIVE     BAS16-7-F
+        D7         3       K              PASSIVE     BAS16-7-F
+        R13        2       2              PASSIVE     0O
+
+[00048] NetD3_3
+        D3         3       K              PASSIVE     BAS16-7-F
+        R7         1       1              PASSIVE     1kO
+
+[00047] NetD3_1
+        D3         1       A              PASSIVE     BAS16-7-F
+        Q2         3       D              PASSIVE     BSS84-7-F
+
+[00046] NetD2_3
+        D2         3       K              PASSIVE     BZX84B16-7-F
+        Q2         2       S              PASSIVE     BSS84-7-F
+        R2         2       2              PASSIVE     100kO
+        U2         8       INH            PASSIVE     TJA1021T/20/CM,118
+
+[00045] NetD2_1
+        D2         1       A              PASSIVE     BZX84B16-7-F
+        Q2         1       G              PASSIVE     BSS84-7-F
+        R2         1       1              PASSIVE     100kO
+        R3         1       1              PASSIVE     10kO
+
+[00044] NetD1_1
+        D1         1       A              PASSIVE     BZX84C12-7-F
+        Q1         1       G              PASSIVE     BSS84-7-F
+        R1         1       1              PASSIVE     100kO
+        R4         1       1              PASSIVE     10kO
+
+[00043] NetC22_1
+        C22        1       1              PASSIVE     8pF
+        U5         B24     XC1            INPUT       NRF52840-QIAA-R
+        X1         1       OSC1           PASSIVE     32MHz
+
+[00042] NetC21_1
+        C21        1       1              PASSIVE     8pF
+        U5         A23     XC2            OUTPUT      NRF52840-QIAA-R
+        X1         3       OSC3           PASSIVE     32MHz
+
+[00041] NetC20_2
+        C20        2       1              PASSIVE     4.7µF
+        U5         AC5     DECUSB         POWER       NRF52840-QIAA-R
+
+[00040] NetC19_2
+        C19        2       1              PASSIVE     100pF
+        U5         D23     DEC3           POWER       NRF52840-QIAA-R
+
+[00039] NetC18_2
+        C18        2       1              PASSIVE     0.1µF
+        U5         A18     DEC2           POWER       NRF52840-QIAA-R
+
+[00038] NetC17_2
+        C17        2       1              PASSIVE     0.1µF
+        U5         C1      DEC1           POWER       NRF52840-QIAA-R
+
+[00037] NetC16_2
+        C16        2       1              PASSIVE     1000pF
+        U5         N24     DEC5           POWER       NRF52840-QIAA-R
+
+[00036] NetC15_2
+        C15        2       1              PASSIVE     10000pF
+        U7         6       SS             PASSIVE     AP64352SP-13
+
+[00035] NetC14_1
+        C14        1       1              PASSIVE     150µF
+        L4         2       2              PASSIVE     6.8 uH 3.84A
+        R15        1       1              PASSIVE     0O
+        R16        1       1              PASSIVE     0O
+        R17        2       2              PASSIVE     523kO
+
+[00034] NetC9_2
+        C9         2       1              PASSIVE     47nF
+        C10        2       1              PASSIVE     47nF
+        C11        2       1              PASSIVE     1µF
+        L2         1       1              PASSIVE     15nH
+        U5         B5      DEC4           POWER       NRF52840-QIAA-R
+        U5         E24     DEC6           POWER       NRF52840-QIAA-R
+
+[00033] NetC5_2
+        C5         2       1              PASSIVE     0.1µF
+        U7         1       BST            PASSIVE     AP64352SP-13
+
+[00032] NetC5_1
+        C5         1       1              PASSIVE     0.1µF
+        L4         1       1              PASSIVE     6.8 uH 3.84A
+        U7         8       SW             PASSIVE     AP64352SP-13
+
+[00031] LIN-WAKE
+        Q5         1       G              PASSIVE     BSS138K
+        R10        2       2              PASSIVE     1MO
+        U5         B11     P0.28/AIN4     I/O         NRF52840-QIAA-R
+
+[00030] LIN-TX-IN
+        U2         4       TXD            PASSIVE     TJA1021T/20/CM,118
+        U5         A10     P0.29/AIN5     I/O         NRF52840-QIAA-R
+
+[00029] LIN-SLP-N
+        U2         2       SLP_N          PASSIVE     TJA1021T/20/CM,118
+        U5         A8      P0.31/AIN7     I/O         NRF52840-QIAA-R
+
+[00028] LIN-RX-OUT
+        R11        2       2              PASSIVE     10kO
+        U2         1       RXD            PASSIVE     TJA1021T/20/CM,118
+        U5         B9      P0.30/AIN6     I/O         NRF52840-QIAA-R
+
+[00027] LIN-PWR
+        Q4         1       G              PASSIVE     2N7002P,215
+        R6         2       2              PASSIVE     1MO
+        U5         H2      P0.27          I/O         NRF52840-QIAA-R
+
+[00026] LIN-IO
+        D4         2       C              PASSIVE     PESD1IVN24-AX
+        J1         3       3              PASSIVE     WIREPAD-18AWG-4X-3.5MM
+        J2         3       3              PASSIVE     WIREPAD-18AWG-4X-3.5MM
+        R7         2       2              PASSIVE     1kO
+        TP13       1       1              PASSIVE     SMT Testpoint 1MM
+        U2         6       LIN            PASSIVE     TJA1021T/20/CM,118
+
+[00025] LIN-CMDR
+        Q3         1       G              PASSIVE     2N7002P,215
+        R5         2       2              PASSIVE     1MO
+        TP9        1       1              PASSIVE     SMT Testpoint 1MM
+        U5         R24     P1.06          I/O         NRF52840-QIAA-R
+
+[00024] GREEN-LED
+        Q10        1       G              PASSIVE     2N7002P,215
+        U5         AD22    P1.00          I/O         NRF52840-QIAA-R
+
+[00023] GND
+        C1         1       1              PASSIVE     0.1µF
+        C2         1       1              PASSIVE     0.1µF
+        C3         1       1              PASSIVE     0.1µF
+        C4         1       1              PASSIVE     0.1µF
+        C6         1       1              PASSIVE     4.7µF
+        C7         2       1              PASSIVE     100µF
+        C8         2       1              PASSIVE     10µF
+        C9         1       1              PASSIVE     47nF
+        C10        1       1              PASSIVE     47nF
+        C11        1       1              PASSIVE     1µF
+        C12        2       1              PASSIVE     150µF
+        C13        2       1              PASSIVE     150µF
+        C14        2       1              PASSIVE     150µF
+        C15        1       1              PASSIVE     10000pF
+        C16        1       1              PASSIVE     1000pF
+        C17        1       1              PASSIVE     0.1µF
+        C18        1       1              PASSIVE     0.1µF
+        C19        1       1              PASSIVE     100pF
+        C20        1       1              PASSIVE     4.7µF
+        C21        2       1              PASSIVE     8pF
+        C22        2       1              PASSIVE     8pF
+        C23        1       1              PASSIVE     8pF
+        C24        1       1              PASSIVE     8pF
+        C25        1       1              PASSIVE     0.1µF
+        C26        1       1              PASSIVE     0.1µF
+        C27        1       1              PASSIVE     10µF
+        C28        1       1              PASSIVE     0.1µF
+        D4         1       C              PASSIVE     PESD1IVN24-AX
+        D5         1       C              PASSIVE     PESD5V0S1BA-115
+        D8         1       C              PASSIVE     PESD5V0S1BA-115
+        D12        1       C              PASSIVE     PESD5V0S1BA-115
+        D13        1       C              PASSIVE     PESD5V0S1BA-115
+        D14        1       C              PASSIVE     PESD5V0S1BA-115
+        J1         4       4              PASSIVE     WIREPAD-18AWG-4X-3.5MM
+        J2         4       4              PASSIVE     WIREPAD-18AWG-4X-3.5MM
+        J3         3       3              PASSIVE     WIREPAD-22AWG-6X-3.5MM
+        J3         4       4              PASSIVE     WIREPAD-22AWG-6X-3.5MM
+        J4         4       4              PASSIVE     WIREPAD-22AWG-4X-3.5MM
+        J5         3       3              PASSIVE     WIREPAD-22AWG-3X-3.5MM
+        J7         5       GND            PASSIVE     TAG-CONNECT-SWD
+        J8         A1      GND_A          POWER       USB4145-03-0230-C
+        J8         A12     GND_A          POWER       USB4145-03-0230-C
+        J8         B1      GND_B          POWER       USB4145-03-0230-C
+        J8         B12     GND_B          POWER       USB4145-03-0230-C
+        J8         S1      SHIELD         PASSIVE     USB4145-03-0230-C
+        J8         S2      SHIELD         PASSIVE     USB4145-03-0230-C
+        J8         S3      SHIELD         PASSIVE     USB4145-03-0230-C
+        J8         S4      SHIELD         PASSIVE     USB4145-03-0230-C
+        J9         3       GND            PASSIVE     20021121-00010T4LF
+        J9         5       GND            PASSIVE     20021121-00010T4LF
+        J9         9       GND_DETECT     PASSIVE     20021121-00010T4LF
+        Q3         2       S              PASSIVE     2N7002P,215
+        Q4         2       S              PASSIVE     2N7002P,215
+        Q5         2       S              PASSIVE     BSS138K
+        Q8         2       S              PASSIVE     2N7002P,215
+        Q9         2       S              PASSIVE     2N7002P,215
+        Q10        2       S              PASSIVE     2N7002P,215
+        R5         1       1              PASSIVE     1MO
+        R6         1       1              PASSIVE     1MO
+        R10        1       1              PASSIVE     1MO
+        R18        2       2              PASSIVE     10kO
+        R19        1       1              PASSIVE     100kO
+        R20        1       1              PASSIVE     100kO
+        R21        1       1              PASSIVE     100kO
+        R22        2       2              PASSIVE     49.9kO
+        R23        2       2              PASSIVE     100k
+        R28        2       2              PASSIVE     10kO
+        R29        1       1              PASSIVE     1MO
+        R33        2       2              PASSIVE     100kO
+        R36        1       1              PASSIVE     5.1kO
+        R37        1       1              PASSIVE     5.1kO
+        TP2        1       1              PASSIVE     SMT Testpoint 1MM
+        TP24       1       1              PASSIVE     SMT Testpoint 1MM
+        TP25       1       1              PASSIVE     SMT Testpoint 1MM
+        TP26       1       1              PASSIVE     SMT Testpoint 1MM
+        U1         2       GND            PASSIVE     AP22804AW5-7
+        U2         5       GND            PASSIVE     TJA1021T/20/CM,118
+        U3         3       GND            PASSIVE     SN74LV1T34DBVR
+        U4         3       GND            PASSIVE     SN74LV1T34DBVR
+        U5         74      GND            POWER       NRF52840-QIAA-R
+        U5         B7      VSS            POWER       NRF52840-QIAA-R
+        U5         F23     VSS_PA         POWER       NRF52840-QIAA-R
+        U7         7       GND            PASSIVE     AP64352SP-13
+        U7         9       EP(GND)        PASSIVE     AP64352SP-13
+        U8         2       GND            PASSIVE     AP22804AW5-7
+        U9         3       GND            PASSIVE     SN74LV1T34DBVR
+        U10        3       GND            PASSIVE     SN74LV1T34DBVR
+        U11        2       GND            PASSIVE     TLV271CW5-7
+        U12        4       GND            PASSIVE     MX25R6435FZNIL0
+        U12        9       GND            PASSIVE     MX25R6435FZNIL0
+        U13        4       VSS            PASSIVE     FM25L16B-GTR
+        U14        3       GND            POWER       MAX98357AETE+T
+        U14        11      GND            POWER       MAX98357AETE+T
+        U14        15      GND            POWER       MAX98357AETE+T
+        U14        17      EP             POWER       MAX98357AETE+T
+        U15        1       GND            PASSIVE     PRTR5V0U2X,215
+
+[00022] FRAM-SDO
+        U5         V23     P1.03          I/O         NRF52840-QIAA-R
+        U13        2       Q (SDO)        PASSIVE     FM25L16B-GTR
+
+[00021] FRAM-SDI
+        U5         U24     P1.04          I/O         NRF52840-QIAA-R
+        U13        5       D (SDI)        PASSIVE     FM25L16B-GTR
+
+[00020] FRAM-CS
+        U5         W24     P1.02          I/O         NRF52840-QIAA-R
+        U13        1       S\ (C\S\)      PASSIVE     FM25L16B-GTR
+
+[00019] FRAM-CLK
+        U5         AC21    P0.25          I/O         NRF52840-QIAA-R
+        U13        6       C (SCLK)       PASSIVE     FM25L16B-GTR
+
+[00018] CHG-LOOP
+        D14        2       C              PASSIVE     PESD5V0S1BA-115
+        J5         2       2              PASSIVE     WIREPAD-22AWG-3X-3.5MM
+        R31        1       1              PASSIVE     100kO
+        R32        2       2              PASSIVE     100O
+        TP16       1       1              PASSIVE     SMT Testpoint 1MM
+
+[00017] CHG-DET-PWR
+        R31        2       2              PASSIVE     100kO
+        U5         A14     P1.15          I/O         NRF52840-QIAA-R
+
+[00016] CHG-DET
+        R32        1       1              PASSIVE     100O
+        U5         A16     P1.13          I/O         NRF52840-QIAA-R
+
+[00015] CC2
+        J8         B5      CC2            I/O         USB4145-03-0230-C
+        R36        2       2              PASSIVE     5.1kO
+
+[00014] CC1
+        J8         A5      CC1            I/O         USB4145-03-0230-C
+        R37        2       2              PASSIVE     5.1kO
+
+[00013] BTN0-EXT
+        D8         2       C              PASSIVE     PESD5V0S1BA-115
+        J3         5       5              PASSIVE     WIREPAD-22AWG-6X-3.5MM
+        R12        2       2              PASSIVE     100O
+        TP7        1       1              PASSIVE     SMT Testpoint 1MM
+
+[00012] BTN0
+        U4         4       Y              PASSIVE     SN74LV1T34DBVR
+        U5         T23     P1.05          I/O         NRF52840-QIAA-R
+
+[00011] BOARD-ID2
+        R19        2       2              PASSIVE     100kO
+        U5         T2      P0.11          I/O         NRF52840-QIAA-R
+
+[00010] BOARD-ID1
+        R20        2       2              PASSIVE     100kO
+        U5         J24     P0.10/NFC2     I/O         NRF52840-QIAA-R
+
+[00009] BOARD-ID0
+        R21        2       2              PASSIVE     100kO
+        U5         L24     P0.09/NFC1     I/O         NRF52840-QIAA-R
+
+[00008] AUX1-EXT
+        D13        2       C              PASSIVE     PESD5V0S1BA-115
+        J4         3       3              PASSIVE     WIREPAD-22AWG-4X-3.5MM
+        R30        2       2              PASSIVE     100O
+        TP11       1       1              PASSIVE     SMT Testpoint 1MM
+
+[00007] AUX1
+        U5         N1      P0.08          I/O         NRF52840-QIAA-R
+        U10        4       Y              PASSIVE     SN74LV1T34DBVR
+
+[00006] +VIN-PROTECT
+        C7         1       1              PASSIVE     100µF
+        C8         1       1              PASSIVE     10µF
+        D1         3       K              PASSIVE     BZX84C12-7-F
+        D9         3       K              PASSIVE     BZX84B16-7-F
+        D11        3       K              PASSIVE     BZX84B16-7-F
+        Q1         2       S              PASSIVE     BSS84-7-F
+        Q6         3       S              PASSIVE     ZXMP4A16GTA
+        Q7         2       S              PASSIVE     BSS84-7-F
+        R1         2       2              PASSIVE     100kO
+        R24        2       2              PASSIVE     100kO
+        TP5        1       1              PASSIVE     SMT Testpoint 1MM
+        U7         2       VIN            PASSIVE     AP64352SP-13
+        U7         3       EN             PASSIVE     AP64352SP-13
+
+[00005] +VIN
+        J1         1       1              PASSIVE     WIREPAD-18AWG-4X-3.5MM
+        J2         1       1              PASSIVE     WIREPAD-18AWG-4X-3.5MM
+        J5         1       1              PASSIVE     WIREPAD-22AWG-3X-3.5MM
+        Q6         2,4     D              PASSIVE     ZXMP4A16GTA
+        TP27       1       1              PASSIVE     SMT Testpoint 1MM
+
+[00004] +VBUS
+        D7         1       A              PASSIVE     BAS16-7-F
+        J8         A4      VBUS_A         POWER       USB4145-03-0230-C
+        J8         A9      VBUS_A         POWER       USB4145-03-0230-C
+        J8         B4      VBUS_B         POWER       USB4145-03-0230-C
+        J8         B9      VBUS_B         POWER       USB4145-03-0230-C
+        TP1        1       1              PASSIVE     SMT Testpoint 1MM
+        U5         AD2     VBUS           POWER       NRF52840-QIAA-R
+        U15        4       VCC            PASSIVE     PRTR5V0U2X,215
+
+[00003] +5v0-CH1
+        J4         1       1              PASSIVE     WIREPAD-22AWG-4X-3.5MM
+        TP12       1       1              PASSIVE     SMT Testpoint 1MM
+        U8         1       OUT            PASSIVE     AP22804AW5-7
+
+[00002] +5v0-CH0
+        J3         1       1              PASSIVE     WIREPAD-22AWG-6X-3.5MM
+        TP8        1       1              PASSIVE     SMT Testpoint 1MM
+        U1         1       OUT            PASSIVE     AP22804AW5-7
+
+[00001] +5v0
+        C12        1       1              PASSIVE     150µF
+        C13        1       1              PASSIVE     150µF
+        C26        2       1              PASSIVE     0.1µF
+        C27        2       1              PASSIVE     10µF
+        D6         1       A              PASSIVE     BAS16-7-F
+        D15        A       A              PASSIVE     APT2012SURCK
+        D16        A       A              PASSIVE     APT2012CGCK
+        J3         6       6              PASSIVE     WIREPAD-22AWG-6X-3.5MM
+        R15        2       2              PASSIVE     0O
+        R16        2       2              PASSIVE     0O
+        TP18       1       1              PASSIVE     SMT Testpoint 1MM
+        U1         5       IN             PASSIVE     AP22804AW5-7
+        U3         5       VCC            PASSIVE     SN74LV1T34DBVR
+        U8         5       IN             PASSIVE     AP22804AW5-7
+        U9         5       VCC            PASSIVE     SN74LV1T34DBVR
+        U14        7       VDD            POWER       MAX98357AETE+T
+        U14        8       VDD            POWER       MAX98357AETE+T
+

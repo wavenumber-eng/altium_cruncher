@@ -16,12 +16,18 @@ CurveMode = Literal["native_arcs", "polyline"]
 @dataclass(frozen=True)
 class AssemblyProjectionOptions:
     side: ProjectionSide
+    projection_algorithm: str | None = None
     curve_mode: CurveMode = "native_arcs"
     samples_per_curve: int = 24
     round_digits: int = 3
     include_visible: bool = True
     include_outline: bool = True
     union_polygons: bool = True
+    mesh_linear_deflection: float | None = None
+    mesh_angular_deflection: float | None = None
+    mesh_relative: bool | None = None
+    hlr_angle_tolerance: float | None = None
+    edge_flags: Mapping[str, bool] | None = None
 
 
 @dataclass(frozen=True)
@@ -68,12 +74,24 @@ class AssemblyProjectionCache:
         return (
             str(model_hash),
             str(options.side),
+            str(options.projection_algorithm or ""),
             str(options.curve_mode),
             int(max(2, options.samples_per_curve)),
             int(max(0, options.round_digits)),
             bool(options.include_visible),
             bool(options.include_outline),
             bool(options.union_polygons),
+            None
+            if options.mesh_linear_deflection is None
+            else float(options.mesh_linear_deflection),
+            None
+            if options.mesh_angular_deflection is None
+            else float(options.mesh_angular_deflection),
+            None if options.mesh_relative is None else bool(options.mesh_relative),
+            None
+            if options.hlr_angle_tolerance is None
+            else float(options.hlr_angle_tolerance),
+            tuple(sorted((str(k), bool(v)) for k, v in (options.edge_flags or {}).items())),
             tuple(float(v) for v in pose_signature),
         )
 
@@ -143,6 +161,26 @@ class AssemblyProjectionCache:
         if curve_mode not in {"native_arcs", "polyline"}:
             curve_mode = "native_arcs"
 
+        hlr_options: dict[str, object] = {
+            "curve_mode": curve_mode,
+            "samples_per_curve": int(max(2, options.samples_per_curve)),
+            "round_digits": round_digits,
+            "include_visible": bool(options.include_visible),
+            "include_outline": bool(options.include_outline),
+            "union_simple_polygons": bool(options.union_polygons),
+        }
+        if options.projection_algorithm:
+            hlr_options["projection_algorithm"] = str(options.projection_algorithm)
+        if options.mesh_linear_deflection is not None:
+            hlr_options["mesh_linear_deflection"] = float(options.mesh_linear_deflection)
+        if options.mesh_angular_deflection is not None:
+            hlr_options["mesh_angular_deflection"] = float(options.mesh_angular_deflection)
+        if options.mesh_relative is not None:
+            hlr_options["mesh_relative"] = bool(options.mesh_relative)
+        if options.hlr_angle_tolerance is not None:
+            hlr_options["hlr_angle_tolerance"] = float(options.hlr_angle_tolerance)
+        hlr_options.update({key: bool(value) for key, value in (options.edge_flags or {}).items()})
+
         result = geometer.project_step_hlr(
             step_bytes,
             views=[
@@ -153,14 +191,7 @@ class AssemblyProjectionCache:
                 }
             ],
             model_transform=_matrix4_for_geometer(transform_matrix),
-            options={
-                "curve_mode": curve_mode,
-                "samples_per_curve": int(max(2, options.samples_per_curve)),
-                "round_digits": round_digits,
-                "include_visible": bool(options.include_visible),
-                "include_outline": bool(options.include_outline),
-                "union_simple_polygons": bool(options.union_polygons),
-            },
+            options=hlr_options,
         )
 
         simple = result.geometry(view_id, "simple")
@@ -339,8 +370,12 @@ def _arc_from_json(raw: Any) -> AssemblyProjectedArc | None:
     if start is None or end is None or center is None:
         return None
     try:
-        radius = float(raw.get("radius"))
-        extent_rad = float(raw.get("extent_rad"))
+        raw_radius = raw.get("radius")
+        raw_extent_rad = raw.get("extent_rad")
+        if raw_radius is None or raw_extent_rad is None:
+            return None
+        radius = float(raw_radius)
+        extent_rad = float(raw_extent_rad)
     except (TypeError, ValueError):
         return None
     return AssemblyProjectedArc(

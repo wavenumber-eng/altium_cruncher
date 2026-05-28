@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>extract command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="extract" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>extract</h1><p class="lede">Extracts symbols, footprints, or project source contents from Altium design documents.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher extract schematic.SchDoc --combined -o output/extract
+altium-cruncher extract board.PcbDoc --split -o output/extract
+altium-cruncher extract project.PrjPcb -o output/extract
+altium-cruncher extract vendor.IntLib -o output/extract</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts schematic, PCB, project, and integrated-library inputs. Options select combined or split extraction and the output directory. For <code>.IntLib</code>, <code>--stream-filenames</code> uses IntLib stream basenames, <code>--no-libpkg</code> skips generated <code>LibPkg</code>, and <code>--no-overwrite</code> fails if extracted source files already exist.</p></section>
+<section id="output"><h2>Output</h2><p>The command writes extracted <code>SchLib</code> or <code>PcbLib</code> artifacts, organized by source. <code>.IntLib</code> extraction writes source files under kind folders such as <code>SchLib/</code> and <code>PCBLib/</code>, writes a generated <code>LibPkg</code> by default, and emits <code>*_intlib_extract_manifest.json</code> with stream paths, output paths, source kinds, and parse metadata.</p></section>
+<section id="tests"><h2>Tests</h2><p>L3 exercises schematic extraction on Hydroscope and IntLib source extraction on the redistributable <code>RT_SUPER_C1.IntLib</code> fixture. Planned corpus tests should mirror the broader underlying Altium Monkey extraction tests.</p></section>
+</main>
+</body>
+</html>

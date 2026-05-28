@@ -21,10 +21,209 @@ from altium_cruncher.altium_pcblib_clean import (
     infer_pcblib_clean_config_path,
 )
 from altium_cruncher.altium_cruncher_common import find_prjpcb_in_cwd
+from altium_cruncher.config_json import load_json_config
 
 log = logging.getLogger(__name__)
 
 DEFAULT_SCH_CLEAN_CONFIG_FILENAME = "altium-clean.json"
+_SCHEMATIC_CONFIG_SUFFIX = ".schdoc"
+_PCBLIB_CONFIG_SUFFIX = ".pcblib"
+
+_SCHEMATIC_CLEAN_COMMENTS: dict[str, tuple[str, ...]] = {
+    "schema": (
+        "Schematic clean config for .SchDoc, .SchLib, and .PrjPcb inputs.",
+        "This file is JSONC: // comments and trailing commas are accepted.",
+        "Use --init-config to write this template without cleaning an input.",
+        "Use --force-config with --init-config to overwrite an existing template.",
+    ),
+    "enabled": (
+        "Set enabled=false to leave this rule family unchanged.",
+    ),
+    "font_name": (
+        "Altium font family name to apply.",
+    ),
+    "size_pt": (
+        "Font size in points.",
+    ),
+    "bold": (
+        "Whether the generated font is bold.",
+    ),
+    "italic": (
+        "Whether the generated font is italic.",
+    ),
+    "color_win32": (
+        "Win32/BGR integer color. The loader also accepts #RRGGBB or integer strings.",
+    ),
+    "normalize_pin_fonts": (
+        "Pin name/designator fonts inside symbols.",
+        "Set enabled=false if library pin text is already curated.",
+    ),
+    "normalize_pin_fonts.name_font": (
+        "Style for visible pin names.",
+    ),
+    "normalize_pin_fonts.designator_font": (
+        "Style for visible pin designators/numbers.",
+    ),
+    "normalize_symbol_body_rectangles": (
+        "Main symbol body rectangles. Width/height thresholds avoid touching tiny graphics.",
+        "line_width accepts smallest/zero, small, medium, large, or the Altium enum integer.",
+    ),
+    "normalize_symbol_body_rectangles.min_width_mils": (
+        "Only rectangles wider than this many mils are treated as symbol bodies.",
+    ),
+    "normalize_symbol_body_rectangles.min_height_mils": (
+        "Only rectangles taller than this many mils are treated as symbol bodies.",
+    ),
+    "normalize_symbol_body_rectangles.outline_color_win32": (
+        "Rectangle outline color.",
+    ),
+    "normalize_symbol_body_rectangles.line_width": (
+        "Outline width: smallest/zero, small, medium, large, or enum integer.",
+    ),
+    "normalize_symbol_body_rectangles.fill_color_win32": (
+        "Rectangle fill color.",
+    ),
+    "normalize_symbol_body_rectangles.is_solid": (
+        "Whether the rectangle fill is solid.",
+    ),
+    "normalize_symbol_body_rectangles.transparent": (
+        "Whether the rectangle fill should be transparent.",
+    ),
+    "normalize_power_symbols": (
+        "Power-port text and color normalization for schematic sheets.",
+        "Colors may be Win32/BGR integers, 0xRRGGBB-style strings, or #RRGGBB.",
+    ),
+    "normalize_power_symbols.font": (
+        "Font applied to power-port text.",
+    ),
+    "normalize_net_labels": (
+        "Net-label text style and color normalization.",
+        "Use this to make copied/vendor sheets match the project drawing standard.",
+    ),
+    "normalize_net_labels.font": (
+        "Font applied to net-label text.",
+    ),
+    "normalize_component_designators": (
+        "Placed component designator text, for example U1/R3/C10.",
+        "Font specs use font_name, size_pt, bold, italic, and optional color_win32/color.",
+    ),
+    "normalize_component_designators.font": (
+        "Font applied to component designator text.",
+    ),
+    "normalize_component_parameters": (
+        "Visible component parameter text such as value or part-number fields.",
+        "This does not rename parameter keys; it only normalizes displayed text style.",
+    ),
+    "normalize_component_parameters.font": (
+        "Font applied to visible component parameter text.",
+    ),
+    "normalize_component_free_text": (
+        "Free text owned by a component rather than board/sheet-level free text.",
+        "Useful for vendor symbols with inconsistent internal notes.",
+    ),
+    "normalize_component_free_text.font_name": (
+        "Font family applied to component-owned free text.",
+    ),
+    "normalize_wires": (
+        "Schematic wire color normalization.",
+        "This intentionally avoids net labels and power symbols; those have separate rules.",
+    ),
+    "normalize_no_erc": (
+        "No-ERC marker appearance.",
+        "symbol accepts cross, thin cross, small cross, checkbox, triangle, or enum integer.",
+    ),
+    "normalize_no_erc.symbol": (
+        "Marker style: cross, thin cross, small cross, checkbox, triangle, or enum integer.",
+    ),
+    "normalize_sheet_style": (
+        "Sheet border/area colors and document title-block font.",
+        "PrjPcb input applies this rule to every SchDoc listed by the project.",
+    ),
+    "normalize_sheet_style.line_color_win32": (
+        "Sheet border line color.",
+    ),
+    "normalize_sheet_style.area_color_win32": (
+        "Sheet background/area color.",
+    ),
+    "normalize_sheet_style.document_font": (
+        "Font applied to sheet document/title-block text.",
+    ),
+    "normalize_symbol_internal_graphics_monochrome": (
+        "Symbol-owned internal graphics, such as lines, polygons, arcs, and fills.",
+        "saturation=0 makes graphics monochrome while preserving relative intensity.",
+    ),
+    "normalize_symbol_internal_graphics_monochrome.saturation": (
+        "Target saturation from 0.0 monochrome to 1.0 unchanged.",
+    ),
+}
+
+_PCBLIB_CLEAN_COMMENTS: dict[str, tuple[str, ...]] = {
+    "schema": (
+        "PcbLib clean config for footprint-library cleanup.",
+        "This file is JSONC: // comments and trailing commas are accepted.",
+        "Use --init-config to write this template without cleaning an input.",
+        "Use --force-config with --init-config to overwrite an existing template.",
+        "The default profile removes vendor drafting noise while preserving 3D bodies.",
+    ),
+    "enabled": (
+        "Set enabled=false to leave this rule family unchanged.",
+    ),
+    "profile": (
+        "Human-readable rule profile name written to clean reports.",
+        "Use separate config files for different vendor/library cleanup policies.",
+    ),
+    "remove_mechanical_primitives": (
+        "Remove mechanical-layer tracks, arcs, fills, and similar drafting primitives.",
+        "Preserve options protect component bodies, board cutouts, keepouts, and custom pads.",
+    ),
+    "remove_mechanical_primitives.primitive_types": (
+        "Primitive collections to remove; supported values include tracks, arcs, fills, and texts.",
+    ),
+    "remove_mechanical_primitives.layers": (
+        "Layer policy for primitive removal, for example mechanical or any.",
+    ),
+    "remove_mechanical_primitives.preserve_regions": (
+        "Keep regions even if mechanical primitive removal is enabled.",
+    ),
+    "remove_mechanical_primitives.preserve_component_bodies": (
+        "Keep component-body/3D-model related primitives.",
+    ),
+    "remove_text_strings": (
+        "Remove configured PcbLib text strings, often vendor labels on mechanical layers.",
+        "Match by layer, text content, or both depending on the nested rule options.",
+    ),
+    "remove_text_strings.layers": (
+        "Layer policy for text removal, for example any or mechanical.",
+    ),
+    "remove_text_strings.match": (
+        "Text matching mode: all, regex, contains, or exact.",
+    ),
+    "remove_text_strings.patterns": (
+        "Text patterns used when match is regex, contains, or exact.",
+    ),
+    "remove_regions": (
+        "Remove configured mechanical regions.",
+        "Use cautiously: the rule has preservation flags for keepouts and custom-pad regions.",
+    ),
+    "remove_regions.layers": (
+        "Layer policy for region removal, for example mechanical or any.",
+    ),
+    "remove_regions.preserve_component_linked": (
+        "Keep regions linked to a footprint component object.",
+    ),
+    "remove_regions.preserve_model_associated": (
+        "Keep regions associated with embedded or generated models.",
+    ),
+    "remove_regions.preserve_keepouts": (
+        "Keep keepout regions.",
+    ),
+    "remove_regions.preserve_board_cutouts": (
+        "Keep board-cutout regions.",
+    ),
+    "remove_regions.preserve_custom_pad_regions": (
+        "Keep regions used to represent custom pads.",
+    ),
+}
 
 
 def _find_input_in_cwd() -> Path | None:
@@ -94,14 +293,219 @@ def _write_config_template(path: Path, *, suffix: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     template = (
         PcbLibCleanConfig.template().to_dict()
-        if suffix == ".pcblib"
+        if suffix == _PCBLIB_CONFIG_SUFFIX
         else AltiumCleanConfig.template().to_dict()
     )
-    path.write_text(json.dumps(template, indent=2), encoding="utf-8")
+    comments = (
+        _PCBLIB_CLEAN_COMMENTS
+        if suffix == _PCBLIB_CONFIG_SUFFIX
+        else _SCHEMATIC_CLEAN_COMMENTS
+    )
+    path.write_text(_render_jsonc_template(template, comments), encoding="utf-8")
+
+
+def _render_jsonc_template(
+    template: dict[str, object],
+    comments: dict[str, tuple[str, ...]],
+) -> str:
+    """Render a JSONC config template with section guidance comments."""
+    lines: list[str] = [
+        "// Generated by altium-cruncher clean.",
+        "// Edit enabled flags and rule values, then rerun the same command.",
+        "// Use --output or --backup when trying a new rule set on real designs.",
+        "{",
+    ]
+    lines.extend(_render_jsonc_object_fields(template, comments, path=(), indent=2))
+    lines.append("}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _render_jsonc_object_fields(
+    data: dict[str, object],
+    comments: dict[str, tuple[str, ...]],
+    *,
+    path: tuple[str, ...],
+    indent: int,
+) -> list[str]:
+    lines: list[str] = []
+    keys = list(data)
+    for index, key in enumerate(keys):
+        if index:
+            lines.append("")
+        current_path = (*path, key)
+        lines.extend(_comment_lines(comments, current_path, indent=indent))
+        comma = "," if index < len(keys) - 1 else ""
+        lines.extend(
+            _render_jsonc_property(
+                key,
+                data[key],
+                comments,
+                path=current_path,
+                indent=indent,
+                comma=comma,
+            )
+        )
+    return lines
+
+
+def _render_jsonc_property(
+    key: str,
+    value: object,
+    comments: dict[str, tuple[str, ...]],
+    *,
+    path: tuple[str, ...],
+    indent: int,
+    comma: str,
+) -> list[str]:
+    space = " " * indent
+    if isinstance(value, dict):
+        lines = [f'{space}"{key}": {{']
+        lines.extend(
+            _render_jsonc_object_fields(
+                value,
+                comments,
+                path=path,
+                indent=indent + 2,
+            )
+        )
+        lines.append(f"{space}}}{comma}")
+        return lines
+
+    value_text = json.dumps(value, indent=2)
+    value_lines = value_text.splitlines()
+    if len(value_lines) == 1:
+        return [f'{space}"{key}": {value_lines[0]}{comma}']
+    lines = [f'{space}"{key}": {value_lines[0]}']
+    lines.extend(f"{space}{line}" for line in value_lines[1:-1])
+    lines.append(f"{space}{value_lines[-1]}{comma}")
+    return lines
+
+
+def _comment_lines(
+    comments: dict[str, tuple[str, ...]],
+    path: tuple[str, ...],
+    *,
+    indent: int,
+) -> list[str]:
+    key = ".".join(path)
+    comment_text = comments.get(key)
+    if comment_text is None:
+        comment_text = comments.get(path[-1], ())
+    space = " " * indent
+    return [f"{space}// {comment}" for comment in comment_text]
+
+
+def _suffix_from_config_type(config_type: str | None) -> str | None:
+    if config_type is None:
+        return None
+    return _PCBLIB_CONFIG_SUFFIX if config_type == "pcblib" else _SCHEMATIC_CONFIG_SUFFIX
+
+
+def _resolve_config_suffix(
+    *,
+    input_file: Path | None,
+    config_type: str | None,
+) -> str:
+    config_suffix = _suffix_from_config_type(config_type)
+    if input_file is None:
+        if config_suffix is None:
+            raise ValueError("--init-config without a file requires --config-type")
+        return config_suffix
+
+    input_suffix = input_file.suffix.lower()
+    input_config_suffix = (
+        _PCBLIB_CONFIG_SUFFIX if input_suffix == ".pcblib" else _SCHEMATIC_CONFIG_SUFFIX
+    )
+    if config_suffix is not None and config_suffix != input_config_suffix:
+        raise ValueError(
+            f"--config-type {config_type} does not match input file type {input_suffix}"
+        )
+    return input_config_suffix
+
+
+def _resolve_config_template_path(
+    args: argparse.Namespace,
+    input_file: Path | None,
+    *,
+    suffix: str,
+) -> Path:
+    if args.config:
+        return Path(args.config).resolve()
+    if input_file is None:
+        filename = (
+            DEFAULT_PCBLIB_CLEAN_CONFIG_FILENAME
+            if suffix == _PCBLIB_CONFIG_SUFFIX
+            else DEFAULT_SCH_CLEAN_CONFIG_FILENAME
+        )
+        return (Path.cwd() / filename).resolve()
+    if suffix == _PCBLIB_CONFIG_SUFFIX:
+        return infer_pcblib_clean_config_path(input_file).resolve()
+    return infer_clean_config_path(
+        input_file,
+        config_filename=DEFAULT_SCH_CLEAN_CONFIG_FILENAME,
+    ).resolve()
+
+
+def _init_clean_config(
+    args: argparse.Namespace,
+    input_file: Path | None,
+    *,
+    suffix: str,
+) -> int:
+    config_path = _resolve_config_template_path(args, input_file, suffix=suffix)
+    if config_path.exists() and not getattr(args, "force_config", False):
+        log.error(
+            "Config already exists: %s. Use --force-config to overwrite.",
+            config_path,
+        )
+        return 1
+    _write_config_template(config_path, suffix=suffix)
+    log.info("Created clean config template: %s", config_path)
+    log.info("Edit the config, then run clean without --init-config.")
+    return 0
+
+
+def _resolve_clean_input(args: argparse.Namespace) -> Path | None:
+    if args.file:
+        input_file = Path(args.file).resolve()
+        if not input_file.exists() and not getattr(args, "init_config", False):
+            raise FileNotFoundError(f"File not found: {input_file}")
+        return input_file
+
+    if getattr(args, "init_config", False) and getattr(args, "config_type", None):
+        return None
+
+    detected = _find_input_in_cwd()
+    if detected is None:
+        raise ValueError(
+            "No input specified and no unique .PrjPcb/.SchDoc/.SchLib/.PcbLib "
+            "found in current directory"
+        )
+    log.info(f"Auto-detected input file: {detected.name}")
+    return detected
+
+
+def _maybe_init_clean_config(
+    args: argparse.Namespace,
+    input_file: Path | None,
+) -> int | None:
+    try:
+        config_suffix = _resolve_config_suffix(
+            input_file=input_file,
+            config_type=getattr(args, "config_type", None),
+        )
+    except ValueError as exc:
+        log.error(str(exc))
+        return 1
+
+    if not getattr(args, "init_config", False):
+        return None
+    return _init_clean_config(args, input_file, suffix=config_suffix)
 
 
 def _resolve_clean_config(
-    args,
+    args: argparse.Namespace,
     input_file: Path,
 ) -> tuple[AltiumCleanConfig | PcbLibCleanConfig | None, Path | None]:
     suffix = input_file.suffix.lower()
@@ -112,7 +516,7 @@ def _resolve_clean_config(
     else:
         config_path = (
             infer_pcblib_clean_config_path(input_file)
-            if suffix == ".pcblib"
+            if suffix == _PCBLIB_CONFIG_SUFFIX
             else infer_clean_config_path(
                 input_file,
                 config_filename=DEFAULT_SCH_CLEAN_CONFIG_FILENAME,
@@ -123,41 +527,36 @@ def _resolve_clean_config(
             return None, config_path
 
     try:
-        raw = json.loads(config_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+        raw = load_json_config(config_path)
+    except Exception as exc:
         raise ValueError(f"Invalid JSON in clean config: {config_path}: {exc}") from exc
 
-    if suffix == ".pcblib":
+    if suffix == _PCBLIB_CONFIG_SUFFIX:
         return PcbLibCleanConfig.from_dict(raw), config_path
     return AltiumCleanConfig.from_dict(raw), config_path
 
 
-def cmd_clean(args) -> int:
+def cmd_clean(args: argparse.Namespace) -> int:
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
     from altium_monkey.altium_pcblib import AltiumPcbLib
     from altium_monkey.altium_schdoc import AltiumSchDoc
     from altium_monkey.altium_schlib import AltiumSchLib
 
-    if args.file:
-        input_file = Path(args.file).resolve()
-        if not input_file.exists():
-            log.error(f"File not found: {input_file}")
-            return 1
-    else:
-        detected = _find_input_in_cwd()
-        if detected is None:
-            log.error(
-                "No input specified and no unique .PrjPcb/.SchDoc/.SchLib/.PcbLib "
-                "found in current directory"
-            )
-            log.info(
-                "Usage: altium-cruncher clean "
-                "[project.PrjPcb | file.SchDoc | file.SchLib | file.PcbLib]"
-            )
-            return 1
-        input_file = detected
-        log.info(f"Auto-detected input file: {input_file.name}")
+    try:
+        input_file = _resolve_clean_input(args)
+    except (FileNotFoundError, ValueError) as exc:
+        log.error(str(exc))
+        log.info(
+            "Usage: altium-cruncher clean "
+            "[project.PrjPcb | file.SchDoc | file.SchLib | file.PcbLib]"
+        )
+        return 1
 
+    init_result = _maybe_init_clean_config(args, input_file)
+    if init_result is not None:
+        return init_result
+
+    assert input_file is not None
     suffix = input_file.suffix.lower()
     if suffix not in {".prjpcb", ".schdoc", ".schlib", ".pcblib"}:
         log.error(f"Unsupported file type for clean: {suffix}")
@@ -563,7 +962,7 @@ def cmd_clean(args) -> int:
 def register_parser(subparsers):
     clean_parser = subparsers.add_parser(
         "clean",
-        help="normalize Altium SchDoc/SchLib/PcbLib assets using JSON config",
+        help="normalize Altium SchDoc/SchLib/PcbLib assets using JSON/JSONC config",
         description=(
             "Normalize schematic symbol/document styles for SchDoc, SchLib, and PrjPcb files, "
             "and clean PcbLib vendor footprint mechanical drafting noise. "
@@ -571,12 +970,14 @@ def register_parser(subparsers):
             "schematic power symbol normalization, schematic net-label normalization, "
             "component designator/parameter font normalization, component free-text normalization, "
             "schematic wire normalization, schematic no-erc normalization, sheet-style normalization, and "
-            "symbol internal-graphics monochrome normalization. For PcbLib input, supports JSON-configured "
+            "symbol internal-graphics monochrome normalization. For PcbLib input, supports JSON/JSONC-configured "
             "mechanical-layer primitive removal, configured text-string removal, and "
             "configured mechanical-region removal while preserving component bodies and embedded models."
         ),
         epilog=(
             "Examples:\n"
+            "  altium-cruncher clean device.SchLib --init-config\n"
+            "  altium-cruncher clean --init-config --config-type pcblib --config altium-pcblib-clean.json\n"
             "  altium-cruncher clean device.SchLib\n"
             "  altium-cruncher clean sheet.SchDoc --config altium-clean.json\n"
             "  altium-cruncher clean footprint.PcbLib --config altium-pcblib-clean.json\n"
@@ -597,13 +998,34 @@ def register_parser(subparsers):
         "--config",
         type=Path,
         help=(
-            "Path to clean JSON config. "
+            "Path to clean JSON/JSONC config. "
             f"For SchDoc/SchLib/PrjPcb, omitted means {DEFAULT_SCH_CLEAN_CONFIG_FILENAME} "
             "next to input. "
             f"For PcbLib, omitted means workspace config {DEFAULT_PCBLIB_CLEAN_CONFIG_FILENAME} "
             "when available, otherwise the same filename next to input. "
             "If the resolved config is missing, creates a template and exits."
         ),
+    )
+    clean_parser.add_argument(
+        "--init-config",
+        action="store_true",
+        help=(
+            "Write the appropriate commented JSONC config template and exit "
+            "without loading or cleaning the input file"
+        ),
+    )
+    clean_parser.add_argument(
+        "--config-type",
+        choices=("schematic", "pcblib"),
+        help=(
+            "Config template type for --init-config when no input file is supplied; "
+            "schematic covers PrjPcb, SchDoc, and SchLib inputs"
+        ),
+    )
+    clean_parser.add_argument(
+        "--force-config",
+        action="store_true",
+        help="Allow --init-config to overwrite an existing config file",
     )
     clean_parser.add_argument(
         "-o",

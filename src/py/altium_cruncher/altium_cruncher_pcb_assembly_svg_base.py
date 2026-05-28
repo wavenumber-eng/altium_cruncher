@@ -7,7 +7,7 @@ import html
 import math
 import re
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from altium_monkey.altium_pcb_surface import (
     PCB_SurfaceRole,
@@ -47,10 +47,19 @@ class CruncherPcbAssemblySvgRenderOptions(PcbSvgRenderOptions):
     assembly_curve_mode: str = "native_arcs"
     assembly_samples_per_curve: int = 24
     assembly_round_digits: int = 3
+    assembly_projection_algorithm: str | None = None
+    assembly_mesh_linear_deflection: float | None = None
+    assembly_mesh_angular_deflection: float | None = None
+    assembly_mesh_relative: bool | None = None
+    assembly_hlr_angle_tolerance: float | None = None
+    assembly_edge_flags: dict[str, bool] | None = None
     assembly_include_visible: bool = True
     assembly_include_outline: bool = True
     assembly_union_polygons: bool = True
     assembly_overlay_color: str = "#F59E0B"
+    assembly_line_width_mm: float = 0.12
+    assembly_component_projection_options: dict[str, AssemblyProjectionOptions] | None = None
+    assembly_component_stroke_styles: dict[str, dict[str, object]] | None = None
 
 
 class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
@@ -66,7 +75,8 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
         return AssemblyProjectionOptions, get_assembly_projection_cache
 
     def _render_overlay_defs_scene(self, ctx, pcbdoc):
-        if not self.options.include_assembly_overlay:
+        options = cast(CruncherPcbAssemblySvgRenderOptions, self.options)
+        if not options.include_assembly_overlay:
             return [], []
         return self._render_assembly_overlay(ctx, pcbdoc)
 
@@ -77,6 +87,48 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
             return fallback
         token = re.sub(r"[^0-9A-Za-z_.-]+", "_", text).strip("._-")
         return token or fallback
+
+    def _assembly_component_stroke_attrs(
+        self,
+        designator: str,
+        component_stroke_styles: dict[str, dict[str, object]],
+    ) -> list[str]:
+        style = component_stroke_styles.get(str(designator or "").strip())
+        if not style:
+            return []
+        attrs: list[str] = []
+        color = str(style.get("color") or "").strip()
+        if color:
+            attrs.append(f'stroke="{html.escape(color)}"')
+        width_raw = style.get("line_width_mm")
+        if width_raw is not None:
+            if not isinstance(width_raw, (int, float, str)):
+                raise ValueError(
+                    f"Invalid pcb-svg component assembly_hlr line_width_mm for {designator!r}"
+                )
+            try:
+                width = float(width_raw)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Invalid pcb-svg component assembly_hlr line_width_mm for {designator!r}"
+                ) from exc
+            if width > 0.0:
+                attrs.append(f'stroke-width="{self._fmt_local_mm(width)}"')
+        return attrs
+
+    def _assembly_component_designator(
+        self,
+        ctx: PcbSvgRenderContext,
+        component_obj: object | None,
+        component_index: int,
+    ) -> str:
+        if component_obj is not None:
+            designator = str(getattr(component_obj, "designator", "") or "").strip()
+            if designator:
+                return designator
+        if component_index in ctx.component_designator_by_index:
+            return str(ctx.component_designator_by_index.get(component_index) or "").strip()
+        return ""
 
     @staticmethod
     def _assembly_canonical_angle_deg(value: float) -> float:
@@ -375,11 +427,12 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
         ctx: PcbSvgRenderContext,
         pcbdoc: "AltiumPcbDoc",
     ) -> tuple[list[str], list[str]]:
-        side = str(self.options.assembly_view_side or "").strip().lower()
+        options = cast(CruncherPcbAssemblySvgRenderOptions, self.options)
+        side = str(options.assembly_view_side or "").strip().lower()
         if side not in {"top", "bottom"}:
             return [], []
-        emit_simple = bool(self.options.assembly_include_simple)
-        emit_detail = bool(self.options.assembly_include_detail)
+        emit_simple = bool(options.assembly_include_simple)
+        emit_detail = bool(options.assembly_include_detail)
         if not (emit_simple or emit_detail):
             return [], []
         available_mode_tokens: list[str] = []
@@ -390,11 +443,11 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
         available_modes_text = " ".join(available_mode_tokens)
         default_mode = "detail" if emit_detail else "simple"
 
-        curve_mode = str(self.options.assembly_curve_mode or "").strip().lower()
+        curve_mode = str(options.assembly_curve_mode or "").strip().lower()
         if curve_mode not in {"native_arcs", "polyline"}:
             curve_mode = "native_arcs"
-        samples_per_curve = max(int(self.options.assembly_samples_per_curve), 2)
-        round_digits = max(int(self.options.assembly_round_digits), 0)
+        samples_per_curve = max(int(options.assembly_samples_per_curve), 2)
+        round_digits = max(int(options.assembly_round_digits), 0)
 
         AssemblyProjectionOptions, get_assembly_projection_cache = self._assembly_projection_types()
         helper = self._get_model_helper()
@@ -414,13 +467,21 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
 
         projection_options = AssemblyProjectionOptions(
             side="bottom" if side == "bottom" else "top",
+            projection_algorithm=options.assembly_projection_algorithm,
             curve_mode="polyline" if curve_mode == "polyline" else "native_arcs",
             samples_per_curve=samples_per_curve,
             round_digits=round_digits,
-            include_visible=bool(self.options.assembly_include_visible),
-            include_outline=bool(self.options.assembly_include_outline),
-            union_polygons=bool(self.options.assembly_union_polygons),
+            include_visible=bool(options.assembly_include_visible),
+            include_outline=bool(options.assembly_include_outline),
+            union_polygons=bool(options.assembly_union_polygons),
+            mesh_linear_deflection=options.assembly_mesh_linear_deflection,
+            mesh_angular_deflection=options.assembly_mesh_angular_deflection,
+            mesh_relative=options.assembly_mesh_relative,
+            hlr_angle_tolerance=options.assembly_hlr_angle_tolerance,
+            edge_flags=options.assembly_edge_flags,
         )
+        component_projection_options = options.assembly_component_projection_options or {}
+        component_stroke_styles = options.assembly_component_stroke_styles or {}
 
         components = list(getattr(pcbdoc, "components", []) or [])
         symbol_ids_by_key: dict[tuple[object, ...], tuple[str, str]] = {}
@@ -486,6 +547,7 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
                 continue
             if comp_idx >= 0:
                 component_had_body_on_side.add(comp_idx)
+            designator = self._assembly_component_designator(ctx, component, comp_idx)
 
             if model_entry is None:
                 model_type = helper._parse_altium_int(props.get("MODEL.MODELTYPE"))
@@ -609,7 +671,7 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
                 step_bytes=bytes(model_entry.get("step_bytes", b"") or b""),
                 pose_signature=pose_signature,
                 transform_matrix=transform_matrix,
-                options=projection_options,
+                options=component_projection_options.get(designator, projection_options),
                 model_label=str(model_entry.get("name", "") or model_name_text or model_id_text or ""),
             )
             if projected.is_empty:
@@ -632,11 +694,6 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
                 unique_projection_count += 1
 
             simple_id, detail_id = symbol_ids
-            designator = ""
-            if component is not None:
-                designator = str(getattr(component, "designator", "") or "").strip()
-            if not designator and comp_idx in ctx.component_designator_by_index:
-                designator = str(ctx.component_designator_by_index.get(comp_idx) or "").strip()
             token = self._safe_svg_token(designator, fallback=f"comp_{body_idx:04d}")
             comp_group_id = f"assembly-comp-{token}-{body_idx:04d}"
 
@@ -653,6 +710,12 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
                 # coordinates in _assembly_geometry_elements_local().
                 f'transform="{transform_value}"',
             ]
+            comp_attrs.extend(
+                self._assembly_component_stroke_attrs(
+                    designator,
+                    component_stroke_styles,
+                )
+            )
             if self.options.include_metadata:
                 comp_attrs.extend(
                     ctx.relationship_metadata_attrs(
@@ -788,13 +851,19 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
                 unique_projection_count += 1
 
             simple_id, detail_id = symbol_ids
-            designator = str(getattr(component, "designator", "") or "").strip()
+            designator = self._assembly_component_designator(ctx, component, comp_idx)
             token = self._safe_svg_token(designator, fallback=f"comp_{comp_idx:04d}")
             comp_group_id = f"assembly-comp-{token}-extruded-{comp_idx:04d}"
             comp_attrs = [
                 f'id="{html.escape(comp_group_id)}"',
                 f'transform="{transform_value}"',
             ]
+            comp_attrs.extend(
+                self._assembly_component_stroke_attrs(
+                    designator,
+                    component_stroke_styles,
+                )
+            )
             if self.options.include_metadata:
                 comp_attrs.extend(
                     ctx.relationship_metadata_attrs(
@@ -999,13 +1068,19 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
                 unique_projection_count += 1
 
             simple_id, detail_id = symbol_ids
-            designator = str(getattr(component, "designator", "") or "").strip()
+            designator = self._assembly_component_designator(ctx, component, comp_idx)
             token = self._safe_svg_token(designator, fallback=f"comp_{comp_idx:04d}")
             comp_group_id = f"assembly-comp-{token}-bbox-{comp_idx:04d}"
             comp_attrs = [
                 f'id="{html.escape(comp_group_id)}"',
                 f'transform="{transform_value}"',
             ]
+            comp_attrs.extend(
+                self._assembly_component_stroke_attrs(
+                    designator,
+                    component_stroke_styles,
+                )
+            )
             if self.options.include_metadata:
                 comp_attrs.extend(
                     ctx.relationship_metadata_attrs(
@@ -1048,7 +1123,8 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
             f'data-assembly-modes="{html.escape(available_modes_text)}"',
             f'data-assembly-default-mode="{html.escape(default_mode)}"',
             'fill="none"',
-            f'stroke="{html.escape(str(self.options.assembly_overlay_color or "#F59E0B"))}"',
+            f'stroke="{html.escape(str(options.assembly_overlay_color or "#F59E0B"))}"',
+            f'stroke-width="{self._fmt_local_mm(max(float(options.assembly_line_width_mm), 0.001))}"',
             'stroke-linecap="round"',
             'stroke-linejoin="round"',
             'vector-effect="non-scaling-stroke"',
@@ -1081,8 +1157,7 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
         lines.append(
             "    "
             + (
-                f'<g id="{html.escape(simple_id)}" data-assembly-symbol="simple" '
-                'stroke-width="0.12">'
+                f'<g id="{html.escape(simple_id)}" data-assembly-symbol="simple">'
             )
         )
         lines.extend(
@@ -1096,8 +1171,7 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
         lines.append(
             "    "
             + (
-                f'<g id="{html.escape(detail_id)}" data-assembly-symbol="detail" '
-                'stroke-width="0.08">'
+                f'<g id="{html.escape(detail_id)}" data-assembly-symbol="detail">'
             )
         )
         lines.extend(
@@ -1250,7 +1324,7 @@ def render_pcb_assembly_svg_views(
 
         if "assembly-top" in normalized_views:
             top_role_order = _surface_role_order_from_tokens(
-                assembly_top_layer_order or ["copper", "silkscreen"],
+                assembly_top_layer_order or ["copper"],
                 include_missing_roles=False,
             )
             top_layers_in_order = pcb_surface_layers(
@@ -1302,7 +1376,7 @@ def render_pcb_assembly_svg_views(
 
         if "assembly-bottom" in normalized_views:
             bottom_role_order = _surface_role_order_from_tokens(
-                assembly_bottom_layer_order or ["copper", "silkscreen"],
+                assembly_bottom_layer_order or ["copper"],
                 include_missing_roles=False,
             )
             bottom_layers_in_order = pcb_surface_layers(

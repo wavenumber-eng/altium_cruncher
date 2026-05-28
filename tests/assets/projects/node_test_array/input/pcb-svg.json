@@ -1,0 +1,107 @@
+{
+  "schema": "wn.pcb.svg.config.v1",
+  "global": {
+    "pcbdoc": null,
+    "mono_color": "#000000",
+    "board_cutout_color": "#FFFF0000",
+    "plated_drill_color": "#90EE90",
+    "non_plated_drill_color": "#ADD8E6",
+    "polygon_color": "#FF888888",
+    "drill_mode": "overlay",
+    "drill_overlay_opacity": 0.25,
+    "include_metadata": true,
+    "include_board_outline": true,
+    "include_outline_in_layers": true,
+    "show_empty_layers": false,
+    "include_polygon_definition_overlays": false,
+    "mirror_bottom_view": true,
+    "clip_to_outline": true,
+    "clip_holes_from_copper": true,
+    "include_board_cutout_layer": false,
+    "board_cutout_layer_hatch": false,
+    "board_cutout_layer_label": false,
+    "board_cutout_layer_label_text": "cutout",
+    "assembly_enabled": false,
+    "assembly_include_simple": true,
+    "assembly_include_detail": true,
+    "assembly_curve_mode": "native_arcs",
+    "assembly_samples_per_curve": 24,
+    "assembly_round_digits": 3,
+    "assembly_include_visible": true,
+    "assembly_include_outline": true,
+    "assembly_union_polygons": true,
+    "svg_scale": 10.0,
+    "svg_size_unit": "",
+    "viewer_theme": "light",
+    "clean_output": false
+  },
+  "views": [
+    {
+      "name": "layers",
+      "source": "layers",
+      "enabled": true
+    },
+    {
+      "name": "top_view",
+      "source": "top",
+      "enabled": true,
+      "board_outline_color": "#FF000000",
+      "board_cutout_color": "#FFFF0000",
+      "copper_color": "#FF000000",
+      "silkscreen_color": "#FF000000",
+      "description": "Top View",
+      "layer_order": [
+        "copper",
+        "silkscreen"
+      ],
+      "plated_drill_color": "#FF90EE90",
+      "non_plated_drill_color": "#FFADD8E6",
+      "polygon_color": "#FF888888"
+    },
+    {
+      "name": "bottom_view",
+      "source": "bottom",
+      "enabled": true,
+      "board_outline_color": "#FF000000",
+      "board_cutout_color": "#FFFF0000",
+      "copper_color": "#FF000000",
+      "silkscreen_color": "#FF000000",
+      "description": "Bottom View",
+      "layer_order": [
+        "copper",
+        "silkscreen"
+      ],
+      "plated_drill_color": "#FF90EE90",
+      "non_plated_drill_color": "#FFADD8E6",
+      "polygon_color": "#FF888888"
+    },
+    {
+      "name": "assembly_top_view",
+      "source": "assembly-top",
+      "enabled": false,
+      "board_outline_color": "#FF000000",
+      "board_cutout_color": "#FFFF0000",
+      "copper_color": "#FF000000",
+      "silkscreen_color": "#FF000000",
+      "description": "Assembly Top View",
+      "layer_order": [
+        "copper"
+      ],
+      "assembly_enabled": true
+    },
+    {
+      "name": "assembly_bottom_view",
+      "source": "assembly-bottom",
+      "enabled": false,
+      "board_outline_color": "#FF000000",
+      "board_cutout_color": "#FFFF0000",
+      "copper_color": "#FF000000",
+      "silkscreen_color": "#FF000000",
+      "description": "Assembly Bottom View",
+      "layer_order": [
+        "copper"
+      ],
+      "assembly_enabled": true
+    }
+  ]
+}

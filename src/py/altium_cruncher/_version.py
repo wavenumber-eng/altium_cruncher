@@ -8,9 +8,13 @@ from datetime import date
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
 
-__version__ = "2026.5.26"
+__version__ = "2026.5.28"
 
 _DISTRIBUTION_NAME = "altium-cruncher"
+_CONTROLLED_DEPENDENCIES = (
+    "altium-monkey",
+    "wn-geometer",
+)
 _VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$")
 
 
@@ -58,3 +62,20 @@ def parse_version(raw_version: str) -> Version:
 
 def cli_version_text() -> str:
     return f"altium-cruncher {version().string}"
+
+
+def dependency_version_text(distribution_name: str) -> str:
+    try:
+        dependency_version = distribution_version(distribution_name)
+    except PackageNotFoundError:
+        dependency_version = "not installed"
+    return f"{distribution_name} {dependency_version}"
+
+
+def cli_version_report() -> str:
+    lines = [cli_version_text()]
+    lines.extend(
+        dependency_version_text(distribution_name)
+        for distribution_name in _CONTROLLED_DEPENDENCIES
+    )
+    return "\n".join(lines)

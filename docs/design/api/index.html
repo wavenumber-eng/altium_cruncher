@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Altium Cruncher API Design Index</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body data-doc-kind="api-design-index">
+<main>
+  <nav class="nav">
+    <a href="../index.html">Design Index</a>
+    <a href="index.html">API</a>
+  </nav>
+
+  <header>
+    <p class="status">API design index</p>
+    <h1>Altium Cruncher API Design</h1>
+    <p class="lede">
+      Public dataclasses and major interfaces are documented here with their
+      rationale, purpose, test requirements, and working definition. L99
+      signoff inspects this folder and fails when source interfaces do not have
+      matching design and Rack test ownership.
+    </p>
+  </header>
+
+  <section>
+    <h2>Documents</h2>
+    <table>
+      <tr>
+        <th>Document</th>
+        <th>Purpose</th>
+      </tr>
+      <tr>
+        <td><a href="output-path-templates.html">output-path-templates.html</a></td>
+        <td>Shared output folder and filename template resolution for output-producing commands.</td>
+      </tr>
+      <tr>
+        <td><a href="bom-pnp-interfaces.html">bom-pnp-interfaces.html</a></td>
+        <td>Shared BOM/PnP alias, normalization, grouping, and manufacturing-output dataclasses.</td>
+      </tr>
+      <tr>
+        <td><a href="clean-interfaces.html">clean-interfaces.html</a></td>
+        <td>Schematic and schematic-library clean configuration and result dataclasses.</td>
+      </tr>
+      <tr>
+        <td><a href="pcblib-clean-interfaces.html">pcblib-clean-interfaces.html</a></td>
+        <td>PCB-library clean configuration and result dataclasses.</td>
+      </tr>
+      <tr>
+        <td><a href="pcb-interfaces.html">pcb-interfaces.html</a></td>
+        <td>PCB SVG, assembly projection, render input, and layer STEP dataclasses.</td>
+      </tr>
+      <tr>
+        <td><a href="easyeda-interfaces.html">easyeda-interfaces.html</a></td>
+        <td>Experimental EasyEDA import, preview, and review dataclasses.</td>
+      </tr>
+      <tr>
+        <td><a href="version-interface.html">version-interface.html</a></td>
+        <td>Date-version release metadata dataclass.</td>
+      </tr>
+    </table>
+  </section>
+</main>
+</body>
+</html>

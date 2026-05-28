@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="XML-BOM-Hydroscope.xsl"?>
+<!DOCTYPE GRID[
+  <!ELEMENT GRID (BANDS, COLUMNS, ROWS*)>
+  <!ATTLIST GRID ExportVersion CDATA #REQUIRED>
+  <!ELEMENT BANDS (BAND*)>
+  <!ELEMENT BAND EMPTY>
+  <!ATTLIST BAND Index CDATA #REQUIRED>
+  <!ATTLIST BAND Caption CDATA #IMPLIED>
+  <!ELEMENT COLUMNS (COLUMN*)>
+  <!ELEMENT COLUMN EMPTY>
+  <!ATTLIST COLUMN Name CDATA #REQUIRED>
+  <!ATTLIST COLUMN Caption CDATA #IMPLIED>
+  <!ATTLIST COLUMN Index CDATA #REQUIRED>
+  <!ATTLIST COLUMN BandIndex CDATA #REQUIRED>
+  <!ATTLIST COLUMN RowIndex CDATA #REQUIRED>
+  <!ATTLIST COLUMN ColIndex CDATA #REQUIRED>
+  <!ATTLIST COLUMN Width CDATA #IMPLIED>
+  <!ELEMENT GROUP (GROUP*, ROW*)>
+  <!ATTLIST GROUP GroupText CDATA #IMPLIED>
+  <!ELEMENT ROWS (ROW*)>
+  <!ELEMENT ROW EMPTY>
+  <!ATTLIST ROW Name CDATA #IMPLIED>
+  <!ATTLIST ROW Description CDATA #IMPLIED>
+  <!ATTLIST ROW LibRef CDATA #IMPLIED>
+  <!ATTLIST ROW Quantity CDATA #IMPLIED>
+  <!ATTLIST ROW Designator CDATA #IMPLIED>
+]>
+<GRID ExportVersion="1.0">
+  <BANDS>
+    <BAND Index="0" Caption="" />
+  </BANDS>
+  <COLUMNS>
+    <COLUMN Name="Name" Caption="Name" Index="0" BandIndex="0" RowIndex="0" ColIndex="0" Width="120" />
+    <COLUMN Name="Description" Caption="Description" Index="1" BandIndex="0" RowIndex="0" ColIndex="1" Width="120" />
+    <COLUMN Name="LibRef" Caption="LibRef" Index="2" BandIndex="0" RowIndex="0" ColIndex="2" Width="120" />
+    <COLUMN Name="Quantity" Caption="Quantity" Index="3" BandIndex="0" RowIndex="0" ColIndex="3" Width="120" />
+    <COLUMN Name="Designator" Caption="Designator" Index="4" BandIndex="0" RowIndex="0" ColIndex="4" Width="100" />
+  </COLUMNS>
+  <ROWS>
+    <ROW Name="0" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R19" />
+    <ROW Name="0" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R24" />
+    <ROW Name="0" Description="RES 0.0 OHM 1/10W JUMP 0603 SMD" LibRef="ERJ-3GEY0R00V" Quantity="1" Designator="R27" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C1" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C2" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C3" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C6" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C7" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C8" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C9" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C10" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C11" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C12" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C13" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C14" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C16" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C19" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C21" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C22" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C23" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C25" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C27" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C32" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C43" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C49" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C53" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C54" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C58" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C59" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C60" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C61" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C62" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C63" />
+    <ROW Name="0.1µF" Description="CAP CER 0.1UF 50V X7R 0603" LibRef="CGA3E2X7R1H104K080AE" Quantity="1" Designator="C64" />
+    <ROW Name="0.47µF" Description="CAP CER 0.47UF 50V X7R 0805" LibRef="CGA4J3X7R1H474K125AE" Quantity="1" Designator="C29" />
+    <ROW Name="0.47µF" Description="CAP CER 0.47UF 50V X7R 0805" LibRef="CGA4J3X7R1H474K125AE" Quantity="1" Designator="C40" />
+    <ROW Name="1µF" Description="CAP CER 1UF 25V X7R 0603" LibRef="CGA3E1X7R1E105K080AE" Quantity="1" Designator="C28" />
+    <ROW Name="1µF" Description="CAP CER 1UF 25V X7R 0603" LibRef="CGA3E1X7R1E105K080AE" Quantity="1" Designator="C30" />
+    <ROW Name="1k" Description="RES 1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1001V" Quantity="1" Designator="R2" />
+    <ROW Name="1k" Description="RES 1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1001V" Quantity="1" Designator="R3" />
+    <ROW Name="1k" Description="RES 1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1001V" Quantity="1" Designator="R7" />
+    <ROW Name="1k" Description="RES 1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1001V" Quantity="1" Designator="R23" />
+    <ROW Name="1k" Description="RES 1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1001V" Quantity="1" Designator="R43" />
+    <ROW Name="4.7µF" Description="CAP CER 4.7UF 50V X7R 1210" LibRef="CGA6P3X7R1H475M250AB" Quantity="1" Designator="C44" />
+    <ROW Name="4.7µF" Description="CAP CER 4.7UF 50V X7R 1210" LibRef="CGA6P3X7R1H475M250AB" Quantity="1" Designator="C47" />
+    <ROW Name="5.1k" Description="RES 5.1K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5101V" Quantity="1" Designator="R22" />
+    <ROW Name="10µF" Description="CAP CER 10UF 6.3V X7R 0805" LibRef="CGA4J1X7R0J106K125AC" Quantity="1" Designator="C18" />
+    <ROW Name="10µF" Description="CAP CER 10UF 6.3V X7R 0805" LibRef="CGA4J1X7R0J106K125AC" Quantity="1" Designator="C20" />
+    <ROW Name="10µF" Description="CAP CER 10UF 6.3V X7R 0805" LibRef="CGA4J1X7R0J106K125AC" Quantity="1" Designator="C26" />
+    <ROW Name="10µF" Description="CAP CER 10UF 6.3V X7R 0805" LibRef="CGA4J1X7R0J106K125AC" Quantity="1" Designator="C50" />
+    <ROW Name="10µF" Description="CAP CER 10UF 6.3V X7R 0805" LibRef="CGA4J1X7R0J106K125AC" Quantity="1" Designator="C51" />
+    <ROW Name="10µF" Description="CAP CER 10UF 6.3V X7R 0805" LibRef="CGA4J1X7R0J106K125AC" Quantity="1" Designator="C52" />
+    <ROW Name="10µF" Description="CAP CER 10UF 35V X7R 1206" LibRef="CGA5L1X7R1V106K160AE" Quantity="1" Designator="C45" />
+    <ROW Name="10µF" Description="CAP CER 10UF 35V X7R 1206" LibRef="CGA5L1X7R1V106K160AE" Quantity="1" Designator="C46" />
+    <ROW Name="10µF" Description="CAP CER 10UF 35V X7R 1206" LibRef="CGA5L1X7R1V106K160AE" Quantity="1" Designator="C57" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R4" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R5" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R6" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R8" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R9" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R10" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R11" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R12" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R13" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R15" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R16" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R17" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R18" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R26" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R29" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R31" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R32" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R36" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R38" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R40" />
+    <ROW Name="10k" Description="RES 10K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1002V" Quantity="1" Designator="R42" />
+    <ROW Name="12MHz" Description="CRYSTAL 12.000MHZ 18PF SMD" LibRef="ABM3-12.000MHZ-B2-T" Quantity="1" Designator="Y3" />
+    <ROW Name="12.4k" Description="RES 12.4K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1242V" Quantity="1" Designator="R14" />
+    <ROW Name="18pF" Description="CAP CER 18PF 50V C0G 0603" LibRef="CGA3E2C0G1H180J080AA" Quantity="1" Designator="C4" />
+    <ROW Name="18pF" Description="CAP CER 18PF 50V C0G 0603" LibRef="CGA3E2C0G1H180J080AA" Quantity="1" Designator="C5" />
+    <ROW Name="18pF" Description="CAP CER 18PF 50V C0G 0603" LibRef="CGA3E2C0G1H180J080AA" Quantity="1" Designator="C15" />
+    <ROW Name="18pF" Description="CAP CER 18PF 50V C0G 0603" LibRef="CGA3E2C0G1H180J080AA" Quantity="1" Designator="C17" />
+    <ROW Name="22µH 0.9A" Description="Inductor 22µH 0.9A" LibRef="NRS5020T220MMGJ" Quantity="1" Designator="L5" />
+    <ROW Name="22µH 0.9A" Description="Inductor 22µH 0.9A" LibRef="NRS5020T220MMGJ" Quantity="1" Designator="L6" />
+    <ROW Name="25MHz" Description="25MHz ±30ppm Crystal 18pF 30 Ohm -20°C ~ 70°C  Surface Mount 2-SMD, No Lead (DFN, LCC)" LibRef="ABM3-25.000MHZ-B4Y-T" Quantity="1" Designator="Y2" />
+    <ROW Name="31.6k" Description="RES 31.6K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF3162V" Quantity="1" Designator="R28" />
+    <ROW Name="31.6k" Description="RES 31.6K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF3162V" Quantity="1" Designator="R37" />
+    <ROW Name="33µF" Description="CAP ALUM 33UF 25V 20% SMD" LibRef="EEE-FK1E330UR" Quantity="1" Designator="C48" />
+    <ROW Name="43k" Description="RES 43K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF4302V" Quantity="1" Designator="R30" />
+    <ROW Name="43k" Description="RES 43K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF4302V" Quantity="1" Designator="R33" />
+    <ROW Name="43k" Description="RES 43K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF4302V" Quantity="1" Designator="R34" />
+    <ROW Name="50pF" Description="CAP CER 50PF 100V C0G/NP0 0603" LibRef="CL10C500JC81PNC" Quantity="1" Designator="C39" />
+    <ROW Name="100" Description="RES 100 OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1000V" Quantity="1" Designator="R1" />
+    <ROW Name="100" Description="RES 100 OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1000V" Quantity="1" Designator="R20" />
+    <ROW Name="100" Description="RES 100 OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1000V" Quantity="1" Designator="R21" />
+    <ROW Name="100k" Description="RES 100K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF1003V" Quantity="1" Designator="R35" />
+    <ROW Name="300pF" Description="Cap Ceramic 300pF 50V C0G 5% SMD 0603 125C Paper T/R" LibRef="CL10C301JB8NNNC" Quantity="1" Designator="C34" />
+    <ROW Name="300pF" Description="Cap Ceramic 300pF 50V C0G 5% SMD 0603 125C Paper T/R" LibRef="CL10C301JB8NNNC" Quantity="1" Designator="C36" />
+    <ROW Name="300pF" Description="Cap Ceramic 300pF 50V C0G 5% SMD 0603 125C Paper T/R" LibRef="CL10C301JB8NNNC" Quantity="1" Designator="C37" />
+    <ROW Name="300pF" Description="Cap Ceramic 300pF 50V C0G 5% SMD 0603 125C Paper T/R" LibRef="CL10C301JB8NNNC" Quantity="1" Designator="C38" />
+    <ROW Name="300pF" Description="Cap Ceramic 300pF 50V C0G 5% SMD 0603 125C Paper T/R" LibRef="CL10C301JB8NNNC" Quantity="1" Designator="C41" />
+    <ROW Name="374k" Description="RES 374K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF3743V" Quantity="1" Designator="R39" />
+    <ROW Name="374k" Description="RES 374K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF3743V" Quantity="1" Designator="R41" />
+    <ROW Name="560k" Description="RES 560K OHM 1/10W 1% 0603 SMD" LibRef="ERJ-3EKF5603V" Quantity="1" Designator="R25" />
+    <ROW Name="4700pF" Description="CAP CER 4700PF 50V X7R 0603" LibRef="CGA3E2X7R1H472K080AE" Quantity="1" Designator="C55" />
+    <ROW Name="4700pF" Description="CAP CER 4700PF 50V X7R 0603" LibRef="CGA3E2X7R1H472K080AE" Quantity="1" Designator="C56" />
+    <ROW Name="10000pF" Description="CAP CER 10000PF 50V X7R 0603" LibRef="CGA3E2X7R1H103M080AE" Quantity="1" Designator="C31" />
+    <ROW Name="10000pF" Description="CAP CER 10000PF 100V C0GNP0 0603" LibRef="CGA3E1C0G2A103J080AE" Quantity="1" Designator="C24" />
+    <ROW Name="10000pF" Description="CAP CER 10000PF 100V C0GNP0 0603" LibRef="CGA3E1C0G2A103J080AE" Quantity="1" Designator="C33" />
+    <ROW Name="10000pF" Description="CAP CER 10000PF 100V C0GNP0 0603" LibRef="CGA3E1C0G2A103J080AE" Quantity="1" Designator="C35" />
+    <ROW Name="10000pF" Description="CAP CER 10000PF 100V C0GNP0 0603" LibRef="CGA3E1C0G2A103J080AE" Quantity="1" Designator="C42" />
+    <ROW Name="1909763-1" Description="CONN UMCC JACK STR 50OHM SMD" LibRef="1909763-1" Quantity="1" Designator="J5" />
+    <ROW Name="B160-13-F" Description="DIODE SCHOTTKY 60V 1A SMA" LibRef="B160-13-F" Quantity="1" Designator="D3" />
+    <ROW Name="B160-13-F" Description="DIODE SCHOTTKY 60V 1A SMA" LibRef="B160-13-F" Quantity="1" Designator="D4" />
+    <ROW Name="B160-13-F" Description="DIODE SCHOTTKY 60V 1A SMA" LibRef="B160-13-F" Quantity="1" Designator="D5" />
+    <ROW Name="B160-13-F" Description="DIODE SCHOTTKY 60V 1A SMA" LibRef="B160-13-F" Quantity="1" Designator="D6" />
+    <ROW Name="BAV99,215" Description="DIODE ARRAY GP 100V 215MA SOT23" LibRef="BAV99,215" Quantity="1" Designator="D7" />
+    <ROW Name="BAV99T-7-F" Description="DIODES INC.         BAV99T-7-F            Small Signal Diode, Switching, Dual Series, 85 V, 155 mA, 1.25 V, 4 ns, 4 A" LibRef="BAV99T-7-F" Quantity="1" Designator="D2" />
+    <ROW Name="BKP2125HS600-T" Description="FERRITE BEAD 60 OHM 0805 1LN" LibRef="BKP2125HS600-T" Quantity="1" Designator="L1" />
+    <ROW Name="BKP2125HS600-T" Description="FERRITE BEAD 60 OHM 0805 1LN" LibRef="BKP2125HS600-T" Quantity="1" Designator="L2" />
+    <ROW Name="BKP2125HS600-T" Description="FERRITE BEAD 60 OHM 0805 1LN" LibRef="BKP2125HS600-T" Quantity="1" Designator="L3" />
+    <ROW Name="BKP2125HS600-T" Description="FERRITE BEAD 60 OHM 0805 1LN" LibRef="BKP2125HS600-T" Quantity="1" Designator="L4" />
+    <ROW Name="FMMT491TA" Description="TRANS NPN 60V 1A SOT23-3" LibRef="FMMT491TA" Quantity="1" Designator="Q1" />
+    <ROW Name="FOX924B-16.000" Description="OSC TCXO 16.000MHZ HCMOS SMD" LibRef="FOX924B-16.000" Quantity="1" Designator="Y1" />
+    <ROW Name="FTSH-105-01-F-DV" Description="SAMTEC - FTSH-105-01-F-DV - .050 X .050" LibRef="CORTEX-DEBUG" Quantity="1" Designator="J1" />
+    <ROW Name="ISL3176EIUZ-T" Description="IC TXRX RS422/485 20MBPS 10MSOP" LibRef="ISL3176EIUZ-T" Quantity="1" Designator="U2" />
+    <ROW Name="LED 1.6X0.8MM 570NM GRN CLR SMD" Description="LED 1.6X0.8MM 570NM GRN CLR SMD" LibRef="APT1608CGCK" Quantity="1" Designator="D1" />
+    <ROW Name="LPC54606J512BD100E" Description="32-BIT ARM CORTEX-M4" LibRef="LPC54606J512BD100E" Quantity="1" Designator="U3" />
+    <ROW Name="LT3570EFE#PBF" Description="IC REG BUCK/BST/LINEAR 20TSSOP" LibRef="LT3570EFE#PBF" Quantity="1" Designator="U15" />
+    <ROW Name="MCP4725A0T-E/CH" Description="IC DAC 12BIT W/I2C SOT23A-6" LibRef="MCP4725A0T-E/CH" Quantity="1" Designator="U17" />
+    <ROW Name="MD0100N8-G" Description="High Voltage Protection T/R Switch 4-Pin(3+Tab) SOT-89" LibRef="MD0100N8-G" Quantity="1" Designator="U13" />
+    <ROW Name="MD1213K6-G" Description="Gate Drivers HI SPD DUAL MOSFET DRIVER" LibRef="MD1213K6-G" Quantity="1" Designator="U12" />
+    <ROW Name="MIC803-30D2VM3-TR" Description="3-Pin Microprocessor Supervisor Circuit w/ Open-Drain Reset Output, 3 SOT-23 - T/R" LibRef="MIC803-30D2VM3-TR" Quantity="1" Designator="U4" />
+    <ROW Name="OPA348AIDBVR" Description="IC OPAMP GP 1MHZ RRO SOT23-5" LibRef="OPA348AIDBVR" Quantity="1" Designator="U16" />
+    <ROW Name="OPA348AIDBVR" Description="IC OPAMP GP 1MHZ RRO SOT23-5" LibRef="OPA348AIDBVR" Quantity="1" Designator="U18" />
+    <ROW Name="OPA348AIDBVR" Description="IC OPAMP GP 1MHZ RRO SOT23-5" LibRef="OPA348AIDBVR" Quantity="1" Designator="U19" />
+    <ROW Name="OPA353NA/250" Description="IC OPAMP GP 44MHZ RRO SOT23-5" LibRef="OPA353NA/250" Quantity="1" Designator="U14" />
+    <ROW Name="PKMCS0909E4000-R1" Description="Audio Indicators &amp; Alerts Piezo Buzzer 9x9mm 4KHz 1.9mm Thickness" LibRef="PKMCS0909E4000-R1" Quantity="1" Designator="U6" />
+    <ROW Name="S8111-46R" Description="CBL CLIP 1-1.5MM DIA CBL SMD" LibRef="S8111-46R" Quantity="1" Designator="HW1" />
+    <ROW Name="SI5351A-B-GTR" Description="Clock Generators &amp; Support Products Any-Rate, Dual PLL 1 60MHz Clock 8outputs" LibRef="SI5351A-B-GTR" Quantity="1" Designator="U1" />
+    <ROW Name="SM04B-SRSS-TB(LF)(SN)" Description="Conn Shrouded Header HDR 4 POS 1mm Solder RA SMD T/R" LibRef="SM04B-SRSS-TB(LF)(SN)" Quantity="1" Designator="J6" />
+    <ROW Name="SM6B-SRSS-TB(LF)(SN)" Description="6 Positions Header, Shrouded Connector 0.039&quot; (1.00mm) Surface Mount, Right Angle Tin" LibRef="SM06B-SRSS-TB(LF)(SN)" Quantity="1" Designator="J3" />
+    <ROW Name="SM08B-SRSS-TB(LF)(SN)" Description="8 Positions Header, Shrouded Connector 0.039&quot; (1.00mm) Surface Mount, Right Angle Tin" LibRef="SM08B-SRSS-TB(LF)(SN)" Quantity="1" Designator="J4" />
+    <ROW Name="SN74AHC1G08DBVR" Description="IC SGL 2IN POS-AND GATE SOT23-5" LibRef="SN74AHC1G08DBVR" Quantity="1" Designator="U7" />
+    <ROW Name="SN74AHC1G08DBVR" Description="IC SGL 2IN POS-AND GATE SOT23-5" LibRef="SN74AHC1G08DBVR" Quantity="1" Designator="U8" />
+    <ROW Name="TC6320TG-G" Description="Trans MOSFET N/P-CH 200V 8-Pin SOIC N T/R" LibRef="TC6320TG-G" Quantity="1" Designator="U11" />
+    <ROW Name="TDC1000PW" Description="IC AFE ULTRA SENSING 28TSSOP" LibRef="TDC1000PW" Quantity="1" Designator="U9" />
+    <ROW Name="TDC7200PWR" Description="IC DIG CONV 14TSSOP" LibRef="TDC7200PWR" Quantity="1" Designator="U10" />
+    <ROW Name="TZ-SB-0001-PCB-[A]" Description="Raw printed circuit board,  Revision A" LibRef="TZ-SB-0001-PCB-[A]" Quantity="1" Designator="PCB1" />
+    <ROW Name="W25Q64JVSSIQ" Description="NOR Flash Serial-SPI 3V 64MBit 64M x 1bit 6ns 8-Pin SOIC" LibRef="W25Q64JVSSIQ" Quantity="1" Designator="U5" />
+  </ROWS>
+</GRID>

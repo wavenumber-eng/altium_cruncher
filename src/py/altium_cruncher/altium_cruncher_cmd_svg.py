@@ -1,4 +1,4 @@
-"""Legacy svg shortcut command for altium_cruncher."""
+"""Combined schematic and PCB SVG command for altium_cruncher."""
 
 import argparse
 import logging
@@ -31,7 +31,7 @@ def _project_has_pcbdoc(prjpcb_path: Path) -> bool:
 
 def _resolve_svg_execution_modes(input_file: Path | None) -> tuple[bool, bool]:
     """
-    Return (run_sch_svg, run_pcb_svg) for legacy svg shortcut.
+    Return (run_sch_svg, run_pcb_svg) for the combined svg command.
     """
     if input_file is not None:
         suffix = input_file.suffix.lower()
@@ -52,7 +52,7 @@ def _resolve_svg_execution_modes(input_file: Path | None) -> tuple[bool, bool]:
 
 def cmd_svg(args) -> int:
     """
-    Handle svg shortcut command.
+    Handle the combined svg command.
 
     Behavior:
     - `.SchDoc` / `.SchLib` input: run `sch-svg`
@@ -84,7 +84,7 @@ def cmd_svg(args) -> int:
     return_codes: list[int] = []
 
     if run_sch:
-        log.info("svg shortcut: running sch-svg")
+        log.info("svg command: running sch-svg")
         sch_args = argparse.Namespace(
             file=args.file,
             output=(output_root / "sch-svg") if output_root else None,
@@ -92,7 +92,7 @@ def cmd_svg(args) -> int:
         return_codes.append(cmd_sch_svg(sch_args))
 
     if run_pcb:
-        log.info("svg shortcut: running pcb-svg")
+        log.info("svg command: running pcb-svg")
         pcb_args = argparse.Namespace(**vars(args))
         pcb_args.output = (output_root / "pcb-svg") if output_root else None
         return_codes.append(cmd_pcb_svg(pcb_args))
@@ -103,8 +103,11 @@ def cmd_svg(args) -> int:
 def register_parser(subparsers):
     svg_parser = subparsers.add_parser(
         "svg",
-        help="legacy shortcut: run sch-svg and/or pcb-svg based on input",
-        description="Compatibility shortcut command. Routes to sch-svg and pcb-svg based on input type.",
+        help="run sch-svg, pcb-svg, or both based on input",
+        description=(
+            "Run schematic SVG generation, PCB SVG generation, or both based on "
+            "the input type. PrjPcb inputs run both when the project contains a PCB."
+        ),
         epilog="Examples:\n"
                "  altium-cruncher svg schematic.SchDoc      # runs sch-svg\n"
                "  altium-cruncher svg board.PcbDoc          # runs pcb-svg\n"

@@ -1,0 +1,1540 @@
+Wire List
+
+<<< Component List >>>
+M3                              BM1            M3
+M3                              BM2            M3
+M3                              BM3            M3
+M3                              BM4            M3
+M3                              BM5            M3
+M3                              BM6            M3
+18pF                            C1_1           C0603_0.90MM_MD
+18pF                            C1_2           C0603_0.90MM_MD
+18pF                            C1_3           C0603_0.90MM_MD
+18pF                            C1_4           C0603_0.90MM_MD
+18pF                            C2_1           C0603_0.90MM_MD
+18pF                            C2_2           C0603_0.90MM_MD
+18pF                            C2_3           C0603_0.90MM_MD
+18pF                            C2_4           C0603_0.90MM_MD
+18pF                            C3_1           C0603_0.90MM_MD
+18pF                            C3_2           C0603_0.90MM_MD
+18pF                            C3_3           C0603_0.90MM_MD
+18pF                            C3_4           C0603_0.90MM_MD
+WS2813A-V2                      D1_1           WS2813A-V2
+WS2813A-V2                      D1_2           WS2813A-V2
+WS2813A-V2                      D1_3           WS2813A-V2
+WS2813A-V2                      D1_4           WS2813A-V2
+WS2813A-V2                      D2_1           WS2813A-V2
+WS2813A-V2                      D2_2           WS2813A-V2
+WS2813A-V2                      D2_3           WS2813A-V2
+WS2813A-V2                      D2_4           WS2813A-V2
+WS2813A-V2                      D3_1           WS2813A-V2
+WS2813A-V2                      D3_2           WS2813A-V2
+WS2813A-V2                      D3_3           WS2813A-V2
+WS2813A-V2                      D3_4           WS2813A-V2
+WS2813A-V2                      D4_1           WS2813A-V2
+WS2813A-V2                      D4_2           WS2813A-V2
+WS2813A-V2                      D4_3           WS2813A-V2
+WS2813A-V2                      D4_4           WS2813A-V2
+WS2813A-V2                      D5_1           WS2813A-V2
+WS2813A-V2                      D5_2           WS2813A-V2
+WS2813A-V2                      D5_3           WS2813A-V2
+WS2813A-V2                      D5_4           WS2813A-V2
+WS2813A-V2                      D6_1           WS2813A-V2
+WS2813A-V2                      D6_2           WS2813A-V2
+WS2813A-V2                      D6_3           WS2813A-V2
+WS2813A-V2                      D6_4           WS2813A-V2
+BZX84B16-7-F                    D7_1           D_SOT-23-3_P
+BZX84B16-7-F                    D7_2           D_SOT-23-3_P
+BZX84B16-7-F                    D7_3           D_SOT-23-3_P
+BZX84B16-7-F                    D7_4           D_SOT-23-3_P
+WS2813A-V2                      D8_1           WS2813A-V2
+WS2813A-V2                      D8_2           WS2813A-V2
+WS2813A-V2                      D8_3           WS2813A-V2
+WS2813A-V2                      D8_4           WS2813A-V2
+WS2813A-V2                      D9_1           WS2813A-V2
+WS2813A-V2                      D9_2           WS2813A-V2
+WS2813A-V2                      D9_3           WS2813A-V2
+WS2813A-V2                      D9_4           WS2813A-V2
+WS2813A-V2                      D10_1          WS2813A-V2
+WS2813A-V2                      D10_2          WS2813A-V2
+WS2813A-V2                      D10_3          WS2813A-V2
+WS2813A-V2                      D10_4          WS2813A-V2
+WS2813A-V2                      D11_1          WS2813A-V2
+WS2813A-V2                      D11_2          WS2813A-V2
+WS2813A-V2                      D11_3          WS2813A-V2
+WS2813A-V2                      D11_4          WS2813A-V2
+WS2813A-V2                      D12_1          WS2813A-V2
+WS2813A-V2                      D12_2          WS2813A-V2
+WS2813A-V2                      D12_3          WS2813A-V2
+WS2813A-V2                      D12_4          WS2813A-V2
+WS2813A-V2                      D13_1          WS2813A-V2
+WS2813A-V2                      D13_2          WS2813A-V2
+WS2813A-V2                      D13_3          WS2813A-V2
+WS2813A-V2                      D13_4          WS2813A-V2
+WS2813A-V2                      D14_1          WS2813A-V2
+WS2813A-V2                      D14_2          WS2813A-V2
+WS2813A-V2                      D14_3          WS2813A-V2
+WS2813A-V2                      D14_4          WS2813A-V2
+WS2813A-V2                      D15_1          WS2813A-V2
+WS2813A-V2                      D15_2          WS2813A-V2
+WS2813A-V2                      D15_3          WS2813A-V2
+WS2813A-V2                      D15_4          WS2813A-V2
+WAGO 2601-1103                  J1             2601-1103
+B2B-PH-SM4-TBT(LF)(SN)          J2_1           B2B-PH-SM4
+B2B-PH-SM4-TBT(LF)(SN)          J2_2           B2B-PH-SM4
+B2B-PH-SM4-TBT(LF)(SN)          J2_3           B2B-PH-SM4
+B2B-PH-SM4-TBT(LF)(SN)          J2_4           B2B-PH-SM4
+PZ254-2-05-S                    J3_1           PZ254-2-05-S
+PZ254-2-05-S                    J3_2           PZ254-2-05-S
+PZ254-2-05-S                    J3_3           PZ254-2-05-S
+PZ254-2-05-S                    J3_4           PZ254-2-05-S
+WAGO 2601-1103                  J4             2601-1103
+GT-USB-7082B                    J5_1           GT-USB-7082B
+GT-USB-7082B                    J5_2           GT-USB-7082B
+GT-USB-7082B                    J5_3           GT-USB-7082B
+GT-USB-7082B                    J5_4           GT-USB-7082B
+20021121-00010T4LF              J6_1           FTSH-105-05-F-DV
+20021121-00010T4LF              J6_2           FTSH-105-05-F-DV
+20021121-00010T4LF              J6_3           FTSH-105-05-F-DV
+20021121-00010T4LF              J6_4           FTSH-105-05-F-DV
+9774080360R                     M5_1           9774080360R-YIYUAN
+9774080360R                     M5_2           9774080360R-YIYUAN
+9774080360R                     M5_3           9774080360R-YIYUAN
+9774080360R                     M5_4           9774080360R-YIYUAN
+9774080360R                     M6_1           9774080360R-YIYUAN
+9774080360R                     M6_2           9774080360R-YIYUAN
+9774080360R                     M6_3           9774080360R-YIYUAN
+9774080360R                     M6_4           9774080360R-YIYUAN
+9774080360R                     M7_1           9774080360R-YIYUAN
+9774080360R                     M7_2           9774080360R-YIYUAN
+9774080360R                     M7_3           9774080360R-YIYUAN
+9774080360R                     M7_4           9774080360R-YIYUAN
+9774080360R                     M8_1           9774080360R-YIYUAN
+9774080360R                     M8_2           9774080360R-YIYUAN
+9774080360R                     M8_3           9774080360R-YIYUAN
+9774080360R                     M8_4           9774080360R-YIYUAN
+H2184-05                        P1_1           H2184-05
+H2184-05                        P1_2           H2184-05
+H2184-05                        P1_3           H2184-05
+H2184-05                        P1_4           H2184-05
+H2184-05                        P2_1           H2184-05
+H2184-05                        P2_2           H2184-05
+H2184-05                        P2_3           H2184-05
+H2184-05                        P2_4           H2184-05
+H2184-05                        P3_1           H2184-05
+H2184-05                        P3_2           H2184-05
+H2184-05                        P3_3           H2184-05
+H2184-05                        P3_4           H2184-05
+H2184-05                        P4_1           H2184-05
+H2184-05                        P4_2           H2184-05
+H2184-05                        P4_3           H2184-05
+H2184-05                        P4_4           H2184-05
+ZXMP4A16GTA                     Q1_1           SOT223
+ZXMP4A16GTA                     Q1_2           SOT223
+ZXMP4A16GTA                     Q1_3           SOT223
+ZXMP4A16GTA                     Q1_4           SOT223
+100kO                           R1_1           R0603_0.55MM_MD
+100kO                           R1_2           R0603_0.55MM_MD
+100kO                           R1_3           R0603_0.55MM_MD
+100kO                           R1_4           R0603_0.55MM_MD
+0O                              R2_1           R0603_0.55MM_HD
+0O                              R2_2           R0603_0.55MM_HD
+0O                              R2_3           R0603_0.55MM_HD
+0O                              R2_4           R0603_0.55MM_HD
+0O                              R3_1           R0603_0.55MM_HD
+0O                              R3_2           R0603_0.55MM_HD
+0O                              R3_3           R0603_0.55MM_HD
+0O                              R3_4           R0603_0.55MM_HD
+10kO                            R4_1           R0603_0.55MM_MD
+10kO                            R4_2           R0603_0.55MM_MD
+10kO                            R4_3           R0603_0.55MM_MD
+10kO                            R4_4           R0603_0.55MM_MD
+0O                              R5_1           R0805_0.70MM_MD
+0O                              R5_2           R0805_0.70MM_MD
+0O                              R5_3           R0805_0.70MM_MD
+0O                              R5_4           R0805_0.70MM_MD
+0O                              R6_1           R0805_0.70MM_MD
+0O                              R6_2           R0805_0.70MM_MD
+0O                              R6_3           R0805_0.70MM_MD
+0O                              R6_4           R0805_0.70MM_MD
+0O                              R7_1           R0805_0.70MM_MD
+0O                              R7_2           R0805_0.70MM_MD
+0O                              R7_3           R0805_0.70MM_MD
+0O                              R7_4           R0805_0.70MM_MD
+0O                              R8_1           R0805_0.70MM_MD
+0O                              R8_2           R0805_0.70MM_MD
+0O                              R8_3           R0805_0.70MM_MD
+0O                              R8_4           R0805_0.70MM_MD
+0O                              R9_1           R0805_0.70MM_MD
+0O                              R9_2           R0805_0.70MM_MD
+0O                              R9_3           R0805_0.70MM_MD
+0O                              R9_4           R0805_0.70MM_MD
+0O                              R10_1          R0805_0.70MM_MD
+0O                              R10_2          R0805_0.70MM_MD
+0O                              R10_3          R0805_0.70MM_MD
+0O                              R10_4          R0805_0.70MM_MD
+0O                              R11_1          R0805_0.70MM_MD
+0O                              R11_2          R0805_0.70MM_MD
+0O                              R11_3          R0805_0.70MM_MD
+0O                              R11_4          R0805_0.70MM_MD
+0O                              R12_1          R0805_0.70MM_MD
+0O                              R12_2          R0805_0.70MM_MD
+0O                              R12_3          R0805_0.70MM_MD
+0O                              R12_4          R0805_0.70MM_MD
+0O                              R13_1          R0805_0.70MM_MD
+0O                              R13_2          R0805_0.70MM_MD
+0O                              R13_3          R0805_0.70MM_MD
+0O                              R13_4          R0805_0.70MM_MD
+0O                              R14_1          R0805_0.70MM_MD
+0O                              R14_2          R0805_0.70MM_MD
+0O                              R14_3          R0805_0.70MM_MD
+0O                              R14_4          R0805_0.70MM_MD
+0O                              R15_1          R0805_0.70MM_MD
+0O                              R15_2          R0805_0.70MM_MD
+0O                              R15_3          R0805_0.70MM_MD
+0O                              R15_4          R0805_0.70MM_MD
+0O                              R16_1          R0805_0.70MM_MD
+0O                              R16_2          R0805_0.70MM_MD
+0O                              R16_3          R0805_0.70MM_MD
+0O                              R16_4          R0805_0.70MM_MD
+0O                              R17_1          R0603_0.55MM_HD
+0O                              R17_2          R0603_0.55MM_HD
+0O                              R17_3          R0603_0.55MM_HD
+0O                              R17_4          R0603_0.55MM_HD
+0O                              R18_1          R0603_0.55MM_HD
+0O                              R18_2          R0603_0.55MM_HD
+0O                              R18_3          R0603_0.55MM_HD
+0O                              R18_4          R0603_0.55MM_HD
+5.1kO                           R19_1          R0603_0.55MM_HD
+5.1kO                           R19_2          R0603_0.55MM_HD
+5.1kO                           R19_3          R0603_0.55MM_HD
+5.1kO                           R19_4          R0603_0.55MM_HD
+5.1kO                           R20_1          R0603_0.55MM_HD
+5.1kO                           R20_2          R0603_0.55MM_HD
+5.1kO                           R20_3          R0603_0.55MM_HD
+5.1kO                           R20_4          R0603_0.55MM_HD
+0O                              R21_1          R0603_0.55MM_HD
+0O                              R21_2          R0603_0.55MM_HD
+0O                              R21_3          R0603_0.55MM_HD
+0O                              R21_4          R0603_0.55MM_HD
+0O                              R22_1          R0603_0.55MM_HD
+0O                              R22_2          R0603_0.55MM_HD
+0O                              R22_3          R0603_0.55MM_HD
+0O                              R22_4          R0603_0.55MM_HD
+0O                              R23_1          R0603_0.55MM_HD
+0O                              R23_2          R0603_0.55MM_HD
+0O                              R23_3          R0603_0.55MM_HD
+0O                              R23_4          R0603_0.55MM_HD
+0O                              R24_1          R0603_0.55MM_HD
+0O                              R24_2          R0603_0.55MM_HD
+0O                              R24_3          R0603_0.55MM_HD
+0O                              R24_4          R0603_0.55MM_HD
+0O                              R25_1          R0603_0.55MM_HD
+0O                              R25_2          R0603_0.55MM_HD
+0O                              R25_3          R0603_0.55MM_HD
+0O                              R25_4          R0603_0.55MM_HD
+0O                              R26_1          R0603_0.55MM_HD
+0O                              R26_2          R0603_0.55MM_HD
+0O                              R26_3          R0603_0.55MM_HD
+0O                              R26_4          R0603_0.55MM_HD
+FSM4JSMATR                      SW1_1          FSM4JSMATR
+FSM4JSMATR                      SW1_2          FSM4JSMATR
+FSM4JSMATR                      SW1_3          FSM4JSMATR
+FSM4JSMATR                      SW1_4          FSM4JSMATR
+FSM4JSMATR                      SW2_1          FSM4JSMATR
+FSM4JSMATR                      SW2_2          FSM4JSMATR
+FSM4JSMATR                      SW2_3          FSM4JSMATR
+FSM4JSMATR                      SW2_4          FSM4JSMATR
+YZ209315103P-01                 TP1_1          YZ209315103P-01
+YZ209315103P-01                 TP1_2          YZ209315103P-01
+YZ209315103P-01                 TP1_3          YZ209315103P-01
+YZ209315103P-01                 TP1_4          YZ209315103P-01
+YZ209315103P-01                 TP2_1          YZ209315103P-01
+YZ209315103P-01                 TP2_2          YZ209315103P-01
+YZ209315103P-01                 TP2_3          YZ209315103P-01
+YZ209315103P-01                 TP2_4          YZ209315103P-01
+YZ209315103P-01                 TP3_1          YZ209315103P-01
+YZ209315103P-01                 TP3_2          YZ209315103P-01
+YZ209315103P-01                 TP3_3          YZ209315103P-01
+YZ209315103P-01                 TP3_4          YZ209315103P-01
+YZ209315103P-01                 TP4_1          YZ209315103P-01
+YZ209315103P-01                 TP4_2          YZ209315103P-01
+YZ209315103P-01                 TP4_3          YZ209315103P-01
+YZ209315103P-01                 TP4_4          YZ209315103P-01
+YZ209315103P-01                 TP5_1          YZ209315103P-01
+YZ209315103P-01                 TP5_2          YZ209315103P-01
+YZ209315103P-01                 TP5_3          YZ209315103P-01
+YZ209315103P-01                 TP5_4          YZ209315103P-01
+YZ209315103P-01                 TP6_1          YZ209315103P-01
+YZ209315103P-01                 TP6_2          YZ209315103P-01
+YZ209315103P-01                 TP6_3          YZ209315103P-01
+YZ209315103P-01                 TP6_4          YZ209315103P-01
+YZ209315103P-01                 TP7_1          YZ209315103P-01
+YZ209315103P-01                 TP7_2          YZ209315103P-01
+YZ209315103P-01                 TP7_3          YZ209315103P-01
+YZ209315103P-01                 TP7_4          YZ209315103P-01
+YZ209315103P-01                 TP8_1          YZ209315103P-01
+YZ209315103P-01                 TP8_2          YZ209315103P-01
+YZ209315103P-01                 TP8_3          YZ209315103P-01
+YZ209315103P-01                 TP8_4          YZ209315103P-01
+YZ209315103P-01                 TP9_1          YZ209315103P-01
+YZ209315103P-01                 TP9_2          YZ209315103P-01
+YZ209315103P-01                 TP9_3          YZ209315103P-01
+YZ209315103P-01                 TP9_4          YZ209315103P-01
+YZ209315103P-01                 TP10_1         YZ209315103P-01
+YZ209315103P-01                 TP10_2         YZ209315103P-01
+YZ209315103P-01                 TP10_3         YZ209315103P-01
+YZ209315103P-01                 TP10_4         YZ209315103P-01
+YZ209315103P-01                 TP11_1         YZ209315103P-01
+YZ209315103P-01                 TP11_2         YZ209315103P-01
+YZ209315103P-01                 TP11_3         YZ209315103P-01
+YZ209315103P-01                 TP11_4         YZ209315103P-01
+YZ209315103P-01                 TP12_1         YZ209315103P-01
+YZ209315103P-01                 TP12_2         YZ209315103P-01
+YZ209315103P-01                 TP12_3         YZ209315103P-01
+YZ209315103P-01                 TP12_4         YZ209315103P-01
+YZ209315103P-01                 TP13_1         YZ209315103P-01
+YZ209315103P-01                 TP13_2         YZ209315103P-01
+YZ209315103P-01                 TP13_3         YZ209315103P-01
+YZ209315103P-01                 TP13_4         YZ209315103P-01
+YZ209315103P-01                 TP14_1         YZ209315103P-01
+YZ209315103P-01                 TP14_2         YZ209315103P-01
+YZ209315103P-01                 TP14_3         YZ209315103P-01
+YZ209315103P-01                 TP14_4         YZ209315103P-01
+YZ209315103P-01                 TP15_1         YZ209315103P-01
+YZ209315103P-01                 TP15_2         YZ209315103P-01
+YZ209315103P-01                 TP15_3         YZ209315103P-01
+YZ209315103P-01                 TP15_4         YZ209315103P-01
+YZ209315103P-01                 TP16_1         YZ209315103P-01
+YZ209315103P-01                 TP16_2         YZ209315103P-01
+YZ209315103P-01                 TP16_3         YZ209315103P-01
+YZ209315103P-01                 TP16_4         YZ209315103P-01
+YZ209315103P-01                 TP17_1         YZ209315103P-01
+YZ209315103P-01                 TP17_2         YZ209315103P-01
+YZ209315103P-01                 TP17_3         YZ209315103P-01
+YZ209315103P-01                 TP17_4         YZ209315103P-01
+YZ209315103P-01                 TP18_1         YZ209315103P-01
+YZ209315103P-01                 TP18_2         YZ209315103P-01
+YZ209315103P-01                 TP18_3         YZ209315103P-01
+YZ209315103P-01                 TP18_4         YZ209315103P-01
+YZ209315103P-01                 TP19_1         YZ209315103P-01
+YZ209315103P-01                 TP19_2         YZ209315103P-01
+YZ209315103P-01                 TP19_3         YZ209315103P-01
+YZ209315103P-01                 TP19_4         YZ209315103P-01
+YZ209315103P-01                 TP20_1         YZ209315103P-01
+YZ209315103P-01                 TP20_2         YZ209315103P-01
+YZ209315103P-01                 TP20_3         YZ209315103P-01
+YZ209315103P-01                 TP20_4         YZ209315103P-01
+YZ209315103P-01                 TP21_1         YZ209315103P-01
+YZ209315103P-01                 TP21_2         YZ209315103P-01
+YZ209315103P-01                 TP21_3         YZ209315103P-01
+YZ209315103P-01                 TP21_4         YZ209315103P-01
+YZ209315103P-01                 TP22_1         YZ209315103P-01
+YZ209315103P-01                 TP22_2         YZ209315103P-01
+YZ209315103P-01                 TP22_3         YZ209315103P-01
+YZ209315103P-01                 TP22_4         YZ209315103P-01
+YZ209315103P-01                 TP23_1         YZ209315103P-01
+YZ209315103P-01                 TP23_2         YZ209315103P-01
+YZ209315103P-01                 TP23_3         YZ209315103P-01
+YZ209315103P-01                 TP23_4         YZ209315103P-01
+YZ209315103P-01                 TP24_1         YZ209315103P-01
+YZ209315103P-01                 TP24_2         YZ209315103P-01
+YZ209315103P-01                 TP24_3         YZ209315103P-01
+YZ209315103P-01                 TP24_4         YZ209315103P-01
+YZ209315103P-01                 TP25_1         YZ209315103P-01
+YZ209315103P-01                 TP25_2         YZ209315103P-01
+YZ209315103P-01                 TP25_3         YZ209315103P-01
+YZ209315103P-01                 TP25_4         YZ209315103P-01
+YZ209315103P-01                 TP26_1         YZ209315103P-01
+YZ209315103P-01                 TP26_2         YZ209315103P-01
+YZ209315103P-01                 TP26_3         YZ209315103P-01
+YZ209315103P-01                 TP26_4         YZ209315103P-01
+YZ209315103P-01                 TP27_1         YZ209315103P-01
+YZ209315103P-01                 TP27_2         YZ209315103P-01
+YZ209315103P-01                 TP27_3         YZ209315103P-01
+YZ209315103P-01                 TP27_4         YZ209315103P-01
+cricket-node-testpoint-placement-templateU1_1           cricket-node-template
+cricket-node-testpoint-placement-templateU1_2           cricket-node-template
+cricket-node-testpoint-placement-templateU1_3           cricket-node-template
+cricket-node-testpoint-placement-templateU1_4           cricket-node-template
+
+<<< Wire List >>>
+
+  NODE  REFERENCE  PIN #   PIN NAME       PIN TYPE    PART VALUE
+
+[00337] VIN-PROTECT_4
+        J3_4       9       9              PASSIVE     PZ254-2-05-S
+        R26_4      2       2              PASSIVE     0O
+        TP5_4      1       1              PASSIVE     YZ209315103P-01
+
+[00336] VIN-PROTECT_3
+        J3_3       9       9              PASSIVE     PZ254-2-05-S
+        R26_3      2       2              PASSIVE     0O
+        TP5_3      1       1              PASSIVE     YZ209315103P-01
+
+[00335] VIN-PROTECT_2
+        J3_2       9       9              PASSIVE     PZ254-2-05-S
+        R26_2      2       2              PASSIVE     0O
+        TP5_2      1       1              PASSIVE     YZ209315103P-01
+
+[00334] VIN-PROTECT_1
+        J3_1       9       9              PASSIVE     PZ254-2-05-S
+        R26_1      2       2              PASSIVE     0O
+        TP5_1      1       1              PASSIVE     YZ209315103P-01
+
+[00333] VDD_4
+        J3_4       3       3              PASSIVE     PZ254-2-05-S
+        J6_4       1       VCC            PASSIVE     20021121-00010T4LF
+        TP17_4     1       1              PASSIVE     YZ209315103P-01
+
+[00332] VDD_3
+        J3_3       3       3              PASSIVE     PZ254-2-05-S
+        J6_3       1       VCC            PASSIVE     20021121-00010T4LF
+        TP17_3     1       1              PASSIVE     YZ209315103P-01
+
+[00331] VDD_2
+        J3_2       3       3              PASSIVE     PZ254-2-05-S
+        J6_2       1       VCC            PASSIVE     20021121-00010T4LF
+        TP17_2     1       1              PASSIVE     YZ209315103P-01
+
+[00330] VDD_1
+        J3_1       3       3              PASSIVE     PZ254-2-05-S
+        J6_1       1       VCC            PASSIVE     20021121-00010T4LF
+        TP17_1     1       1              PASSIVE     YZ209315103P-01
+
+[00329] VBUS_4
+        J5_4       A4,B4,A VBUS           PASSIVE     GT-USB-7082B
+        TP1_4      1       1              PASSIVE     YZ209315103P-01
+
+[00328] VBUS_3
+        J5_3       A4,B4,A VBUS           PASSIVE     GT-USB-7082B
+        TP1_3      1       1              PASSIVE     YZ209315103P-01
+
+[00327] VBUS_2
+        J5_2       A4,B4,A VBUS           PASSIVE     GT-USB-7082B
+        TP1_2      1       1              PASSIVE     YZ209315103P-01
+
+[00326] VBUS_1
+        J5_1       A4,B4,A VBUS           PASSIVE     GT-USB-7082B
+        TP1_1      1       1              PASSIVE     YZ209315103P-01
+
+[00325] USB-DEVICE-D_4_P
+        R2_4       2       2              PASSIVE     0O
+        R17_4      2       2              PASSIVE     0O
+        TP3_4      1       1              PASSIVE     YZ209315103P-01
+
+[00324] USB-DEVICE-D_4_N
+        R3_4       2       2              PASSIVE     0O
+        R18_4      2       2              PASSIVE     0O
+        TP4_4      1       1              PASSIVE     YZ209315103P-01
+
+[00323] USB-DEVICE-D_3_P
+        R2_3       2       2              PASSIVE     0O
+        R17_3      2       2              PASSIVE     0O
+        TP3_3      1       1              PASSIVE     YZ209315103P-01
+
+[00322] USB-DEVICE-D_3_N
+        R3_3       2       2              PASSIVE     0O
+        R18_3      2       2              PASSIVE     0O
+        TP4_3      1       1              PASSIVE     YZ209315103P-01
+
+[00321] USB-DEVICE-D_2_P
+        R2_2       2       2              PASSIVE     0O
+        R17_2      2       2              PASSIVE     0O
+        TP3_2      1       1              PASSIVE     YZ209315103P-01
+
+[00320] USB-DEVICE-D_2_N
+        R3_2       2       2              PASSIVE     0O
+        R18_2      2       2              PASSIVE     0O
+        TP4_2      1       1              PASSIVE     YZ209315103P-01
+
+[00319] USB-DEVICE-D_1_P
+        R2_1       2       2              PASSIVE     0O
+        R17_1      2       2              PASSIVE     0O
+        TP3_1      1       1              PASSIVE     YZ209315103P-01
+
+[00318] USB-DEVICE-D_1_N
+        R3_1       2       2              PASSIVE     0O
+        R18_1      2       2              PASSIVE     0O
+        TP4_1      1       1              PASSIVE     YZ209315103P-01
+
+[00317] TEST2_4
+        J3_4       2       2              PASSIVE     PZ254-2-05-S
+        TP9_4      1       1              PASSIVE     YZ209315103P-01
+
+[00316] TEST2_3
+        J3_3       2       2              PASSIVE     PZ254-2-05-S
+        TP9_3      1       1              PASSIVE     YZ209315103P-01
+
+[00315] TEST2_2
+        J3_2       2       2              PASSIVE     PZ254-2-05-S
+        TP9_2      1       1              PASSIVE     YZ209315103P-01
+
+[00314] TEST2_1
+        J3_1       2       2              PASSIVE     PZ254-2-05-S
+        TP9_1      1       1              PASSIVE     YZ209315103P-01
+
+[00313] TEST1_4
+        J3_4       4       4              PASSIVE     PZ254-2-05-S
+        TP20_4     1       1              PASSIVE     YZ209315103P-01
+
+[00312] TEST1_3
+        J3_3       4       4              PASSIVE     PZ254-2-05-S
+        TP20_3     1       1              PASSIVE     YZ209315103P-01
+
+[00311] TEST1_2
+        J3_2       4       4              PASSIVE     PZ254-2-05-S
+        TP20_2     1       1              PASSIVE     YZ209315103P-01
+
+[00310] TEST1_1
+        J3_1       4       4              PASSIVE     PZ254-2-05-S
+        TP20_1     1       1              PASSIVE     YZ209315103P-01
+
+[00309] TEST0_4
+        J3_4       6       6              PASSIVE     PZ254-2-05-S
+        TP19_4     1       1              PASSIVE     YZ209315103P-01
+
+[00308] TEST0_3
+        J3_3       6       6              PASSIVE     PZ254-2-05-S
+        TP19_3     1       1              PASSIVE     YZ209315103P-01
+
+[00307] TEST0_2
+        J3_2       6       6              PASSIVE     PZ254-2-05-S
+        TP19_2     1       1              PASSIVE     YZ209315103P-01
+
+[00306] TEST0_1
+        J3_1       6       6              PASSIVE     PZ254-2-05-S
+        TP19_1     1       1              PASSIVE     YZ209315103P-01
+
+[00305] SYS-PWR
+        C3_1       2       1              PASSIVE     18pF
+        C3_2       2       1              PASSIVE     18pF
+        C3_3       2       1              PASSIVE     18pF
+        C3_4       2       1              PASSIVE     18pF
+        J1         1       1              PASSIVE     WAGO 2601-1103
+        J4         1       1              PASSIVE     WAGO 2601-1103
+        R11_1      1       1              PASSIVE     0O
+        R11_2      1       1              PASSIVE     0O
+        R11_3      1       1              PASSIVE     0O
+        R11_4      1       1              PASSIVE     0O
+        R14_1      1       1              PASSIVE     0O
+        R14_2      1       1              PASSIVE     0O
+        R14_3      1       1              PASSIVE     0O
+        R14_4      1       1              PASSIVE     0O
+
+[00304] SYS-LIN
+        C1_1       2       1              PASSIVE     18pF
+        C1_2       2       1              PASSIVE     18pF
+        C1_3       2       1              PASSIVE     18pF
+        C1_4       2       1              PASSIVE     18pF
+        J1         2       2              PASSIVE     WAGO 2601-1103
+        J4         2       2              PASSIVE     WAGO 2601-1103
+        R13_1      1       1              PASSIVE     0O
+        R13_2      1       1              PASSIVE     0O
+        R13_3      1       1              PASSIVE     0O
+        R13_4      1       1              PASSIVE     0O
+        R16_1      1       1              PASSIVE     0O
+        R16_2      1       1              PASSIVE     0O
+        R16_3      1       1              PASSIVE     0O
+        R16_4      1       1              PASSIVE     0O
+
+[00303] SYS-GND
+        C2_1       2       1              PASSIVE     18pF
+        C2_2       2       1              PASSIVE     18pF
+        C2_3       2       1              PASSIVE     18pF
+        C2_4       2       1              PASSIVE     18pF
+        J1         3       3              PASSIVE     WAGO 2601-1103
+        J4         3       3              PASSIVE     WAGO 2601-1103
+        R12_1      1       1              PASSIVE     0O
+        R12_2      1       1              PASSIVE     0O
+        R12_3      1       1              PASSIVE     0O
+        R12_4      1       1              PASSIVE     0O
+        R15_1      1       1              PASSIVE     0O
+        R15_2      1       1              PASSIVE     0O
+        R15_3      1       1              PASSIVE     0O
+        R15_4      1       1              PASSIVE     0O
+
+[00302] SWDIO_4
+        R21_4      2       2              PASSIVE     0O
+        R23_4      2       2              PASSIVE     0O
+        TP21_4     1       1              PASSIVE     YZ209315103P-01
+
+[00301] SWDIO_3
+        R21_3      2       2              PASSIVE     0O
+        R23_3      2       2              PASSIVE     0O
+        TP21_3     1       1              PASSIVE     YZ209315103P-01
+
+[00300] SWDIO_2
+        R21_2      2       2              PASSIVE     0O
+        R23_2      2       2              PASSIVE     0O
+        TP21_2     1       1              PASSIVE     YZ209315103P-01
+
+[00299] SWDIO_1
+        R21_1      2       2              PASSIVE     0O
+        R23_1      2       2              PASSIVE     0O
+        TP21_1     1       1              PASSIVE     YZ209315103P-01
+
+[00298] SWDCLK_4
+        R22_4      2       2              PASSIVE     0O
+        R24_4      2       2              PASSIVE     0O
+        TP22_4     1       1              PASSIVE     YZ209315103P-01
+
+[00297] SWDCLK_3
+        R22_3      2       2              PASSIVE     0O
+        R24_3      2       2              PASSIVE     0O
+        TP22_3     1       1              PASSIVE     YZ209315103P-01
+
+[00296] SWDCLK_2
+        R22_2      2       2              PASSIVE     0O
+        R24_2      2       2              PASSIVE     0O
+        TP22_2     1       1              PASSIVE     YZ209315103P-01
+
+[00295] SWDCLK_1
+        R22_1      2       2              PASSIVE     0O
+        R24_1      2       2              PASSIVE     0O
+        TP22_1     1       1              PASSIVE     YZ209315103P-01
+
+[00294] SP-_4
+        J2_4       1       1              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP15_4     1       1              PASSIVE     YZ209315103P-01
+
+[00293] SP-_3
+        J2_3       1       1              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP15_3     1       1              PASSIVE     YZ209315103P-01
+
+[00292] SP-_2
+        J2_2       1       1              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP15_2     1       1              PASSIVE     YZ209315103P-01
+
+[00291] SP-_1
+        J2_1       1       1              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP15_1     1       1              PASSIVE     YZ209315103P-01
+
+[00290] SP+_4
+        J2_4       2       2              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP14_4     1       1              PASSIVE     YZ209315103P-01
+
+[00289] SP+_3
+        J2_3       2       2              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP14_3     1       1              PASSIVE     YZ209315103P-01
+
+[00288] SP+_2
+        J2_2       2       2              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP14_2     1       1              PASSIVE     YZ209315103P-01
+
+[00287] SP+_1
+        J2_1       2       2              PASSIVE     B2B-PH-SM4-TBT(LF)(SN)
+        TP14_1     1       1              PASSIVE     YZ209315103P-01
+
+[00286] RESET_4
+        J6_4       10      R\S\T\         PASSIVE     20021121-00010T4LF
+        SW2_4      B       B              PASSIVE     FSM4JSMATR
+        TP23_4     1       1              PASSIVE     YZ209315103P-01
+
+[00285] RESET_3
+        J6_3       10      R\S\T\         PASSIVE     20021121-00010T4LF
+        SW2_3      B       B              PASSIVE     FSM4JSMATR
+        TP23_3     1       1              PASSIVE     YZ209315103P-01
+
+[00284] RESET_2
+        J6_2       10      R\S\T\         PASSIVE     20021121-00010T4LF
+        SW2_2      B       B              PASSIVE     FSM4JSMATR
+        TP23_2     1       1              PASSIVE     YZ209315103P-01
+
+[00283] RESET_1
+        J6_1       10      R\S\T\         PASSIVE     20021121-00010T4LF
+        SW2_1      B       B              PASSIVE     FSM4JSMATR
+        TP23_1     1       1              PASSIVE     YZ209315103P-01
+
+[00282] NP1-EXT_4
+        D2_4       4       DIN            PASSIVE     WS2813A-V2
+        D3_4       6       BIN            PASSIVE     WS2813A-V2
+        TP10_4     1       1              PASSIVE     YZ209315103P-01
+
+[00281] NP1-EXT_3
+        D2_3       4       DIN            PASSIVE     WS2813A-V2
+        D3_3       6       BIN            PASSIVE     WS2813A-V2
+        TP10_3     1       1              PASSIVE     YZ209315103P-01
+
+[00280] NP1-EXT_2
+        D2_2       4       DIN            PASSIVE     WS2813A-V2
+        D3_2       6       BIN            PASSIVE     WS2813A-V2
+        TP10_2     1       1              PASSIVE     YZ209315103P-01
+
+[00279] NP1-EXT_1
+        D2_1       4       DIN            PASSIVE     WS2813A-V2
+        D3_1       6       BIN            PASSIVE     WS2813A-V2
+        TP10_1     1       1              PASSIVE     YZ209315103P-01
+
+[00278] NP0-EXT_4
+        D1_4       4       DIN            PASSIVE     WS2813A-V2
+        TP6_4      1       1              PASSIVE     YZ209315103P-01
+
+[00277] NP0-EXT_3
+        D1_3       4       DIN            PASSIVE     WS2813A-V2
+        TP6_3      1       1              PASSIVE     YZ209315103P-01
+
+[00276] NP0-EXT_2
+        D1_2       4       DIN            PASSIVE     WS2813A-V2
+        TP6_2      1       1              PASSIVE     YZ209315103P-01
+
+[00275] NP0-EXT_1
+        D1_1       4       DIN            PASSIVE     WS2813A-V2
+        TP6_1      1       1              PASSIVE     YZ209315103P-01
+
+[00274] NetR10_4_1
+        R10_4      1       1              PASSIVE     0O
+        R16_4      2       2              PASSIVE     0O
+
+[00273] NetR10_3_1
+        R10_3      1       1              PASSIVE     0O
+        R16_3      2       2              PASSIVE     0O
+
+[00272] NetR10_2_1
+        R10_2      1       1              PASSIVE     0O
+        R16_2      2       2              PASSIVE     0O
+
+[00271] NetR10_1_1
+        R10_1      1       1              PASSIVE     0O
+        R16_1      2       2              PASSIVE     0O
+
+[00270] NetR9_4_1
+        R9_4       1       1              PASSIVE     0O
+        R15_4      2       2              PASSIVE     0O
+
+[00269] NetR9_3_1
+        R9_3       1       1              PASSIVE     0O
+        R15_3      2       2              PASSIVE     0O
+
+[00268] NetR9_2_1
+        R9_2       1       1              PASSIVE     0O
+        R15_2      2       2              PASSIVE     0O
+
+[00267] NetR9_1_1
+        R9_1       1       1              PASSIVE     0O
+        R15_1      2       2              PASSIVE     0O
+
+[00266] NetR8_4_1
+        R8_4       1       1              PASSIVE     0O
+        R14_4      2       2              PASSIVE     0O
+
+[00265] NetR8_3_1
+        R8_3       1       1              PASSIVE     0O
+        R14_3      2       2              PASSIVE     0O
+
+[00264] NetR8_2_1
+        R8_2       1       1              PASSIVE     0O
+        R14_2      2       2              PASSIVE     0O
+
+[00263] NetR8_1_1
+        R8_1       1       1              PASSIVE     0O
+        R14_1      2       2              PASSIVE     0O
+
+[00262] NetR7_4_1
+        R7_4       1       1              PASSIVE     0O
+        R13_4      2       2              PASSIVE     0O
+
+[00261] NetR7_3_1
+        R7_3       1       1              PASSIVE     0O
+        R13_3      2       2              PASSIVE     0O
+
+[00260] NetR7_2_1
+        R7_2       1       1              PASSIVE     0O
+        R13_2      2       2              PASSIVE     0O
+
+[00259] NetR7_1_1
+        R7_1       1       1              PASSIVE     0O
+        R13_1      2       2              PASSIVE     0O
+
+[00258] NetR6_4_1
+        R6_4       1       1              PASSIVE     0O
+        R12_4      2       2              PASSIVE     0O
+
+[00257] NetR6_3_1
+        R6_3       1       1              PASSIVE     0O
+        R12_3      2       2              PASSIVE     0O
+
+[00256] NetR6_2_1
+        R6_2       1       1              PASSIVE     0O
+        R12_2      2       2              PASSIVE     0O
+
+[00255] NetR6_1_1
+        R6_1       1       1              PASSIVE     0O
+        R12_1      2       2              PASSIVE     0O
+
+[00254] NetR5_4_1
+        R5_4       1       1              PASSIVE     0O
+        R11_4      2       2              PASSIVE     0O
+
+[00253] NetR5_3_1
+        R5_3       1       1              PASSIVE     0O
+        R11_3      2       2              PASSIVE     0O
+
+[00252] NetR5_2_1
+        R5_2       1       1              PASSIVE     0O
+        R11_2      2       2              PASSIVE     0O
+
+[00251] NetR5_1_1
+        R5_1       1       1              PASSIVE     0O
+        R11_1      2       2              PASSIVE     0O
+
+[00250] NetQ1_4_2,4
+        Q1_4       2,4     D              PASSIVE     ZXMP4A16GTA
+        R5_4       2       2              PASSIVE     0O
+        R8_4       2       2              PASSIVE     0O
+        R25_4      1       1              PASSIVE     0O
+
+[00249] NetQ1_3_2,4
+        Q1_3       2,4     D              PASSIVE     ZXMP4A16GTA
+        R5_3       2       2              PASSIVE     0O
+        R8_3       2       2              PASSIVE     0O
+        R25_3      1       1              PASSIVE     0O
+
+[00248] NetQ1_2_2,4
+        Q1_2       2,4     D              PASSIVE     ZXMP4A16GTA
+        R5_2       2       2              PASSIVE     0O
+        R8_2       2       2              PASSIVE     0O
+        R25_2      1       1              PASSIVE     0O
+
+[00247] NetQ1_1_2,4
+        Q1_1       2,4     D              PASSIVE     ZXMP4A16GTA
+        R5_1       2       2              PASSIVE     0O
+        R8_1       2       2              PASSIVE     0O
+        R25_1      1       1              PASSIVE     0O
+
+[00211] NetJ6_4_4
+        J6_4       4       SWDCLK/TCK     PASSIVE     20021121-00010T4LF
+        R23_4      1       1              PASSIVE     0O
+        R24_4      1       1              PASSIVE     0O
+
+[00210] NetJ6_4_2
+        J6_4       2       SWDIO/TMS      PASSIVE     20021121-00010T4LF
+        R21_4      1       1              PASSIVE     0O
+        R22_4      1       1              PASSIVE     0O
+
+[00206] NetJ6_3_4
+        J6_3       4       SWDCLK/TCK     PASSIVE     20021121-00010T4LF
+        R23_3      1       1              PASSIVE     0O
+        R24_3      1       1              PASSIVE     0O
+
+[00205] NetJ6_3_2
+        J6_3       2       SWDIO/TMS      PASSIVE     20021121-00010T4LF
+        R21_3      1       1              PASSIVE     0O
+        R22_3      1       1              PASSIVE     0O
+
+[00201] NetJ6_2_4
+        J6_2       4       SWDCLK/TCK     PASSIVE     20021121-00010T4LF
+        R23_2      1       1              PASSIVE     0O
+        R24_2      1       1              PASSIVE     0O
+
+[00200] NetJ6_2_2
+        J6_2       2       SWDIO/TMS      PASSIVE     20021121-00010T4LF
+        R21_2      1       1              PASSIVE     0O
+        R22_2      1       1              PASSIVE     0O
+
+[00196] NetJ6_1_4
+        J6_1       4       SWDCLK/TCK     PASSIVE     20021121-00010T4LF
+        R23_1      1       1              PASSIVE     0O
+        R24_1      1       1              PASSIVE     0O
+
+[00195] NetJ6_1_2
+        J6_1       2       SWDIO/TMS      PASSIVE     20021121-00010T4LF
+        R21_1      1       1              PASSIVE     0O
+        R22_1      1       1              PASSIVE     0O
+
+[00193] NetJ5_4_B5
+        J5_4       B5      CC2            PASSIVE     GT-USB-7082B
+        R19_4      2       2              PASSIVE     5.1kO
+
+[00191] NetJ5_4_A7
+        J5_4       A7      DN1            PASSIVE     GT-USB-7082B
+        J5_4       B7      DN2            PASSIVE     GT-USB-7082B
+        R17_4      1       1              PASSIVE     0O
+        R18_4      1       1              PASSIVE     0O
+
+[00190] NetJ5_4_A6
+        J5_4       A6      DP1            PASSIVE     GT-USB-7082B
+        J5_4       B6      DP2            PASSIVE     GT-USB-7082B
+        R2_4       1       1              PASSIVE     0O
+        R3_4       1       1              PASSIVE     0O
+
+[00189] NetJ5_4_A5
+        J5_4       A5      CC1            PASSIVE     GT-USB-7082B
+        R20_4      2       2              PASSIVE     5.1kO
+
+[00187] NetJ5_3_B5
+        J5_3       B5      CC2            PASSIVE     GT-USB-7082B
+        R19_3      2       2              PASSIVE     5.1kO
+
+[00185] NetJ5_3_A7
+        J5_3       A7      DN1            PASSIVE     GT-USB-7082B
+        J5_3       B7      DN2            PASSIVE     GT-USB-7082B
+        R17_3      1       1              PASSIVE     0O
+        R18_3      1       1              PASSIVE     0O
+
+[00184] NetJ5_3_A6
+        J5_3       A6      DP1            PASSIVE     GT-USB-7082B
+        J5_3       B6      DP2            PASSIVE     GT-USB-7082B
+        R2_3       1       1              PASSIVE     0O
+        R3_3       1       1              PASSIVE     0O
+
+[00183] NetJ5_3_A5
+        J5_3       A5      CC1            PASSIVE     GT-USB-7082B
+        R20_3      2       2              PASSIVE     5.1kO
+
+[00181] NetJ5_2_B5
+        J5_2       B5      CC2            PASSIVE     GT-USB-7082B
+        R19_2      2       2              PASSIVE     5.1kO
+
+[00179] NetJ5_2_A7
+        J5_2       A7      DN1            PASSIVE     GT-USB-7082B
+        J5_2       B7      DN2            PASSIVE     GT-USB-7082B
+        R17_2      1       1              PASSIVE     0O
+        R18_2      1       1              PASSIVE     0O
+
+[00178] NetJ5_2_A6
+        J5_2       A6      DP1            PASSIVE     GT-USB-7082B
+        J5_2       B6      DP2            PASSIVE     GT-USB-7082B
+        R2_2       1       1              PASSIVE     0O
+        R3_2       1       1              PASSIVE     0O
+
+[00177] NetJ5_2_A5
+        J5_2       A5      CC1            PASSIVE     GT-USB-7082B
+        R20_2      2       2              PASSIVE     5.1kO
+
+[00175] NetJ5_1_B5
+        J5_1       B5      CC2            PASSIVE     GT-USB-7082B
+        R19_1      2       2              PASSIVE     5.1kO
+
+[00173] NetJ5_1_A7
+        J5_1       A7      DN1            PASSIVE     GT-USB-7082B
+        J5_1       B7      DN2            PASSIVE     GT-USB-7082B
+        R17_1      1       1              PASSIVE     0O
+        R18_1      1       1              PASSIVE     0O
+
+[00172] NetJ5_1_A6
+        J5_1       A6      DP1            PASSIVE     GT-USB-7082B
+        J5_1       B6      DP2            PASSIVE     GT-USB-7082B
+        R2_1       1       1              PASSIVE     0O
+        R3_1       1       1              PASSIVE     0O
+
+[00171] NetJ5_1_A5
+        J5_1       A5      CC1            PASSIVE     GT-USB-7082B
+        R20_1      2       2              PASSIVE     5.1kO
+
+[00154] NetD14_4_3
+        D14_4      3       DO             PASSIVE     WS2813A-V2
+        D15_4      4       DIN            PASSIVE     WS2813A-V2
+
+[00152] NetD14_3_3
+        D14_3      3       DO             PASSIVE     WS2813A-V2
+        D15_3      4       DIN            PASSIVE     WS2813A-V2
+
+[00150] NetD14_2_3
+        D14_2      3       DO             PASSIVE     WS2813A-V2
+        D15_2      4       DIN            PASSIVE     WS2813A-V2
+
+[00148] NetD14_1_3
+        D14_1      3       DO             PASSIVE     WS2813A-V2
+        D15_1      4       DIN            PASSIVE     WS2813A-V2
+
+[00146] NetD13_4_3
+        D13_4      3       DO             PASSIVE     WS2813A-V2
+        D14_4      4       DIN            PASSIVE     WS2813A-V2
+        D15_4      6       BIN            PASSIVE     WS2813A-V2
+
+[00144] NetD13_3_3
+        D13_3      3       DO             PASSIVE     WS2813A-V2
+        D14_3      4       DIN            PASSIVE     WS2813A-V2
+        D15_3      6       BIN            PASSIVE     WS2813A-V2
+
+[00142] NetD13_2_3
+        D13_2      3       DO             PASSIVE     WS2813A-V2
+        D14_2      4       DIN            PASSIVE     WS2813A-V2
+        D15_2      6       BIN            PASSIVE     WS2813A-V2
+
+[00140] NetD13_1_3
+        D13_1      3       DO             PASSIVE     WS2813A-V2
+        D14_1      4       DIN            PASSIVE     WS2813A-V2
+        D15_1      6       BIN            PASSIVE     WS2813A-V2
+
+[00138] NetD12_4_3
+        D12_4      3       DO             PASSIVE     WS2813A-V2
+        D13_4      4       DIN            PASSIVE     WS2813A-V2
+        D14_4      6       BIN            PASSIVE     WS2813A-V2
+
+[00136] NetD12_3_3
+        D12_3      3       DO             PASSIVE     WS2813A-V2
+        D13_3      4       DIN            PASSIVE     WS2813A-V2
+        D14_3      6       BIN            PASSIVE     WS2813A-V2
+
+[00134] NetD12_2_3
+        D12_2      3       DO             PASSIVE     WS2813A-V2
+        D13_2      4       DIN            PASSIVE     WS2813A-V2
+        D14_2      6       BIN            PASSIVE     WS2813A-V2
+
+[00132] NetD12_1_3
+        D12_1      3       DO             PASSIVE     WS2813A-V2
+        D13_1      4       DIN            PASSIVE     WS2813A-V2
+        D14_1      6       BIN            PASSIVE     WS2813A-V2
+
+[00130] NetD11_4_3
+        D11_4      3       DO             PASSIVE     WS2813A-V2
+        D12_4      4       DIN            PASSIVE     WS2813A-V2
+        D13_4      6       BIN            PASSIVE     WS2813A-V2
+
+[00128] NetD11_3_3
+        D11_3      3       DO             PASSIVE     WS2813A-V2
+        D12_3      4       DIN            PASSIVE     WS2813A-V2
+        D13_3      6       BIN            PASSIVE     WS2813A-V2
+
+[00126] NetD11_2_3
+        D11_2      3       DO             PASSIVE     WS2813A-V2
+        D12_2      4       DIN            PASSIVE     WS2813A-V2
+        D13_2      6       BIN            PASSIVE     WS2813A-V2
+
+[00124] NetD11_1_3
+        D11_1      3       DO             PASSIVE     WS2813A-V2
+        D12_1      4       DIN            PASSIVE     WS2813A-V2
+        D13_1      6       BIN            PASSIVE     WS2813A-V2
+
+[00122] NetD10_4_3
+        D10_4      3       DO             PASSIVE     WS2813A-V2
+        D11_4      4       DIN            PASSIVE     WS2813A-V2
+        D12_4      6       BIN            PASSIVE     WS2813A-V2
+
+[00120] NetD10_3_3
+        D10_3      3       DO             PASSIVE     WS2813A-V2
+        D11_3      4       DIN            PASSIVE     WS2813A-V2
+        D12_3      6       BIN            PASSIVE     WS2813A-V2
+
+[00118] NetD10_2_3
+        D10_2      3       DO             PASSIVE     WS2813A-V2
+        D11_2      4       DIN            PASSIVE     WS2813A-V2
+        D12_2      6       BIN            PASSIVE     WS2813A-V2
+
+[00116] NetD10_1_3
+        D10_1      3       DO             PASSIVE     WS2813A-V2
+        D11_1      4       DIN            PASSIVE     WS2813A-V2
+        D12_1      6       BIN            PASSIVE     WS2813A-V2
+
+[00114] NetD9_4_3
+        D9_4       3       DO             PASSIVE     WS2813A-V2
+        D10_4      4       DIN            PASSIVE     WS2813A-V2
+        D11_4      6       BIN            PASSIVE     WS2813A-V2
+
+[00112] NetD9_3_3
+        D9_3       3       DO             PASSIVE     WS2813A-V2
+        D10_3      4       DIN            PASSIVE     WS2813A-V2
+        D11_3      6       BIN            PASSIVE     WS2813A-V2
+
+[00110] NetD9_2_3
+        D9_2       3       DO             PASSIVE     WS2813A-V2
+        D10_2      4       DIN            PASSIVE     WS2813A-V2
+        D11_2      6       BIN            PASSIVE     WS2813A-V2
+
+[00108] NetD9_1_3
+        D9_1       3       DO             PASSIVE     WS2813A-V2
+        D10_1      4       DIN            PASSIVE     WS2813A-V2
+        D11_1      6       BIN            PASSIVE     WS2813A-V2
+
+[00106] NetD8_4_3
+        D8_4       3       DO             PASSIVE     WS2813A-V2
+        D9_4       4       DIN            PASSIVE     WS2813A-V2
+        D10_4      6       BIN            PASSIVE     WS2813A-V2
+
+[00104] NetD8_3_3
+        D8_3       3       DO             PASSIVE     WS2813A-V2
+        D9_3       4       DIN            PASSIVE     WS2813A-V2
+        D10_3      6       BIN            PASSIVE     WS2813A-V2
+
+[00102] NetD8_2_3
+        D8_2       3       DO             PASSIVE     WS2813A-V2
+        D9_2       4       DIN            PASSIVE     WS2813A-V2
+        D10_2      6       BIN            PASSIVE     WS2813A-V2
+
+[00100] NetD8_1_3
+        D8_1       3       DO             PASSIVE     WS2813A-V2
+        D9_1       4       DIN            PASSIVE     WS2813A-V2
+        D10_1      6       BIN            PASSIVE     WS2813A-V2
+
+[00098] NetD7_4_3
+        D7_4       3       K              PASSIVE     BZX84B16-7-F
+        Q1_4       3       S              PASSIVE     ZXMP4A16GTA
+        R26_4      1       1              PASSIVE     0O
+
+[00097] NetD7_4_1
+        D7_4       1       A              PASSIVE     BZX84B16-7-F
+        Q1_4       1       G              PASSIVE     ZXMP4A16GTA
+        R4_4       1       1              PASSIVE     10kO
+
+[00096] NetD7_3_3
+        D7_3       3       K              PASSIVE     BZX84B16-7-F
+        Q1_3       3       S              PASSIVE     ZXMP4A16GTA
+        R26_3      1       1              PASSIVE     0O
+
+[00095] NetD7_3_1
+        D7_3       1       A              PASSIVE     BZX84B16-7-F
+        Q1_3       1       G              PASSIVE     ZXMP4A16GTA
+        R4_3       1       1              PASSIVE     10kO
+
+[00094] NetD7_2_3
+        D7_2       3       K              PASSIVE     BZX84B16-7-F
+        Q1_2       3       S              PASSIVE     ZXMP4A16GTA
+        R26_2      1       1              PASSIVE     0O
+
+[00093] NetD7_2_1
+        D7_2       1       A              PASSIVE     BZX84B16-7-F
+        Q1_2       1       G              PASSIVE     ZXMP4A16GTA
+        R4_2       1       1              PASSIVE     10kO
+
+[00092] NetD7_1_3
+        D7_1       3       K              PASSIVE     BZX84B16-7-F
+        Q1_1       3       S              PASSIVE     ZXMP4A16GTA
+        R26_1      1       1              PASSIVE     0O
+
+[00091] NetD7_1_1
+        D7_1       1       A              PASSIVE     BZX84B16-7-F
+        Q1_1       1       G              PASSIVE     ZXMP4A16GTA
+        R4_1       1       1              PASSIVE     10kO
+
+[00090] NetD6_4_3
+        D6_4       3       DO             PASSIVE     WS2813A-V2
+        D8_4       4       DIN            PASSIVE     WS2813A-V2
+        D9_4       6       BIN            PASSIVE     WS2813A-V2
+
+[00088] NetD6_3_3
+        D6_3       3       DO             PASSIVE     WS2813A-V2
+        D8_3       4       DIN            PASSIVE     WS2813A-V2
+        D9_3       6       BIN            PASSIVE     WS2813A-V2
+
+[00086] NetD6_2_3
+        D6_2       3       DO             PASSIVE     WS2813A-V2
+        D8_2       4       DIN            PASSIVE     WS2813A-V2
+        D9_2       6       BIN            PASSIVE     WS2813A-V2
+
+[00084] NetD6_1_3
+        D6_1       3       DO             PASSIVE     WS2813A-V2
+        D8_1       4       DIN            PASSIVE     WS2813A-V2
+        D9_1       6       BIN            PASSIVE     WS2813A-V2
+
+[00082] NetD5_4_3
+        D5_4       3       DO             PASSIVE     WS2813A-V2
+        D6_4       4       DIN            PASSIVE     WS2813A-V2
+        D8_4       6       BIN            PASSIVE     WS2813A-V2
+
+[00080] NetD5_3_3
+        D5_3       3       DO             PASSIVE     WS2813A-V2
+        D6_3       4       DIN            PASSIVE     WS2813A-V2
+        D8_3       6       BIN            PASSIVE     WS2813A-V2
+
+[00078] NetD5_2_3
+        D5_2       3       DO             PASSIVE     WS2813A-V2
+        D6_2       4       DIN            PASSIVE     WS2813A-V2
+        D8_2       6       BIN            PASSIVE     WS2813A-V2
+
+[00076] NetD5_1_3
+        D5_1       3       DO             PASSIVE     WS2813A-V2
+        D6_1       4       DIN            PASSIVE     WS2813A-V2
+        D8_1       6       BIN            PASSIVE     WS2813A-V2
+
+[00074] NetD4_4_3
+        D4_4       3       DO             PASSIVE     WS2813A-V2
+        D5_4       4       DIN            PASSIVE     WS2813A-V2
+        D6_4       6       BIN            PASSIVE     WS2813A-V2
+
+[00072] NetD4_3_3
+        D4_3       3       DO             PASSIVE     WS2813A-V2
+        D5_3       4       DIN            PASSIVE     WS2813A-V2
+        D6_3       6       BIN            PASSIVE     WS2813A-V2
+
+[00070] NetD4_2_3
+        D4_2       3       DO             PASSIVE     WS2813A-V2
+        D5_2       4       DIN            PASSIVE     WS2813A-V2
+        D6_2       6       BIN            PASSIVE     WS2813A-V2
+
+[00068] NetD4_1_3
+        D4_1       3       DO             PASSIVE     WS2813A-V2
+        D5_1       4       DIN            PASSIVE     WS2813A-V2
+        D6_1       6       BIN            PASSIVE     WS2813A-V2
+
+[00066] NetD3_4_3
+        D3_4       3       DO             PASSIVE     WS2813A-V2
+        D4_4       4       DIN            PASSIVE     WS2813A-V2
+        D5_4       6       BIN            PASSIVE     WS2813A-V2
+
+[00064] NetD3_3_3
+        D3_3       3       DO             PASSIVE     WS2813A-V2
+        D4_3       4       DIN            PASSIVE     WS2813A-V2
+        D5_3       6       BIN            PASSIVE     WS2813A-V2
+
+[00062] NetD3_2_3
+        D3_2       3       DO             PASSIVE     WS2813A-V2
+        D4_2       4       DIN            PASSIVE     WS2813A-V2
+        D5_2       6       BIN            PASSIVE     WS2813A-V2
+
+[00060] NetD3_1_3
+        D3_1       3       DO             PASSIVE     WS2813A-V2
+        D4_1       4       DIN            PASSIVE     WS2813A-V2
+        D5_1       6       BIN            PASSIVE     WS2813A-V2
+
+[00058] NetD2_4_3
+        D2_4       3       DO             PASSIVE     WS2813A-V2
+        D3_4       4       DIN            PASSIVE     WS2813A-V2
+        D4_4       6       BIN            PASSIVE     WS2813A-V2
+
+[00056] NetD2_3_3
+        D2_3       3       DO             PASSIVE     WS2813A-V2
+        D3_3       4       DIN            PASSIVE     WS2813A-V2
+        D4_3       6       BIN            PASSIVE     WS2813A-V2
+
+[00054] NetD2_2_3
+        D2_2       3       DO             PASSIVE     WS2813A-V2
+        D3_2       4       DIN            PASSIVE     WS2813A-V2
+        D4_2       6       BIN            PASSIVE     WS2813A-V2
+
+[00052] NetD2_1_3
+        D2_1       3       DO             PASSIVE     WS2813A-V2
+        D3_1       4       DIN            PASSIVE     WS2813A-V2
+        D4_1       6       BIN            PASSIVE     WS2813A-V2
+
+[00036] LIN-IO_4
+        R7_4       2       2              PASSIVE     0O
+        R10_4      2       2              PASSIVE     0O
+        TP13_4     1       1              PASSIVE     YZ209315103P-01
+
+[00035] LIN-IO_3
+        R7_3       2       2              PASSIVE     0O
+        R10_3      2       2              PASSIVE     0O
+        TP13_3     1       1              PASSIVE     YZ209315103P-01
+
+[00034] LIN-IO_2
+        R7_2       2       2              PASSIVE     0O
+        R10_2      2       2              PASSIVE     0O
+        TP13_2     1       1              PASSIVE     YZ209315103P-01
+
+[00033] LIN-IO_1
+        R7_1       2       2              PASSIVE     0O
+        R10_1      2       2              PASSIVE     0O
+        TP13_1     1       1              PASSIVE     YZ209315103P-01
+
+[00032] GND_4
+        C1_4       1       1              PASSIVE     18pF
+        C2_4       1       1              PASSIVE     18pF
+        C3_4       1       1              PASSIVE     18pF
+        D1_4       5       GND            PASSIVE     WS2813A-V2
+        D1_4       6       BIN            PASSIVE     WS2813A-V2
+        D2_4       5       GND            PASSIVE     WS2813A-V2
+        D2_4       6       BIN            PASSIVE     WS2813A-V2
+        D3_4       5       GND            PASSIVE     WS2813A-V2
+        D4_4       5       GND            PASSIVE     WS2813A-V2
+        D5_4       5       GND            PASSIVE     WS2813A-V2
+        D6_4       5       GND            PASSIVE     WS2813A-V2
+        D8_4       5       GND            PASSIVE     WS2813A-V2
+        D9_4       5       GND            PASSIVE     WS2813A-V2
+        D10_4      5       GND            PASSIVE     WS2813A-V2
+        D11_4      5       GND            PASSIVE     WS2813A-V2
+        D12_4      5       GND            PASSIVE     WS2813A-V2
+        D13_4      5       GND            PASSIVE     WS2813A-V2
+        D14_4      5       GND            PASSIVE     WS2813A-V2
+        D15_4      5       GND            PASSIVE     WS2813A-V2
+        J3_4       1       1              PASSIVE     PZ254-2-05-S
+        J3_4       10      10             PASSIVE     PZ254-2-05-S
+        J5_4       A12,B12 GND            PASSIVE     GT-USB-7082B
+        J6_4       3       GND            PASSIVE     20021121-00010T4LF
+        J6_4       5       GND            PASSIVE     20021121-00010T4LF
+        J6_4       9       GND_DETECT     PASSIVE     20021121-00010T4LF
+        R4_4       2       2              PASSIVE     10kO
+        R6_4       2       2              PASSIVE     0O
+        R9_4       2       2              PASSIVE     0O
+        R19_4      1       1              PASSIVE     5.1kO
+        R20_4      1       1              PASSIVE     5.1kO
+        SW1_4      A       A              PASSIVE     FSM4JSMATR
+        SW2_4      A       A              PASSIVE     FSM4JSMATR
+        TP2_4      1       1              PASSIVE     YZ209315103P-01
+        TP24_4     1       1              PASSIVE     YZ209315103P-01
+        TP25_4     1       1              PASSIVE     YZ209315103P-01
+        TP26_4     1       1              PASSIVE     YZ209315103P-01
+
+[00031] GND_3
+        C1_3       1       1              PASSIVE     18pF
+        C2_3       1       1              PASSIVE     18pF
+        C3_3       1       1              PASSIVE     18pF
+        D1_3       5       GND            PASSIVE     WS2813A-V2
+        D1_3       6       BIN            PASSIVE     WS2813A-V2
+        D2_3       5       GND            PASSIVE     WS2813A-V2
+        D2_3       6       BIN            PASSIVE     WS2813A-V2
+        D3_3       5       GND            PASSIVE     WS2813A-V2
+        D4_3       5       GND            PASSIVE     WS2813A-V2
+        D5_3       5       GND            PASSIVE     WS2813A-V2
+        D6_3       5       GND            PASSIVE     WS2813A-V2
+        D8_3       5       GND            PASSIVE     WS2813A-V2
+        D9_3       5       GND            PASSIVE     WS2813A-V2
+        D10_3      5       GND            PASSIVE     WS2813A-V2
+        D11_3      5       GND            PASSIVE     WS2813A-V2
+        D12_3      5       GND            PASSIVE     WS2813A-V2
+        D13_3      5       GND            PASSIVE     WS2813A-V2
+        D14_3      5       GND            PASSIVE     WS2813A-V2
+        D15_3      5       GND            PASSIVE     WS2813A-V2
+        J3_3       1       1              PASSIVE     PZ254-2-05-S
+        J3_3       10      10             PASSIVE     PZ254-2-05-S
+        J5_3       A12,B12 GND            PASSIVE     GT-USB-7082B
+        J6_3       3       GND            PASSIVE     20021121-00010T4LF
+        J6_3       5       GND            PASSIVE     20021121-00010T4LF
+        J6_3       9       GND_DETECT     PASSIVE     20021121-00010T4LF
+        R4_3       2       2              PASSIVE     10kO
+        R6_3       2       2              PASSIVE     0O
+        R9_3       2       2              PASSIVE     0O
+        R19_3      1       1              PASSIVE     5.1kO
+        R20_3      1       1              PASSIVE     5.1kO
+        SW1_3      A       A              PASSIVE     FSM4JSMATR
+        SW2_3      A       A              PASSIVE     FSM4JSMATR
+        TP2_3      1       1              PASSIVE     YZ209315103P-01
+        TP24_3     1       1              PASSIVE     YZ209315103P-01
+        TP25_3     1       1              PASSIVE     YZ209315103P-01
+        TP26_3     1       1              PASSIVE     YZ209315103P-01
+
+[00030] GND_2
+        C1_2       1       1              PASSIVE     18pF
+        C2_2       1       1              PASSIVE     18pF
+        C3_2       1       1              PASSIVE     18pF
+        D1_2       5       GND            PASSIVE     WS2813A-V2
+        D1_2       6       BIN            PASSIVE     WS2813A-V2
+        D2_2       5       GND            PASSIVE     WS2813A-V2
+        D2_2       6       BIN            PASSIVE     WS2813A-V2
+        D3_2       5       GND            PASSIVE     WS2813A-V2
+        D4_2       5       GND            PASSIVE     WS2813A-V2
+        D5_2       5       GND            PASSIVE     WS2813A-V2
+        D6_2       5       GND            PASSIVE     WS2813A-V2
+        D8_2       5       GND            PASSIVE     WS2813A-V2
+        D9_2       5       GND            PASSIVE     WS2813A-V2
+        D10_2      5       GND            PASSIVE     WS2813A-V2
+        D11_2      5       GND            PASSIVE     WS2813A-V2
+        D12_2      5       GND            PASSIVE     WS2813A-V2
+        D13_2      5       GND            PASSIVE     WS2813A-V2
+        D14_2      5       GND            PASSIVE     WS2813A-V2
+        D15_2      5       GND            PASSIVE     WS2813A-V2
+        J3_2       1       1              PASSIVE     PZ254-2-05-S
+        J3_2       10      10             PASSIVE     PZ254-2-05-S
+        J5_2       A12,B12 GND            PASSIVE     GT-USB-7082B
+        J6_2       3       GND            PASSIVE     20021121-00010T4LF
+        J6_2       5       GND            PASSIVE     20021121-00010T4LF
+        J6_2       9       GND_DETECT     PASSIVE     20021121-00010T4LF
+        R4_2       2       2              PASSIVE     10kO
+        R6_2       2       2              PASSIVE     0O
+        R9_2       2       2              PASSIVE     0O
+        R19_2      1       1              PASSIVE     5.1kO
+        R20_2      1       1              PASSIVE     5.1kO
+        SW1_2      A       A              PASSIVE     FSM4JSMATR
+        SW2_2      A       A              PASSIVE     FSM4JSMATR
+        TP2_2      1       1              PASSIVE     YZ209315103P-01
+        TP24_2     1       1              PASSIVE     YZ209315103P-01
+        TP25_2     1       1              PASSIVE     YZ209315103P-01
+        TP26_2     1       1              PASSIVE     YZ209315103P-01
+
+[00029] GND_1
+        C1_1       1       1              PASSIVE     18pF
+        C2_1       1       1              PASSIVE     18pF
+        C3_1       1       1              PASSIVE     18pF
+        D1_1       5       GND            PASSIVE     WS2813A-V2
+        D1_1       6       BIN            PASSIVE     WS2813A-V2
+        D2_1       5       GND            PASSIVE     WS2813A-V2
+        D2_1       6       BIN            PASSIVE     WS2813A-V2
+        D3_1       5       GND            PASSIVE     WS2813A-V2
+        D4_1       5       GND            PASSIVE     WS2813A-V2
+        D5_1       5       GND            PASSIVE     WS2813A-V2
+        D6_1       5       GND            PASSIVE     WS2813A-V2
+        D8_1       5       GND            PASSIVE     WS2813A-V2
+        D9_1       5       GND            PASSIVE     WS2813A-V2
+        D10_1      5       GND            PASSIVE     WS2813A-V2
+        D11_1      5       GND            PASSIVE     WS2813A-V2
+        D12_1      5       GND            PASSIVE     WS2813A-V2
+        D13_1      5       GND            PASSIVE     WS2813A-V2
+        D14_1      5       GND            PASSIVE     WS2813A-V2
+        D15_1      5       GND            PASSIVE     WS2813A-V2
+        J3_1       1       1              PASSIVE     PZ254-2-05-S
+        J3_1       10      10             PASSIVE     PZ254-2-05-S
+        J5_1       A12,B12 GND            PASSIVE     GT-USB-7082B
+        J6_1       3       GND            PASSIVE     20021121-00010T4LF
+        J6_1       5       GND            PASSIVE     20021121-00010T4LF
+        J6_1       9       GND_DETECT     PASSIVE     20021121-00010T4LF
+        R4_1       2       2              PASSIVE     10kO
+        R6_1       2       2              PASSIVE     0O
+        R9_1       2       2              PASSIVE     0O
+        R19_1      1       1              PASSIVE     5.1kO
+        R20_1      1       1              PASSIVE     5.1kO
+        SW1_1      A       A              PASSIVE     FSM4JSMATR
+        SW2_1      A       A              PASSIVE     FSM4JSMATR
+        TP2_1      1       1              PASSIVE     YZ209315103P-01
+        TP24_1     1       1              PASSIVE     YZ209315103P-01
+        TP25_1     1       1              PASSIVE     YZ209315103P-01
+        TP26_1     1       1              PASSIVE     YZ209315103P-01
+
+[00028] CHG-LOOP_4
+        J3_4       8       8              PASSIVE     PZ254-2-05-S
+        TP16_4     1       1              PASSIVE     YZ209315103P-01
+
+[00027] CHG-LOOP_3
+        J3_3       8       8              PASSIVE     PZ254-2-05-S
+        TP16_3     1       1              PASSIVE     YZ209315103P-01
+
+[00026] CHG-LOOP_2
+        J3_2       8       8              PASSIVE     PZ254-2-05-S
+        TP16_2     1       1              PASSIVE     YZ209315103P-01
+
+[00025] CHG-LOOP_1
+        J3_1       8       8              PASSIVE     PZ254-2-05-S
+        TP16_1     1       1              PASSIVE     YZ209315103P-01
+
+[00024] BTN0-EXT_4
+        R1_4       1       1              PASSIVE     100kO
+        SW1_4      B       B              PASSIVE     FSM4JSMATR
+        TP7_4      1       1              PASSIVE     YZ209315103P-01
+
+[00023] BTN0-EXT_3
+        R1_3       1       1              PASSIVE     100kO
+        SW1_3      B       B              PASSIVE     FSM4JSMATR
+        TP7_3      1       1              PASSIVE     YZ209315103P-01
+
+[00022] BTN0-EXT_2
+        R1_2       1       1              PASSIVE     100kO
+        SW1_2      B       B              PASSIVE     FSM4JSMATR
+        TP7_2      1       1              PASSIVE     YZ209315103P-01
+
+[00021] BTN0-EXT_1
+        R1_1       1       1              PASSIVE     100kO
+        SW1_1      B       B              PASSIVE     FSM4JSMATR
+        TP7_1      1       1              PASSIVE     YZ209315103P-01
+
+[00020] AUX1-EXT_4
+        J3_4       5       5              PASSIVE     PZ254-2-05-S
+        TP11_4     1       1              PASSIVE     YZ209315103P-01
+
+[00019] AUX1-EXT_3
+        J3_3       5       5              PASSIVE     PZ254-2-05-S
+        TP11_3     1       1              PASSIVE     YZ209315103P-01
+
+[00018] AUX1-EXT_2
+        J3_2       5       5              PASSIVE     PZ254-2-05-S
+        TP11_2     1       1              PASSIVE     YZ209315103P-01
+
+[00017] AUX1-EXT_1
+        J3_1       5       5              PASSIVE     PZ254-2-05-S
+        TP11_1     1       1              PASSIVE     YZ209315103P-01
+
+[00016] +VIN_4
+        R25_4      2       2              PASSIVE     0O
+        TP27_4     1       1              PASSIVE     YZ209315103P-01
+
+[00015] +VIN_3
+        R25_3      2       2              PASSIVE     0O
+        TP27_3     1       1              PASSIVE     YZ209315103P-01
+
+[00014] +VIN_2
+        R25_2      2       2              PASSIVE     0O
+        TP27_2     1       1              PASSIVE     YZ209315103P-01
+
+[00013] +VIN_1
+        R25_1      2       2              PASSIVE     0O
+        TP27_1     1       1              PASSIVE     YZ209315103P-01
+
+[00012] +5v0_4
+        J3_4       7       7              PASSIVE     PZ254-2-05-S
+        R1_4       2       2              PASSIVE     100kO
+        TP18_4     1       1              PASSIVE     YZ209315103P-01
+
+[00011] +5v0_3
+        J3_3       7       7              PASSIVE     PZ254-2-05-S
+        R1_3       2       2              PASSIVE     100kO
+        TP18_3     1       1              PASSIVE     YZ209315103P-01
+
+[00010] +5v0_2
+        J3_2       7       7              PASSIVE     PZ254-2-05-S
+        R1_2       2       2              PASSIVE     100kO
+        TP18_2     1       1              PASSIVE     YZ209315103P-01
+
+[00009] +5v0_1
+        J3_1       7       7              PASSIVE     PZ254-2-05-S
+        R1_1       2       2              PASSIVE     100kO
+        TP18_1     1       1              PASSIVE     YZ209315103P-01
+
+[00008] +5v0-CH1_4
+        D2_4       2       VCC            PASSIVE     WS2813A-V2
+        D3_4       2       VCC            PASSIVE     WS2813A-V2
+        D4_4       2       VCC            PASSIVE     WS2813A-V2
+        D5_4       2       VCC            PASSIVE     WS2813A-V2
+        D6_4       2       VCC            PASSIVE     WS2813A-V2
+        D8_4       2       VCC            PASSIVE     WS2813A-V2
+        D9_4       2       VCC            PASSIVE     WS2813A-V2
+        D10_4      2       VCC            PASSIVE     WS2813A-V2
+        D11_4      2       VCC            PASSIVE     WS2813A-V2
+        D12_4      2       VCC            PASSIVE     WS2813A-V2
+        D13_4      2       VCC            PASSIVE     WS2813A-V2
+        D14_4      2       VCC            PASSIVE     WS2813A-V2
+        D15_4      2       VCC            PASSIVE     WS2813A-V2
+        TP12_4     1       1              PASSIVE     YZ209315103P-01
+
+[00007] +5v0-CH1_3
+        D2_3       2       VCC            PASSIVE     WS2813A-V2
+        D3_3       2       VCC            PASSIVE     WS2813A-V2
+        D4_3       2       VCC            PASSIVE     WS2813A-V2
+        D5_3       2       VCC            PASSIVE     WS2813A-V2
+        D6_3       2       VCC            PASSIVE     WS2813A-V2
+        D8_3       2       VCC            PASSIVE     WS2813A-V2
+        D9_3       2       VCC            PASSIVE     WS2813A-V2
+        D10_3      2       VCC            PASSIVE     WS2813A-V2
+        D11_3      2       VCC            PASSIVE     WS2813A-V2
+        D12_3      2       VCC            PASSIVE     WS2813A-V2
+        D13_3      2       VCC            PASSIVE     WS2813A-V2
+        D14_3      2       VCC            PASSIVE     WS2813A-V2
+        D15_3      2       VCC            PASSIVE     WS2813A-V2
+        TP12_3     1       1              PASSIVE     YZ209315103P-01
+
+[00006] +5v0-CH1_2
+        D2_2       2       VCC            PASSIVE     WS2813A-V2
+        D3_2       2       VCC            PASSIVE     WS2813A-V2
+        D4_2       2       VCC            PASSIVE     WS2813A-V2
+        D5_2       2       VCC            PASSIVE     WS2813A-V2
+        D6_2       2       VCC            PASSIVE     WS2813A-V2
+        D8_2       2       VCC            PASSIVE     WS2813A-V2
+        D9_2       2       VCC            PASSIVE     WS2813A-V2
+        D10_2      2       VCC            PASSIVE     WS2813A-V2
+        D11_2      2       VCC            PASSIVE     WS2813A-V2
+        D12_2      2       VCC            PASSIVE     WS2813A-V2
+        D13_2      2       VCC            PASSIVE     WS2813A-V2
+        D14_2      2       VCC            PASSIVE     WS2813A-V2
+        D15_2      2       VCC            PASSIVE     WS2813A-V2
+        TP12_2     1       1              PASSIVE     YZ209315103P-01
+
+[00005] +5v0-CH1_1
+        D2_1       2       VCC            PASSIVE     WS2813A-V2
+        D3_1       2       VCC            PASSIVE     WS2813A-V2
+        D4_1       2       VCC            PASSIVE     WS2813A-V2
+        D5_1       2       VCC            PASSIVE     WS2813A-V2
+        D6_1       2       VCC            PASSIVE     WS2813A-V2
+        D8_1       2       VCC            PASSIVE     WS2813A-V2
+        D9_1       2       VCC            PASSIVE     WS2813A-V2
+        D10_1      2       VCC            PASSIVE     WS2813A-V2
+        D11_1      2       VCC            PASSIVE     WS2813A-V2
+        D12_1      2       VCC            PASSIVE     WS2813A-V2
+        D13_1      2       VCC            PASSIVE     WS2813A-V2
+        D14_1      2       VCC            PASSIVE     WS2813A-V2
+        D15_1      2       VCC            PASSIVE     WS2813A-V2
+        TP12_1     1       1              PASSIVE     YZ209315103P-01
+
+[00004] +5v0-CH0_4
+        D1_4       2       VCC            PASSIVE     WS2813A-V2
+        TP8_4      1       1              PASSIVE     YZ209315103P-01
+
+[00003] +5v0-CH0_3
+        D1_3       2       VCC            PASSIVE     WS2813A-V2
+        TP8_3      1       1              PASSIVE     YZ209315103P-01
+
+[00002] +5v0-CH0_2
+        D1_2       2       VCC            PASSIVE     WS2813A-V2
+        TP8_2      1       1              PASSIVE     YZ209315103P-01
+
+[00001] +5v0-CH0_1
+        D1_1       2       VCC            PASSIVE     WS2813A-V2
+        TP8_1      1       1              PASSIVE     YZ209315103P-01
+

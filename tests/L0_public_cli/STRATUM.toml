@@ -1,6 +1,6 @@
 name = "Public CLI"
 order = 0
-description = "Smoke tests for the standalone public CLI package and command manifest"
+description = "Tests for the standalone public CLI package and command manifest"
 enabled = true
 concerns = ["cli", "contracts", "release"]
 
@@ -16,25 +16,58 @@ note = "This is the first standalone Rack stratum; broader command parity tests 
 
 [[subtests]]
 id = "L0_001"
-file = "test_L0_001_cli_smoke.py"
-name = "CLI Smoke"
+file = "test_L0_001_cli_entrypoint.py"
+name = "CLI Entrypoint"
 description = "Validate version/help startup and public command-manifest visibility"
 concerns = ["cli", "contracts", "release"]
 test_case_type = "contract"
-test_cases = "../../contracts/command_manifest.v0.json"
+test_cases = "../../docs/contracts/command_manifest.v0.json"
 
 [subtests.code_under_test]
 module = "altium_cruncher._cli"
 
 [subtests.objectives]
 cli_startup = "CLI entry point starts without optional EasyEDA dependencies"
-manifest_alignment = "Manifest commands remain visible in help output"
-command_help = "Each manifest command exposes command-level help"
+manifest_alignment = "Manifest commands remain visible in alphabetical help output"
+command_help = "Each manifest command exposes versioned command-level help"
 
 [subtests.approach]
 subprocess_cli = "Invoke the package command through the current Python environment"
 
 [subtests.test_functions]
 test_cli_version_command = "Version subcommand reports the package version"
+test_cli_no_args_prints_versioned_help = "Bare CLI invocation prints versioned root help"
 test_cli_help_lists_manifest_commands = "Root help lists each command declared in the manifest"
-test_cli_command_help_starts_for_manifest_commands = "Each manifest command starts and prints command-level help"
+test_cli_help_lists_commands_alphabetically = "Root help lists commands alphabetically"
+test_cli_command_help_starts_for_manifest_commands = "Each manifest command starts and prints versioned command-level help"
+test_svg_help_describes_combined_svg_command = "svg help describes combined schematic and PCB SVG behavior"
+
+[[subtests]]
+id = "L0_002"
+file = "test_L0_002_output_path_templates.py"
+name = "Output Path Templates"
+description = "Validate shared output folder and filename template resolution"
+concerns = ["contracts", "release"]
+test_case_type = "contract"
+test_cases = "../../docs/plans/PUBLIC_REPO_MIGRATION_PLAN.md"
+
+[subtests.code_under_test]
+module = "altium_cruncher.output_path_templates"
+
+[subtests.objectives]
+path_expressions = "Resolve literals, project parameters, and runtime VariantName tokens"
+path_safety = "Generated paths stay relative and sanitize unsafe filename characters"
+command_reuse = "Provide one resolver for output-producing command modules"
+
+[subtests.approach]
+unit_resolution = "Exercise the resolver directly with deterministic public fixture-style parameters"
+
+[subtests.test_functions]
+test_concat_expression_builds_release_folder_from_project_parameters = "Altium-style concatenation expressions produce release folder names"
+test_variant_name_token_resolves_current_processed_variant = "VariantName resolves to the current processed variant"
+test_brace_template_supports_command_tokens_and_project_parameters = "Brace templates support command tokens and project parameters"
+test_output_name_rejects_path_separators = "Filename-only helper rejects path separators"
+test_missing_parameter_can_raise_or_resolve_empty = "Missing project parameters have explicit policy"
+test_relative_output_path_sanitizes_invalid_filename_characters = "Unsafe filename characters are sanitized"
+test_relative_output_path_rejects_absolute_and_traversal_paths = "Absolute paths and traversal are rejected"
+test_relative_output_path_normalizes_backslashes = "Windows separators normalize to relative path parts"

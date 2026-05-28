@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pcb_svg_config.a0.schema.json",
+  "title": "pcb.svg.config.a0",
+  "type": "object",
+  "required": ["schema", "global", "layer_outputs", "views"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "pcb.svg.config.a0"
+    },
+    "global": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "pcbdoc": { "type": ["string", "null"] },
+        "canvas": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bounds": { "enum": ["board_outline", "all_geometry"] },
+            "margin_mm": { "type": "number", "minimum": 0 }
+          }
+        },
+        "include_metadata": { "type": "boolean" },
+        "show_empty_layers": { "type": "boolean" },
+        "clip_to_outline": { "type": "boolean" },
+        "clip_holes_from_copper": { "type": "boolean" },
+        "mirror_bottom_view": { "type": "boolean" },
+        "svg_scale": { "type": "number", "exclusiveMinimum": 0 },
+        "svg_size_unit": { "type": "string" },
+        "clean_output": { "type": "boolean" },
+        "styles": { "$ref": "#/$defs/styleTable" }
+      }
+    },
+    "assembly": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_projection": { "$ref": "#/$defs/projectionMode" },
+        "dnp_projection": { "$ref": "#/$defs/projectionMode" },
+        "designator_color": { "type": "string" },
+        "dnp_designator_color": { "type": "string" }
+      }
+    },
+    "dnp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": { "type": "string" },
+        "hatch": { "type": "boolean" },
+        "hatch_spacing_mm": { "type": "number", "exclusiveMinimum": 0 },
+        "hatch_angle_deg": { "type": "number" },
+        "hatch_line_width_mm": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "diodes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "line_art": { "type": "boolean" },
+        "marker_color": { "type": "string" },
+        "numeric_cathode_pad": { "type": "string" },
+        "cathode_pad_names": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "designator_prefixes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "parameter_terms": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "pin1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exclude_designator_prefixes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/componentOverride" }
+    },
+    "layer_outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "layers": {
+          "oneOf": [
+            { "const": "auto" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ]
+        },
+        "include_special_layers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/syntheticLayer" }
+        },
+        "output_dir": { "type": "string" }
+      }
+    },
+    "views": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "layers"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "enabled": { "type": "boolean" },
+          "group_id": { "type": "string" },
+          "output_svg": { "type": "string" },
+          "layers": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "mirror": { "type": "boolean" },
+          "assembly_hlr_mode": {
+            "enum": ["simple", "detail", "detailed", "bounding_box", "none"]
+          },
+          "styles": { "$ref": "#/$defs/styleTable" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "syntheticLayer": {
+      "enum": [
+        "BOARD_OUTLINE",
+        "BOARD_CUTOUTS",
+        "DRILLS",
+        "SLOTS",
+        "ASSEMBLY_HLR_TOP",
+        "ASSEMBLY_HLR_BOTTOM",
+        "ASSEMBLY_DESIGNATORS_TOP",
+        "ASSEMBLY_DESIGNATORS_BOTTOM",
+        "PIN1_TOP",
+        "PIN1_BOTTOM"
+      ]
+    },
+    "projectionMode": {
+      "enum": ["detail", "simple", "bounding_box", "none"]
+    },
+    "componentOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "side": { "enum": ["top", "bottom"] },
+        "projection": { "$ref": "#/$defs/projectionMode" },
+        "assembly_hlr": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "pin1_enabled": { "type": "boolean" },
+        "pin1_pad": { "type": "string" },
+        "cathode_pad": { "type": "string" },
+        "diode": { "type": "boolean" },
+        "diode_line_art": { "type": "boolean" },
+        "show_designator": { "type": "boolean" }
+      }
+    },
+    "styleTable": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "properties": {
+        "board_outline": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "color": { "type": "string" },
+            "line_width_mm": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "board_cutouts": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "color": { "type": "string" },
+            "hatch": { "type": "boolean" },
+            "hatch_spacing_mm": { "type": "number", "exclusiveMinimum": 0 },
+            "hatch_angle_deg": { "type": "number" },
+            "hatch_line_width_mm": { "type": "number", "exclusiveMinimum": 0 },
+            "outline_style": { "enum": ["solid", "dashed"] },
+            "outline_dash_mm": { "type": "number", "exclusiveMinimum": 0 },
+            "outline_width_mm": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "additionalProperties": true
+        },
+        "drills": { "$ref": "#/$defs/holeStyle" },
+        "slots": { "$ref": "#/$defs/holeStyle" }
+      }
+    },
+    "holeStyle": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "plated_color": { "type": "string" },
+        "non_plated_color": { "type": "string" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": true
+    }
+  }
+}

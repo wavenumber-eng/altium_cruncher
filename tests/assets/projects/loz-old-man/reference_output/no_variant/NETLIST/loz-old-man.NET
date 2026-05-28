@@ -1,0 +1,1929 @@
+Wire List
+
+<<< Component List >>>
+FSM4JSMATR                      BTN1           FSM4JSMA
+FSM4JSMATR                      BTN2           FSM4JSMA
+0.1µF                           C1             C0402_0.55MM_HD
+220µF                           C2             C_ALU_F
+1µF                             C3             C0805_1.50MM_MD
+0.1µF                           C4             C0402_0.55MM_HD
+1µF                             C5             C0805_1.50MM_MD
+0.1µF                           C6             C0402_0.55MM_HD
+10µF                            C7             C1206_1.90MM_HD
+0.22µF                          C8             C0603_0.90MM_HD
+22µF                            C9             C1206_1.60MM_HD
+22µF                            C10            C1206_1.60MM_HD
+1µF                             C11            C0805_1.50MM_MD
+0.1µF                           C12            C0402_0.55MM_HD
+0.1µF                           C13            C0402_0.55MM_HD
+10µF                            C14            C1206_1.90MM_HD
+0.22µF                          C15            C0603_0.90MM_HD
+22µF                            C16            C1206_1.60MM_HD
+22µF                            C17            C1206_1.60MM_HD
+1µF                             C18            C0805_1.50MM_MD
+0.1µF                           C19            C0402_0.55MM_HD
+0.1µF                           C20            C0402_0.55MM_HD
+0.1µF                           C21            C0402_0.55MM_HD
+10000pF                         C22            C0603_0.90MM_HD
+10000pF                         C23            C0603_0.90MM_HD
+0.1µF                           C24            C0402_0.55MM_HD
+0.1µF                           C25            C0402_0.55MM_HD
+0.1µF                           C26            C0402_0.55MM_HD
+0.1µF                           C27            C0402_0.55MM_HD
+1µF                             C28            C0805_1.50MM_MD
+0.1µF                           C29            C0402_0.55MM_HD
+10000pF                         C30            C0603_0.90MM_HD
+10000pF                         C31            C0603_0.90MM_HD
+10000pF                         C32            C0603_0.90MM_HD
+4.7µF                           C33            C0805_1.50MM_HD
+0.1µF                           C34            C0402_0.55MM_HD
+12pF                            C35            C0603_0.90MM_HD
+12pF                            C36            C0603_0.90MM_HD
+100pF                           C37            C0603_0.95MM_HD
+0.1µF                           C38            C0402_0.55MM_HD
+10000pF                         C39            C0603_0.90MM_HD
+100pF                           C40            C0603_0.95MM_HD
+0.1µF                           C41            C0402_0.55MM_HD
+0.1µF                           C42            C0402_0.55MM_HD
+0.1µF                           C43            C0402_0.55MM_HD
+0.1µF                           C44            C0402_0.55MM_HD
+0.1µF                           C45            C0402_0.55MM_HD
+0.1µF                           C46            C0402_0.55MM_HD
+0.1µF                           C47            C0402_0.55MM_HD
+0.1µF                           C48            C0402_0.55MM_HD
+0.1µF                           C49            C0402_0.55MM_HD
+0.1µF                           C50            C0402_0.55MM_HD
+0.1µF                           C51            C0402_0.55MM_HD
+2.2µF                           C52            C0603_0.90MM_HD
+0.1µF                           C53            C0402_0.55MM_HD
+0.1µF                           C54            C0402_0.55MM_HD
+0.1µF                           C55            C0402_0.55MM_HD
+2.2µF                           C56            C0603_0.90MM_HD
+4.7µF                           C57            C0805_1.50MM_HD
+0.22µF                          C58            C0603_0.90MM_HD
+22µF                            C59            C1206_1.60MM_HD
+SMCJ15A                         D1             D_SMC_P
+BAT54JFILM                      D2             SOD-323
+ES2G-13-F                       D3             D_SMB_P
+B240A-13-F                      D4             D_SMA_P
+BZX84B3V3-7-F                   D5             D_SOT-23-3_P
+PESD1CAN,215                    D6             SOT23_MEDIUM
+IP4234CZ6,125                   D7             SOT427_MEDIUM
+1N4148W-7-F                     D8             D_SOD-123_P
+BAT54JFILM                      D9             SOD-323
+IP4234CZ6,125                   D10            SOT427_MEDIUM
+BAT54JFILM                      D11            SOD-323
+SMBJ5.0A                        D12            D_SMB_P
+IP4234CZ6,125                   D13            SOT427_MEDIUM
+PEC11R-4215K-S0024              ENC1           PEC11R-4215K-S0024
+15V 3A                          F1             F_PTC_2920
+8V 1.1A                         F2             F_PTC_1206
+PCB Fiducial                    FID1           Fiducial 1mm - 2mm
+PCB Fiducial                    FID2           Fiducial 1mm - 2mm
+PCB Fiducial                    FID3           Fiducial 1mm - 2mm
+PCB Fiducial                    FID4           Fiducial 1mm - 2mm
+PCB Fiducial                    FID5           Fiducial 1mm - 2mm
+PCB Fiducial                    FID6           Fiducial 1mm - 2mm
+PCB Fiducial                    FID7           Fiducial 1mm - 2mm
+PCB Fiducial                    FID8           Fiducial 1mm - 2mm
+1437164                         J1             1437164
+1551448                         J2             1551448
+5110                            J3             C0603_0.9mm
+5110                            J4             C0603_0.9mm
+1552269                         J5             1552269
+Tag-Connect 2070 Pinout         J6             TC2070
+NPPN101BFCN-RC                  J7             NPPN101BFCN-RC
+NPPN101BFCN-RC                  J8             NPPN101BFCN-RC - 11-20
+FTSH-105-01-F-DV-K-A            J9             FTSH-105-01-F-DV-K-A
+TC2030-CTL-NL                   J10            TC2030
+XF2M-6015-1AH                   J11            XF2M-6015-1AH - Reverse
+TC2030-USB                      J12            TC2030
+MUSBRA511R0                     J13            AMPHENOL_MUSBR-A511
+36R@100MHz                      L1             T_Laird_35F0121-0SR-10
+36R@100MHz                      L2             T_Laird_35F0121-0SR-10
+2.2uH                           L3             IHLP-2020CZ
+36R@100MHz                      L4             T_Laird_35F0121-0SR-10
+36R@100MHz                      L5             T_Laird_35F0121-0SR-10
+2.2uH                           L6             IHLP-2020CZ
+BLM18AG601SN1D                  L7             L_0603_0.8mm
+BLM18AG601SN1D                  L8             L_0603_0.8mm
+47µH 0.075A                     L9             L0805_1.45MM_MD
+BLM18AG601SN1D                  L10            L_0603_0.8mm
+ZXMN4A06GTA                     Q1             SOT223
+BSS138                          Q2             SOT23_Medium
+BSS138                          Q3             SOT23_Medium
+100k                            R1             R0603_0.55MM_MD
+43.2k                           R2             R0603_0.55MM_MD
+100k                            R3             R0603_0.55MM_MD
+24.9k                           R4             R0603_0.55MM_MD
+0                               R5             R0603_0.55MM_MD
+1k                              R6             R0603_0.55MM_MD
+50mO                            R7             R1206_0.60MM_HD
+1k                              R8             R0603_0.55MM_MD
+1k                              R9             R0603_0.55MM_MD
+10k                             R10            R0603_0.55MM_MD
+10k                             R11            R0603_0.55MM_MD
+100                             R12            R0603_0.55MM_MD
+1k                              R13            R0603_0.55MM_MD
+1k                              R14            R0603_0.55MM_MD
+10k                             R15            R0603_0.55MM_MD
+4.7k                            R16            R0603_0.55MM_MD
+4.7k                            R17            R0603_0.55MM_MD
+3.92k                           R18            R0603_0.55MM_MD
+10k                             R19            R0603_0.55MM_MD
+1k                              R20            R0603_0.55MM_MD
+10k                             R21            R0603_0.55MM_MD
+10k                             R22            R0603_0.55MM_MD
+10k                             R23            R0603_0.55MM_MD
+10k                             R24            R0603_0.55MM_MD
+100                             R25            R0603_0.55MM_MD
+100                             R26            R0603_0.55MM_MD
+10k                             R27            R0603_0.55MM_MD
+100                             R28            R0603_0.55MM_MD
+10k                             R29            R0603_0.55MM_MD
+1k                              R30            R0603_0.55MM_MD
+100k                            R31            R0603_0.55MM_MD
+0                               R32            R0603_0.55MM_MD
+0                               R33            R0603_0.55MM_MD
+0                               R34            R0603_0.55MM_MD
+0                               R35            R0603_0.55MM_MD
+1k                              R36            R0603_0.55MM_MD
+100k                            R37            R0603_0.55MM_MD
+100k                            R38            R0603_0.55MM_MD
+120                             R39            R1206_0.70MM_HD
+10k                             R40            R0603_0.55MM_MD
+10k                             R41            R0603_0.55MM_MD
+10k                             R42            R0603_0.55MM_HD
+10k                             R43            R0603_0.55MM_HD
+1k                              R44            R0603_0.55MM_MD
+10k                             R45            R0603_0.55MM_HD
+10k                             R46            R0603_0.55MM_HD
+10k                             R47            R0603_0.55MM_MD
+12k                             R48            R0603_0.55MM_HD
+10k                             R49            R0603_0.55MM_HD
+10k                             R50            R0603_0.55MM_HD
+2.2k                            R51            R0603_0.55MM_MD
+2.2k                            R52            R0603_0.55MM_MD
+2.2k                            R53            R0603_0.55MM_MD
+2.2k                            R54            R0603_0.55MM_MD
+100k                            R55            R0603_0.55MM_MD
+100k                            R56            R0603_0.55MM_MD
+100k                            R57            R0603_0.55MM_MD
+100k                            R58            R0603_0.55MM_MD
+0                               R59            R0603_0.55MM_MD
+0                               R60            R0603_0.55MM_MD
+0                               R61            R0603_0.55MM_MD
+0                               R62            R0603_0.55MM_MD
+1k                              R63            R0603_0.55MM_MD
+1k                              R64            R0603_0.55MM_MD
+1k                              R65            R0603_0.55MM_MD
+1k                              R66            R0603_0.55MM_MD
+1k                              R67            R0603_0.55MM_MD
+4.7k                            R68            R0603_0.55MM_MD
+4.7k                            R69            R0603_0.55MM_MD
+4.7k                            R70            R0603_0.55MM_MD
+4.7k                            R71            R0603_0.55MM_MD
+4.7k                            R72            R0603_0.55MM_MD
+1k                              R73            R0603_0.55MM_MD
+1k                              R74            R0603_0.55MM_MD
+10k                             R75            R0603_0.55MM_MD
+10k                             R76            R0603_0.55MM_MD
+10k                             R77            R0603_0.55MM_MD
+10k                             R78            R0603_0.55MM_MD
+10k                             R79            R0603_0.55MM_MD
+10k                             R80            R0603_0.55MM_MD
+10k                             R81            R0603_0.55MM_MD
+1k                              R82            R0603_0.55MM_MD
+33                              R83            R0603_0.55MM_MD
+33                              R84            R0603_0.55MM_MD
+33                              R85            R0603_0.55MM_MD
+33                              R86            R0603_0.55MM_MD
+33                              R87            R0603_0.55MM_MD
+33                              R88            R0603_0.55MM_MD
+10k                             R89            R0603_0.55MM_MD
+10k                             R90            R0603_0.55MM_MD
+33                              R91            R0603_0.55MM_MD
+33                              R92            R0603_0.55MM_MD
+33                              R93            R0603_0.55MM_MD
+33                              R94            R0603_0.55MM_MD
+51                              R95            R0603_0.55MM_MD
+51                              R96            R0603_0.55MM_MD
+51                              R97            R0603_0.55MM_MD
+51                              R98            R0603_0.55MM_MD
+51                              R99            R0603_0.55MM_MD
+51                              R100           R0603_0.55MM_MD
+51                              R101           R0603_0.55MM_MD
+51                              R102           R0603_0.55MM_MD
+51                              R103           R0603_0.55MM_MD
+51                              R104           R0603_0.55MM_MD
+51                              R105           R0603_0.55MM_MD
+51                              R106           R0603_0.55MM_MD
+51                              R107           R0603_0.55MM_MD
+51                              R108           R0603_0.55MM_MD
+51                              R109           R0603_0.55MM_MD
+51                              R110           R0603_0.55MM_MD
+51                              R111           R0603_0.55MM_MD
+51                              R112           R0603_0.55MM_MD
+51                              R113           R0603_0.55MM_MD
+51                              R114           R0603_0.55MM_MD
+15                              R115           R0603_0.55MM_MD
+1k                              R116           R0603_0.55MM_MD
+2.2k                            R117           R0603_0.55MM_MD
+10k                             R118           R0603_0.55MM_MD
+10k                             R119           R0603_0.55MM_MD
+15k                             R120           R0603_0.55MM_MD
+15k                             R121           R0603_0.55MM_MD
+                                TP1            TP_SMT_25_MIL_ROUND
+                                TP2            TP_SMT_25_MIL_ROUND
+PC TEST POINT MINIATURE SMT     TP3            SMT_TEST_5015
+PC TEST POINT MINIATURE SMT     TP4            SMT_TEST_5015
+PC TEST POINT MINIATURE SMT     TP5            SMT_TEST_5015
+PC TEST POINT MINIATURE SMT     TP6            SMT_TEST_5015
+                                TP7            TP_SMT_25_MIL_ROUND
+                                TP8            TP_SMT_25_MIL_ROUND
+                                TP9            TP_SMT_25_MIL_ROUND
+                                TP10           TP_SMT_25_MIL_ROUND
+                                TP11           TP_SMT_25_MIL_ROUND
+                                TP12           TP_SMT_25_MIL_ROUND
+                                TP13           TP_SMT_25_MIL_ROUND
+                                TP14           TP_SMT_25_MIL_ROUND
+                                TP15           TP_SMT_25_MIL_ROUND
+                                TP16           TP_SMT_25_MIL_ROUND
+                                TP17           TP_SMT_25_MIL_ROUND
+                                TP18           TP_SMT_25_MIL_ROUND
+                                TP19           TP_SMT_25_MIL_ROUND
+                                TP20           TP_SMT_25_MIL_ROUND
+LMR33630BDDAR                   U1             HSOIC-8
+MCP810T-270I/TT                 U2             SOT23_Medium
+LMR33630BDDAR                   U3             HSOIC-8
+UCC27531DBVT                    U4             SOT95P245X145-6L
+LMP8640MK-T/NOPB                U5             SOT95P245X145-6L
+TLV3201AIDBVR                   U6             SOT23-5
+OPA322AIDBVT                    U7             SOT23-5
+OPA322AIDBVT                    U8             SOT23-5
+OPA322AIDBVT                    U9             SOT23-5
+SM712.TCT                       U10            SOT-23
+SM712.TCT                       U11            SOT-23
+ISL3176EIUZ-T                   U12            10 MSOP
+TPS1H200AQDGNRQ1                U13            TI_DGN_MD
+OPA322AIDBVT                    U14            SOT23-5
+SN74HC244DWR                    U15            SOIC-20-300_MEDIUM
+SN74AHC1G04DBVR                 U16            TSOT-23-5
+SN65HVD230DR                    U17            SOIC-8
+OPA322AIDBVT                    U18            SOT23-5
+LPC43S57JET256E                 U19            LBGA256 16X16 1700X1700X155
+FOX924B-12.000                  U20            FOX924
+PRTR5V0U2X,215                  U21            SOT143B
+PRTR5V0U2X,215                  U22            SOT143B
+IS42S32800J-6BLI                U23            TFBGA90_8x13
+SDINBDG4-8G-I1                  U24            BGA_JDEC_EMMC_11.5x13.1x1.1_1
+W25Q128JVSIMTR                  U25            SOIC-8W
+FM25CL64B-G                     U26            SOIC-8
+CAT4238TD-GT3                   U27            SOT23-5
+AP2111MPG-13                    U28            MSOP-8E
+XBEE3 Placement Guide           XBEE_GUID      XBEE3_CELLULAR_PLACEMENT_GUID
+ECS-.327-12.5-17X-TR            Y1             ECX-306
+
+<<< Wire List >>>
+
+  NODE  REFERENCE  PIN #   PIN NAME       PIN TYPE    PART VALUE
+
+[00394] VS
+        J11        42      42             PASSIVE     XF2M-6015-1AH
+        R113       1       1              PASSIVE     51
+
+[00393] USB_HOST_PWR_EN
+        R47        1       1              PASSIVE     10k
+        R119       2       2              PASSIVE     10k
+        U19        P15     USB0_PPWR      I/O         LPC43S57JET256E
+        U28        4       EN             PASSIVE     AP2111MPG-13
+
+[00392] USB_HOST_D_P
+        D13        3       3              PASSIVE     IP4234CZ6,125
+        R121       2       2              PASSIVE     15k
+        U19        F2      USB0_DP        I/O         LPC43S57JET256E
+
+[00391] USB_HOST_D_N
+        D13        4       4              PASSIVE     IP4234CZ6,125
+        R120       2       2              PASSIVE     15k
+        U19        G2      USB0_DM        I/O         LPC43S57JET256E
+
+[00390] USB_DEVICE_D_P
+        D10        3       3              PASSIVE     IP4234CZ6,125
+        U19        F12     USB1_DP        I/O         LPC43S57JET256E
+
+[00389] USB_DEVICE_D_N
+        D10        4       4              PASSIVE     IP4234CZ6,125
+        U19        G12     USB1_DM        I/O         LPC43S57JET256E
+
+[00388] USB_DEV_D_P
+        D10        1       1              PASSIVE     IP4234CZ6,125
+        J12        4       D_P            PASSIVE     TC2030-USB
+
+[00387] USB_DEV_D_N
+        D10        6       6              PASSIVE     IP4234CZ6,125
+        J12        3       D_N            PASSIVE     TC2030-USB
+
+[00386] USB1_VBUS
+        R116       2       2              PASSIVE     1k
+        R117       2       2              PASSIVE     2.2k
+        U19        K14     P2_5/SGPIO14/CTI/O         LPC43S57JET256E
+
+[00385] UART2_TX
+        U15        2       1A1            PASSIVE     SN74HC244DWR
+        U19        J14     PA_1/GPIO4[8]/QI/O         LPC43S57JET256E
+
+[00384] UART2_RX
+        R32        2       2              PASSIVE     0
+        U19        K15     PA_2/GPIO4[9]/QI/O         LPC43S57JET256E
+
+[00383] U0_TXD_OUT
+        D7         3       3              PASSIVE     IP4234CZ6,125
+        J1         3       3              PASSIVE     1437164
+
+[00382] U0_TXD
+        R63        2       2              PASSIVE     1k
+        U19        A3      PF_10/U0_TXD/GPI/O         LPC43S57JET256E
+
+[00381] U0_RXD_IN
+        D7         4       4              PASSIVE     IP4234CZ6,125
+        J1         4       4              PASSIVE     1437164
+
+[00380] U0_RXD
+        R64        2       2              PASSIVE     1k
+        U19        A2      PF_11/U0_RXD/GPI/O         LPC43S57JET256E
+
+[00379] TXP_0
+        J5         3       3              PASSIVE     1552269
+        U11        1       IO             PASSIVE     SM712.TCT
+        U12        6       Y              PASSIVE     ISL3176EIUZ-T
+
+[00378] TXN_0
+        J5         6       6              PASSIVE     1552269
+        U11        2       IO             PASSIVE     SM712.TCT
+        U12        7       Z              PASSIVE     ISL3176EIUZ-T
+
+[00377] TDI_MCU
+        R54        2       2              PASSIVE     2.2k
+        U19        J4      TDI            INPUT       LPC43S57JET256E
+
+[00376] TDI
+        J9         8       8              PASSIVE     FTSH-105-01-F-DV-K-A
+        R54        1       1              PASSIVE     2.2k
+        U22        3       IO2            PASSIVE     PRTR5V0U2X,215
+
+[00375] SWO/TDO_MCU
+        R53        2       2              PASSIVE     2.2k
+        U19        K5      TDO/SWO        OUTPUT      LPC43S57JET256E
+
+[00374] SWO/TDO
+        J9         6       6              PASSIVE     FTSH-105-01-F-DV-K-A
+        J10        6       SWO            PASSIVE     TC2030-CTL-NL
+        R53        1       1              PASSIVE     2.2k
+        U22        2       IO1            PASSIVE     PRTR5V0U2X,215
+
+[00373] SWIO/TMS_MCU
+        R51        2       2              PASSIVE     2.2k
+        U19        K6      TMS/SWDIO      INPUT       LPC43S57JET256E
+
+[00372] SWIO/TMS
+        J9         2       2              PASSIVE     FTSH-105-01-F-DV-K-A
+        J10        2       SWDIO          PASSIVE     TC2030-CTL-NL
+        R51        1       1              PASSIVE     2.2k
+        U21        2       IO1            PASSIVE     PRTR5V0U2X,215
+
+[00371] SWDCLK/TCLK_MCU
+        R52        2       2              PASSIVE     2.2k
+        U19        J5      TCK/SWDCLK     INPUT       LPC43S57JET256E
+
+[00370] SWDCLK/TCLK
+        J9         4       4              PASSIVE     FTSH-105-01-F-DV-K-A
+        J10        4       SWDCLK         PASSIVE     TC2030-CTL-NL
+        R52        1       1              PASSIVE     2.2k
+        U21        3       IO2            PASSIVE     PRTR5V0U2X,215
+
+[00369] SSP1_SCK
+        J11        11      11             PASSIVE     XF2M-6015-1AH
+        R93        2       2              PASSIVE     33
+        U19        D10     PF_4/SSP1_SCK/GI/O         LPC43S57JET256E
+
+[00368] SSP1_MOSI
+        J11        9       9              PASSIVE     XF2M-6015-1AH
+        R92        2       2              PASSIVE     33
+        U19        B7      PF_7/U3_BAUD/SSI/O         LPC43S57JET256E
+
+[00367] SSP1_MISO
+        J11        8       8              PASSIVE     XF2M-6015-1AH
+        R91        2       2              PASSIVE     33
+        U19        E7      PF_6/U3_DIR/SSPI/O         LPC43S57JET256E
+
+[00366] SPIFI_SIO3
+        R88        2       2              PASSIVE     33
+        U19        A15     P3_4/GPIO1[14]/I/O         LPC43S57JET256E
+
+[00365] SPIFI_SIO2
+        R87        2       2              PASSIVE     33
+        U19        C12     P3_5/GPIO1[15]/I/O         LPC43S57JET256E
+
+[00364] SPIFI_SCK
+        R84        2       2              PASSIVE     33
+        U19        B14     P3_3/SPI_SCK/SSI/O         LPC43S57JET256E
+
+[00363] SPIFI_MOSI
+        R85        2       2              PASSIVE     33
+        U19        C11     P3_7/SPI_MOSI/SI/O         LPC43S57JET256E
+
+[00362] SPIFI_MISO
+        R86        2       2              PASSIVE     33
+        U19        B13     P3_6/GPIO0[6]/SI/O         LPC43S57JET256E
+
+[00361] SOLENOID_ON
+        R6         1       1              PASSIVE     1k
+        U19        T3      P1_4/GPIO0[11]/I/O         LPC43S57JET256E
+
+[00360] SOLENOID_CUR_SP
+        U6         3       +              PASSIVE     TLV3201AIDBVR
+        U19        E3      ADC0_0/ADC1_0/DINPUT       LPC43S57JET256E
+
+[00359] SOLENOID_CUR_FB
+        C26        2       1              PASSIVE     0.1µF
+        U8         1       OUT            PASSIVE     OPA322AIDBVT
+        U8         4       -              PASSIVE     OPA322AIDBVT
+        U19        C3      ADC0_1/ADC1_1  INPUT       LPC43S57JET256E
+
+[00358] SOL_N
+        D3         1       A              PASSIVE     ES2G-13-F
+        J2         3       3              PASSIVE     1551448
+        Q1         2       D              PASSIVE     ZXMN4A06GTA
+        Q1         4       D              PASSIVE     ZXMN4A06GTA
+
+[00357] SENSOR_TX_OUT
+        U12        4       DI             PASSIVE     ISL3176EIUZ-T
+        U19        M1      PC_13/U1_TXD/GPI/O         LPC43S57JET256E
+
+[00356] SENSOR_TX_EN
+        R14        1       1              PASSIVE     1k
+        U12        3       DE             PASSIVE     ISL3176EIUZ-T
+        U19        K11     P2_4/SGPIO13/I2I/O         LPC43S57JET256E
+
+[00355] SENSOR_RX_IN
+        U12        1       RO             PASSIVE     ISL3176EIUZ-T
+        U19        N1      PC_14/U1_RXD/GPI/O         LPC43S57JET256E
+
+[00354] SENSOR_RX_EN
+        R13        2       2              PASSIVE     1k
+        U12        2       \R\E\          PASSIVE     ISL3176EIUZ-T
+        U19        A7      P7_5/GPIO3[13]/I/O         LPC43S57JET256E
+
+[00353] SENSOR_ENABLE
+        R16        1       1              PASSIVE     4.7k
+        U19        J12     P2_3/SGPIO12/I2I/O         LPC43S57JET256E
+
+[00352] SENSOR_CUR_FB
+        U14        1       OUT            PASSIVE     OPA322AIDBVT
+        U14        4       -              PASSIVE     OPA322AIDBVT
+        U19        A4      ADC0_2/ADC1_2  INPUT       LPC43S57JET256E
+
+[00351] SDA
+        R43        2       2              PASSIVE     10k
+        TP1        1       1              PASSIVE     
+        U19        L16     I2C0_SDA       I/O         LPC43S57JET256E
+
+[00350] SD_DATA3
+        R76        1       1              PASSIVE     10k
+        U19        G5      PC_7/USB1_ULPI_I/O         LPC43S57JET256E
+        U24        B2      DAT3           PASSIVE     SDINBDG4-8G-I1
+
+[00349] SD_DATA2
+        R77        1       1              PASSIVE     10k
+        U19        H6      PC_6/USB1_ULPI_I/O         LPC43S57JET256E
+        U24        A5      DAT2           PASSIVE     SDINBDG4-8G-I1
+
+[00348] SD_DATA1
+        R78        1       1              PASSIVE     10k
+        U19        G4      PC_5/USB1_ULPI_I/O         LPC43S57JET256E
+        U24        A4      DAT1           PASSIVE     SDINBDG4-8G-I1
+
+[00347] SD_DATA0
+        R79        1       1              PASSIVE     10k
+        U19        F4      PC_4/USB1_ULPI_I/O         LPC43S57JET256E
+        U24        A3      DAT0           PASSIVE     SDINBDG4-8G-I1
+
+[00346] SD_CMD
+        R80        1       1              PASSIVE     10k
+        U19        M5      PC_10/USB1_ULPII/O         LPC43S57JET256E
+        U24        M5      CMD            PASSIVE     SDINBDG4-8G-I1
+
+[00345] SD_CLK
+        U19        D4      PC_0/USB1_ULPI_I/O         LPC43S57JET256E
+        U24        M6      CLK            PASSIVE     SDINBDG4-8G-I1
+
+[00344] SCL
+        R42        2       2              PASSIVE     10k
+        TP2        1       1              PASSIVE     
+        U19        L15     I2C0_SCL       I/O         LPC43S57JET256E
+
+[00343] RXP_0
+        J5         1       1              PASSIVE     1552269
+        R12        1       1              PASSIVE     100
+        U10        2       IO             PASSIVE     SM712.TCT
+        U12        9       A              PASSIVE     ISL3176EIUZ-T
+
+[00342] RXN_0
+        J5         2       2              PASSIVE     1552269
+        R12        2       2              PASSIVE     100
+        U10        1       IO             PASSIVE     SM712.TCT
+        U12        8       B              PASSIVE     ISL3176EIUZ-T
+
+[00341] R4
+        J11        30      30             PASSIVE     XF2M-6015-1AH
+        R99        1       1              PASSIVE     51
+
+[00340] R3
+        J11        31      31             PASSIVE     XF2M-6015-1AH
+        R98        1       1              PASSIVE     51
+
+[00339] R2
+        J11        32      32             PASSIVE     XF2M-6015-1AH
+        R97        1       1              PASSIVE     51
+
+[00338] R1
+        J11        33      33             PASSIVE     XF2M-6015-1AH
+        R96        1       1              PASSIVE     51
+
+[00337] R0
+        J11        34      34             PASSIVE     XF2M-6015-1AH
+        R95        1       1              PASSIVE     51
+
+[00336] POR
+        D2         2       K              PASSIVE     BAT54JFILM
+        Q3         1       G              PASSIVE     BSS138
+        R50        2       2              PASSIVE     10k
+
+[00335] PCLK
+        J11        40      40             PASSIVE     XF2M-6015-1AH
+        R111       1       1              PASSIVE     51
+
+[00260] NetU15_19
+        U15        19      \2OE           PASSIVE     SN74HC244DWR
+        U16        4       Y              OUTPUT      SN74AHC1G04DBVR
+
+[00258] NetU4_1
+        U4         1       EN             PASSIVE     UCC27531DBVT
+        U6         1       OUT            PASSIVE     TLV3201AIDBVR
+
+[00255] NetTP20_1
+        TP20       1       1              PASSIVE     
+        U19        K1      P8_7/GPIO4[7]/UI/O         LPC43S57JET256E
+
+[00254] NetTP17_1
+        TP17       1       1              PASSIVE     
+        U19        P1      PD_1/EMC_CKEOUTI/O         LPC43S57JET256E
+
+[00253] NetTP16_1
+        TP16       1       1              PASSIVE     
+        U19        J2      P8_4/GPIO4[4]/UI/O         LPC43S57JET256E
+
+[00252] NetTP15_1
+        TP15       1       1              PASSIVE     
+        U19        T12     P1_15/GPIO0[2]/I/O         LPC43S57JET256E
+
+[00251] NetTP14_1
+        TP14       1       1              PASSIVE     
+        U19        F1      USB0_VBUS      I/O         LPC43S57JET256E
+
+[00250] NetTP13_1
+        TP13       1       1              PASSIVE     
+        U19        C5      ADC0_7/ADC1_7  INPUT       LPC43S57JET256E
+
+[00249] NetTP12_1
+        TP12       1       1              PASSIVE     
+        U19        A5      ADC0_6/ADC1_6  INPUT       LPC43S57JET256E
+
+[00248] NetTP11_1
+        TP11       1       1              PASSIVE     
+        U19        B3      ADC0_5/ADC1_5  INPUT       LPC43S57JET256E
+
+[00247] NetTP10_1
+        TP10       1       1              PASSIVE     
+        U19        C6      ADC0_4/ADC1_4  INPUT       LPC43S57JET256E
+
+[00246] NetTP9_1
+        TP9        1       1              PASSIVE     
+        U18        1       OUT            PASSIVE     OPA322AIDBVT
+        U18        4       -              PASSIVE     OPA322AIDBVT
+        U19        B5      ADC0_3/ADC1_3  INPUT       LPC43S57JET256E
+
+[00245] NetR93_1
+        R93        1       1              PASSIVE     33
+        U26        6       SCK            INPUT       FM25CL64B-G
+
+[00244] NetR92_1
+        R92        1       1              PASSIVE     33
+        U26        5       SI             INPUT       FM25CL64B-G
+
+[00243] NetR91_1
+        R91        1       1              PASSIVE     33
+        U26        2       SO             OUTPUT      FM25CL64B-G
+
+[00242] NetR90_1
+        R90        1       1              PASSIVE     10k
+        U26        3       \WP            INPUT       FM25CL64B-G
+        U26        7       \HOLD          INPUT       FM25CL64B-G
+
+[00241] NetR89_2
+        R89        2       2              PASSIVE     10k
+        R94        1       1              PASSIVE     33
+        U26        1       \CS            INPUT       FM25CL64B-G
+
+[00240] NetR88_1
+        R88        1       1              PASSIVE     33
+        U25        7       H\O\L\D\/SIO3  PASSIVE     W25Q128JVSIMTR
+
+[00239] NetR87_1
+        R87        1       1              PASSIVE     33
+        U25        3       W\P\/SIO2      PASSIVE     W25Q128JVSIMTR
+
+[00238] NetR86_1
+        R86        1       1              PASSIVE     33
+        U25        2       SO/SIO1        PASSIVE     W25Q128JVSIMTR
+
+[00237] NetR85_1
+        R85        1       1              PASSIVE     33
+        U25        5       SI/SIO0        PASSIVE     W25Q128JVSIMTR
+
+[00236] NetR84_1
+        R84        1       1              PASSIVE     33
+        U25        6       SCK            PASSIVE     W25Q128JVSIMTR
+
+[00235] NetR83_1
+        R83        1       1              PASSIVE     33
+        U25        1       \CE            PASSIVE     W25Q128JVSIMTR
+
+[00234] NetR75_2
+        R75        2       2              PASSIVE     10k
+        TP18       1       1              PASSIVE     
+        U19        N4      PC_8/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00233] NetR72_1
+        R72        1       1              PASSIVE     4.7k
+        R74        2       2              PASSIVE     1k
+
+[00232] NetR69_1
+        R69        1       1              PASSIVE     4.7k
+        R73        2       2              PASSIVE     1k
+
+[00231] NetR67_1
+        R67        1       1              PASSIVE     1k
+        R71        1       1              PASSIVE     4.7k
+
+[00230] NetR66_1
+        R66        1       1              PASSIVE     1k
+        R70        1       1              PASSIVE     4.7k
+
+[00229] NetR48_1
+        R48        1       1              PASSIVE     12k
+        U19        H1      USB0_RREF      PASSIVE     LPC43S57JET256E
+
+[00228] NetR45_1
+        R45        1       1              PASSIVE     10k
+        U19        L4      DBGEN          INPUT       LPC43S57JET256E
+
+[00227] NetR40_2
+        R40        2       2              PASSIVE     10k
+        U17        8       RS             INPUT       SN65HVD230DR
+
+[00226] NetR36_2
+        R36        2       2              PASSIVE     1k
+        U15        3       2Y4            PASSIVE     SN74HC244DWR
+        U15        12      1Y4            PASSIVE     SN74HC244DWR
+
+[00225] NetR18_2
+        R18        2       2              PASSIVE     3.92k
+        U13        4       CL             PASSIVE     TPS1H200AQDGNRQ1
+
+[00224] NetR17_2
+        R17        2       2              PASSIVE     4.7k
+        U13        2       DIAG_EN        PASSIVE     TPS1H200AQDGNRQ1
+
+[00223] NetR16_2
+        R16        2       2              PASSIVE     4.7k
+        U13        1       IN             PASSIVE     TPS1H200AQDGNRQ1
+
+[00222] NetR11_1
+        R11        1       1              PASSIVE     10k
+        U9         1       OUT            PASSIVE     OPA322AIDBVT
+        U9         4       -              PASSIVE     OPA322AIDBVT
+
+[00221] NetR9_1
+        R9         1       1              PASSIVE     1k
+        U5         1       VOUT           PASSIVE     LMP8640MK-T/NOPB
+
+[00220] NetR6_2
+        R6         2       2              PASSIVE     1k
+        U4         2       IN             PASSIVE     UCC27531DBVT
+
+[00219] NetR5_2
+        R5         2       2              PASSIVE     0
+        U4         5       OUTL           PASSIVE     UCC27531DBVT
+        U4         6       OUTH           PASSIVE     UCC27531DBVT
+
+[00218] NetR3_1
+        R3         1       1              PASSIVE     100k
+        R4         2       2              PASSIVE     24.9k
+        U3         5       FB             PASSIVE     LMR33630BDDAR
+
+[00217] NetR1_1
+        R1         1       1              PASSIVE     100k
+        R2         2       2              PASSIVE     43.2k
+        U1         5       FB             PASSIVE     LMR33630BDDAR
+
+[00216] NetQ2_1
+        Q2         1       G              PASSIVE     BSS138
+        R36        1       1              PASSIVE     1k
+        R37        2       2              PASSIVE     100k
+
+[00215] NetQ1_3
+        Q1         3       S              PASSIVE     ZXMN4A06GTA
+        R7         2       2              PASSIVE     50mO
+        U5         3       +IN            PASSIVE     LMP8640MK-T/NOPB
+
+[00214] NetQ1_1
+        Q1         1       G              PASSIVE     ZXMN4A06GTA
+        R5         1       1              PASSIVE     0
+
+[00213] NetJ13_1
+        J13        1       VCC            PASSIVE     MUSBRA511R0
+        L10        1       1              PASSIVE     BLM18AG601SN1D
+
+[00210] NetJ12_1
+        J12        1       VBUS           PASSIVE     TC2030-USB
+        R116       1       1              PASSIVE     1k
+
+[00189] NetJ6_14
+        J6         14      14             PASSIVE     Tag-Connect 2070 Pinout
+        R30        2       2              PASSIVE     1k
+
+[00188] NetJ6_10
+        J6         10      10             PASSIVE     Tag-Connect 2070 Pinout
+        TP7        1       1              PASSIVE     
+
+[00187] NetJ6_9
+        J6         9       9              PASSIVE     Tag-Connect 2070 Pinout
+        TP8        1       1              PASSIVE     
+
+[00183] NetF2_1
+        F2         1       1              PASSIVE     8V 1.1A
+        L10        2       2              PASSIVE     BLM18AG601SN1D
+
+[00182] NetENC1_B
+        ENC1       B       B              PASSIVE     PEC11R-4215K-S0024
+        R28        2       2              PASSIVE     100
+
+[00181] NetENC1_A
+        ENC1       A       A              PASSIVE     PEC11R-4215K-S0024
+        R26        2       2              PASSIVE     100
+
+[00180] NetENC1_1
+        ENC1       1       1              PASSIVE     PEC11R-4215K-S0024
+        R25        1       1              PASSIVE     100
+
+[00179] NetD11_2
+        D11        2       K              PASSIVE     BAT54JFILM
+        D13        5       VCC            PASSIVE     IP4234CZ6,125
+
+[00178] NetD9_2
+        D9         2       K              PASSIVE     BAT54JFILM
+        D10        5       VCC            PASSIVE     IP4234CZ6,125
+
+[00177] NetD8_1
+        D8         1       A              PASSIVE     1N4148W-7-F
+        L9         2       2              PASSIVE     47µH 0.075A
+        U27        1       SW             PASSIVE     CAT4238TD-GT3
+
+[00176] NetD7_6
+        D7         6       6              PASSIVE     IP4234CZ6,125
+        R64        1       1              PASSIVE     1k
+
+[00175] NetD7_1
+        D7         1       1              PASSIVE     IP4234CZ6,125
+        R63        1       1              PASSIVE     1k
+
+[00174] NetD4_2
+        D4         2       K              PASSIVE     B240A-13-F
+        J5         4       4              PASSIVE     1552269
+        J5         5       5              PASSIVE     1552269
+        R19        2       2              PASSIVE     10k
+        U13        7       OUT            PASSIVE     TPS1H200AQDGNRQ1
+
+[00173] NetD2_1
+        D2         1       A              PASSIVE     BAT54JFILM
+        U2         2       RST            PASSIVE     MCP810T-270I/TT
+
+[00172] NetC59_2
+        C59        2       1              PASSIVE     22µF
+        D11        1       A              PASSIVE     BAT54JFILM
+        D12        2       K              PASSIVE     SMBJ5.0A
+        F2         2       2              PASSIVE     8V 1.1A
+        U28        6       OUT            PASSIVE     AP2111MPG-13
+        U28        7       OUT            PASSIVE     AP2111MPG-13
+
+[00171] NetC56_2
+        C56        2       1              PASSIVE     2.2µF
+        U24        C2      VDDI           PASSIVE     SDINBDG4-8G-I1
+
+[00170] NetC42_2
+        C42        2       1              PASSIVE     0.1µF
+        L8         1       1              PASSIVE     BLM18AG601SN1D
+        U19        F3      USB0_VDDA3V3_DRPOWER       LPC43S57JET256E
+        U19        G3      USB0_VDDA3V3   POWER       LPC43S57JET256E
+
+[00169] NetC41_2
+        C41        2       1              PASSIVE     0.1µF
+        L7         1       1              PASSIVE     BLM18AG601SN1D
+        U19        B4      VDDA           POWER       LPC43S57JET256E
+
+[00168] NetC37_2
+        C37        2       1              PASSIVE     100pF
+        C40        1       1              PASSIVE     100pF
+        U19        D1      XTAL1          PASSIVE     LPC43S57JET256E
+
+[00167] NetC37_1
+        C37        1       1              PASSIVE     100pF
+        U20        3       OUT            PASSIVE     FOX924B-12.000
+
+[00166] NetC36_2
+        C36        2       1              PASSIVE     12pF
+        U19        B8      RTCX2          OUTPUT      LPC43S57JET256E
+        Y1         4       OSC2           PASSIVE     ECS-.327-12.5-17X-TR
+
+[00165] NetC35_2
+        C35        2       1              PASSIVE     12pF
+        U19        A8      RTCX1          INPUT       LPC43S57JET256E
+        Y1         1       OSC1           PASSIVE     ECS-.327-12.5-17X-TR
+
+[00164] NetC34_2
+        C34        2       1              PASSIVE     0.1µF
+        R41        1       1              PASSIVE     10k
+        R44        1       1              PASSIVE     1k
+        U18        3       +              PASSIVE     OPA322AIDBVT
+
+[00163] NetC32_2
+        C32        2       1              PASSIVE     10000pF
+        R23        1       1              PASSIVE     10k
+        R28        1       1              PASSIVE     100
+        R29        2       2              PASSIVE     10k
+
+[00162] NetC31_2
+        C31        2       1              PASSIVE     10000pF
+        R22        1       1              PASSIVE     10k
+        R26        1       1              PASSIVE     100
+        R27        2       2              PASSIVE     10k
+
+[00161] NetC30_2
+        C30        2       1              PASSIVE     10000pF
+        R21        2       2              PASSIVE     10k
+        R24        1       1              PASSIVE     10k
+        R25        2       2              PASSIVE     100
+
+[00160] NetC29_2
+        C29        2       1              PASSIVE     0.1µF
+        R19        1       1              PASSIVE     10k
+        R20        1       1              PASSIVE     1k
+        U14        3       +              PASSIVE     OPA322AIDBVT
+
+[00159] NetC28_2
+        C28        2       1              PASSIVE     1µF
+        U13        5       DELAY          PASSIVE     TPS1H200AQDGNRQ1
+
+[00158] NetC26_1
+        C26        1       1              PASSIVE     0.1µF
+        R10        1       1              PASSIVE     10k
+        R11        2       2              PASSIVE     10k
+
+[00157] NetC25_1
+        C25        1       1              PASSIVE     0.1µF
+        R10        2       2              PASSIVE     10k
+        U8         3       +              PASSIVE     OPA322AIDBVT
+
+[00156] NetC23_2
+        C23        2       1              PASSIVE     10000pF
+        R8         1       1              PASSIVE     1k
+        R9         2       2              PASSIVE     1k
+
+[00155] NetC23_1
+        C23        1       1              PASSIVE     10000pF
+        U6         4       -              PASSIVE     TLV3201AIDBVR
+        U7         1       OUT            PASSIVE     OPA322AIDBVT
+        U7         4       -              PASSIVE     OPA322AIDBVT
+        U9         3       +              PASSIVE     OPA322AIDBVT
+
+[00154] NetC22_2
+        C22        2       1              PASSIVE     10000pF
+        R8         2       2              PASSIVE     1k
+        U7         3       +              PASSIVE     OPA322AIDBVT
+
+[00153] NetC18_2
+        C18        2       1              PASSIVE     1µF
+        U3         6       VCC            PASSIVE     LMR33630BDDAR
+
+[00152] NetC16_2
+        C16        2       1              PASSIVE     22µF
+        C17        2       1              PASSIVE     22µF
+        J4         1       1              PASSIVE     5110
+        L6         2       2              PASSIVE     2.2uH
+        R3         2       2              PASSIVE     100k
+
+[00151] NetC14_2
+        C14        2       1              PASSIVE     10µF
+        C15        2       1              PASSIVE     0.22µF
+        L5         2       2              PASSIVE     36R@100MHz
+        U3         2       VIN            PASSIVE     LMR33630BDDAR
+        U3         3       EN             PASSIVE     LMR33630BDDAR
+
+[00150] NetC13_2
+        C13        2       1              PASSIVE     0.1µF
+        U3         7       BOOT           PASSIVE     LMR33630BDDAR
+
+[00149] NetC13_1
+        C13        1       1              PASSIVE     0.1µF
+        L6         1       1              PASSIVE     2.2uH
+        U3         8       SW             PASSIVE     LMR33630BDDAR
+
+[00148] NetC11_2
+        C11        2       1              PASSIVE     1µF
+        U1         6       VCC            PASSIVE     LMR33630BDDAR
+
+[00147] NetC9_2
+        C9         2       1              PASSIVE     22µF
+        C10        2       1              PASSIVE     22µF
+        J3         1       1              PASSIVE     5110
+        L3         2       2              PASSIVE     2.2uH
+        R1         2       2              PASSIVE     100k
+
+[00146] NetC7_2
+        C7         2       1              PASSIVE     10µF
+        C8         2       1              PASSIVE     0.22µF
+        L2         2       2              PASSIVE     36R@100MHz
+        U1         2       VIN            PASSIVE     LMR33630BDDAR
+        U1         3       EN             PASSIVE     LMR33630BDDAR
+
+[00145] NetC2_1
+        C2         1       1              PASSIVE     220µF
+        C3         2       1              PASSIVE     1µF
+        C4         2       1              PASSIVE     0.1µF
+        D1         2       K              PASSIVE     SMCJ15A
+        F1         2       2              PASSIVE     15V 3A
+        L1         1       1              PASSIVE     36R@100MHz
+
+[00144] NetC1_2
+        C1         2       1              PASSIVE     0.1µF
+        U1         7       BOOT           PASSIVE     LMR33630BDDAR
+
+[00143] NetC1_1
+        C1         1       1              PASSIVE     0.1µF
+        L3         1       1              PASSIVE     2.2uH
+        U1         8       SW             PASSIVE     LMR33630BDDAR
+
+[00142] NetBTN2_A
+        BTN2       A       A              PASSIVE     FSM4JSMATR
+        R65        1       1              PASSIVE     1k
+        R68        1       1              PASSIVE     4.7k
+
+[00141] MODEM_USB_D_P
+        J6         13      13             PASSIVE     Tag-Connect 2070 Pinout
+        J7         7       7              PASSIVE     NPPN101BFCN-RC
+
+[00140] MODEM_USB_D_N
+        J6         12      12             PASSIVE     Tag-Connect 2070 Pinout
+        J7         8       8              PASSIVE     NPPN101BFCN-RC
+
+[00139] MODEM_TX
+        J7         2       2              PASSIVE     NPPN101BFCN-RC
+        R32        1       1              PASSIVE     0
+        R33        1       1              PASSIVE     0
+
+[00138] MODEM_RX
+        J7         3       3              PASSIVE     NPPN101BFCN-RC
+        U15        9       2Y1            PASSIVE     SN74HC244DWR
+        U15        18      1Y1            PASSIVE     SN74HC244DWR
+
+[00137] MODEM_RTS
+        J8         16      16             PASSIVE     NPPN101BFCN-RC
+        U15        5       2Y3            PASSIVE     SN74HC244DWR
+        U15        14      1Y3            PASSIVE     SN74HC244DWR
+
+[00136] MODEM_DTR
+        J7         9       9              PASSIVE     NPPN101BFCN-RC
+        U15        7       2Y2            PASSIVE     SN74HC244DWR
+        U15        16      1Y2            PASSIVE     SN74HC244DWR
+
+[00135] MODEM_CTS
+        J8         12      12             PASSIVE     NPPN101BFCN-RC
+        R34        2       2              PASSIVE     0
+        R35        2       2              PASSIVE     0
+
+[00134] LCD_VSYNC
+        R113       2       2              PASSIVE     51
+        U19        D2      P4_5/GPIO2[5]/CI/O         LPC43S57JET256E
+
+[00133] LCD_RED_4
+        R99        2       2              PASSIVE     51
+        U19        C14     P7_1/GPIO3[9]/CI/O         LPC43S57JET256E
+
+[00132] LCD_RED_3
+        R98        2       2              PASSIVE     51
+        U19        J1      P8_5/GPIO4[5]/UI/O         LPC43S57JET256E
+
+[00131] LCD_RED_2
+        R97        2       2              PASSIVE     51
+        U19        K3      P8_6/GPIO4[6]/UI/O         LPC43S57JET256E
+
+[00130] LCD_RED_1
+        R96        2       2              PASSIVE     51
+        U19        C8      P7_4/GPIO3[12]/I/O         LPC43S57JET256E
+
+[00129] LCD_RED_0
+        R95        2       2              PASSIVE     51
+        U19        D3      P4_2/GPIO2[2]/CI/O         LPC43S57JET256E
+
+[00128] LCD_PCLK_WR
+        R111       2       2              PASSIVE     51
+        U19        H4      P4_7/LCD_DCLK/GI/O         LPC43S57JET256E
+
+[00127] LCD_LE
+        TP19       1       1              PASSIVE     
+        U19        B16     P7_0/GPIO3[8]/CI/O         LPC43S57JET256E
+
+[00126] LCD_HSYNC
+        R114       2       2              PASSIVE     51
+        U19        C7      P7_6/GPIO3[14]/I/O         LPC43S57JET256E
+
+[00125] LCD_GREEN_5
+        R105       2       2              PASSIVE     51
+        U19        G11     P3_1/I2S0_TX_WSI/O         LPC43S57JET256E
+
+[00124] LCD_GREEN_4
+        R104       2       2              PASSIVE     51
+        U19        F11     P3_2/I2S0_TX_SDI/O         LPC43S57JET256E
+
+[00123] LCD_GREEN_3
+        R103       2       2              PASSIVE     51
+        U19        D5      P4_0/GPIO2[0]/MI/O         LPC43S57JET256E
+
+[00122] LCD_GREEN_2
+        R102       2       2              PASSIVE     51
+        U19        J3      P8_3/GPIO4[3]/UI/O         LPC43S57JET256E
+
+[00121] LCD_GREEN_1
+        R101       2       2              PASSIVE     51
+        U19        L2      P4_9/CTIN_6/LCDI/O         LPC43S57JET256E
+
+[00120] LCD_GREEN_0
+        R100       2       2              PASSIVE     51
+        U19        M3      P4_10/CTIN_2/LCI/O         LPC43S57JET256E
+
+[00119] LCD_DC
+        J11        10      10             PASSIVE     XF2M-6015-1AH
+        U19        E5      P8_0/GPIO4[0]/UI/O         LPC43S57JET256E
+
+[00118] LCD_DATA_ENABLE
+        R112       2       2              PASSIVE     51
+        U19        C1      P4_6/GPIO2[6]/CI/O         LPC43S57JET256E
+
+[00117] LCD_CS
+        J11        12      12             PASSIVE     XF2M-6015-1AH
+        U19        H5      P8_1/GPIO4[1]/UI/O         LPC43S57JET256E
+
+[00116] LCD_BLUE_4
+        R110       2       2              PASSIVE     51
+        U19        B15     PB_0/CTOUT_10/LI/O         LPC43S57JET256E
+
+[00115] LCD_BLUE_3
+        R109       2       2              PASSIVE     51
+        U19        A14     PB_1/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00114] LCD_BLUE_2
+        R108       2       2              PASSIVE     51
+        U19        B12     PB_2/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00113] LCD_BLUE_1
+        R107       2       2              PASSIVE     51
+        U19        A13     PB_3/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00112] LCD_BLUE_0
+        R106       2       2              PASSIVE     51
+        U19        A6      PB_6/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00111] HS
+        J11        41      41             PASSIVE     XF2M-6015-1AH
+        R114       1       1              PASSIVE     51
+
+[00110] GND_IN
+        C2         2       1              PASSIVE     220µF
+        C3         1       1              PASSIVE     1µF
+        C4         1       1              PASSIVE     0.1µF
+        D1         1       A              PASSIVE     SMCJ15A
+        J1         2       2              PASSIVE     1437164
+        L4         1       1              PASSIVE     36R@100MHz
+
+[00109] GND
+        BTN1       B       B              PASSIVE     FSM4JSMATR
+        BTN2       B       B              PASSIVE     FSM4JSMATR
+        C5         1       1              PASSIVE     1µF
+        C6         1       1              PASSIVE     0.1µF
+        C7         1       1              PASSIVE     10µF
+        C8         1       1              PASSIVE     0.22µF
+        C9         1       1              PASSIVE     22µF
+        C10        1       1              PASSIVE     22µF
+        C11        1       1              PASSIVE     1µF
+        C12        2       1              PASSIVE     0.1µF
+        C14        1       1              PASSIVE     10µF
+        C15        1       1              PASSIVE     0.22µF
+        C16        1       1              PASSIVE     22µF
+        C17        1       1              PASSIVE     22µF
+        C18        1       1              PASSIVE     1µF
+        C19        2       1              PASSIVE     0.1µF
+        C20        2       1              PASSIVE     0.1µF
+        C21        2       1              PASSIVE     0.1µF
+        C22        1       1              PASSIVE     10000pF
+        C24        2       1              PASSIVE     0.1µF
+        C25        2       1              PASSIVE     0.1µF
+        C27        1       1              PASSIVE     0.1µF
+        C28        1       1              PASSIVE     1µF
+        C29        1       1              PASSIVE     0.1µF
+        C30        1       1              PASSIVE     10000pF
+        C31        1       1              PASSIVE     10000pF
+        C32        1       1              PASSIVE     10000pF
+        C33        1       1              PASSIVE     4.7µF
+        C34        1       1              PASSIVE     0.1µF
+        C35        1       1              PASSIVE     12pF
+        C36        1       1              PASSIVE     12pF
+        C38        1       1              PASSIVE     0.1µF
+        C39        1       1              PASSIVE     10000pF
+        C40        2       1              PASSIVE     100pF
+        C41        1       1              PASSIVE     0.1µF
+        C42        1       1              PASSIVE     0.1µF
+        C43        1       1              PASSIVE     0.1µF
+        C44        1       1              PASSIVE     0.1µF
+        C45        1       1              PASSIVE     0.1µF
+        C46        1       1              PASSIVE     0.1µF
+        C47        1       1              PASSIVE     0.1µF
+        C48        1       1              PASSIVE     0.1µF
+        C49        1       1              PASSIVE     0.1µF
+        C50        1       1              PASSIVE     0.1µF
+        C51        1       1              PASSIVE     0.1µF
+        C52        1       1              PASSIVE     2.2µF
+        C53        1       1              PASSIVE     0.1µF
+        C54        1       1              PASSIVE     0.1µF
+        C55        1       1              PASSIVE     0.1µF
+        C56        1       1              PASSIVE     2.2µF
+        C57        1       1              PASSIVE     4.7µF
+        C58        1       1              PASSIVE     0.22µF
+        C59        1       1              PASSIVE     22µF
+        D4         1       A              PASSIVE     B240A-13-F
+        D5         1       A              PASSIVE     BZX84B3V3-7-F
+        D6         3       A              PASSIVE     PESD1CAN,215
+        D7         2       GND            PASSIVE     IP4234CZ6,125
+        D10        2       GND            PASSIVE     IP4234CZ6,125
+        D12        1       A              PASSIVE     SMBJ5.0A
+        D13        2       GND            PASSIVE     IP4234CZ6,125
+        ENC1       2       2              PASSIVE     PEC11R-4215K-S0024
+        ENC1       C       C              PASSIVE     PEC11R-4215K-S0024
+        ENC1       M1      M1             PASSIVE     PEC11R-4215K-S0024
+        ENC1       M2      M2             PASSIVE     PEC11R-4215K-S0024
+        J2         2       2              PASSIVE     1551448
+        J5         7       7              PASSIVE     1552269
+        J5         8       8              PASSIVE     1552269
+        J6         11      11             PASSIVE     Tag-Connect 2070 Pinout
+        J7         10      10             PASSIVE     NPPN101BFCN-RC
+        J9         5       5              PASSIVE     FTSH-105-01-F-DV-K-A
+        J9         9       9              PASSIVE     FTSH-105-01-F-DV-K-A
+        J10        5       GND            PASSIVE     TC2030-CTL-NL
+        J11        4       4              POWER       XF2M-6015-1AH
+        J11        5       5              PASSIVE     XF2M-6015-1AH
+        J11        19      19             PASSIVE     XF2M-6015-1AH
+        J11        20      20             PASSIVE     XF2M-6015-1AH
+        J11        21      21             PASSIVE     XF2M-6015-1AH
+        J11        28      28             PASSIVE     XF2M-6015-1AH
+        J11        29      29             PASSIVE     XF2M-6015-1AH
+        J11        35      35             PASSIVE     XF2M-6015-1AH
+        J11        36      36             PASSIVE     XF2M-6015-1AH
+        J11        37      37             PASSIVE     XF2M-6015-1AH
+        J11        38      XR             PASSIVE     XF2M-6015-1AH
+        J11        43      43             PASSIVE     XF2M-6015-1AH
+        J11        44      44             PASSIVE     XF2M-6015-1AH
+        J11        45      45             PASSIVE     XF2M-6015-1AH
+        J11        46      46             PASSIVE     XF2M-6015-1AH
+        J11        47      47             PASSIVE     XF2M-6015-1AH
+        J11        48      48             PASSIVE     XF2M-6015-1AH
+        J11        49      19             PASSIVE     XF2M-6015-1AH
+        J11        50      50             PASSIVE     XF2M-6015-1AH
+        J12        5       GND            PASSIVE     TC2030-USB
+        J13        4       GND            PASSIVE     MUSBRA511R0
+        J13        S1      SHELL          PASSIVE     MUSBRA511R0
+        J13        S2      SHELL          PASSIVE     MUSBRA511R0
+        L4         2       2              PASSIVE     36R@100MHz
+        Q2         2       S              PASSIVE     BSS138
+        Q3         2       S              PASSIVE     BSS138
+        R2         1       1              PASSIVE     43.2k
+        R4         1       1              PASSIVE     24.9k
+        R7         1       1              PASSIVE     50mO
+        R14        2       2              PASSIVE     1k
+        R17        1       1              PASSIVE     4.7k
+        R18        1       1              PASSIVE     3.92k
+        R20        2       2              PASSIVE     1k
+        R37        1       1              PASSIVE     100k
+        R38        1       1              PASSIVE     100k
+        R40        1       1              PASSIVE     10k
+        R44        2       2              PASSIVE     1k
+        R47        2       2              PASSIVE     10k
+        R48        2       2              PASSIVE     12k
+        R50        1       1              PASSIVE     10k
+        R59        2       2              PASSIVE     0
+        R60        2       2              PASSIVE     0
+        R61        2       2              PASSIVE     0
+        R62        2       2              PASSIVE     0
+        R73        1       1              PASSIVE     1k
+        R74        1       1              PASSIVE     1k
+        R75        1       1              PASSIVE     10k
+        R81        1       1              PASSIVE     10k
+        R82        1       1              PASSIVE     1k
+        R115       1       1              PASSIVE     15
+        R117       1       1              PASSIVE     2.2k
+        R119       1       1              PASSIVE     10k
+        R120       1       1              PASSIVE     15k
+        R121       1       1              PASSIVE     15k
+        TP3        1       1              PASSIVE     PC TEST POINT MINIATURE SMT
+        TP4        1       1              PASSIVE     PC TEST POINT MINIATURE SMT
+        TP5        1       1              PASSIVE     PC TEST POINT MINIATURE SMT
+        TP6        1       1              PASSIVE     PC TEST POINT MINIATURE SMT
+        U1         1       PGND           PASSIVE     LMR33630BDDAR
+        U1         9       AGND           PASSIVE     LMR33630BDDAR
+        U2         1       VSS            PASSIVE     MCP810T-270I/TT
+        U3         1       PGND           PASSIVE     LMR33630BDDAR
+        U3         9       AGND           PASSIVE     LMR33630BDDAR
+        U4         4       GND            PASSIVE     UCC27531DBVT
+        U5         2       V-             PASSIVE     LMP8640MK-T/NOPB
+        U5         4       -IN            PASSIVE     LMP8640MK-T/NOPB
+        U6         2       GND            PASSIVE     TLV3201AIDBVR
+        U7         2       GND            PASSIVE     OPA322AIDBVT
+        U8         2       GND            PASSIVE     OPA322AIDBVT
+        U9         2       GND            PASSIVE     OPA322AIDBVT
+        U10        3       GND            PASSIVE     SM712.TCT
+        U11        3       GND            PASSIVE     SM712.TCT
+        U12        5       GND            PASSIVE     ISL3176EIUZ-T
+        U13        6       GND            PASSIVE     TPS1H200AQDGNRQ1
+        U13        9       EP             PASSIVE     TPS1H200AQDGNRQ1
+        U14        2       GND            PASSIVE     OPA322AIDBVT
+        U15        10      GND            PASSIVE     SN74HC244DWR
+        U16        3       GND            PASSIVE     SN74AHC1G04DBVR
+        U17        2       VSS            POWER       SN65HVD230DR
+        U18        2       GND            PASSIVE     OPA322AIDBVT
+        U19        B2      VSSA           POWER       LPC43S57JET256E
+        U19        C4      VSSIO          POWER       LPC43S57JET256E
+        U19        D13     VSSIO          POWER       LPC43S57JET256E
+        U19        G1      USB0_VSSA_REF  POWER       LPC43S57JET256E
+        U19        G6      VSSIO          POWER       LPC43S57JET256E
+        U19        G7      VSSIO          POWER       LPC43S57JET256E
+        U19        G8      VSSIO          POWER       LPC43S57JET256E
+        U19        G9      VSS            POWER       LPC43S57JET256E
+        U19        H2      USB0_ID        INPUT       LPC43S57JET256E
+        U19        H3      USB0_VSSA_TERM POWER       LPC43S57JET256E
+        U19        H7      VSS            POWER       LPC43S57JET256E
+        U19        H8      VSSIO          POWER       LPC43S57JET256E
+        U19        H9      VSSIO          POWER       LPC43S57JET256E
+        U19        J8      VSSIO          POWER       LPC43S57JET256E
+        U19        J9      VSSIO          POWER       LPC43S57JET256E
+        U19        J10     VSS            POWER       LPC43S57JET256E
+        U19        J11     VSS            POWER       LPC43S57JET256E
+        U19        K8      VSS            POWER       LPC43S57JET256E
+        U19        K9      VSSIO          POWER       LPC43S57JET256E
+        U19        K10     VSSIO          POWER       LPC43S57JET256E
+        U19        M13     VSSIO          POWER       LPC43S57JET256E
+        U19        P7      VSSIO          POWER       LPC43S57JET256E
+        U19        P13     VSSIO          POWER       LPC43S57JET256E
+        U20        2       GND            PASSIVE     FOX924B-12.000
+        U21        1       GND            PASSIVE     PRTR5V0U2X,215
+        U22        1       GND            PASSIVE     PRTR5V0U2X,215
+        U23        A3      VSS            POWER       IS42S32800J-6BLI
+        U23        B3      VSSQ           POWER       IS42S32800J-6BLI
+        U23        B8      VSSQ           POWER       IS42S32800J-6BLI
+        U23        C1      VSSQ           POWER       IS42S32800J-6BLI
+        U23        D1      VSSQ           POWER       IS42S32800J-6BLI
+        U23        E9      VSSQ           POWER       IS42S32800J-6BLI
+        U23        F1      VSS            POWER       IS42S32800J-6BLI
+        U23        L3      VSS            POWER       IS42S32800J-6BLI
+        U23        L9      VSSQ           POWER       IS42S32800J-6BLI
+        U23        M1      VSSQ           POWER       IS42S32800J-6BLI
+        U23        N1      VSSQ           POWER       IS42S32800J-6BLI
+        U23        P3      VSSQ           POWER       IS42S32800J-6BLI
+        U23        P8      VSSQ           POWER       IS42S32800J-6BLI
+        U23        R3      VSS            POWER       IS42S32800J-6BLI
+        U24        A6      VSS            PASSIVE     SDINBDG4-8G-I1
+        U24        C4      VSSQ           PASSIVE     SDINBDG4-8G-I1
+        U24        E7      VSS            PASSIVE     SDINBDG4-8G-I1
+        U24        G5      VSS            PASSIVE     SDINBDG4-8G-I1
+        U24        H10     VSS            PASSIVE     SDINBDG4-8G-I1
+        U24        J5      VSS            PASSIVE     SDINBDG4-8G-I1
+        U24        K8      VSS            PASSIVE     SDINBDG4-8G-I1
+        U24        N2      VSSQ           PASSIVE     SDINBDG4-8G-I1
+        U24        N5      VSSQ           PASSIVE     SDINBDG4-8G-I1
+        U24        P4      VSSQ           PASSIVE     SDINBDG4-8G-I1
+        U24        P6      VSSQ           PASSIVE     SDINBDG4-8G-I1
+        U25        4       VSS            PASSIVE     W25Q128JVSIMTR
+        U26        4       VSS            POWER       FM25CL64B-G
+        U27        2       GND            PASSIVE     CAT4238TD-GT3
+        U28        1       GND            PASSIVE     AP2111MPG-13
+        U28        9       EP             PASSIVE     AP2111MPG-13
+
+[00108] G5
+        J11        22      22             PASSIVE     XF2M-6015-1AH
+        R105       1       1              PASSIVE     51
+
+[00107] G4
+        J11        23      23             PASSIVE     XF2M-6015-1AH
+        R104       1       1              PASSIVE     51
+
+[00106] G3
+        J11        24      24             PASSIVE     XF2M-6015-1AH
+        R103       1       1              PASSIVE     51
+
+[00105] G2
+        J11        25      25             PASSIVE     XF2M-6015-1AH
+        R102       1       1              PASSIVE     51
+
+[00104] G1
+        J11        26      26             PASSIVE     XF2M-6015-1AH
+        R101       1       1              PASSIVE     51
+
+[00103] G0
+        J11        27      27             PASSIVE     XF2M-6015-1AH
+        R100       1       1              PASSIVE     51
+
+[00102] FTDI_TX
+        J6         3       3              PASSIVE     Tag-Connect 2070 Pinout
+        U15        11      2A1            PASSIVE     SN74HC244DWR
+
+[00101] FTDI_RX
+        J6         4       4              PASSIVE     Tag-Connect 2070 Pinout
+        R33        2       2              PASSIVE     0
+
+[00100] FTDI_RTS
+        J6         6       6              PASSIVE     Tag-Connect 2070 Pinout
+        U15        15      2A3            PASSIVE     SN74HC244DWR
+
+[00099] FTDI_RESET
+        J6         8       8              PASSIVE     Tag-Connect 2070 Pinout
+        U15        17      2A4            PASSIVE     SN74HC244DWR
+
+[00098] FTDI_PATH
+        D5         3       K              PASSIVE     BZX84B3V3-7-F
+        R30        1       1              PASSIVE     1k
+        R38        2       2              PASSIVE     100k
+        U15        1       \1OE           PASSIVE     SN74HC244DWR
+        U16        2       A              INPUT       SN74AHC1G04DBVR
+
+[00097] FTDI_DTR
+        J6         5       5              PASSIVE     Tag-Connect 2070 Pinout
+        U15        13      2A2            PASSIVE     SN74HC244DWR
+
+[00096] FTDI_CTS
+        J6         7       7              PASSIVE     Tag-Connect 2070 Pinout
+        R35        1       1              PASSIVE     0
+
+[00095] EXT_USB_HOST_D_P
+        D13        1       1              PASSIVE     IP4234CZ6,125
+        J13        3       D_P            PASSIVE     MUSBRA511R0
+
+[00094] EXT_USB_HOST_D_N
+        D13        6       6              PASSIVE     IP4234CZ6,125
+        J13        2       D_N            PASSIVE     MUSBRA511R0
+
+[00093] ENC_PHASE_B
+        R29        1       1              PASSIVE     10k
+        U19        C2      P4_3/GPIO2[3]/CI/O         LPC43S57JET256E
+
+[00092] ENC_PHASE_A
+        R27        1       1              PASSIVE     10k
+        U19        A1      P4_1/GPIO2[1]/CI/O         LPC43S57JET256E
+
+[00091] ENC_BUTTON
+        R21        1       1              PASSIVE     10k
+        U19        B1      P4_4/GPIO2[4]/CI/O         LPC43S57JET256E
+
+[00090] EMC_DQMOUT3
+        U19        G14     PE_13/CTOUT_14/I/O         LPC43S57JET256E
+        U23        F2      DQM3           INPUT       IS42S32800J-6BLI
+
+[00089] EMC_DQMOUT2
+        U19        N2      PD_0/CTOUT_15/EI/O         LPC43S57JET256E
+        U23        F8      DQM2           INPUT       IS42S32800J-6BLI
+
+[00088] EMC_DQMOUT1
+        U19        H15     P6_10/GPIO3[6]/I/O         LPC43S57JET256E
+        U23        K1      DQM1           INPUT       IS42S32800J-6BLI
+
+[00087] EMC_DQMOUT0
+        U19        G15     P6_12/GPIO2[8]/I/O         LPC43S57JET256E
+        U23        K9      DQM0           INPUT       IS42S32800J-6BLI
+
+[00086] EMC_D31
+        U19        D15     PE_12/CTOUT_11/I/O         LPC43S57JET256E
+        U23        E2      DQ31           I/O         IS42S32800J-6BLI
+
+[00085] EMC_D30
+        U19        D16     PE_11/CTOUT_12/I/O         LPC43S57JET256E
+        U23        D3      DQ30           I/O         IS42S32800J-6BLI
+
+[00084] EMC_D29
+        U19        E14     PE_10/CTIN_3/U1I/O         LPC43S57JET256E
+        U23        D2      DQ29           I/O         IS42S32800J-6BLI
+
+[00083] EMC_D28
+        U19        E16     PE_9/CTIN_4/U1_I/O         LPC43S57JET256E
+        U23        B1      DQ28           I/O         IS42S32800J-6BLI
+
+[00082] EMC_D27
+        U19        F14     PE_8/CTOUT_4/U1I/O         LPC43S57JET256E
+        U23        C2      DQ27           I/O         IS42S32800J-6BLI
+
+[00081] EMC_D26
+        U19        F15     PE_7/CTOUT_5/U1I/O         LPC43S57JET256E
+        U23        A1      DQ26           I/O         IS42S32800J-6BLI
+
+[00080] EMC_D25
+        U19        M16     PE_6/CTOUT_2/U1I/O         LPC43S57JET256E
+        U23        C3      DQ25           I/O         IS42S32800J-6BLI
+
+[00079] EMC_D24
+        U19        N16     PE_5/CTOUT_3/U1I/O         LPC43S57JET256E
+        U23        A2      DQ24           I/O         IS42S32800J-6BLI
+
+[00078] EMC_D23
+        U19        T11     PD_9/CTOUT_13/EI/O         LPC43S57JET256E
+        U23        A8      DQ23           I/O         IS42S32800J-6BLI
+
+[00077] EMC_D22
+        U19        P8      PD_8/CTIN_6/EMCI/O         LPC43S57JET256E
+        U23        C7      DQ22           I/O         IS42S32800J-6BLI
+
+[00076] EMC_D21
+        U19        T6      PD_7/CTIN_5/EMCI/O         LPC43S57JET256E
+        U23        A9      DQ21           I/O         IS42S32800J-6BLI
+
+[00075] EMC_D20
+        U19        R6      PD_6/CTOUT_10/EI/O         LPC43S57JET256E
+        U23        C8      DQ20           I/O         IS42S32800J-6BLI
+
+[00074] EMC_D19
+        U19        P6      PD_5/CTOUT_9/EMI/O         LPC43S57JET256E
+        U23        B9      DQ19           I/O         IS42S32800J-6BLI
+
+[00073] EMC_D18
+        U19        T2      PD_4/CTOUT_8/EMI/O         LPC43S57JET256E
+        U23        D8      DQ18           I/O         IS42S32800J-6BLI
+
+[00072] EMC_D17
+        U19        P4      PD_3/CTOUT_6/EMI/O         LPC43S57JET256E
+        U23        D7      DQ17           I/O         IS42S32800J-6BLI
+
+[00071] EMC_D16
+        U19        R1      PD_2/CTOUT_7/EMI/O         LPC43S57JET256E
+        U23        E8      DQ16           I/O         IS42S32800J-6BLI
+
+[00070] EMC_D15
+        U19        T8      P5_3/GPIO2[12]/I/O         LPC43S57JET256E
+        U23        R2      DQ15           I/O         IS42S32800J-6BLI
+
+[00069] EMC_D14
+        U19        R4      P5_2/GPIO2[11]/I/O         LPC43S57JET256E
+        U23        N3      DQ14           I/O         IS42S32800J-6BLI
+
+[00068] EMC_D13
+        U19        P3      P5_1/GPIO2[10]/I/O         LPC43S57JET256E
+        U23        R1      DQ13           I/O         IS42S32800J-6BLI
+
+[00067] EMC_D12
+        U19        N3      P5_0/GPIO2[9]/MI/O         LPC43S57JET256E
+        U23        N2      DQ12           I/O         IS42S32800J-6BLI
+
+[00066] EMC_D11
+        U19        R12     P5_7/GPIO2[7]/MI/O         LPC43S57JET256E
+        U23        P1      DQ11           I/O         IS42S32800J-6BLI
+
+[00065] EMC_D10
+        U19        T13     P5_6/GPIO2[15]/I/O         LPC43S57JET256E
+        U23        M2      DQ10           I/O         IS42S32800J-6BLI
+
+[00064] EMC_D9
+        U19        P10     P5_5/GPIO2[14]/I/O         LPC43S57JET256E
+        U23        M3      DQ9            I/O         IS42S32800J-6BLI
+
+[00063] EMC_D8
+        U19        P9      P5_4/GPIO2[13]/I/O         LPC43S57JET256E
+        U23        L2      DQ8            I/O         IS42S32800J-6BLI
+
+[00062] EMC_D7
+        U19        R11     P1_14/GPIO1[7]/I/O         LPC43S57JET256E
+        U23        L8      DQ7            I/O         IS42S32800J-6BLI
+
+[00061] EMC_D6
+        U19        R10     P1_13/GPIO1[6]/I/O         LPC43S57JET256E
+        U23        M7      DQ6            I/O         IS42S32800J-6BLI
+
+[00060] EMC_D5
+        U19        R9      P1_12/GPIO1[5]/I/O         LPC43S57JET256E
+        U23        M8      DQ5            I/O         IS42S32800J-6BLI
+
+[00059] EMC_D4
+        U19        T9      P1_11/GPIO1[4]/I/O         LPC43S57JET256E
+        U23        P9      DQ4            I/O         IS42S32800J-6BLI
+
+[00058] EMC_D3
+        U19        R8      P1_10/GPIO1[3]/I/O         LPC43S57JET256E
+        U23        N8      DQ3            I/O         IS42S32800J-6BLI
+
+[00057] EMC_D2
+        U19        T7      P1_9/GPIO1[2]/UI/O         LPC43S57JET256E
+        U23        R9      DQ2            I/O         IS42S32800J-6BLI
+
+[00056] EMC_D1
+        U19        R7      P1_8/GPIO1[1]/UI/O         LPC43S57JET256E
+        U23        N7      DQ1            I/O         IS42S32800J-6BLI
+
+[00055] EMC_D0
+        U19        T5      P1_7/GPIO1[0]/UI/O         LPC43S57JET256E
+        U23        R8      DQ0            I/O         IS42S32800J-6BLI
+
+[00054] EMC_CLK0
+        U19        N5      CLK0/EMC_CLK0/CI/O         LPC43S57JET256E
+        U23        J1      CLK            INPUT       IS42S32800J-6BLI
+
+[00053] EMC_CKEOUT0
+        U19        H12     P6_11/GPIO3[7]/I/O         LPC43S57JET256E
+        U23        J2      CKE            INPUT       IS42S32800J-6BLI
+
+[00052] EMC_A14
+        U19        H13     P6_8/EMC_A14/SGI/O         LPC43S57JET256E
+        U23        H8      BA1            INPUT       IS42S32800J-6BLI
+
+[00051] EMC_A13
+        U19        T16     P2_0/SGPIO4/U0_I/O         LPC43S57JET256E
+        U23        J7      BA0            INPUT       IS42S32800J-6BLI
+
+[00050] EMC_A11
+        U19        M15     P2_2/SGPIO6/U0_I/O         LPC43S57JET256E
+        U23        H9      A11            INPUT       IS42S32800J-6BLI
+
+[00049] EMC_A10
+        U19        K16     P2_6/SGPIO7/U0_I/O         LPC43S57JET256E
+        U23        G7      A10            INPUT       IS42S32800J-6BLI
+
+[00048] EMC_A9
+        R68        2       2              PASSIVE     4.7k
+        U19        H14     P2_7/GPIO0[7]/CI/O         LPC43S57JET256E
+        U23        J3      A9             INPUT       IS42S32800J-6BLI
+
+[00047] EMC_A8
+        R70        2       2              PASSIVE     4.7k
+        U19        J16     P2_8/SGPIO15/CTI/O         LPC43S57JET256E
+        U23        H2      A8             INPUT       IS42S32800J-6BLI
+
+[00046] EMC_A7
+        R71        2       2              PASSIVE     4.7k
+        U19        R3      P1_2/GPIO0[9]/CI/O         LPC43S57JET256E
+        U23        H1      A7             INPUT       IS42S32800J-6BLI
+
+[00045] EMC_A6
+        R72        2       2              PASSIVE     4.7k
+        U19        R2      P1_1/GPIO0[8]/CI/O         LPC43S57JET256E
+        U23        G3      A6             INPUT       IS42S32800J-6BLI
+
+[00044] EMC_A5
+        U19        P2      P1_0/GPIO0[4]/CI/O         LPC43S57JET256E
+        U23        G2      A5             INPUT       IS42S32800J-6BLI
+
+[00043] EMC_A4
+        U19        C16     P2_13/GPIO1[13]I/O         LPC43S57JET256E
+        U23        G1      A4             INPUT       IS42S32800J-6BLI
+
+[00042] EMC_A3
+        U19        E15     P2_12/GPIO1[12]I/O         LPC43S57JET256E
+        U23        F3      A3             INPUT       IS42S32800J-6BLI
+
+[00041] EMC_A2
+        U19        F16     P2_11/GPIO1[11]I/O         LPC43S57JET256E
+        U23        F7      A2             INPUT       IS42S32800J-6BLI
+
+[00040] EMC_A1
+        U19        G16     P2_10/GPIO0[14]I/O         LPC43S57JET256E
+        U23        G9      A1             INPUT       IS42S32800J-6BLI
+
+[00039] EMC_A0
+        R69        2       2              PASSIVE     4.7k
+        U19        H16     P2_9/GPIO1[10]/I/O         LPC43S57JET256E
+        U23        G8      A0             INPUT       IS42S32800J-6BLI
+
+[00038] DE
+        J11        39      39             PASSIVE     XF2M-6015-1AH
+        R112       1       1              PASSIVE     51
+
+[00037] CELL_RESET
+        U15        8       1A4            PASSIVE     SN74HC244DWR
+        U19        K2      PC_9/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00036] CAN0_TD
+        U17        1       TXD            INPUT       SN65HVD230DR
+        U19        K12     PE_3/CAN0_TD/ADI/O         LPC43S57JET256E
+
+[00035] CAN0_RD
+        U17        4       RXD            OUTPUT      SN65HVD230DR
+        U19        M14     PE_2/ADCTRIG0/CI/O         LPC43S57JET256E
+
+[00034] CAN0_L
+        D6         2       C2             PASSIVE     PESD1CAN,215
+        J2         5       5              PASSIVE     1551448
+        R39        1       1              PASSIVE     120
+        U17        6       CANL           I/O         SN65HVD230DR
+
+[00033] CAN0_H
+        D6         1       C1             PASSIVE     PESD1CAN,215
+        J2         4       4              PASSIVE     1551448
+        R39        2       2              PASSIVE     120
+        U17        7       CANH           I/O         SN65HVD230DR
+
+[00032] BOARD_ID3
+        R55        2       2              PASSIVE     100k
+        R59        1       1              PASSIVE     0
+        U19        R13     PD_14/E\M\C\_\DI/O         LPC43S57JET256E
+
+[00031] BOARD_ID2
+        R56        2       2              PASSIVE     100k
+        R60        1       1              PASSIVE     0
+        U19        T14     PD_13/CTIN_0/E\I/O         LPC43S57JET256E
+
+[00030] BOARD_ID1
+        R57        2       2              PASSIVE     100k
+        R61        1       1              PASSIVE     0
+        U19        N11     PD_12/E\M\C\_\CI/O         LPC43S57JET256E
+
+[00029] BOARD_ID0
+        R58        2       2              PASSIVE     100k
+        R62        1       1              PASSIVE     0
+        U19        N9      PD_11/E\M\C\_\CI/O         LPC43S57JET256E
+
+[00028] BL-
+        J11        58      58             PASSIVE     XF2M-6015-1AH
+        J11        59      59             PASSIVE     XF2M-6015-1AH
+        R115       2       2              PASSIVE     15
+        U27        3       FB             PASSIVE     CAT4238TD-GT3
+
+[00027] BL+
+        C58        2       1              PASSIVE     0.22µF
+        D8         2       K              PASSIVE     1N4148W-7-F
+        J11        60      60             PASSIVE     XF2M-6015-1AH
+
+[00026] B4
+        J11        14      14             PASSIVE     XF2M-6015-1AH
+        R110       1       1              PASSIVE     51
+
+[00025] B3
+        J11        15      15             PASSIVE     XF2M-6015-1AH
+        R109       1       1              PASSIVE     51
+
+[00024] B2
+        J11        16      16             PASSIVE     XF2M-6015-1AH
+        R108       1       1              PASSIVE     51
+
+[00023] B1
+        J11        17      17             PASSIVE     XF2M-6015-1AH
+        R107       1       1              PASSIVE     51
+
+[00022] B0
+        J11        18      18             PASSIVE     XF2M-6015-1AH
+        R106       1       1              PASSIVE     51
+
+[00021] \USB_HOST_FAULT
+        R118       1       1              PASSIVE     10k
+        U19        L11     P9_6/GPIO4[11]/I/O         LPC43S57JET256E
+        U28        5       FLAG           PASSIVE     AP2111MPG-13
+
+[00020] \TRST
+        R46        1       1              PASSIVE     10k
+        U19        M4      T\R\S\T\       INPUT       LPC43S57JET256E
+
+[00019] \SSP1_CS_FRAM
+        R94        2       2              PASSIVE     33
+        U19        D11     PF_2/U3_TXD/SSPI/O         LPC43S57JET256E
+
+[00018] \SPIFI_CS
+        R83        2       2              PASSIVE     33
+        U19        C10     P3_8/SPI_SSEL/SI/O         LPC43S57JET256E
+
+[00017] \SENSOR_FAULT
+        R15        1       1              PASSIVE     10k
+        U13        3       \FAULT         PASSIVE     TPS1H200AQDGNRQ1
+        U19        E2      P4_8/CTIN_5/LCDI/O         LPC43S57JET256E
+
+[00016] \SD_WP
+        R82        2       2              PASSIVE     1k
+        U19        T15     PD_15/EMC_A17/GI/O         LPC43S57JET256E
+
+[00015] \SD_RESET
+        R81        2       2              PASSIVE     10k
+        U19        P5      P1_3/GPIO0[10]/I/O         LPC43S57JET256E
+        U24        K5      \RST           PASSIVE     SDINBDG4-8G-I1
+
+[00014] \RST
+        BTN1       A       A              PASSIVE     FSM4JSMATR
+        J9         10      10             PASSIVE     FTSH-105-01-F-DV-K-A
+        J10        3       RST            PASSIVE     TC2030-CTL-NL
+        Q3         3       D              PASSIVE     BSS138
+        R49        1       1              PASSIVE     10k
+        U19        D9      R\E\S\E\T\     INPUT       LPC43S57JET256E
+
+[00013] \MODEM_RESET
+        J7         5       5              PASSIVE     NPPN101BFCN-RC
+        Q2         3       D              PASSIVE     BSS138
+        R31        1       1              PASSIVE     100k
+
+[00012] \LCD_RESET_N
+        J11        13      13             PASSIVE     XF2M-6015-1AH
+        U19        K4      P8_2/GPIO4[2]/UI/O         LPC43S57JET256E
+
+[00011] \EMC_WE
+        U19        T4      P1_6/GPIO1[9]/CI/O         LPC43S57JET256E
+        U23        K8      WE#            INPUT       IS42S32800J-6BLI
+
+[00010] \EMC_RAS
+        U19        P16     P6_5/GPIO3[4]/CI/O         LPC43S57JET256E
+        U23        J9      RAS#           INPUT       IS42S32800J-6BLI
+
+[00009] \EMC_DYCS0
+        U19        J15     P6_9/GPIO3[5]/EI/O         LPC43S57JET256E
+        U23        J8      CS#            INPUT       IS42S32800J-6BLI
+
+[00008] \EMC_CAS
+        U19        R16     P6_4/GPIO3[3]/CI/O         LPC43S57JET256E
+        U23        K7      CAS#           INPUT       IS42S32800J-6BLI
+
+[00007] \CELL_RTS
+        U15        6       1A3            PASSIVE     SN74HC244DWR
+        U19        F5      PC_3/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00006] \CELL_DTR
+        U15        4       1A2            PASSIVE     SN74HC244DWR
+        U19        F6      PC_2/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00005] \CELL_CTS
+        R34        1       1              PASSIVE     0
+        U19        E4      PC_1/USB1_ULPI_I/O         LPC43S57JET256E
+
+[00004] +12V_FILT
+        C5         2       1              PASSIVE     1µF
+        C6         2       1              PASSIVE     0.1µF
+        C19        1       1              PASSIVE     0.1µF
+        D3         2       K              PASSIVE     ES2G-13-F
+        J2         1       1              PASSIVE     1551448
+        L1         2       2              PASSIVE     36R@100MHz
+        L2         1       1              PASSIVE     36R@100MHz
+        L5         1       1              PASSIVE     36R@100MHz
+        R41        2       2              PASSIVE     10k
+        U4         3       VDD            PASSIVE     UCC27531DBVT
+        U13        8       VS             PASSIVE     TPS1H200AQDGNRQ1
+
+[00003] +5V
+        C33        2       1              PASSIVE     4.7µF
+        C57        2       1              PASSIVE     4.7µF
+        J4         2       2              PASSIVE     5110
+        J6         1       1              PASSIVE     Tag-Connect 2070 Pinout
+        J7         1       1              PASSIVE     NPPN101BFCN-RC
+        L9         1       1              PASSIVE     47µH 0.075A
+        U27        4       S\H\D\N\       PASSIVE     CAT4238TD-GT3
+        U27        5       VIN            PASSIVE     CAT4238TD-GT3
+        U28        2       IN             PASSIVE     AP2111MPG-13
+        U28        3       IN             PASSIVE     AP2111MPG-13
+
+[00002] +3V3
+        C12        1       1              PASSIVE     0.1µF
+        C20        1       1              PASSIVE     0.1µF
+        C21        1       1              PASSIVE     0.1µF
+        C24        1       1              PASSIVE     0.1µF
+        C27        2       1              PASSIVE     0.1µF
+        C38        2       1              PASSIVE     0.1µF
+        C39        2       1              PASSIVE     10000pF
+        C43        2       1              PASSIVE     0.1µF
+        C44        2       1              PASSIVE     0.1µF
+        C45        2       1              PASSIVE     0.1µF
+        C46        2       1              PASSIVE     0.1µF
+        C47        2       1              PASSIVE     0.1µF
+        C48        2       1              PASSIVE     0.1µF
+        C49        2       1              PASSIVE     0.1µF
+        C50        2       1              PASSIVE     0.1µF
+        C51        2       1              PASSIVE     0.1µF
+        C52        2       1              PASSIVE     2.2µF
+        C53        2       1              PASSIVE     0.1µF
+        C54        2       1              PASSIVE     0.1µF
+        C55        2       1              PASSIVE     0.1µF
+        D7         5       VCC            PASSIVE     IP4234CZ6,125
+        D9         1       A              PASSIVE     BAT54JFILM
+        J3         2       2              PASSIVE     5110
+        J6         2       2              PASSIVE     Tag-Connect 2070 Pinout
+        J9         1       1              PASSIVE     FTSH-105-01-F-DV-K-A
+        J10        1       VCC            PASSIVE     TC2030-CTL-NL
+        J11        1       1              POWER       XF2M-6015-1AH
+        J11        2       2              POWER       XF2M-6015-1AH
+        J11        3       3              POWER       XF2M-6015-1AH
+        J11        6       6              PASSIVE     XF2M-6015-1AH
+        L7         2       2              PASSIVE     BLM18AG601SN1D
+        L8         2       2              PASSIVE     BLM18AG601SN1D
+        R13        1       1              PASSIVE     1k
+        R15        2       2              PASSIVE     10k
+        R22        2       2              PASSIVE     10k
+        R23        2       2              PASSIVE     10k
+        R24        2       2              PASSIVE     10k
+        R31        2       2              PASSIVE     100k
+        R42        1       1              PASSIVE     10k
+        R43        1       1              PASSIVE     10k
+        R45        2       2              PASSIVE     10k
+        R46        2       2              PASSIVE     10k
+        R49        2       2              PASSIVE     10k
+        R55        1       1              PASSIVE     100k
+        R56        1       1              PASSIVE     100k
+        R57        1       1              PASSIVE     100k
+        R58        1       1              PASSIVE     100k
+        R65        2       2              PASSIVE     1k
+        R66        2       2              PASSIVE     1k
+        R67        2       2              PASSIVE     1k
+        R76        2       2              PASSIVE     10k
+        R77        2       2              PASSIVE     10k
+        R78        2       2              PASSIVE     10k
+        R79        2       2              PASSIVE     10k
+        R80        2       2              PASSIVE     10k
+        R89        1       1              PASSIVE     10k
+        R90        2       2              PASSIVE     10k
+        R118       2       2              PASSIVE     10k
+        U2         3       VDD            PASSIVE     MCP810T-270I/TT
+        U5         6       V+             PASSIVE     LMP8640MK-T/NOPB
+        U6         5       VCC            PASSIVE     TLV3201AIDBVR
+        U7         5       VCC            PASSIVE     OPA322AIDBVT
+        U8         5       VCC            PASSIVE     OPA322AIDBVT
+        U9         5       VCC            PASSIVE     OPA322AIDBVT
+        U12        10      VCC            PASSIVE     ISL3176EIUZ-T
+        U14        5       VCC            PASSIVE     OPA322AIDBVT
+        U15        20      VCC            PASSIVE     SN74HC244DWR
+        U16        5       VCC            PASSIVE     SN74AHC1G04DBVR
+        U17        3       VDD            POWER       SN65HVD230DR
+        U18        5       VCC            PASSIVE     OPA322AIDBVT
+        U19        D7      VDDIO          POWER       LPC43S57JET256E
+        U19        E8      VPP            POWER       LPC43S57JET256E
+        U19        E12     VDDIO          POWER       LPC43S57JET256E
+        U19        F7      VDDIO          POWER       LPC43S57JET256E
+        U19        F8      VDDIO          POWER       LPC43S57JET256E
+        U19        F9      VDDREG         POWER       LPC43S57JET256E
+        U19        F10     VDDREG         POWER       LPC43S57JET256E
+        U19        G10     VDDIO          POWER       LPC43S57JET256E
+        U19        H10     VDDIO          POWER       LPC43S57JET256E
+        U19        J6      VDDIO          POWER       LPC43S57JET256E
+        U19        J7      VDDIO          POWER       LPC43S57JET256E
+        U19        K7      VDDIO          POWER       LPC43S57JET256E
+        U19        L7      VDDREG         POWER       LPC43S57JET256E
+        U19        L8      VDDREG         POWER       LPC43S57JET256E
+        U19        L9      VDDIO          POWER       LPC43S57JET256E
+        U19        L10     VDDIO          POWER       LPC43S57JET256E
+        U19        N7      VDDIO          POWER       LPC43S57JET256E
+        U19        N13     VDDIO          POWER       LPC43S57JET256E
+        U20        4       VCC            PASSIVE     FOX924B-12.000
+        U21        4       VCC            PASSIVE     PRTR5V0U2X,215
+        U22        4       VCC            PASSIVE     PRTR5V0U2X,215
+        U23        A7      VDD            POWER       IS42S32800J-6BLI
+        U23        B2      VDDQ           POWER       IS42S32800J-6BLI
+        U23        B7      VDDQ           POWER       IS42S32800J-6BLI
+        U23        C9      VDDQ           POWER       IS42S32800J-6BLI
+        U23        D9      VDDQ           POWER       IS42S32800J-6BLI
+        U23        E1      VDDQ           POWER       IS42S32800J-6BLI
+        U23        F9      VDD            POWER       IS42S32800J-6BLI
+        U23        L1      VDDQ           POWER       IS42S32800J-6BLI
+        U23        L7      VDD            POWER       IS42S32800J-6BLI
+        U23        M9      VDDQ           POWER       IS42S32800J-6BLI
+        U23        N9      VDDQ           POWER       IS42S32800J-6BLI
+        U23        P2      VDDQ           POWER       IS42S32800J-6BLI
+        U23        P7      VDDQ           POWER       IS42S32800J-6BLI
+        U23        R7      VDD            POWER       IS42S32800J-6BLI
+        U24        C6      VCCQ           PASSIVE     SDINBDG4-8G-I1
+        U24        E6      VCC            PASSIVE     SDINBDG4-8G-I1
+        U24        F5      VCC            PASSIVE     SDINBDG4-8G-I1
+        U24        J10     VCC            PASSIVE     SDINBDG4-8G-I1
+        U24        K9      VCC            PASSIVE     SDINBDG4-8G-I1
+        U24        M4      VCCQ           PASSIVE     SDINBDG4-8G-I1
+        U24        N4      VCCQ           PASSIVE     SDINBDG4-8G-I1
+        U24        P3      VCCQ           PASSIVE     SDINBDG4-8G-I1
+        U24        P5      VCCQ           PASSIVE     SDINBDG4-8G-I1
+        U25        8       VCC            PASSIVE     W25Q128JVSIMTR
+        U26        8       VDD            POWER       FM25CL64B-G
+
+[00001] 12V_IN
+        F1         1       1              PASSIVE     15V 3A
+        J1         1       1              PASSIVE     1437164
+

@@ -20,22 +20,21 @@ jobs:
         run: |
           VERSION="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
           test "v${VERSION}" = "${GITHUB_REF_NAME}"
-      - name: Verify changelog mentions package version
+      - name: Verify release notes mention package version
         shell: bash
         run: |
           VERSION="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          RELEASE_DATE="$(uv run python -c 'import tomllib; v=tomllib.load(open("pyproject.toml","rb"))["project"]["version"]; y,m,d,*_=map(int,v.split(".")); print(f"{y:04d}-{m:02d}-{d:02d}")')"
           grep -F "## ${VERSION}" CHANGELOG.md
-      - name: Run tests
-        run: uv run --extra test pytest
-      - name: Run Rack smoke lane
+          test -f "docs/releases/${RELEASE_DATE}.md"
+          grep -F "\`${VERSION}\`" "docs/releases/${RELEASE_DATE}.md"
+      - name: Run Rack suite
         run: uv run --extra test rack run --all
-      - name: Run signoff
-        run: uv run --extra test python scripts/py_signoff.py --root .
       - name: Build package
         run: uv run --extra test python -m build
       - name: Check package
         run: uv run --extra test twine check dist/*
-      - name: Run installed console smoke
-        run: uv run --extra test python scripts/install_smoke.py
+      - name: Run installed console test
+        run: uv run --extra test python tests/support_scripts/install_test.py
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

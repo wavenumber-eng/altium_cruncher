@@ -1,0 +1,11 @@
+Output: XML-BOM
+Type  : BOM
+From  : Variant [1v8-SOIC8] of Project [RT_SUPER_C1.PrjPcb]
+   Generated File[XML-BOM-RT_SUPER_C1(1v8-SOIC8).xml]
+   Generated File[XML-BOM-RT_SUPER_C1(1v8-SOIC8).xsl]
+
+
+Files Generated   : 2
+Documents Printed : 0
+
+Finished Output Generation At 2:17:37 PM On 5/26/2026

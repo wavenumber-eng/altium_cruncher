@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>bom command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="bom" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>bom</h1><p class="lede">Exports bill-of-materials data from Altium schematic or project inputs. The command uses the shared BOM/PnP normalization layer for canonical aliases, grouped JSON/CSV/XLSX, configurable DNP handling, optional PCB line items, and JLC BOM rows.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher bom project.PrjPcb --format json -o output/bom
+altium-cruncher bom schematic.SchDoc --format xlsx
+altium-cruncher bom project.PrjPcb --variant B4
+altium-cruncher bom project.PrjPcb --format grouped-json
+altium-cruncher bom project.PrjPcb --format jlc-csv
+altium-cruncher bom project.PrjPcb --format jlc-xlsx
+altium-cruncher bom --write-config bom.config
+altium-cruncher bom project.PrjPcb --config bom.config</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. <code>--format</code> selects one legacy output format and overrides multi-output config mode. Without <code>--format</code>, the command loads <code>bom.config</code> from the working directory or creates it when absent. <code>--config</code> selects a specific <code>docs/contracts/bom_pnp_config.v1.schema.json</code>-shaped JSON or JSONC config path and also creates that path on first config-mode use. <code>--write-config</code> writes a default editable config without requiring a design file. <code>--variant</code> and <code>--all-variants</code> override config variant policy. <code>-o</code> is the legacy output directory or the config output root.</p></section>
+<section id="output"><h2>Output</h2><p>Legacy output is written under the selected output directory using the input stem. Config output uses <code>dir_template</code> and <code>name_template</code> with project parameters plus <code>Command</code>, <code>OutputKind</code>, <code>SourceName</code>, <code>SourceStem</code>, and <code>VariantName</code> tokens. Configured BOM outputs include <code>raw-json</code>, <code>legacy-json</code>, <code>grouped-json</code>, <code>grouped-csv</code>, <code>grouped-xlsx</code>, <code>jlc-csv</code>, and <code>jlc-xlsx</code>. The generated default processes all variants including the no-variant base, writes <code>raw-json</code> and <code>grouped-xlsx</code>, groups by <code>mfg</code>, <code>mpn</code>, and <code>description</code>, and emits the grouped fields <code>mfg</code>, <code>mpn</code>, <code>description</code>, <code>quantity</code>, and <code>designators</code>. <code>mfg</code> and <code>mpn</code> are table-field aliases for the canonical <code>manufacturer</code> and <code>manufacturer_part_number</code> parameters. <code>raw-json</code> is a flat list of unaliased component dictionaries from the selected Altium source. Grouped XLSX output omits the line-number <code>item</code> column unless explicitly configured, writes spreadsheet-safe text cells, uses inverse knockout header styling, and does not enable Excel header filter dropdowns. Configured outputs write <code>bom.config.used.json</code> beside generated artifacts.</p></section>
+<section id="tests"><h2>Tests</h2><p>Current L3 coverage verifies BOM JSON generation on Hydroscope. Unit tests cover alias resolution, config parsing, grouped BOM lines, natural designator sorting, raw JSON, DNP row placement, DNP XLSX highlighting, grouped table rows, XLSX generation, and JLC BOM rows. Planned BOM parity tests use <code>node_test_array</code> for hierarchy, variants, DNP handling, and field aliasing.</p></section>
+</main>
+</body>
+</html>

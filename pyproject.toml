@@ -1,6 +1,6 @@
 [project]
 name = "altium-cruncher"
-version = "2026.5.26"
+version = "2026.5.28"
 description = "Cross-platform Altium CLI utilities built on public altium-monkey"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -9,13 +9,19 @@ authors = [
     { name = "Wavenumber LLC" },
 ]
 dependencies = [
-    "altium-monkey>=2026.5.25",
+    "altium-monkey==2026.5.26",
     "colorama>=0.4.6",
+    "json-with-comments>=1.2.10",
+    "openpyxl>=3.1.0",
     "wn-geometer==2026.5.25",
 ]
 
 [project.optional-dependencies]
+easyeda = [
+    "easyeda-monkey>=2026.5.26",
+]
 test = [
+    "jsonschema>=4.0.0",
     "pytest>=8.0.0",
     "wn-rack>=1.1.0",
     "pyright>=1.1.390",
@@ -26,6 +32,7 @@ test = [
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.0.0",
     "pytest>=8.0.0",
     "wn-rack>=1.1.0",
     "pyright>=1.1.390",
@@ -49,16 +56,19 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 include = [
     "src/py/altium_cruncher/**",
-    "scripts/**",
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
     "CONTRIBUTING.md",
     "docs/**",
-    "contracts/**",
-    "examples/**",
+    "docs/contracts/**",
+    "scripts/**",
     "tests/**",
     "pyproject.toml",
+]
+exclude = [
+    "docs/plans/**",
+    "docs/research/**",
 ]
 
 [tool.hatch.build.targets.wheel]

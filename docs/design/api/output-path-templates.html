@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Output Path Template Resolver</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body data-doc-kind="api-design" data-api="output-path-templates">
+<main>
+  <nav class="nav">
+    <a href="../index.html">Design Index</a>
+    <a href="index.html">API</a>
+  </nav>
+
+  <header>
+    <p class="status">Shared interface design</p>
+    <h1>Output Path Template Resolver</h1>
+    <p class="lede">
+      The output path template resolver provides one common way for
+      output-producing commands to build safe relative folders and filenames
+      from fixed strings, project parameters, command context, and the current
+      processed variant.
+    </p>
+  </header>
+
+  <section
+    data-interface="OutputPathTemplates"
+    data-rack-stratum="L0_public_cli"
+    data-test-file="tests/L0_public_cli/test_L0_002_output_path_templates.py"
+    data-test-target="test_concat_expression_builds_release_folder_from_project_parameters">
+    <h2>Interface Ownership</h2>
+
+    <h3>Rationale</h3>
+    <p>
+      SVG, design JSON, BOM, PnP, and JLC outputs all need project-specific naming.
+      Keeping this logic in one module avoids command-local string replacement
+      rules and makes release folder naming testable.
+    </p>
+
+    <h3>Purpose</h3>
+    <p>
+      Resolve Altium-style concatenation expressions and brace templates into
+      strings, single output names, or safe relative output paths. Project
+      parameters supply values such as <code>Revision</code>,
+      <code>RevisionMinor</code>, <code>PartNumberPCB</code>,
+      <code>PartNumberPCBA</code>, and <code>Title</code>. The runtime
+      <code>VariantName</code> token represents the variant currently being
+      processed.
+    </p>
+
+    <h3>Test Requirements</h3>
+    <p>
+      Rack L0 tests exercise literal and parameter concatenation, brace
+      templates, <code>VariantName</code>, missing parameter policy, unsafe
+      filename character handling, path traversal rejection, absolute path
+      rejection, and Windows separator normalization.
+    </p>
+
+    <h3>Working Definition</h3>
+    <p>
+      The resolver is working when every output-producing command can call the
+      same module to resolve a command-configured relative output path or file
+      name, and the resolved value cannot escape the selected output root unless
+      a future explicit absolute-path policy is designed and tested.
+    </p>
+  </section>
+
+  <section id="formats">
+    <h2>Supported Template Forms</h2>
+    <table>
+      <tr>
+        <th>Form</th>
+        <th>Example</th>
+        <th>Purpose</th>
+      </tr>
+      <tr>
+        <td>Altium-style concatenation</td>
+        <td><code>'releases/rev' + Revision + '.' + RevisionMinor + '/' + PartNumberPCBA</code></td>
+        <td>Matches the shape used by OutJob release path expressions.</td>
+      </tr>
+      <tr>
+        <td>Brace template</td>
+        <td><code>{Command}/{VariantName}/{PartNumberPCB}-{OutputKind}</code></td>
+        <td>Compact JSON-config-friendly form for command-specific templates.</td>
+      </tr>
+    </table>
+  </section>
+
+  <section id="safety">
+    <h2>Safety Rules</h2>
+    <ul>
+      <li>Resolved output paths are relative by default.</li>
+      <li>Drive-prefixed and root-anchored paths are rejected.</li>
+      <li><code>.</code> and <code>..</code> path components are rejected.</li>
+      <li>Invalid filename characters are replaced with underscores.</li>
+      <li>Backslashes normalize to path separators before validation.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

@@ -21,22 +21,105 @@ name = "Public CLI Workflows"
 description = "Run selected public CLI commands against the Hydroscope fixture and validate outputs"
 concerns = ["cli", "contracts", "release"]
 test_case_type = "reference"
-test_cases = "../../examples/assets/projects/hydroscope"
+test_cases = "../../tests/assets/projects/hydroscope/input"
 
 [subtests.code_under_test]
 module = "altium_cruncher._cli"
 
 [subtests.objectives]
-schematic_outputs = "Sch SVG, BOM, PnP, and netlist commands generate expected artifacts"
+schematic_outputs = "Sch SVG, BOM, PnP, and design JSON commands generate expected artifacts"
 library_outputs = "Extract, split, and merge commands generate valid library artifacts"
-pcb_outputs = "pcb-svg generates layer SVG outputs from a public PcbDoc"
+intlib_outputs = "IntLib source extraction writes source libraries, LibPkg, and manifest"
+pcb_outputs = "pcb-svg generates layer SVG and assembly HLR outputs from a public PcbDoc"
 clean_template = "clean creates a config template without mutating committed assets"
+output_path_templates = "Output path templates can use real PrjPcb project parameters"
+bom_pnp_config = "Shared BOM/PnP config drives multi-output BOM, PnP, and JLC workflows"
 
 [subtests.approach]
 subprocess_cli = "Invoke public CLI commands through the current Python environment"
 
 [subtests.test_functions]
-test_schematic_and_design_json_commands_use_public_project = "Exercise Sch SVG, BOM, PnP, and netlist commands on Hydroscope"
+test_schematic_and_design_json_commands_use_public_project = "Exercise Sch SVG, BOM, PnP, and design JSON commands on Hydroscope"
+test_bom_pnp_config_and_jlc_command_use_public_project = "Exercise shared BOM/PnP config and paired JLC outputs"
+test_output_path_template_uses_public_project_parameters = "Resolve release-style output paths from public Hydroscope project parameters"
 test_library_extract_split_merge_commands_use_public_fixtures = "Exercise extraction and library split/merge commands on Hydroscope"
+test_intlib_extract_command_uses_public_fixture = "Exercise IntLib source extraction on RT_SUPER_C1"
 test_pcb_svg_command_uses_public_pcbdoc_without_private_context = "Exercise pcb-svg against a copied public PcbDoc and explicit config"
+test_pcb_svg_assembly_views_use_geometer_hlr = "Exercise assembly top/bottom SVG views with geometer HLR enabled"
+test_pcb_svg_cutout_layer_uses_configured_hashes = "Exercise configurable cutout hatches and dashed outlines on the cutouts fixture"
 test_clean_command_creates_template_for_public_schdoc_copy = "Exercise clean template generation without mutating assets"
+
+[[subtests]]
+id = "L3_002"
+file = "test_L3_002_pcb_layer_step_workflow.py"
+name = "PCB Layer STEP Workflow"
+description = "Generate bottom-layer STEP artifacts from the cricket-node fixture"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "reference"
+test_cases = "../../tests/assets/projects/cricket-node"
+
+[subtests.code_under_test]
+module = "altium_cruncher.altium_cruncher_cmd_pcb_layer_step"
+
+[subtests.objectives]
+fixture_backed_step = "pcb-layer-step runs against a real cricket-node PcbDoc fixture"
+color_contract = "Configured copper and board-outline colors reach the STEP request and manifest"
+artifact_shape = "Command writes a STEP artifact and JSON manifest"
+
+[subtests.approach]
+command_handler = "Invoke the command handler directly with a small geometer writer stub"
+
+[subtests.test_functions]
+test_pcb_layer_step_cricket_bottom_layer_uses_configured_colors = "Generate bottom-layer artifacts and verify configured colors"
+
+[[subtests]]
+id = "L3_003"
+file = "test_L3_003_megamaid_workflow.py"
+name = "Megamaid Workflow"
+description = "Run megamaid against Hydroscope and validate embedded assets and manifest counts"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "reference"
+test_cases = "../../tests/assets/projects/hydroscope/input"
+
+[subtests.code_under_test]
+module = "altium_cruncher.altium_cruncher_cmd_megamaid"
+
+[subtests.objectives]
+embedded_assets = "megamaid extracts embedded schematic images and 3D models"
+manifest_contract = "megamaid writes a JSON manifest with expected asset counts"
+native_parity = "optional native executable parity remains available when configured"
+
+[subtests.approach]
+subprocess_cli = "Invoke public megamaid CLI through the current Python environment"
+direct_helper = "Exercise image payload decoding with a focused helper-level test"
+
+[subtests.test_functions]
+test_megamaid_schematic_image_extract_writes_preferred_payload = "Embedded schematic image extraction writes preferred decoded payloads"
+test_megamaid_hydroscope_extracts_images_and_models = "Hydroscope megamaid run extracts expected image and model counts"
+test_native_megamaid_matches_python_for_hydroscope_assets = "Optional native executable output matches Python for embedded assets"
+
+[[subtests]]
+id = "L3_004"
+file = "test_L3_004_bom_pnp_oracle_workflows.py"
+name = "BOM PnP Oracle Workflows"
+description = "Run BOM, PnP, and JLC workflows against Altium oracle fixture outputs"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "reference"
+test_cases = "../../tests/assets/projects"
+
+[subtests.code_under_test]
+module = "altium_cruncher._cli"
+
+[subtests.objectives]
+bom_oracle = "Raw BOM JSON covers Altium XML-BOM designators and key fields"
+pnp_oracle = "PnP JSON matches Altium PNP-METRIC side, coordinate, and rotation data"
+jlc_bundle = "JLC command writes paired BOM and CPL artifacts for the same fixture set"
+
+[subtests.approach]
+subprocess_cli = "Invoke public CLI commands through the current Python environment"
+oracle_parse = "Parse Altium XML-BOM and PNP-METRIC files from reference_output"
+
+[subtests.test_functions]
+test_bom_raw_json_covers_altium_xml_oracle_designators = "Validate raw BOM source data against XML-BOM oracle designators"
+test_pnp_json_matches_altium_metric_oracle_core_geometry = "Validate PnP placement geometry against PNP-METRIC CSV"
+test_jlc_command_writes_paired_outputs_for_primary_fixtures = "Generate paired JLC BOM/CPL outputs for primary BOM/PnP fixtures"

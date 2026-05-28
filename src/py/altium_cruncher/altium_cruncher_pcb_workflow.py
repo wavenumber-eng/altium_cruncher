@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from altium_monkey.altium_design import AltiumDesign
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
 log = logging.getLogger(__name__)
@@ -63,8 +64,7 @@ def _normalize_pcb_project_context(value: str | None) -> str:
     mode = aliases.get(raw, raw)
     if mode not in PCB_PROJECT_CONTEXT_MODES:
         raise ValueError(
-            "project_context must be one of: "
-            + ", ".join(PCB_PROJECT_CONTEXT_MODES)
+            "project_context must be one of: " + ", ".join(PCB_PROJECT_CONTEXT_MODES)
         )
     return mode
 
@@ -73,7 +73,7 @@ def load_design_for_pcb_input(
     input_file: Path,
     *,
     project_context: str | None = "auto",
-):
+) -> tuple["AltiumDesign", str]:
     """
     Load an AltiumDesign from a PcbDoc/PrjPcb input.
 
@@ -87,7 +87,7 @@ def load_design_for_pcb_input(
     context_mode = _normalize_pcb_project_context(project_context)
     suffix = resolved_input.suffix.lower()
     if suffix == ".prjpcb":
-        return AltiumDesign.from_prjpcb(resolved_input), "prjpcb_input"
+        return _load_design_from_prjpcb(resolved_input, context_mode)
     if suffix != ".pcbdoc":
         raise ValueError(f"Unsupported PCB design input type: {suffix}")
 
@@ -146,7 +146,9 @@ def load_design_for_pcb_input(
         try:
             schdocs.append(AltiumSchDoc(schdoc_path))
         except Exception as exc:
-            log.warning("Skipping pseudo-project SchDoc load for %s: %s", schdoc_path.name, exc)
+            log.warning(
+                "Skipping pseudo-project SchDoc load for %s: %s", schdoc_path.name, exc
+            )
 
     design = AltiumDesign.from_pcbdoc(resolved_input)
     design.project = pseudo_project
@@ -167,6 +169,31 @@ def load_design_for_pcb_input(
         len(schdocs),
     )
     return design, "pcbdoc_pseudo_project"
+
+
+def _load_design_from_prjpcb(
+    input_file: Path,
+    context_mode: str,
+) -> tuple["AltiumDesign", str]:
+    from altium_monkey.altium_design import AltiumDesign
+
+    if context_mode == "none":
+        return _load_prjpcb_board_only_design(input_file), "prjpcb_board_only"
+    return AltiumDesign.from_prjpcb(input_file), "prjpcb_input"
+
+
+def _load_prjpcb_board_only_design(input_file: Path) -> "AltiumDesign":
+    """Load a project file without parsing schematic documents."""
+    from altium_monkey.altium_design import AltiumDesign
+    from altium_monkey.altium_netlist_options import NetlistOptions
+    from altium_monkey.altium_prjpcb import AltiumPrjPcb
+
+    project = AltiumPrjPcb(input_file)
+    return AltiumDesign(
+        project=project,
+        schdocs=[],
+        _options=NetlistOptions.from_prjpcb(project),
+    )
 
 
 def iter_pcb_render_inputs(

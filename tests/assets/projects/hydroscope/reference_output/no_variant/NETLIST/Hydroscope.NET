@@ -1,0 +1,932 @@
+Wire List
+
+<<< Component List >>>
+0.1µF                           C1             C0603_0.90MM_HD
+0.1µF                           C2             C0603_0.90MM_HD
+0.1µF                           C3             C0603_0.90MM_HD
+18pF                            C4             C0603_0.90MM_HD
+18pF                            C5             C0603_0.90MM_HD
+0.1µF                           C6             C0603_0.90MM_HD
+0.1µF                           C7             C0603_0.90MM_HD
+0.1µF                           C8             C0603_0.90MM_HD
+0.1µF                           C9             C0603_0.90MM_HD
+0.1µF                           C10            C0603_0.90MM_HD
+0.1µF                           C11            C0603_0.90MM_HD
+0.1µF                           C12            C0603_0.90MM_HD
+0.1µF                           C13            C0603_0.90MM_HD
+0.1µF                           C14            C0603_0.90MM_HD
+18pF                            C15            C0603_0.90MM_HD
+0.1µF                           C16            C0603_0.90MM_HD
+18pF                            C17            C0603_0.90MM_HD
+10µF                            C18            C0805_1.45MM_HD
+0.1µF                           C19            C0603_0.90MM_HD
+10µF                            C20            C0805_1.45MM_HD
+0.1µF                           C21            C0603_0.90MM_HD
+0.1µF                           C22            C0603_0.90MM_HD
+0.1µF                           C23            C0603_0.90MM_HD
+10000pF                         C24            C0603_0.95MM_HD
+0.1µF                           C25            C0603_0.90MM_HD
+10µF                            C26            C0805_1.45MM_HD
+0.1µF                           C27            C0603_0.90MM_HD
+1µF                             C28            C0603_0.95MM_HD
+0.47µF                          C29            C0805_1.45MM_HD
+1µF                             C30            C0603_0.95MM_HD
+10000pF                         C31            C0603_0.90MM_HD
+0.1µF                           C32            C0603_0.90MM_HD
+10000pF                         C33            C0603_0.95MM_HD
+300pF                           C34            C0603_0.90mm_MD
+10000pF                         C35            C0603_0.95MM_HD
+300pF                           C36            C0603_0.90mm_MD
+300pF                           C37            C0603_0.90mm_MD
+300pF                           C38            C0603_0.90mm_MD
+50pF                            C39            C0603_0.90MM_HD
+0.47µF                          C40            C0805_1.45MM_HD
+300pF                           C41            C0603_0.90mm_MD
+10000pF                         C42            C0603_0.95MM_HD
+0.1µF                           C43            C0603_0.90MM_HD
+4.7µF                           C44            C1210_2.80MM_HD
+10µF                            C45            C1206_1.90MM_HD
+10µF                            C46            C1206_1.90MM_HD
+4.7µF                           C47            C1210_2.80MM_HD
+33µF                            C48            C_ALU_C
+0.1µF                           C49            C0603_0.90MM_HD
+10µF                            C50            C0805_1.45MM_MD
+10µF                            C51            C0805_1.45MM_MD
+10µF                            C52            C0805_1.45MM_MD
+0.1µF                           C53            C0603_0.90MM_HD
+0.1µF                           C54            C0603_0.90MM_HD
+4700pF                          C55            C0603_0.95MM_HD
+4700pF                          C56            C0603_0.95MM_HD
+10µF                            C57            C1206_1.90MM_HD
+0.1µF                           C58            C0603_0.90MM_HD
+0.1µF                           C59            C0603_0.90MM_HD
+0.1µF                           C60            C0603_0.90MM_HD
+0.1µF                           C61            C0603_0.90MM_HD
+0.1µF                           C62            C0603_0.90MM_HD
+0.1µF                           C63            C0603_0.90MM_HD
+0.1µF                           C64            C0603_0.90MM_HD
+LED 1.6X0.8MM 570NM GRN CLR SMD D1             LED_0603 - GREEN
+BAV99T-7-F                      D2             D_SOT-523_P
+B160-13-F                       D3             D_SMA_P
+B160-13-F                       D4             D_SMA_P
+B160-13-F                       D5             D_SMA_P
+B160-13-F                       D6             D_SMA_P
+BAV99,215                       D7             SOT-23
+PCB Fiducial                    F1             Fiducial 1mm - 2mm
+PCB Fiducial                    F2             Fiducial 1mm - 2mm
+PCB Fiducial                    F3             Fiducial 1mm - 2mm
+S8111-46R                       HW1            S8111-46R
+FTSH-105-01-F-DV                J1             FTSH-105-04-F-DV - HD
+TC2030-CTL-NL                   J2             TC2030 NO LATCH
+SM6B-SRSS-TB(LF)(SN)            J3             SM06B-SRSS-TB(LF)(SN)
+SM08B-SRSS-TB(LF)(SN)           J4             SM08B-SRSS-TB(LF)(SN)
+1909763-1                       J5             1909763-1
+SM04B-SRSS-TB(LF)(SN)           J6             SM04B-SRSS-TB(LF)(SN)
+BKP2125HS600-T                  L1             C0805_0.8mm
+BKP2125HS600-T                  L2             C0805_0.8mm
+BKP2125HS600-T                  L3             C0805_0.8mm
+BKP2125HS600-T                  L4             C0805_0.8mm
+22µH 0.9A                       L5             L_NRS5020
+22µH 0.9A                       L6             L_NRS5020
+TZ-SB-0001-PCB-[A]              PCB1           
+FMMT491TA                       Q1             SOT-23
+100                             R1             R0603_HD
+1k                              R2             R0603_0.55MM_HD
+1k                              R3             R0603_0.55MM_HD
+10k                             R4             R0603_0.55MM_HD
+10k                             R5             R0603_0.55MM_HD
+10k                             R6             R0603_0.55MM_HD
+1k                              R7             R0603_0.55MM_HD
+10k                             R8             R0603_0.55MM_HD
+10k                             R9             R0603_0.55MM_HD
+10k                             R10            R0603_0.55MM_HD
+10k                             R11            R0603_0.55MM_HD
+10k                             R12            R0603_0.55MM_HD
+10k                             R13            R0603_0.55MM_HD
+12.4k                           R14            R0603_0.55MM_HD
+10k                             R15            R0603_0.55MM_HD
+10k                             R16            R0603_0.55MM_HD
+10k                             R17            R0603_0.55MM_HD
+10k                             R18            R0603_0.55MM_HD
+0                               R19            R0603_0.55MM_HD
+100                             R20            R0603_0.55MM_HD
+100                             R21            R0603_0.55MM_HD
+5.1k                            R22            R0603_0.55MM_HD
+1k                              R23            R0603_0.55MM_HD
+0                               R24            R0603_0.55MM_HD
+560k                            R25            R0603_0.55MM_HD
+10k                             R26            R0603_0.55MM_HD
+0                               R27            R0603_0.55MM_HD
+31.6k                           R28            R0603_0.55MM_HD
+10k                             R29            R0603_0.55MM_HD
+43k                             R30            R0603_0.55MM_HD
+10k                             R31            R0603_0.55MM_HD
+10k                             R32            R0603_0.55MM_HD
+43k                             R33            R0603_0.55MM_HD
+43k                             R34            R0603_0.55MM_HD
+100k                            R35            R0603_0.55MM_HD
+10k                             R36            R0603_0.55MM_HD
+31.6k                           R37            R0603_0.55MM_HD
+10k                             R38            R0603_0.55MM_HD
+374k                            R39            R0603_0.55MM_HD
+10k                             R40            R0603_0.55MM_HD
+374k                            R41            R0603_0.55MM_HD
+10k                             R42            R0603_0.55MM_HD
+1k                              R43            R0603_0.55MM_HD
+SMT_TEST                        TP1            SMT_TP - 25
+SMT_TEST                        TP2            SMT_TP - 25
+SMT_TEST                        TP3            SMT_TP - 25
+SMT_TEST                        TP4            SMT_TP - 25
+SMT_TEST                        TP5            SMT_TP - 25
+SMT_TEST                        TP6            SMT_TP - 25
+SMT_TEST                        TP7            SMT_TP - 25
+SMT_TEST                        TP8            SMT_TP - 25
+SMT_TEST                        TP9            SMT_TP - 25
+SMT_TEST                        TP10           SMT_TP - 25
+SMT_TEST                        TP11           SMT_TP - 25
+SMT_TEST                        TP12           SMT_TP - 25
+SI5351A-B-GTR                   U1             10 MSOP
+ISL3176EIUZ-T                   U2             10 MSOP
+LPC54606J512BD100E              U3             TSQFP50P1600X1600X160-100N
+MIC803-30D2VM3-TR               U4             SOT-23
+W25Q64JVSSIQ                    U5             SOIC127P830X200-8L
+PKMCS0909E4000-R1               U6             PKMCS0909E4000-R1
+SN74AHC1G08DBVR                 U7             SOT95P245X145-5L
+SN74AHC1G08DBVR                 U8             SOT95P245X145-5L
+TDC1000PW                       U9             TSOP65P640X120-28N
+TDC7200PWR                      U10            TSSOP14
+TC6320TG-G                      U11            SOIC 8
+MD1213K6-G                      U12            QFN80P400X400X100_HS-13N
+MD0100N8-G                      U13            SOT89-150P410X160-3N
+OPA353NA/250                    U14            SOT23-5
+LT3570EFE#PBF                   U15            TSOP65P640X120_HS-21N
+OPA348AIDBVR                    U16            SOT23-5
+MCP4725A0T-E/CH                 U17            SOT95P245X145-6L
+OPA348AIDBVR                    U18            SOT23-5
+OPA348AIDBVR                    U19            SOT23-5
+FOX924B-16.000                  Y1             FOX924
+25MHz                           Y2             ABM3
+12MHz                           Y3             ABM3
+
+<<< Wire List >>>
+
+  NODE  REFERENCE  PIN #   PIN NAME       PIN TYPE    PART VALUE
+
+[00146] VIN_MONITOR
+        U3         26      PIO0_15/ADC0_3/PASSIVE     LPC54606J512BD100E
+        U18        1       OUT            PASSIVE     OPA348AIDBVR
+        U18        4       -              PASSIVE     OPA348AIDBVR
+
+[00145] VCOM
+        C39        1       1              PASSIVE     50pF
+        C42        2       1              PASSIVE     10000pF
+        R22        1       1              PASSIVE     5.1k
+        U9         3       VCOM           PASSIVE     TDC1000PW
+
+[00144] US_TX_BUF
+        J3         5       5              PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        U8         4       OUT            PASSIVE     SN74AHC1G08DBVR
+
+[00143] US_OUT
+        J5         3       SIG            PASSIVE     1909763-1
+        U11        5       DN             PASSIVE     TC6320TG-G
+        U11        6       DN             PASSIVE     TC6320TG-G
+        U11        7       DP             PASSIVE     TC6320TG-G
+        U11        8       DP             PASSIVE     TC6320TG-G
+        U13        1       A              PASSIVE     MD0100N8-G
+
+[00142] US_CLK.TDC7200_CLK
+        U10        5       CLOCK          PASSIVE     TDC7200PWR
+        Y1         3       OUTPUT         PASSIVE     FOX924B-16.000
+
+[00141] US_CLK.TDC1000_CLK
+        U1         10      CLK0           PASSIVE     SI5351A-B-GTR
+        U9         25      CLKIN          PASSIVE     TDC1000PW
+
+[00140] TX_ENABLE
+        U2         3       DE             PASSIVE     ISL3176EIUZ-T
+        U3         73      PIO1_28/FC7_SCKPASSIVE     LPC54606J512BD100E
+
+[00139] TDC_TRIGGER
+        TP9        1       1              PASSIVE     SMT_TEST
+        U3         55      PIO1_1/FC3_RXD_PASSIVE     LPC54606J512BD100E
+        U9         16      TRIGGER        PASSIVE     TDC1000PW
+        U10        2       TRIGGER        PASSIVE     TDC7200PWR
+
+[00138] TDC_RESET
+        U3         63      PIO1_26/FC2_CTSPASSIVE     LPC54606J512BD100E
+        U9         17      RESET          PASSIVE     TDC1000PW
+
+[00137] TDC_ENABLE
+        U3         66      PIO1_13/ENET_RXPASSIVE     LPC54606J512BD100E
+        U9         15      EN             PASSIVE     TDC1000PW
+        U10        1       ENABLE         PASSIVE     TDC7200PWR
+
+[00136] SWO
+        J1         6       SWO/TDO        PASSIVE     FTSH-105-01-F-DV
+        J2         6       SWO            PASSIVE     TC2030-CTL-NL
+        R15        1       1              PASSIVE     10k
+        U3         23      PIO0_10/ADC0_0/PASSIVE     LPC54606J512BD100E
+
+[00135] SWDIO
+        J1         2       SWDIO/TMS      PASSIVE     FTSH-105-01-F-DV
+        J2         2       SWDIO          PASSIVE     TC2030-CTL-NL
+        R17        1       1              PASSIVE     10k
+        U3         25      PIO0_12/ADC0_2/PASSIVE     LPC54606J512BD100E
+
+[00134] SWDCLK
+        J1         4       SWDCLK/TCK     PASSIVE     FTSH-105-01-F-DV
+        J2         4       SWDCLK         PASSIVE     TC2030-CTL-NL
+        R16        1       1              PASSIVE     10k
+        U3         24      PIO0_11/ADC0_1/PASSIVE     LPC54606J512BD100E
+
+[00133] STOP
+        TP11       1       1              PASSIVE     SMT_TEST
+        U7         1       A              PASSIVE     SN74AHC1G08DBVR
+        U7         2       B              PASSIVE     SN74AHC1G08DBVR
+        U9         14      STOP           PASSIVE     TDC1000PW
+        U10        4       STOP           PASSIVE     TDC7200PWR
+
+[00132] START
+        TP10       1       1              PASSIVE     SMT_TEST
+        U3         29      PIO1_0/ACD0_6/FPASSIVE     LPC54606J512BD100E
+        U9         13      START          PASSIVE     TDC1000PW
+        U10        3       START          PASSIVE     TDC7200PWR
+
+[00131] SPIFI_SCK
+        U3         56      PIO0_26/FC2_RXDPASSIVE     LPC54606J512BD100E
+        U5         6       SCK            PASSIVE     W25Q64JVSSIQ
+
+[00130] SPIFI_IO3
+        U3         42      PIO0_27/FC2_TXDPASSIVE     LPC54606J512BD100E
+        U5         7       H\O\L\D\ (IO3) PASSIVE     W25Q64JVSSIQ
+
+[00129] SPIFI_IO2
+        U3         44      PIO0_28/FC0_SCKPASSIVE     LPC54606J512BD100E
+        U5         3       \W\P\ (IO2)    PASSIVE     W25Q64JVSSIQ
+
+[00128] SPIFI_IO0
+        U3         38      PIO0_24/FC0_RXDPASSIVE     LPC54606J512BD100E
+        U3         40      PIO0_25/FC0_TXDPASSIVE     LPC54606J512BD100E
+        U5         2       SO (IO1)       PASSIVE     W25Q64JVSSIQ
+        U5         5       SI (IO0)       PASSIVE     W25Q64JVSSIQ
+
+[00127] SPIFI_CS
+        R9         1       1              PASSIVE     10k
+        U3         35      PIO0_23/ADC0_11PASSIVE     LPC54606J512BD100E
+        U5         1       \C\E\          PASSIVE     W25Q64JVSSIQ
+
+[00126] SPI_SDO
+        U3         5       PIO1_18/R/FC8_TPASSIVE     LPC54606J512BD100E
+        U9         21      SDO            PASSIVE     TDC1000PW
+        U10        9       DOUT           PASSIVE     TDC7200PWR
+
+[00125] SPI_SDIN
+        U3         47      PIO1_17/ENET_MDPASSIVE     LPC54606J512BD100E
+        U9         20      SDI            PASSIVE     TDC1000PW
+        U10        10      DIN            PASSIVE     TDC7200PWR
+
+[00124] SPI_CLK
+        U3         16      PIO1_19/FC8_SCKPASSIVE     LPC54606J512BD100E
+        U9         18      SCLK           PASSIVE     TDC1000PW
+        U10        12      SCLK           PASSIVE     TDC7200PWR
+
+[00123] SDA
+        J6         1       1              PASSIVE     SM04B-SRSS-TB(LF)(SN)
+        R3         1       1              PASSIVE     1k
+        U1         5       SDA            PASSIVE     SI5351A-B-GTR
+        U3         85      PIO0_3/FC3_RXD_PASSIVE     LPC54606J512BD100E
+        U17        4       SDA            PASSIVE     MCP4725A0T-E/CH
+
+[00122] SCL
+        J6         2       2              PASSIVE     SM04B-SRSS-TB(LF)(SN)
+        R2         1       1              PASSIVE     1k
+        U1         4       SCL            PASSIVE     SI5351A-B-GTR
+        U3         83      PIO0_2/FC3_TXD_PASSIVE     LPC54606J512BD100E
+        U17        5       SCL            PASSIVE     MCP4725A0T-E/CH
+
+[00121] RX_ENABLE
+        U2         2       \R\E\          PASSIVE     ISL3176EIUZ-T
+        U3         81      PIO1_29/FC7_RXDPASSIVE     LPC54606J512BD100E
+
+[00120] RST
+        J1         10      R\S\T\         PASSIVE     FTSH-105-01-F-DV
+        J2         3       RST            PASSIVE     TC2030-CTL-NL
+        R8         1       1              PASSIVE     10k
+        U3         48      RESETN         PASSIVE     LPC54606J512BD100E
+        U4         2       \R\E\S\E\T\    PASSIVE     MIC803-30D2VM3-TR
+
+[00119] RS485_TX_OUT_P
+        J4         1       1              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        U2         6       Y              PASSIVE     ISL3176EIUZ-T
+
+[00118] RS485_TX_OUT_N
+        J4         2       2              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        U2         7       Z              PASSIVE     ISL3176EIUZ-T
+
+[00117] RS485_RX_IN_P
+        J4         3       3              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        R1         2       2              PASSIVE     100
+        U2         9       A              PASSIVE     ISL3176EIUZ-T
+
+[00116] RS485_RX_IN_N
+        J4         6       6              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        R1         1       1              PASSIVE     100
+        U2         8       B              PASSIVE     ISL3176EIUZ-T
+
+[00084] NetTP8_1
+        TP8        1       1              PASSIVE     SMT_TEST
+        U3         92      PIO1_31/MCLK/R/PASSIVE     LPC54606J512BD100E
+
+[00083] NetTP7_1
+        TP7        1       1              PASSIVE     SMT_TEST
+        U3         37      PIO1_21/FC7_CTSPASSIVE     LPC54606J512BD100E
+
+[00082] NetTP6_1
+        TP6        1       1              PASSIVE     SMT_TEST
+        U3         28      PIO0_31/ADC0_5/PASSIVE     LPC54606J512BD100E
+
+[00081] NetTP5_1
+        TP5        1       1              PASSIVE     SMT_TEST
+        U3         64      PIO0_8/FC3_SSELPASSIVE     LPC54606J512BD100E
+
+[00080] NetTP4_1
+        TP4        1       1              PASSIVE     SMT_TEST
+        U3         61      PIO0_7/FC3_RTS_PASSIVE     LPC54606J512BD100E
+
+[00079] NetTP3_1
+        TP3        1       1              PASSIVE     SMT_TEST
+        U3         100     PIO0_1/CAN1_TD/PASSIVE     LPC54606J512BD100E
+
+[00078] NetTP2_1
+        TP2        1       1              PASSIVE     SMT_TEST
+        U3         93      PIO0_0/CAN1_RD/PASSIVE     LPC54606J512BD100E
+
+[00077] NetTP1_1
+        TP1        1       1              PASSIVE     SMT_TEST
+        U1         9       CLK1           PASSIVE     SI5351A-B-GTR
+
+[00076] NetR37_2
+        R37        2       2              PASSIVE     31.6k
+        U17        1       VOUT           PASSIVE     MCP4725A0T-E/CH
+
+[00075] NetR35_1
+        R35        1       1              PASSIVE     100k
+        R36        2       2              PASSIVE     10k
+        U15        10      FB3            PASSIVE     LT3570EFE#PBF
+
+[00074] NetR34_2
+        R34        2       2              PASSIVE     43k
+        U15        8       VC2            PASSIVE     LT3570EFE#PBF
+
+[00073] NetR33_2
+        R33        2       2              PASSIVE     43k
+        U15        20      VC1            PASSIVE     LT3570EFE#PBF
+
+[00072] NetR30_2
+        R30        2       2              PASSIVE     43k
+        U15        6       RT             PASSIVE     LT3570EFE#PBF
+
+[00071] NetR28_1
+        R28        1       1              PASSIVE     31.6k
+        R31        2       2              PASSIVE     10k
+        U15        9       FB2            PASSIVE     LT3570EFE#PBF
+
+[00070] NetR25_1
+        R25        1       1              PASSIVE     560k
+        R26        2       2              PASSIVE     10k
+        U15        1       FB1            PASSIVE     LT3570EFE#PBF
+
+[00069] NetR21_2
+        R21        2       2              PASSIVE     100
+        U9         6       PGAOUT         PASSIVE     TDC1000PW
+
+[00068] NetR20_2
+        R20        2       2              PASSIVE     100
+        U9         4       LNAOUT         PASSIVE     TDC1000PW
+
+[00067] NetR19_2
+        R19        2       2              PASSIVE     0
+        U9         2       RX2            PASSIVE     TDC1000PW
+
+[00066] NetR18_1
+        R18        1       1              PASSIVE     10k
+        U8         1       A              PASSIVE     SN74AHC1G08DBVR
+        U8         2       B              PASSIVE     SN74AHC1G08DBVR
+        U9         28      TX1            PASSIVE     TDC1000PW
+        U12        1       INA            PASSIVE     MD1213K6-G
+        U12        3       INB            PASSIVE     MD1213K6-G
+
+[00065] NetR14_2
+        R14        2       2              PASSIVE     12.4k
+        U3         7       USB1_REXT      PASSIVE     LPC54606J512BD100E
+
+[00064] NetR13_2
+        R13        2       2              PASSIVE     10k
+        U3         13      USB1_DP        PASSIVE     LPC54606J512BD100E
+
+[00063] NetR12_2
+        R12        2       2              PASSIVE     10k
+        U3         12      USB1_DM        PASSIVE     LPC54606J512BD100E
+
+[00062] NetR11_2
+        R11        2       2              PASSIVE     10k
+        U3         97      USB0_DP        PASSIVE     LPC54606J512BD100E
+
+[00061] NetR10_2
+        R10        2       2              PASSIVE     10k
+        U3         98      USB0_DM        PASSIVE     LPC54606J512BD100E
+
+[00060] NetR7_2
+        R7         2       2              PASSIVE     1k
+        U3         72      PIO0_18/FC4_CTSPASSIVE     LPC54606J512BD100E
+
+[00059] NetQ1_1
+        Q1         1       B              PASSIVE     FMMT491TA
+        U15        11      NPN_DRV        PASSIVE     LT3570EFE#PBF
+
+[00058] NetJ3_4
+        J3         4       4              PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        R43        1       1              PASSIVE     1k
+
+[00055] NetD4_1
+        D4         1       A              PASSIVE     B160-13-F
+        L5         2       2              PASSIVE     22µH 0.9A
+        U15        16      SW1            PASSIVE     LT3570EFE#PBF
+
+[00054] NetD1_A
+        D1         A       A              PASSIVE     LED 1.6X0.8MM 570NM GRN CLR SMD
+        R7         1       1              PASSIVE     1k
+
+[00053] NetC64_2
+        C64        2       1              PASSIVE     0.1µF
+        R41        1       1              PASSIVE     374k
+        R42        2       2              PASSIVE     10k
+        U19        3       +              PASSIVE     OPA348AIDBVR
+
+[00052] NetC61_2
+        C61        2       1              PASSIVE     0.1µF
+        R39        1       1              PASSIVE     374k
+        R40        2       2              PASSIVE     10k
+        U18        3       +              PASSIVE     OPA348AIDBVR
+
+[00051] NetC60_2
+        C60        2       1              PASSIVE     0.1µF
+        R37        1       1              PASSIVE     31.6k
+        R38        2       2              PASSIVE     10k
+        U16        3       +              PASSIVE     OPA348AIDBVR
+
+[00050] NetC56_2
+        C56        2       1              PASSIVE     4700pF
+        R34        1       1              PASSIVE     43k
+
+[00049] NetC55_2
+        C55        2       1              PASSIVE     4700pF
+        R33        1       1              PASSIVE     43k
+
+[00048] NetC54_2
+        C54        2       1              PASSIVE     0.1µF
+        U15        7       SS2            PASSIVE     LT3570EFE#PBF
+
+[00047] NetC53_2
+        C53        2       1              PASSIVE     0.1µF
+        U15        19      SS1            PASSIVE     LT3570EFE#PBF
+
+[00046] NetC50_2
+        C50        2       1              PASSIVE     10µF
+        C51        2       1              PASSIVE     10µF
+        C52        2       1              PASSIVE     10µF
+        D5         1       A              PASSIVE     B160-13-F
+        L6         2       2              PASSIVE     22µH 0.9A
+        R27        2       2              PASSIVE     0
+        R28        2       2              PASSIVE     31.6k
+
+[00045] NetC49_2
+        C49        2       1              PASSIVE     0.1µF
+        D5         2       K              PASSIVE     B160-13-F
+        U15        13      BOOST          PASSIVE     LT3570EFE#PBF
+
+[00044] NetC49_1
+        C49        1       1              PASSIVE     0.1µF
+        D6         2       K              PASSIVE     B160-13-F
+        L6         1       1              PASSIVE     22µH 0.9A
+        U15        15      SW2            PASSIVE     LT3570EFE#PBF
+
+[00043] NetC43_2
+        C43        2       1              PASSIVE     0.1µF
+        L4         1       1              PASSIVE     BKP2125HS600-T
+        U14        5       VCC            PASSIVE     OPA353NA/250
+
+[00042] NetC38_2
+        C38        2       2              PASSIVE     300pF
+        C39        2       1              PASSIVE     50pF
+        R22        2       2              PASSIVE     5.1k
+        TP12       1       1              PASSIVE     SMT_TEST
+        U9         7       COMPIN         PASSIVE     TDC1000PW
+        U14        3       +              PASSIVE     OPA353NA/250
+
+[00041] NetC38_1
+        C38        1       1              PASSIVE     300pF
+        C41        1       1              PASSIVE     300pF
+        R21        1       1              PASSIVE     100
+
+[00040] NetC36_2
+        C36        2       2              PASSIVE     300pF
+        C37        2       2              PASSIVE     300pF
+        R20        1       1              PASSIVE     100
+
+[00039] NetC36_1
+        C36        1       1              PASSIVE     300pF
+        U9         5       PGAIN          PASSIVE     TDC1000PW
+
+[00038] NetC35_2
+        C35        2       1              PASSIVE     10000pF
+        U11        2       GN             PASSIVE     TC6320TG-G
+
+[00037] NetC35_1
+        C35        1       1              PASSIVE     10000pF
+        U12        7       OUTB           PASSIVE     MD1213K6-G
+
+[00036] NetC34_2
+        C34        2       2              PASSIVE     300pF
+        R19        1       1              PASSIVE     0
+
+[00035] NetC34_1
+        C34        1       1              PASSIVE     300pF
+        D2         3       AC             PASSIVE     BAV99T-7-F
+        R23        2       2              PASSIVE     1k
+        U13        3       B              PASSIVE     MD0100N8-G
+
+[00034] NetC33_2
+        C33        2       1              PASSIVE     10000pF
+        U11        4       GP             PASSIVE     TC6320TG-G
+
+[00033] NetC33_1
+        C33        1       1              PASSIVE     10000pF
+        U12        9       OUTA           PASSIVE     MD1213K6-G
+
+[00032] NetC31_2
+        C31        2       1              PASSIVE     10000pF
+        C32        2       1              PASSIVE     0.1µF
+        L3         2       2              PASSIVE     BKP2125HS600-T
+        U9         22      VIO            PASSIVE     TDC1000PW
+
+[00031] NetC30_1
+        C30        1       1              PASSIVE     1µF
+        U10        13      VREG           PASSIVE     TDC7200PWR
+
+[00030] NetC17_2
+        C17        2       1              PASSIVE     18pF
+        U3         19      XTALOUT        PASSIVE     LPC54606J512BD100E
+        Y3         1       OSC1           PASSIVE     12MHz
+
+[00029] NetC15_2
+        C15        2       1              PASSIVE     18pF
+        U3         20      XTALIN         PASSIVE     LPC54606J512BD100E
+        Y3         2       OSC2           PASSIVE     12MHz
+
+[00028] NetC5_2
+        C5         2       1              PASSIVE     18pF
+        U1         3       XB             PASSIVE     SI5351A-B-GTR
+        Y2         1       OSC1           PASSIVE     25MHz
+
+[00027] NetC4_2
+        C4         2       1              PASSIVE     18pF
+        U1         2       XA             PASSIVE     SI5351A-B-GTR
+        Y2         2       OSC2           PASSIVE     25MHz
+
+[00026] MISC_FC_IO
+        D7         3       AC             PASSIVE     BAV99,215
+        R43        2       2              PASSIVE     1k
+        U3         94      PIO1_11/ENET_TXPASSIVE     LPC54606J512BD100E
+
+[00025] ISP_TX_OUT
+        U2         4       DI             PASSIVE     ISL3176EIUZ-T
+        U3         95      PIO0_30/FC0_TXDPASSIVE     LPC54606J512BD100E
+
+[00024] ISP_RX_IN
+        U2         1       RO             PASSIVE     ISL3176EIUZ-T
+        U3         82      PIO0_29/FC0_RXDPASSIVE     LPC54606J512BD100E
+
+[00023] ISP2
+        R4         2       2              PASSIVE     10k
+        U3         90      PIO0_6/FC_SCK/CPASSIVE     LPC54606J512BD100E
+
+[00022] ISP1
+        R5         2       2              PASSIVE     10k
+        U3         89      PIO0_5/CAN0_TD/PASSIVE     LPC54606J512BD100E
+
+[00021] ISP0
+        R6         2       2              PASSIVE     10k
+        U3         87      PIO0_4/CAN0_RD/PASSIVE     LPC54606J512BD100E
+
+[00020] HV_ON
+        U3         41      PIO1_10/ENET_TXPASSIVE     LPC54606J512BD100E
+        U12        12      OE             PASSIVE     MD1213K6-G
+
+[00019] HV_MONITOR
+        U3         27      PIO0_16/ADC0_4/PASSIVE     LPC54606J512BD100E
+        U19        1       OUT            PASSIVE     OPA348AIDBVR
+        U19        4       -              PASSIVE     OPA348AIDBVR
+
+[00018] HV_ENABLE
+        R29        2       2              PASSIVE     10k
+        U3         58      PIO1_2/CAN0_TD/PASSIVE     LPC54606J512BD100E
+        U15        2       \S\H\D\N\1\    PASSIVE     LT3570EFE#PBF
+
+[00017] GND
+        C1         1       1              PASSIVE     0.1µF
+        C2         1       1              PASSIVE     0.1µF
+        C3         1       1              PASSIVE     0.1µF
+        C4         1       1              PASSIVE     18pF
+        C5         1       1              PASSIVE     18pF
+        C6         2       1              PASSIVE     0.1µF
+        C7         1       1              PASSIVE     0.1µF
+        C8         1       1              PASSIVE     0.1µF
+        C9         1       1              PASSIVE     0.1µF
+        C10        1       1              PASSIVE     0.1µF
+        C11        1       1              PASSIVE     0.1µF
+        C12        1       1              PASSIVE     0.1µF
+        C13        1       1              PASSIVE     0.1µF
+        C14        1       1              PASSIVE     0.1µF
+        C15        1       1              PASSIVE     18pF
+        C16        1       1              PASSIVE     0.1µF
+        C17        1       1              PASSIVE     18pF
+        C18        1       1              PASSIVE     10µF
+        C19        1       1              PASSIVE     0.1µF
+        C20        1       1              PASSIVE     10µF
+        C21        1       1              PASSIVE     0.1µF
+        C22        1       1              PASSIVE     0.1µF
+        C23        1       1              PASSIVE     0.1µF
+        C24        1       1              PASSIVE     10000pF
+        C25        1       1              PASSIVE     0.1µF
+        C26        1       1              PASSIVE     10µF
+        C27        1       1              PASSIVE     0.1µF
+        C28        1       1              PASSIVE     1µF
+        C29        1       1              PASSIVE     0.47µF
+        C30        2       1              PASSIVE     1µF
+        C31        1       1              PASSIVE     10000pF
+        C32        1       1              PASSIVE     0.1µF
+        C37        1       1              PASSIVE     300pF
+        C40        1       1              PASSIVE     0.47µF
+        C41        2       2              PASSIVE     300pF
+        C42        1       1              PASSIVE     10000pF
+        C43        1       1              PASSIVE     0.1µF
+        C44        2       1              PASSIVE     4.7µF
+        C45        1       1              PASSIVE     10µF
+        C46        1       1              PASSIVE     10µF
+        C47        1       1              PASSIVE     4.7µF
+        C48        2       1              PASSIVE     33µF
+        C50        1       1              PASSIVE     10µF
+        C51        1       1              PASSIVE     10µF
+        C52        1       1              PASSIVE     10µF
+        C53        1       1              PASSIVE     0.1µF
+        C54        1       1              PASSIVE     0.1µF
+        C55        1       1              PASSIVE     4700pF
+        C56        1       1              PASSIVE     4700pF
+        C57        1       1              PASSIVE     10µF
+        C58        1       1              PASSIVE     0.1µF
+        C59        1       1              PASSIVE     0.1µF
+        C60        1       1              PASSIVE     0.1µF
+        C61        1       1              PASSIVE     0.1µF
+        C62        1       1              PASSIVE     0.1µF
+        C63        1       1              PASSIVE     0.1µF
+        C64        1       1              PASSIVE     0.1µF
+        D1         C       C              PASSIVE     LED 1.6X0.8MM 570NM GRN CLR SMD
+        D2         1       A              PASSIVE     BAV99T-7-F
+        D2         2       C              PASSIVE     BAV99T-7-F
+        D6         1       A              PASSIVE     B160-13-F
+        D7         1       A              PASSIVE     BAV99,215
+        D7         2       C              PASSIVE     BAV99,215
+        HW1        1       1              PASSIVE     S8111-46R
+        J1         3       GND            PASSIVE     FTSH-105-01-F-DV
+        J1         5       GND            PASSIVE     FTSH-105-01-F-DV
+        J1         9       GND_DETECT     PASSIVE     FTSH-105-01-F-DV
+        J2         5       GND            PASSIVE     TC2030-CTL-NL
+        J3         1       1              PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        J3         6       6              PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        J3         M1      M1             PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        J3         M2      M2             PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        J4         7       7              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        J4         8       8              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        J4         M1      M1             PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        J4         M2      M2             PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        J5         1       GND            PASSIVE     1909763-1
+        J5         2       GND            PASSIVE     1909763-1
+        J6         3       3              PASSIVE     SM04B-SRSS-TB(LF)(SN)
+        J6         M1      M1             PASSIVE     SM04B-SRSS-TB(LF)(SN)
+        J6         M2      M2             PASSIVE     SM04B-SRSS-TB(LF)(SN)
+        R10        1       1              PASSIVE     10k
+        R11        1       1              PASSIVE     10k
+        R12        1       1              PASSIVE     10k
+        R13        1       1              PASSIVE     10k
+        R14        1       1              PASSIVE     12.4k
+        R18        2       2              PASSIVE     10k
+        R23        1       1              PASSIVE     1k
+        R29        1       1              PASSIVE     10k
+        R30        1       1              PASSIVE     43k
+        R31        1       1              PASSIVE     10k
+        R32        1       1              PASSIVE     10k
+        R36        1       1              PASSIVE     10k
+        R38        1       1              PASSIVE     10k
+        R40        1       1              PASSIVE     10k
+        R42        1       1              PASSIVE     10k
+        U1         8       GND            PASSIVE     SI5351A-B-GTR
+        U2         5       GND            PASSIVE     ISL3176EIUZ-T
+        U3         2       VSS            PASSIVE     LPC54606J512BD100E
+        U3         6       USB1_AVSSC     PASSIVE     LPC54606J512BD100E
+        U3         14      USB1_AVSSTX3V3 PASSIVE     LPC54606J512BD100E
+        U3         22      VSS            PASSIVE     LPC54606J512BD100E
+        U3         30      VREFN          PASSIVE     LPC54606J512BD100E
+        U3         34      VSS            PASSIVE     LPC54606J512BD100E
+        U3         43      PIO1_22/FC8_RTSPASSIVE     LPC54606J512BD100E
+        U3         49      VSS            PASSIVE     LPC54606J512BD100E
+        U3         51      RTCXIN         PASSIVE     LPC54606J512BD100E
+        U3         53      VSS            PASSIVE     LPC54606J512BD100E
+        U3         71      VSS            PASSIVE     LPC54606J512BD100E
+        U3         79      VSS            PASSIVE     LPC54606J512BD100E
+        U3         80      PIO0_22/FC6_TXDPASSIVE     LPC54606J512BD100E
+        U3         96      VSS            PASSIVE     LPC54606J512BD100E
+        U4         1       GND            PASSIVE     MIC803-30D2VM3-TR
+        U5         4       GND            PASSIVE     W25Q64JVSSIQ
+        U6         2       -              PASSIVE     PKMCS0909E4000-R1
+        U7         3       GND            PASSIVE     SN74AHC1G08DBVR
+        U8         3       GND            PASSIVE     SN74AHC1G08DBVR
+        U9         11      CHSEL          PASSIVE     TDC1000PW
+        U9         26      GND            PASSIVE     TDC1000PW
+        U10        7       GND            PASSIVE     TDC7200PWR
+        U11        1       SN             PASSIVE     TC6320TG-G
+        U12        2       VL             PASSIVE     MD1213K6-G
+        U12        4       GND            PASSIVE     MD1213K6-G
+        U12        5       VSS1           PASSIVE     MD1213K6-G
+        U12        6       VSS2           PASSIVE     MD1213K6-G
+        U12        13      TP             PASSIVE     MD1213K6-G
+        U14        2       GND            PASSIVE     OPA353NA/250
+        U15        17      GND            PASSIVE     LT3570EFE#PBF
+        U15        21      GND            PASSIVE     LT3570EFE#PBF
+        U16        2       GND            PASSIVE     OPA348AIDBVR
+        U17        2       VSS            PASSIVE     MCP4725A0T-E/CH
+        U18        2       GND            PASSIVE     OPA348AIDBVR
+        U19        2       GND            PASSIVE     OPA348AIDBVR
+        Y1         2       GND            PASSIVE     FOX924B-16.000
+
+[00016] FLOAT
+        U13        2       COM            PASSIVE     MD0100N8-G
+
+[00015] DC_DC_VIN
+        C45        2       1              PASSIVE     10µF
+        C46        2       1              PASSIVE     10µF
+        C48        1       1              PASSIVE     33µF
+        D3         2       K              PASSIVE     B160-13-F
+        L5         1       1              PASSIVE     22µH 0.9A
+        Q1         3       C              PASSIVE     FMMT491TA
+        R39        2       2              PASSIVE     374k
+        U15        3       \S\H\D\N\2\    PASSIVE     LT3570EFE#PBF
+        U15        4       \S\H\D\N\3\    PASSIVE     LT3570EFE#PBF
+        U15        12      VIN3           PASSIVE     LT3570EFE#PBF
+        U15        14      VIN2           PASSIVE     LT3570EFE#PBF
+        U15        18      VIN1           PASSIVE     LT3570EFE#PBF
+
+[00014] DC_DC_SYNC
+        R32        2       2              PASSIVE     10k
+        U1         6       CLK2           PASSIVE     SI5351A-B-GTR
+        U15        5       SYNC           PASSIVE     LT3570EFE#PBF
+
+[00013] CS_TDC7200
+        U3         15      PIO1_6/FC0_TXD_PASSIVE     LPC54606J512BD100E
+        U10        11      CSB            PASSIVE     TDC7200PWR
+
+[00012] CS_TDC1000
+        U3         18      PIO1_7/FC0_RTS+PASSIVE     LPC54606J512BD100E
+        U9         19      CSB            PASSIVE     TDC1000PW
+
+[00011] BZR
+        U3         91      PIO0_19/FC4_RTSPASSIVE     LPC54606J512BD100E
+        U6         1       +              PASSIVE     PKMCS0909E4000-R1
+
+[00010] BUFFERED_STOP
+        J3         2       2              PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        U7         4       OUT            PASSIVE     SN74AHC1G08DBVR
+
+[00009] BUFFERED_RX
+        J3         3       3              PASSIVE     SM6B-SRSS-TB(LF)(SN)
+        U14        1       OUT            PASSIVE     OPA353NA/250
+        U14        4       -              PASSIVE     OPA353NA/250
+
+[00008] +VIN
+        D3         1       A              PASSIVE     B160-13-F
+        J4         4       4              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+        J4         5       5              PASSIVE     SM08B-SRSS-TB(LF)(SN)
+
+[00007] +V_ADJ
+        R26        1       1              PASSIVE     10k
+        U16        1       OUT            PASSIVE     OPA348AIDBVR
+        U16        4       -              PASSIVE     OPA348AIDBVR
+
+[00006] +MOS_DRV
+        C40        2       1              PASSIVE     0.47µF
+        C57        2       1              PASSIVE     10µF
+        Q1         2       E              PASSIVE     FMMT491TA
+        R35        2       2              PASSIVE     100k
+        U12        8       VH             PASSIVE     MD1213K6-G
+        U12        10      VDD2           PASSIVE     MD1213K6-G
+        U12        11      VDD1           PASSIVE     MD1213K6-G
+
+[00005] +HV_PRE
+        C44        1       1              PASSIVE     4.7µF
+        C47        2       1              PASSIVE     4.7µF
+        D4         2       K              PASSIVE     B160-13-F
+        R24        2       2              PASSIVE     0
+        R25        2       2              PASSIVE     560k
+
+[00004] +HV
+        C29        2       1              PASSIVE     0.47µF
+        R24        1       1              PASSIVE     0
+        R41        2       2              PASSIVE     374k
+        U11        3       SP             PASSIVE     TC6320TG-G
+
+[00003] +3.3v_TDC7200
+        C27        2       1              PASSIVE     0.1µF
+        C28        2       1              PASSIVE     1µF
+        L2         1       1              PASSIVE     BKP2125HS600-T
+        U10        14      VDD            PASSIVE     TDC7200PWR
+
+[00002] +3.3v+_TDC1000
+        C24        2       1              PASSIVE     10000pF
+        C25        2       1              PASSIVE     0.1µF
+        C26        2       1              PASSIVE     10µF
+        L1         2       2              PASSIVE     BKP2125HS600-T
+        U9         23      VDD            PASSIVE     TDC1000PW
+        U9         24      VDD            PASSIVE     TDC1000PW
+
+[00001] +3.3v
+        C1         2       1              PASSIVE     0.1µF
+        C2         2       1              PASSIVE     0.1µF
+        C3         2       1              PASSIVE     0.1µF
+        C6         1       1              PASSIVE     0.1µF
+        C7         2       1              PASSIVE     0.1µF
+        C8         2       1              PASSIVE     0.1µF
+        C9         2       1              PASSIVE     0.1µF
+        C10        2       1              PASSIVE     0.1µF
+        C11        2       1              PASSIVE     0.1µF
+        C12        2       1              PASSIVE     0.1µF
+        C13        2       1              PASSIVE     0.1µF
+        C14        2       1              PASSIVE     0.1µF
+        C16        2       1              PASSIVE     0.1µF
+        C18        2       1              PASSIVE     10µF
+        C19        2       1              PASSIVE     0.1µF
+        C20        2       1              PASSIVE     10µF
+        C21        2       1              PASSIVE     0.1µF
+        C22        2       1              PASSIVE     0.1µF
+        C23        2       1              PASSIVE     0.1µF
+        C58        2       1              PASSIVE     0.1µF
+        C59        2       1              PASSIVE     0.1µF
+        C62        2       1              PASSIVE     0.1µF
+        C63        2       1              PASSIVE     0.1µF
+        J1         1       VCC            PASSIVE     FTSH-105-01-F-DV
+        J2         1       VCC            PASSIVE     TC2030-CTL-NL
+        J6         4       4              PASSIVE     SM04B-SRSS-TB(LF)(SN)
+        L1         1       1              PASSIVE     BKP2125HS600-T
+        L2         2       2              PASSIVE     BKP2125HS600-T
+        L3         1       1              PASSIVE     BKP2125HS600-T
+        L4         2       2              PASSIVE     BKP2125HS600-T
+        R2         2       2              PASSIVE     1k
+        R3         2       2              PASSIVE     1k
+        R4         1       1              PASSIVE     10k
+        R5         1       1              PASSIVE     10k
+        R6         1       1              PASSIVE     10k
+        R8         2       2              PASSIVE     10k
+        R9         2       2              PASSIVE     10k
+        R15        2       2              PASSIVE     10k
+        R16        2       2              PASSIVE     10k
+        R17        2       2              PASSIVE     10k
+        R27        1       1              PASSIVE     0
+        U1         1       VDD            PASSIVE     SI5351A-B-GTR
+        U1         7       VDDO           PASSIVE     SI5351A-B-GTR
+        U2         10      VCC            PASSIVE     ISL3176EIUZ-T
+        U3         1       VDD            PASSIVE     LPC54606J512BD100E
+        U3         9       USB1_VBUS      PASSIVE     LPC54606J512BD100E
+        U3         10      USB1_AVDDC3V3  PASSIVE     LPC54606J512BD100E
+        U3         11      USB1_AVDDTX3V3 PASSIVE     LPC54606J512BD100E
+        U3         21      VDD            PASSIVE     LPC54606J512BD100E
+        U3         31      VREFP          PASSIVE     LPC54606J512BD100E
+        U3         32      VDDA           PASSIVE     LPC54606J512BD100E
+        U3         33      VDD            PASSIVE     LPC54606J512BD100E
+        U3         39      PIO1_9/ENET_TXDPASSIVE     LPC54606J512BD100E
+        U3         45      VBAT           PASSIVE     LPC54606J512BD100E
+        U3         50      VDD            PASSIVE     LPC54606J512BD100E
+        U3         54      VDD            PASSIVE     LPC54606J512BD100E
+        U3         75      VDD            PASSIVE     LPC54606J512BD100E
+        U3         76      VDD            PASSIVE     LPC54606J512BD100E
+        U3         99      VDD            PASSIVE     LPC54606J512BD100E
+        U4         3       VCC            PASSIVE     MIC803-30D2VM3-TR
+        U5         8       VCC            PASSIVE     W25Q64JVSSIQ
+        U7         5       VCC            PASSIVE     SN74AHC1G08DBVR
+        U8         5       VCC            PASSIVE     SN74AHC1G08DBVR
+        U16        5       VCC            PASSIVE     OPA348AIDBVR
+        U17        3       VDD            PASSIVE     MCP4725A0T-E/CH
+        U17        6       A0             PASSIVE     MCP4725A0T-E/CH
+        U18        5       VCC            PASSIVE     OPA348AIDBVR
+        U19        5       VCC            PASSIVE     OPA348AIDBVR
+        Y1         4       VCC            PASSIVE     FOX924B-16.000
+

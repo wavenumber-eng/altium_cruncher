@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>split command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="split" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>split</h1><p class="lede">Splits multi-symbol schematic libraries or multi-footprint PCB libraries into individual library artifacts.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher split Hydroscope.SCHLIB --symbols SMT_TEST -o output/split
+altium-cruncher split footprints.PcbLib --footprints U1,U2</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>input</code> accepts <code>.SchLib</code> or <code>.PcbLib</code>. Selection options limit symbols or footprints. <code>-o</code> selects the output directory.</p></section>
+<section id="output"><h2>Output</h2><p>The command writes one library file per selected symbol or footprint.</p></section>
+<section id="tests"><h2>Tests</h2><p>L3 exercises SchLib splitting on Hydroscope and then feeds the result to merge. Planned golden tests should compare against <code>reference_output</code> fixtures.</p></section>
+</main>
+</body>
+</html>

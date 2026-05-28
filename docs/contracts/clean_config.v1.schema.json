@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/clean_config.v1.schema.json",
+  "title": "Altium Cruncher Clean Config",
+  "description": "JSON/JSONC configuration contract for schematic, schematic-library, and PCB-library clean workflows.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/schematicCleanConfig"
+    },
+    {
+      "$ref": "#/$defs/pcblibCleanConfig"
+    }
+  ],
+  "$defs": {
+    "colorValue": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777215
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ]
+    },
+    "lineWidth": {
+      "oneOf": [
+        {
+          "enum": ["smallest", "zero", "small", "medium", "large"]
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        }
+      ]
+    },
+    "fontSpec": {
+      "type": "object",
+      "properties": {
+        "font_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "font": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size_pt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "color": {
+          "$ref": "#/$defs/colorValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "enabledObject": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "schematicCleanConfig": {
+      "type": "object",
+      "required": ["schema"],
+      "properties": {
+        "schema": {
+          "const": "wn.altium.clean.config.v1"
+        },
+        "normalize_pin_fonts": {
+          "$ref": "#/$defs/pinFonts"
+        },
+        "normalize_symbol_body_rectangles": {
+          "$ref": "#/$defs/symbolBodyRectangles"
+        },
+        "normalize_power_symbols": {
+          "$ref": "#/$defs/fontAndColorRule"
+        },
+        "normalize_net_labels": {
+          "$ref": "#/$defs/fontAndColorRule"
+        },
+        "normalize_component_designators": {
+          "$ref": "#/$defs/componentFontRule"
+        },
+        "normalize_component_parameters": {
+          "$ref": "#/$defs/componentFontRule"
+        },
+        "normalize_component_free_text": {
+          "$ref": "#/$defs/componentFreeText"
+        },
+        "normalize_wires": {
+          "$ref": "#/$defs/colorRule"
+        },
+        "normalize_no_erc": {
+          "$ref": "#/$defs/noErcRule"
+        },
+        "normalize_sheet_style": {
+          "$ref": "#/$defs/sheetStyle"
+        },
+        "normalize_symbol_internal_graphics_monochrome": {
+          "$ref": "#/$defs/internalGraphics"
+        }
+      },
+      "additionalProperties": false
+    },
+    "pinFonts": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name_font": {
+          "$ref": "#/$defs/fontSpec"
+        },
+        "name": {
+          "$ref": "#/$defs/fontSpec"
+        },
+        "designator_font": {
+          "$ref": "#/$defs/fontSpec"
+        },
+        "designator": {
+          "$ref": "#/$defs/fontSpec"
+        }
+      },
+      "additionalProperties": false
+    },
+    "symbolBodyRectangles": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "min_width_mils": {
+          "type": "number",
+          "minimum": 0
+        },
+        "min_height_mils": {
+          "type": "number",
+          "minimum": 0
+        },
+        "outline_color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "outline_color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "line_width": {
+          "$ref": "#/$defs/lineWidth"
+        },
+        "fill_color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "fill_color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "area_color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "is_solid": {
+          "type": "boolean"
+        },
+        "transparent": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fontAndColorRule": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "font_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size_pt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "font": {
+          "$ref": "#/$defs/fontSpec"
+        }
+      },
+      "additionalProperties": false
+    },
+    "componentFontRule": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "font": {
+          "$ref": "#/$defs/fontSpec"
+        }
+      },
+      "additionalProperties": false
+    },
+    "componentFreeText": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "font_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "font": {
+          "type": "string",
+          "minLength": 1
+        },
+        "color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "color": {
+          "$ref": "#/$defs/colorValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "colorRule": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "color": {
+          "$ref": "#/$defs/colorValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "noErcRule": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "symbol": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        },
+        "style": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string",
+              "minLength": 1
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "sheetStyle": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "line_color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "line_color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "area_color_win32": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "area_color": {
+          "$ref": "#/$defs/colorValue"
+        },
+        "document_font": {
+          "$ref": "#/$defs/fontSpec"
+        },
+        "font": {
+          "$ref": "#/$defs/fontSpec"
+        }
+      },
+      "additionalProperties": false
+    },
+    "internalGraphics": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "saturation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "pcblibCleanConfig": {
+      "type": "object",
+      "required": ["schema"],
+      "properties": {
+        "schema": {
+          "const": "wn.altium.pcblib.clean.config.v1"
+        },
+        "profile": {
+          "enum": ["default", "raw"]
+        },
+        "remove_mechanical_primitives": {
+          "$ref": "#/$defs/pcblibMechanicalPrimitives"
+        },
+        "remove_text_strings": {
+          "$ref": "#/$defs/pcblibTextStrings"
+        },
+        "remove_regions": {
+          "$ref": "#/$defs/pcblibRegions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stringList": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pcblibMechanicalPrimitives": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "primitive_types": {
+          "$ref": "#/$defs/stringList"
+        },
+        "layers": {
+          "$ref": "#/$defs/stringList"
+        },
+        "preserve_regions": {
+          "type": "boolean"
+        },
+        "preserve_component_bodies": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "pcblibTextStrings": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "layers": {
+          "$ref": "#/$defs/stringList"
+        },
+        "match": {
+          "enum": ["all", "regex", "contains", "exact"]
+        },
+        "patterns": {
+          "$ref": "#/$defs/stringList"
+        }
+      },
+      "additionalProperties": false
+    },
+    "pcblibRegions": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "layers": {
+          "$ref": "#/$defs/stringList"
+        },
+        "preserve_component_linked": {
+          "type": "boolean"
+        },
+        "preserve_model_associated": {
+          "type": "boolean"
+        },
+        "preserve_keepouts": {
+          "type": "boolean"
+        },
+        "preserve_board_cutouts": {
+          "type": "boolean"
+        },
+        "preserve_custom_pad_regions": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

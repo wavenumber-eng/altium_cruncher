@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/bom_pnp_config.v1.schema.json",
+  "title": "Altium Cruncher BOM/PnP Config",
+  "type": "object",
+  "required": ["schema"],
+  "properties": {
+    "schema": {
+      "const": "wn.altium_cruncher.bom.config.v1"
+    },
+    "field_aliases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    },
+    "variants": {
+      "type": "object",
+      "properties": {
+        "mode": {"enum": ["base", "all", "named"]},
+        "names": {"type": "array", "items": {"type": "string"}},
+        "include_base": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "bom": {
+      "type": "object",
+      "properties": {
+        "source_mode": {"enum": ["schematic", "pcb", "merged"]},
+        "outputs": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "raw-json",
+              "legacy-json",
+              "grouped-json",
+              "grouped-csv",
+              "grouped-xlsx",
+              "jlc-csv",
+              "jlc-xlsx"
+            ]
+          }
+        },
+        "group_fields": {"type": "array", "items": {"type": "string"}},
+        "output_fields": {"type": "array", "items": {"type": "string"}},
+        "include_dnp": {"type": "boolean"},
+        "split_dnp": {"type": "boolean"},
+        "dnp_placement": {"enum": ["inline", "end", "separate"]},
+        "highlight_dnp_rows": {"type": "boolean"},
+        "prefix_order": {"type": "array", "items": {"type": "string"}},
+        "pcb_line_item": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "designator": {"type": "string"},
+            "fields": {
+              "type": "object",
+              "additionalProperties": {"type": "string"}
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "pnp": {
+      "type": "object",
+      "properties": {
+        "outputs": {
+          "type": "array",
+          "items": {"enum": ["json", "csv", "xlsx", "jlc-cpl", "jlc-cpl-xlsx"]}
+        },
+        "output_fields": {"type": "array", "items": {"type": "string"}},
+        "units": {"enum": ["mm", "mils"]},
+        "position_mode": {"enum": ["altium-pick-place", "component-origin"]},
+        "exclude_no_bom": {"type": "boolean"},
+        "layer_order": {"type": "array", "items": {"type": "string"}},
+        "prefix_order": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "dir_template": {"type": "string"},
+        "name_template": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

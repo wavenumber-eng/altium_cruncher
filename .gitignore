@@ -9,3 +9,9 @@ build/
 output/
 rack_results/
 *.pyc
+
+# Altium transient project folders
+**/__Previews/
+**/History/
+**/Project Logs for */
+**/Project Logs For */
