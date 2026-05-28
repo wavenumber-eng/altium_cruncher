@@ -1,7 +1,7 @@
 # Quality Signoff Status
 
 Status: initial bootstrap audit
-Last updated: 2026-05-26
+Last updated: 2026-05-28
 
 ## Passing Gates
 
@@ -13,11 +13,11 @@ Last updated: 2026-05-26
 - build, `twine check`, and built-wheel install tests pass locally.
 - Direct `uv tool install` testing is not yet a hard local gate; the venv
   install test verifies equivalent generated console scripts through PATH.
-- GitHub CI is blocking on Windows and Ubuntu for the first public release.
-  macOS GitHub-hosted CI is deferred because `wn-geometer==2026.5.25` currently
-  publishes a `macosx_26_0_arm64` wheel while GitHub `macos-latest` resolves to
-  macOS 15 arm64. Manual macOS pip/uv-tool testing is still required until that
-  wheel tag or runner mismatch is resolved.
+- GitHub CI is configured for pull requests and `main` pushes on Windows and
+  Ubuntu for the first public release. macOS GitHub-hosted CI remains deferred
+  until hosted-runner wheel compatibility is deliberately enabled and observed.
+  Manual macOS pip/uv-tool testing is still required before claiming macOS CI
+  coverage.
 
 ## Active Design-Doc Gate
 

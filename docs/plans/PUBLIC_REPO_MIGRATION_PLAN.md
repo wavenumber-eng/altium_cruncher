@@ -45,7 +45,8 @@ The standalone public repo should include:
 - `CONTRIBUTING.md`;
 - issue templates;
 - pull-request template;
-- GitHub Actions CI for Windows, macOS, and Linux.
+- GitHub Actions CI for Windows and Linux; macOS CI is deferred until hosted
+  runner dependency compatibility is explicitly validated.
 - `docs/adrs/` for architecture decision records;
 - `docs/design/` for interface, command, data-flow, and format design
   documentation;
@@ -1257,8 +1258,8 @@ The first migration slice is complete when:
 - `uv tool install` can expose the CLI from a built wheel;
 - `wn-hw` setup/update can expose the CLI executable without a manual PATH fix;
 - Rack tests run from the standalone repo;
-- CI runs on Windows, Linux, and macOS with compatible public dependency
-  wheels;
+- CI runs on Windows and Linux with compatible public dependency wheels; macOS
+  CI has an explicit first-release deferral and requires manual verification;
 - at least one stable command is migrated with fixture-backed coverage;
 - the command inventory clearly states which commands remain private,
   deferred, or blocked.
@@ -1268,7 +1269,7 @@ Current local status:
 - package metadata, console script, CI/release workflow, changelog, ADRs, design
   docs, and contracts are present;
 - `rack run --all` passes locally with `L0_public_cli`,
-  `L3_public_workflows`, and `L99_signoff`: 38 passed, 1 optional native
+  `L3_public_workflows`, and `L99_signoff`: 57 passed, 1 optional native
   parity skip;
 - latest committed slice:
   - `29834dc Add BOM PnP fixture oracle notes`;
@@ -1278,7 +1279,9 @@ Current local status:
 - current active slice consumes `altium-monkey==2026.5.26`, exposes
   `pnp.position_mode` plus `--position-mode`, and removes the stale PNP-METRIC
   coordinate exception list;
-- full `pytest` passes locally: 124 passed, 2 skipped;
+- full `pytest` was not rerun for the 2026.5.28 release-metadata cleanup;
+  current release validation uses Rack, L99 signoff, build, distribution check,
+  and installed-console smoke tests;
 - focused EasyEDA optional tests pass locally with the extra: 44 passed;
 - built-wheel install test passes locally and verifies the public console
   script through PATH inside a clean venv;
@@ -1375,19 +1378,20 @@ Current local status:
   - `uv run --extra test python tests\support_scripts\py_signoff.py --root . --baseline tests\support_scripts\py_signoff_baseline.json --format json`:
     0 findings;
   - `git diff --check`: clean aside from existing line-ending warnings;
-  - `uv run --extra test pytest -q`: 146 passed, 2 skipped;
-  - `uv run --extra test rack run --all`: 42 passed, 1 skipped;
+  - `uv run --extra test pytest -q`: not rerun in the 2026.5.28
+    release-metadata cleanup; earlier full run was 146 passed, 2 skipped;
+  - `uv run --extra test rack run --all`: 57 passed, 1 skipped;
 - CLI help now prints the package version in root and command help, lists
   commands alphabetically, and points users to
   `altium-cruncher <command> --help`;
 - L3 now covers the Hydroscope public workflows, the minimized cricket-node
   `pcb-layer-step` bottom-layer fixture, the `RT_SUPER_C1.IntLib` source
   extraction fixture, and the Hydroscope `megamaid` showcase workflow;
-- `wn-hw` setup/update integration and public GitHub CI remain the major first
-  release blockers;
-- the `wn-geometer` macOS wheel tag issue tracked in
-  `wavenumber-eng/geometer#2` is resolved, so macOS CI is no longer blocked by
-  that dependency compatibility issue.
+- `wn-hw` setup/update integration remains the major first-release blocker;
+- GitHub CI is configured for PRs and `main` pushes on Ubuntu and Windows.
+  A remote run still needs to be observed after pushing the public repo branch;
+- macOS CI remains deferred for the first public release until hosted-runner
+  wheel compatibility is deliberately enabled and observed.
 - the `altium_monkey` PcbDoc/PcbLib authoring API detour is complete on
   `toolz` `origin/dev` at `16dee303`, with Python and native C++ parity for
   explicit PcbLib mask/paste expansion and text authoring options. Active

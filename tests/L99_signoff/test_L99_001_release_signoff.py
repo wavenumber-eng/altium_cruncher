@@ -23,8 +23,9 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.5.26"
-EXPECTED_RELEASE_DATE = date(2026, 5, 26)
+EXPECTED_VERSION = "2026.5.28"
+EXPECTED_RELEASE_DATE = date(2026, 5, 28)
+EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-05-28.md"
 CONTROLLED_DEPENDENCIES = {
     "altium-monkey": "2026.5.26",
     "wn-geometer": "2026.5.25",
@@ -42,7 +43,7 @@ def test_version_contract_matches_date_based_release() -> None:
     assert (version.major, version.minor, version.patch, version.build) == (
         2026,
         5,
-        26,
+        28,
         None,
     )
     assert version.release_date == EXPECTED_RELEASE_DATE
@@ -81,11 +82,14 @@ def test_cli_emits_package_version() -> None:
             assert distribution_version(distribution_name) == expected_version
 
 
-def test_changelog_mentions_package_version() -> None:
-    """Verify that release notes mention the current package version."""
+def test_release_notes_mention_package_version() -> None:
+    """Verify that changelog and dated release notes mention the package version."""
     changelog = (PACKAGE_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    release_note = EXPECTED_RELEASE_NOTE.read_text(encoding="utf-8")
 
     assert f"## {EXPECTED_VERSION}" in changelog
+    assert f"`{EXPECTED_VERSION}`" in release_note
+    assert EXPECTED_RELEASE_DATE.isoformat() in release_note
 
 
 def test_developer_working_docs_are_excluded_from_release_artifacts() -> None:

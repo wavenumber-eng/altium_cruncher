@@ -20,11 +20,14 @@ jobs:
         run: |
           VERSION="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
           test "v${VERSION}" = "${GITHUB_REF_NAME}"
-      - name: Verify changelog mentions package version
+      - name: Verify release notes mention package version
         shell: bash
         run: |
           VERSION="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          RELEASE_DATE="$(uv run python -c 'import tomllib; v=tomllib.load(open("pyproject.toml","rb"))["project"]["version"]; y,m,d,*_=map(int,v.split(".")); print(f"{y:04d}-{m:02d}-{d:02d}")')"
           grep -F "## ${VERSION}" CHANGELOG.md
+          test -f "docs/releases/${RELEASE_DATE}.md"
+          grep -F "\`${VERSION}\`" "docs/releases/${RELEASE_DATE}.md"
       - name: Run Rack suite
         run: uv run --extra test rack run --all
       - name: Build package

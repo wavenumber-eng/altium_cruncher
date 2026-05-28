@@ -1,14 +1,14 @@
 # Changelog
 
-## 2026.5.26
+## 2026.5.28
 
 - Bootstrap standalone `altium-cruncher` public package from the prior private
   toolz application.
 - Package the CLI as a normal Python application with the canonical
   `altium-cruncher` console script and `altium_cruncher` Python module entry.
 - Add public command coverage for migrated Altium workflows including SVG
-  export, PCB layer STEP export, extraction, BOM/PnP, netlist, cleanup, split,
-  merge, megamaid, and EasyEDA placeholder commands.
+  export, PCB layer STEP export, extraction, BOM/PnP, design JSON, cleanup,
+  split, merge, megamaid, and EasyEDA import commands.
 - Add Rack smoke strata, release signoff checks, package build validation, and
   built-wheel install smoke coverage.
 - Document `uv tool install` as the preferred CLI install path.
@@ -18,7 +18,7 @@
   EasyEDA workflows through `easyeda-monkey`.
 - Add ADR-0005 and L99 checks for CLI design docs plus public dataclass and
   major-interface design/test ownership.
-- Consume `altium-monkey>=2026.5.26` and expose explicit PnP position mode
+- Consume pinned `altium-monkey==2026.5.26` and expose explicit PnP position mode
   selection for BOM/PnP/JLC workflows.
 - Align BOM/PnP spreadsheet output with `bom_cruncher` by using `openpyxl`;
   XLSX cells are written as text so package values such as `0603` retain
@@ -33,3 +33,9 @@
 - Let user-editable command config files load JSONC comments and trailing
   commas, and use `pcb.svg.config` as the default PCB SVG config filename.
 - Add global `--quiet`, `--verbose`, and `--log-level` CLI logging controls.
+- Add public contribution guide, issue templates, pull-request template, and
+  release notes for the May 28, 2026 public release.
+- Add a Windows PowerShell installer wrapper around the supported
+  `uv tool install` flow.
+- Run CI for pull requests on Ubuntu and Windows, including Rack, package
+  build, distribution check, and installed-console smoke test.

@@ -32,6 +32,7 @@ module = "altium_cruncher._version"
 [subtests.objectives]
 version_contract = "Date-based version metadata matches pyproject and package API"
 cli_version = "CLI version output matches package API"
+release_notes = "Changelog and dated release notes mention the package version"
 python_hygiene = "py_signoff has zero findings"
 
 [subtests.approach]
@@ -40,6 +41,7 @@ pytest = "Run package-local signoff checks as normal pytest tests"
 [subtests.test_functions]
 test_version_contract_matches_date_based_release = "Package version metadata follows the date release contract"
 test_cli_emits_package_version = "CLI version commands emit the canonical package version text"
+test_release_notes_mention_package_version = "Changelog and dated release notes mention the package version"
 test_python_signoff_does_not_regress = "Python signoff produces zero findings"
 
 [[subtests]]

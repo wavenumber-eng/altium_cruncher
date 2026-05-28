@@ -1,7 +1,7 @@
 # WN Workspace Installer Integration
 
 Status: draft planning note
-Last updated: 2026-05-26
+Last updated: 2026-05-28
 
 ## Purpose
 
@@ -32,7 +32,7 @@ altium-cruncher --version
 ## Install Modes
 
 1. Public package install with `uv tool install --force
-   altium-cruncher==<version>`.
+   altium-cruncher==2026.5.28` for the May 28, 2026 release.
 2. Local source checkout install with `uv tool install --force --editable
    <workspace>/altium_cruncher`.
 3. Workspace-local wrapper scripts in a PATH-managed `bin` folder only as a

@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main]
@@ -12,10 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macOS CI is deferred until wn-geometer publishes a wheel compatible
-        # with the hosted macOS runner tag. v2026.5.25 currently provides a
-        # macosx_26_0_arm64 wheel, while GitHub's macos-latest runner is
-        # macOS 15 arm64.
+        # macOS CI is deferred for the first public release until hosted-runner
+        # wheel compatibility is explicitly validated.
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.12"]
 
@@ -24,6 +23,21 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: Set up Python
         run: uv python install ${{ matrix.python-version }}
+      - name: Validate Windows installer script
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "scripts/install-altium-cruncher.ps1",
+            [ref] $tokens,
+            [ref] $errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | Format-List | Out-String | Write-Error
+            exit 1
+          }
       - name: Run Rack suite
         run: uv run --extra test rack run --all
       - name: Build package

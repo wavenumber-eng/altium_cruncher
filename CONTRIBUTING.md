@@ -5,6 +5,37 @@
 Use `uv` for local development and test commands. Public CLI install
 documentation should prefer `uv tool install altium-cruncher`.
 
+Use the GitHub issue templates for bugs and feature requests. Include the exact
+command, `altium-cruncher version` output, and only reproduction files that can
+be shared publicly.
+
+## Contribution Workflow
+
+Open an issue or GitHub Discussion before starting a public PR, unless the
+change is a small documentation typo or an obviously isolated bug fix.
+
+For any public command, config, JSON, generated artifact, API, dependency, or
+workflow change, contributors should agree on the design first. That discussion
+should settle the intended command behavior, config shape and defaults, expected
+outputs, compatibility impact, docs updates, and required tests before a PR is
+considered ready for review.
+
+PRs that change public behavior should link the issue or discussion where the
+design was agreed and include the matching design-doc, contract, and test
+updates.
+
+## Commit Messages And Human Signoff
+
+Commit messages, PR summaries, and signoff notes should be concise, factual,
+and limited to what changed, why it changed, and how it was validated. Do not
+use emojis, decorative prefixes, or marketing-style language.
+
+Every PR signoff should identify the responsible human by name or GitHub user
+ID. If Claude or another AI coding agent materially assisted with the change,
+include that as an implementation note, not as the accountable signoff. Keep it
+to the point: mention the files or behavior changed, tests run, and any known
+limitations.
+
 Before opening a PR:
 
 1. Keep changes focused on one command, contract, or infrastructure slice.
