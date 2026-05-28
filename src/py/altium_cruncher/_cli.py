@@ -183,45 +183,27 @@ def _register_missing_easyeda_parser(
     help_text: str,
 ) -> None:
     """Register an EasyEDA command placeholder when the optional extra is absent."""
-    parser = subparsers.add_parser(command, help=help_text)
+    parser = subparsers.add_parser(command, help=help_text, description=help_text)
     parser.set_defaults(handler=_cmd_missing_easyeda)
 
 
 def _register_easyeda_parsers(subparsers: argparse._SubParsersAction) -> None:
     """Register EasyEDA commands when their optional runtime dependency is installed."""
     try:
-        from altium_cruncher.altium_cruncher_cmd_easyeda_footprint_review import (
-            register_parser as register_easyeda_footprint_review_parser,
-        )
         from altium_cruncher.altium_cruncher_cmd_easyeda_import import (
             register_parser as register_easyeda_import_parser,
-        )
-        from altium_cruncher.altium_cruncher_cmd_easyeda_review import (
-            register_parser as register_easyeda_review_parser,
         )
     except ModuleNotFoundError as exc:
         if exc.name is None or not exc.name.startswith("easyeda_monkey"):
             raise
         _register_missing_easyeda_parser(
             subparsers,
-            "easyeda-footprint-review",
-            "Review EasyEDA footprint imports (requires easyeda-monkey)",
-        )
-        _register_missing_easyeda_parser(
-            subparsers,
             "easyeda-import",
-            "Import EasyEDA symbols/footprints (requires easyeda-monkey)",
-        )
-        _register_missing_easyeda_parser(
-            subparsers,
-            "easyeda-review",
-            "Review EasyEDA schematic imports (requires easyeda-monkey)",
+            "EXPERIMENTAL: import EasyEDA symbols/footprints (requires easyeda-monkey)",
         )
         return
 
-    register_easyeda_footprint_review_parser(subparsers)
     register_easyeda_import_parser(subparsers)
-    register_easyeda_review_parser(subparsers)
 
 
 def main() -> None:

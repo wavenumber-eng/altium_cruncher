@@ -18,9 +18,7 @@ This inventory records the command set migrated from the private
 | `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
 | `design` | public | `L3_public_workflows` | Key command. Exports AltiumDesign JSON for schematic/project documents, including netlist data, components, hierarchy, SVG IDs, and lookup indexes. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
-| `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
-| `easyeda-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
-| `easyeda-footprint-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
+| `easyeda-import` | optional-experimental | optional fixture lane | Experimental. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; current tests cover SchLib import, optional PcbLib footprint import, reports, and previews from saved fixtures. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
@@ -175,13 +173,18 @@ Extract notes:
 
 EasyEDA command notes:
 
-- `easyeda-import`, `easyeda-review`, and `easyeda-footprint-review` remain
-  work in progress until audited;
-- `easyeda-import` is the likely public command, but it needs tests proving
-  saved JSON input, optional API/cache behavior, generated `SchLib`, generated
-  `PcbLib` when requested, reports, and preview artifacts;
-- the review commands were built for development review and may need to become
-  dev-only or deferred if they are not stable enough for public CLI support;
+- `easyeda-import` is an optional experimental command until release ownership
+  is complete;
+- `easyeda-import` currently generates `SchLib` output by default and
+  generates `PcbLib` footprint output when `--footprint` or `--full` is used;
+- optional tests cover saved JSON input, generated `SchLib`, generated
+  `PcbLib` when requested, reports, preview artifacts, and fixture-wide review
+  HTML/SVG output;
+- live API/cache behavior still needs separate optional or network-marked
+  coverage before removing the experimental label;
+- `easyeda-review` and `easyeda-footprint-review` are not public CLI commands;
+  their implementation remains available only for tests and internal review
+  tooling;
 - no EasyEDA command should be release-owned until the `easyeda-monkey` optional
   extra lane runs fixture-backed command tests.
 

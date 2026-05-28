@@ -39,8 +39,8 @@ uv run altium-cruncher --help
 uv run python -m altium_cruncher version
 ```
 
-EasyEDA commands are optional. Install the `easyeda` extra when those workflows
-are needed:
+The EasyEDA import command is optional and experimental. Install the `easyeda`
+extra when that workflow is needed:
 
 ```powershell
 uv tool install --force "altium-cruncher[easyeda]"
@@ -73,9 +73,7 @@ The current migrated command set includes:
 - `jlc`
 - `design`
 - `extract`
-- `easyeda-import`
-- `easyeda-review`
-- `easyeda-footprint-review`
+- `easyeda-import` (experimental)
 - `split`
 - `merge`
 - `megamaid`

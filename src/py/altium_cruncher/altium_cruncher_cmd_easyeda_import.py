@@ -236,8 +236,11 @@ def _preview_pin_text_follows_orientation(policy: EasyEdaSchematicImportPolicy) 
 def register_parser(subparsers):
     easyeda_parser = subparsers.add_parser(
         "easyeda-import",
-        help="generate Altium library artifacts from EasyEDA/LCSC component data",
-        description="Generate an Altium schematic library from EasyEDA/LCSC component data.",
+        help="EXPERIMENTAL: generate Altium library artifacts from EasyEDA/LCSC component data",
+        description=(
+            "EXPERIMENTAL: generate Altium schematic-library and optional "
+            "PCB-library artifacts from EasyEDA/LCSC component data."
+        ),
         epilog=(
             "Examples:\n"
             "  altium-cruncher easyeda-import C2040 --preview\n"

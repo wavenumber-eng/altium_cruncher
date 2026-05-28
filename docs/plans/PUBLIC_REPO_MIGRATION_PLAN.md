@@ -1071,14 +1071,15 @@ on private modules.
 
 Current command status:
 
-- `easyeda-import` is a work-in-progress candidate public command for
-  generating Altium library artifacts from EasyEDA/LCSC component data;
-- `easyeda-review` is a work-in-progress development review command for
-  fixture-wide EasyEDA-vs-Altium schematic comparison;
-- `easyeda-footprint-review` is a work-in-progress development review command
-  for fixture-wide EasyEDA-vs-Altium footprint comparison;
-- none of these commands should be treated as release-owned until they have
-  been audited and covered with fixture-backed tests.
+- `easyeda-import` is the only EasyEDA public CLI command and is optional
+  experimental. It generates `SchLib` output by default and `PcbLib` footprint
+  output with `--footprint` or `--full`;
+- `easyeda-review` and `easyeda-footprint-review` are not public CLI commands;
+  their implementations are kept for tests and internal review tooling only;
+- optional fixture tests exist for saved JSON schematic import, footprint
+  import, import reports/previews, and both review commands;
+- none of these commands should be treated as release-owned until the optional
+  extra lane and live API/cache behavior have been audited.
 
 The intended direction is to move `ezeda_monkey` out of `toolz` into its own
 public repository at <https://github.com/wavenumber-eng/easyeda_monkey> and
@@ -1131,12 +1132,12 @@ EasyEDA command audit requirements:
   availability;
 - verify live API/cache behavior separately as an optional or network-marked
   path;
-- prove `easyeda-import` writes a reparseable `SchLib`, writes reports, and
-  writes preview artifacts when requested;
-- prove `easyeda-import --footprint` or `--full` writes a reparseable `PcbLib`
-  and footprint report;
-- prove the review commands either generate deterministic HTML/SVG review
-  artifacts from fixtures or explicitly demote them to dev/deferred status;
+- keep proving `easyeda-import` writes a reparseable `SchLib`, writes reports,
+  and writes preview artifacts when requested;
+- keep proving `easyeda-import --footprint` or `--full` writes a reparseable
+  `PcbLib` and footprint report;
+- keep proving the internal review helpers generate deterministic HTML/SVG
+  review artifacts from fixtures;
 - keep all EasyEDA fixtures under the standard `input/`, `reference_output/`,
   and transient `output/` convention;
 - L99 should fail if an EasyEDA command is public in the manifest without

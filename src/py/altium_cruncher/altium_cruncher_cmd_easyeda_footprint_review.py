@@ -1,4 +1,4 @@
-"""easyeda-footprint-review command for fixture-wide footprint import review."""
+"""Internal EasyEDA fixture-wide footprint import review helper."""
 
 from __future__ import annotations
 
@@ -138,73 +138,3 @@ def _policy_from_args(args: argparse.Namespace) -> EasyEdaFootprintImportPolicy:
         arc_approximation_max_degrees=getattr(args, "arc_approximation_max_degrees", 15.0),
         include_source_text=getattr(args, "include_source_text", False),
     )
-
-
-def register_parser(subparsers):
-    review_parser = subparsers.add_parser(
-        "easyeda-footprint-review",
-        help="generate a fixture-wide EasyEDA vs Altium footprint review",
-        description=(
-            "Generate one self-contained HTML and SVG review with EasyEDA footprint "
-            "source on the left and generated Altium footprint output on the right."
-        ),
-        epilog=(
-            "Examples:\n"
-            "  altium-cruncher easyeda-footprint-review --fixture-dir "
-            "easyeda_monkey/tests/L0_foundation/cases/api_responses --pattern C*.json\n"
-            "  altium-cruncher easyeda-footprint-review C963370.json C266603.json "
-            "-o output/footprint-review"
-        ),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    review_parser.add_argument(
-        "inputs",
-        nargs="*",
-        type=Path,
-        help="saved EasyEDA API response or EasyEdaFootprint JSON file(s)",
-    )
-    review_parser.add_argument(
-        "--fixture-dir",
-        type=Path,
-        action="append",
-        help="directory of EasyEDA JSON fixtures to include",
-    )
-    review_parser.add_argument(
-        "--pattern",
-        default="*.json",
-        help="glob pattern used with --fixture-dir (default: *.json)",
-    )
-    review_parser.add_argument(
-        "--only",
-        help="comma-separated LCSC IDs to include after fixture discovery",
-    )
-    review_parser.add_argument(
-        "--title",
-        default="EasyEDA to Altium Footprint Review",
-        help="review page title",
-    )
-    review_parser.add_argument(
-        "--curve-approximation-segments",
-        type=int,
-        default=12,
-        help="segments used for Bezier curve approximation (default: 12)",
-    )
-    review_parser.add_argument(
-        "--arc-approximation-max-degrees",
-        type=float,
-        default=15.0,
-        help="max degrees per segment for non-circular arc approximation (default: 15)",
-    )
-    review_parser.add_argument(
-        "--include-source-text",
-        action="store_true",
-        help="include supported EasyEDA footprint text objects in generated output",
-    )
-    review_parser.add_argument(
-        "-o",
-        "--output",
-        type=Path,
-        help="output directory (default: ./output/easyeda-footprint-review)",
-    )
-    review_parser.set_defaults(handler=cmd_easyeda_footprint_review)
-    return review_parser
