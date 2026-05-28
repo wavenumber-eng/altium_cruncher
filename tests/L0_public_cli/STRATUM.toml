@@ -49,7 +49,7 @@ name = "Output Path Templates"
 description = "Validate shared output folder and filename template resolution"
 concerns = ["contracts", "release"]
 test_case_type = "contract"
-test_cases = "../../docs/plans/PUBLIC_REPO_MIGRATION_PLAN.md"
+test_cases = "../../docs/design/api/output-path-templates.html"
 
 [subtests.code_under_test]
 module = "altium_cruncher.output_path_templates"
