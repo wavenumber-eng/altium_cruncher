@@ -11,51 +11,190 @@ PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT = """{
      fabrication STEP exports. Keep only the features that help verify pogo-pin
      alignment against DUT pads. */
   /*
-     Config shape:
-       - defaults: shared settings copied into every output.
-       - outputs: one or more output definitions. Each output accepts the same
-         fields as defaults and overrides only what it needs.
 
-     Common output fields:
-       name, output_step, pcbdoc, layer, z_mm, thickness_mm,
-       copper_color, include_copper, include_board_outline,
-       include_board_cutouts, include_poured_polygons, cut_holes,
-       drill_hole_mode, max_boolean_drill_cuts, drill_hole_color,
-       drill_plated_hole_color, drill_non_plated_hole_color,
-       drill_overlay_thickness_mm, drill_minimum_diameter_mm,
-       drill_hole_shape, drill_ring_width_mm, drill_plated_ring_shape,
-       fuse_copper, fuse_board_outline, arc_segments, include_tracks,
-       include_arcs, include_fills, include_regions, include_vias,
-       include_component_pads, include_free_pads, include_designators,
-       pad_color_rules.
+     CONFIG SHAPE
 
-     Structured sections:
-       board_outline: color, cutout_color, cutouts, width_mm, fuse.
-       features: tracks, arcs, fills, polygons, regions, vias, free_pads,
-         component_pads: {mode, include_designators}.
-       colors: default_copper, pad_rules.
-       drills: mode, minimum_diameter_mm, shape, color, plated_color,
-         non_plated_color, ring_width_mm, plated_ring_shape,
-         overlay_thickness_mm.
+       "defaults"
+         Shared settings copied into every output.
 
-     Designator lists are case-insensitive shell-style patterns. Examples:
-       ["TP*"], ["TP*", "J*", "U1", "U2"], ["M*"].
+       "outputs"
+         One or more output definitions. Each output accepts the same fields as
+         defaults and overrides only what it needs.
 
-     Drill modes:
-       none: omit drill visualization.
-       cut: subtract drill holes from copper bodies.
-       overlay: render separate visible drill bodies.
-       auto: cut small drill sets and use overlays for dense boards.
 
-     Drill shapes:
-       solid: render drill disks/capsules.
-       ring: render rings with the drill hole removed.
-       plated_ring_shape "annulus": use a fixed-width ring.
-       plated_ring_shape "pad": use the full plated pad outline as the ring.
+     COORDINATES
 
-     CLI overrides are available for the main layer, color, outline, drill,
-     fusion, and Z/thickness settings. Run:
-       altium-cruncher pcb-layer-step --help
+       Geometer receives XY geometry relative to the Altium board placement
+       origin: (absolute source mils - Board.ORIGINX/Y) converted to mm.
+
+       "z_mm" controls the bottom Z plane of each body.
+       "thickness_mm" controls extrusion thickness.
+
+
+     COMMON OUTPUT FIELDS
+
+       name
+       output_step
+       pcbdoc
+       layer
+       z_mm
+       thickness_mm
+
+       copper_color
+       include_copper
+       include_board_outline
+       include_board_cutouts
+       include_poured_polygons
+       cut_holes
+
+       drill_hole_mode
+       max_boolean_drill_cuts
+       drill_hole_color
+       drill_plated_hole_color
+       drill_non_plated_hole_color
+       drill_overlay_thickness_mm
+       drill_minimum_diameter_mm
+       drill_hole_shape
+       drill_ring_width_mm
+       drill_plated_ring_shape
+
+       fuse_copper
+       fuse_board_outline
+       arc_segments
+
+       include_tracks
+       include_arcs
+       include_fills
+       include_regions
+       include_vias
+       include_component_pads
+       include_free_pads
+       include_designators
+       pad_color_rules
+
+
+     STRUCTURED SECTIONS
+
+       "board_outline"
+         color:        STEP color for the outer board-outline body.
+         cutout_color: STEP color for interior board-cutout outline bodies.
+         cutouts:      true/false, include separate cutout outline bodies.
+         width_mm:     visual stroke width for outline bodies.
+         fuse:         true/false, request Geometer fusion for outline bodies.
+
+       "features"
+         tracks:   true/false, include copper tracks.
+         arcs:     true/false, include copper arcs.
+         fills:    true/false, include fill rectangles.
+         polygons: true/false, include poured-polygon primitives.
+         regions:  true/false, include copper region primitives.
+         vias:     true/false, include via copper.
+         free_pads: true/false, include pads not owned by a component.
+
+         component_pads can be a boolean or an object:
+
+           false
+             omit all component-owned pads.
+
+           true
+             include component-owned pads. If include_designators is empty or
+             omitted, all component-owned pads are included.
+
+           {"mode": "none"}
+             omit all component-owned pads.
+
+           {"mode": "all"}
+             include component-owned pads. Leave include_designators empty for
+             all component-owned pads.
+
+           {"mode": "matching_designators", "include_designators": [...]}
+             include component-owned pads whose component designator matches at
+             least one pattern.
+
+       "colors"
+         default_copper: STEP color for copper that no pad rule captures.
+         pad_rules:      list of per-designator color/body rules.
+
+         Each pad rule supports:
+           designators: pattern list, such as ["TP*"].
+           color:       named color or #RRGGBB.
+           body:        Geometer body id/name for the matched pads.
+
+       "drills"
+         mode:                 auto, cut, overlay, or none.
+         minimum_diameter_mm:  omit drills smaller than this diameter.
+         shape:                solid or ring.
+         color:                default drill-overlay color.
+         plated_color:         plated drill-overlay color.
+         non_plated_color:     non-plated drill-overlay color.
+         ring_width_mm:        fixed annulus width when shape is ring.
+         plated_ring_shape:    annulus or pad.
+         overlay_thickness_mm: Z thickness for overlay drill bodies.
+
+
+     DESIGNATOR PATTERNS
+
+       Patterns are case-insensitive shell-style matches.
+
+       Examples:
+         ["TP*"]
+         ["TP*", "J*", "U1", "U2"]
+         ["M*"]
+
+
+     COLOR VALUES
+
+       Colors may be #RRGGBB values or one of these names:
+
+         black, blue, brown, copper, gray, green, grey, orange, purple,
+         red, white, yellow.
+
+
+     LAYER VALUES
+
+       Common selectors are bottom, top, BOTTOM, TOP, layer id numbers, or
+       native/display layer names accepted by altium-cruncher.
+
+
+     DRILL MODES
+
+       none
+         Omit drill visualization.
+
+       cut
+         Subtract drill holes from copper bodies.
+
+       overlay
+         Render separate visible drill-reference bodies.
+
+       auto
+         Cut small drill sets. Switch to overlays when the board has more than
+         max_boolean_drill_cuts drill features.
+
+
+     DRILL SHAPES
+
+       solid
+         Render drill disks or slotted capsules.
+
+       ring
+         Render rings with the drill hole removed.
+
+       plated_ring_shape "annulus"
+         Use a fixed-width ring around plated holes.
+
+       plated_ring_shape "pad"
+         Use the full plated pad outline as the ring. This is useful for
+         mounting-hole pads such as M1.
+
+
+     CLI OVERRIDES
+
+       CLI overrides are available for the main layer, color, outline, drill,
+       fusion, and Z/thickness settings. Run:
+
+         altium-cruncher pcb-layer-step --help
+
   */
   "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
   "defaults": {
@@ -84,8 +223,8 @@ PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT = """{
           "include_designators": ["TP*"]
         },
         "free_pads": false,
-        "tracks": true,
-        "arcs": true,
+        "tracks": false,
+        "arcs": false,
         "fills": false,
         "polygons": false,
         "regions": false,

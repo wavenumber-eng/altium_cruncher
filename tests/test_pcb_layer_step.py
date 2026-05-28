@@ -95,9 +95,13 @@ def test_pcb_layer_step_init_config_writes_template_without_loading_input(
     config_path = tmp_path / "pcb-layer-step.json"
     config_text = config_path.read_text(encoding="utf-8")
     assert result == 0
-    assert "Common output fields:" in config_text
+    assert "COMMON OUTPUT FIELDS" in config_text
+    assert "matching_designators" in config_text
     assert "drill_plated_ring_shape" in config_text
     assert "altium-cruncher pcb-layer-step --help" in config_text
+    config = load_pcb_layer_step_config(config_path)
+    assert config.outputs[0].include_tracks is False
+    assert config.outputs[0].include_arcs is False
 
 
 def test_pcb_layer_step_prjpcb_board_only_context_skips_schematic_loading(
@@ -384,6 +388,60 @@ def test_export_pcb_layer_step_requests_geometer_fusion(monkeypatch, tmp_path) -
     assert copper_body["fuse_regions"] is True
     assert outline_body["id"] == "board_outline"
     assert outline_body["fuse_regions"] is True
+
+
+def test_export_pcb_layer_step_uses_board_origin_relative_coordinates(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    captured = {}
+
+    def write_planar_step(request, output_path):
+        captured["request"] = request
+        output_path.write_bytes(json.dumps(request).encode("utf-8"))
+        return output_path
+
+    monkeypatch.setitem(
+        sys.modules, "geometer", SimpleNamespace(write_planar_step=write_planar_step)
+    )
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(1000, 1000, 1500, 1300)
+    pcbdoc.set_origin_mils(1000, 1000)
+    pcbdoc.add_pad(
+        designator="TP1",
+        position_mils=(1100, 1200),
+        width_mils=100,
+        height_mils=100,
+        layer=PcbLayer.BOTTOM,
+        shape=PadShape.CIRCLE,
+    )
+
+    result = export_pcb_layer_step(
+        pcbdoc,
+        tmp_path / "origin-relative.step",
+        board_name="fixture_board",
+        options=PcbLayerStepOptions(
+            layer=PcbLayer.BOTTOM,
+            include_board_outline=False,
+            drill_hole_mode="none",
+        ),
+    )
+
+    copper_body = captured["request"]["bodies"][0]
+    points = copper_body["regions"][0]["outer"]["points"]
+    center_x = (
+        min(point[0] for point in points) + max(point[0] for point in points)
+    ) / 2
+    center_y = (
+        min(point[1] for point in points) + max(point[1] for point in points)
+    ) / 2
+    assert abs(center_x - 2.54) < 1e-9
+    assert abs(center_y - 5.08) < 1e-9
+
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["coordinate_origin"]["mode"] == "board_origin"
+    assert manifest["coordinate_origin"]["origin_mils"] == [1000.0, 1000.0]
 
 
 def test_export_pcb_layer_step_can_preserve_primitive_regions(

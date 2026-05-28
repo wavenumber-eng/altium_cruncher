@@ -22,6 +22,7 @@ from altium_cruncher.altium_cruncher_pcb_layer_step_config import (
     PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT,
     resolve_pcb_layer_selector,
 )
+from altium_cruncher import altium_cruncher_pcb_layer_step_origin as step_origin
 
 log = logging.getLogger(__name__)
 
@@ -813,6 +814,8 @@ def export_pcb_layer_step(
     )
     if not bodies:
         raise ValueError(f"No geometry found for layer {layer.to_display_name()}")
+    origin_mils = step_origin.board_origin_mils(pcbdoc)
+    step_origin.apply_origin_relative_geometry(bodies, origin_mils)
 
     request = {
         "schema": "geometry.planar_step.request.a0",
@@ -832,6 +835,7 @@ def export_pcb_layer_step(
         layer=layer,
         drill_hole_mode=drill_hole_mode,
         counts=counts,
+        coordinate_origin=step_origin.coordinate_origin_payload(origin_mils),
     )
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
@@ -881,6 +885,7 @@ def _build_manifest(
     layer: PcbLayer,
     drill_hole_mode: str,
     counts: dict[str, int],
+    coordinate_origin: dict[str, object],
 ) -> dict[str, Any]:
     return {
         "schema": "wn.altium_cruncher.pcb_layer_step.v1",
@@ -888,6 +893,7 @@ def _build_manifest(
         "board": board_name,
         "source_input": source_input,
         "step_file": output_path.name,
+        "coordinate_origin": coordinate_origin,
         "layer": {
             "id": int(layer.value),
             "json_name": layer.to_json_name(),
@@ -1414,77 +1420,6 @@ def _via_drill_features(pcbdoc: Any, layer: PcbLayer) -> list[_DrillFeature]:
         if feature is not None:
             features.append(feature)
     return features
-
-
-def _collect_layer_regions(
-    pcbdoc: Any,
-    layer: PcbLayer,
-    opts: PcbLayerStepOptions,
-) -> list[_Region]:
-    regions: list[_Region] = []
-
-    for track in getattr(pcbdoc, "tracks", []) or []:
-        if int(getattr(track, "layer", 0) or 0) != layer.value:
-            continue
-        if _is_poured_polygon_primitive(track) and not opts.include_poured_polygons:
-            continue
-        region = _track_region(track)
-        if region is not None:
-            regions.append(region)
-
-    for arc in getattr(pcbdoc, "arcs", []) or []:
-        if int(getattr(arc, "layer", 0) or 0) != layer.value:
-            continue
-        if _is_poured_polygon_primitive(arc) and not opts.include_poured_polygons:
-            continue
-        region = _arc_region(arc)
-        if region is not None:
-            regions.append(region)
-
-    for fill in getattr(pcbdoc, "fills", []) or []:
-        if int(getattr(fill, "layer", 0) or 0) != layer.value:
-            continue
-        if _is_poured_polygon_primitive(fill) and not opts.include_poured_polygons:
-            continue
-        region = _fill_region(fill)
-        if region is not None:
-            regions.append(region)
-
-    if layer.is_copper():
-        for pad in getattr(pcbdoc, "pads", []) or []:
-            region = _pad_region(pad, layer)
-            if region is not None:
-                regions.append(region)
-        for via in getattr(pcbdoc, "vias", []) or []:
-            region = _via_region(via, layer)
-            if region is not None:
-                regions.append(region)
-
-    for region in getattr(pcbdoc, "regions", []) or []:
-        if int(getattr(region, "layer", 0) or 0) != layer.value:
-            continue
-        if bool(getattr(region, "is_board_cutout", False)) or bool(
-            getattr(region, "is_keepout", False)
-        ):
-            continue
-        if _is_poured_polygon_primitive(region) and not opts.include_poured_polygons:
-            continue
-        converted = _region_from_outline_vertices(region)
-        if converted is not None:
-            regions.append(converted)
-
-    for region in getattr(pcbdoc, "shapebased_regions", []) or []:
-        if int(getattr(region, "layer", 0) or 0) != layer.value:
-            continue
-        if bool(getattr(region, "is_keepout", False)):
-            continue
-        if _is_poured_polygon_primitive(region) and not opts.include_poured_polygons:
-            continue
-        converted = _shapebased_region(region)
-        if converted is not None:
-            regions.append(converted)
-
-    return [region for region in regions if len(region.outer.points) >= 3]
 
 
 def _collect_drill_cutout_regions(

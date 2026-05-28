@@ -468,6 +468,11 @@ Initial `pcb-layer-step` coverage:
 - generated configs now use JSONC schema v2 with `outputs[]` so one config can
   emit multiple fixture variants with separate filenames, feature filters,
   drill policy, colors, Z offset, and fusion settings;
+- the generated default fixture output is TP-pad focused: tracks, arcs, fills,
+  polygons, regions, vias, and free pads are off unless explicitly enabled;
+- Geometer requests are normalized to Altium board placement origin
+  (`ORIGINX`/`ORIGINY`) before STEP writing, and manifests record the coordinate
+  normalization policy;
 - feature filtering now covers tracks, arcs, fills, poured polygons, regions,
   vias, component pads, free pads, and case-insensitive designator patterns such
   as `TP*`, `J*`, `U1`, and `U2`;

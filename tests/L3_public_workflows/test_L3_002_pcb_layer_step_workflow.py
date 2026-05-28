@@ -81,9 +81,11 @@ def test_pcb_layer_step_cricket_bottom_layer_uses_configured_colors(
     request = cast(dict[str, Any], captured["request"])
     bodies = cast(list[dict[str, Any]], request["bodies"])
     bodies_by_id = {str(body["id"]): body for body in bodies}
-    assert bodies_by_id["copper"]["color"] == "#3D85C6"
+    assert "copper" not in bodies_by_id
     assert bodies_by_id["test_points"]["color"] == "#FF0000"
     assert bodies_by_id["board_outline"]["color"] == "#CCCCCC"
+    assert manifest["options"]["features"]["tracks"] is False
+    assert manifest["options"]["features"]["arcs"] is False
 
 
 def test_pcb_layer_step_cricket_fixture_variants_compare_request_sizes(
