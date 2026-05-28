@@ -35,6 +35,9 @@ from altium_cruncher.altium_cruncher_cmd_bom import (
 from altium_cruncher.altium_cruncher_cmd_clean import (
     register_parser as register_clean_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_design import (
+    register_parser as register_design_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_extract import (
     register_parser as register_extract_parser,
 )
@@ -46,9 +49,6 @@ from altium_cruncher.altium_cruncher_cmd_merge import (
 )
 from altium_cruncher.altium_cruncher_cmd_megamaid import (
     register_parser as register_megamaid_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_netlist import (
-    register_parser as register_netlist_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     register_parser as register_pcb_svg_parser,
@@ -108,6 +108,14 @@ def _color_command_names_in_help(help_text: str, command_names: tuple[str, ...])
     return line_pattern.sub(replace, help_text)
 
 
+def _format_parser_error_line(prog: str, message: str, *, color: bool) -> str:
+    """Format the argparse error line, optionally with terminal color."""
+    error_text = f"{prog}: error: {message}"
+    if color:
+        error_text = f"{Style.BRIGHT}{Fore.RED}{error_text}{Style.RESET_ALL}"
+    return f"{error_text}\n"
+
+
 class CruncherArgumentParser(argparse.ArgumentParser):
     """Argument parser that prints the package version in help output."""
 
@@ -122,6 +130,18 @@ class CruncherArgumentParser(argparse.ArgumentParser):
                 self.command_names_for_help_color,
             )
         return f"{cli_version_text()}\n\n{help_text}\n"
+
+    def error(self, message: str) -> None:
+        """Print parser errors with red highlighting on interactive terminals."""
+        self.print_usage(sys.stderr)
+        self.exit(
+            2,
+            _format_parser_error_line(
+                self.prog,
+                message,
+                color=_help_color_enabled(sys.stderr),
+            ),
+        )
 
 
 def _configure_root_help_color(
@@ -249,12 +269,12 @@ def main() -> None:
 
     register_bom_parser(command_subparsers)
     register_clean_parser(command_subparsers)
+    register_design_parser(command_subparsers)
     _register_easyeda_parsers(command_subparsers)
     register_extract_parser(command_subparsers)
     register_jlc_parser(command_subparsers)
     register_megamaid_parser(command_subparsers)
     register_merge_parser(command_subparsers)
-    register_netlist_parser(command_subparsers)
     register_pcb_layer_step_parser(command_subparsers)
     register_pcb_svg_parser(command_subparsers)
     register_pcblib_footprint_3d_parser(command_subparsers)

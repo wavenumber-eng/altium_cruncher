@@ -27,7 +27,7 @@ test_cases = "../../tests/assets/projects/hydroscope/input"
 module = "altium_cruncher._cli"
 
 [subtests.objectives]
-schematic_outputs = "Sch SVG, BOM, PnP, and netlist commands generate expected artifacts"
+schematic_outputs = "Sch SVG, BOM, PnP, and design JSON commands generate expected artifacts"
 library_outputs = "Extract, split, and merge commands generate valid library artifacts"
 intlib_outputs = "IntLib source extraction writes source libraries, LibPkg, and manifest"
 pcb_outputs = "pcb-svg generates layer SVG and assembly HLR outputs from a public PcbDoc"
@@ -39,7 +39,7 @@ bom_pnp_config = "Shared BOM/PnP config drives multi-output BOM, PnP, and JLC wo
 subprocess_cli = "Invoke public CLI commands through the current Python environment"
 
 [subtests.test_functions]
-test_schematic_and_design_json_commands_use_public_project = "Exercise Sch SVG, BOM, PnP, and netlist commands on Hydroscope"
+test_schematic_and_design_json_commands_use_public_project = "Exercise Sch SVG, BOM, PnP, and design JSON commands on Hydroscope"
 test_bom_pnp_config_and_jlc_command_use_public_project = "Exercise shared BOM/PnP config and paired JLC outputs"
 test_output_path_template_uses_public_project_parameters = "Resolve release-style output paths from public Hydroscope project parameters"
 test_library_extract_split_merge_commands_use_public_fixtures = "Exercise extraction and library split/merge commands on Hydroscope"

@@ -6,7 +6,7 @@ writing Python.
 
 The package consumes the public `altium-monkey` library and keeps higher-level
 command behavior here: SVG export, PCB layer STEP export, extraction, BOM/PnP
-output, netlist export, cleanup, project decomposition, and EasyEDA import
+output, design JSON export, cleanup, project decomposition, and EasyEDA import
 workflows.
 
 ## Install
@@ -72,7 +72,7 @@ The current migrated command set includes:
 - `bom`
 - `pnp`
 - `jlc`
-- `netlist`
+- `design`
 - `extract`
 - `easyeda-import`
 - `easyeda-review`

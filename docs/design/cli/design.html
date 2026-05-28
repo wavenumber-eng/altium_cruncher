@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>design command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="design" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>design</h1><p class="lede">Generates machine-consumable design JSON from Altium schematic or project inputs.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher design project.PrjPcb -o output/design
+altium-cruncher design schematic.SchDoc</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection in the current directory. <code>-o</code> selects the output directory.</p></section>
+<section id="output"><h2>Output</h2><p>The command writes <code>AltiumDesign.to_json()</code> output containing netlist data, component records, hierarchy, SVG IDs, and lookup indexes. Future output naming should use the shared output path template resolver.</p></section>
+<section id="tests"><h2>Tests</h2><p>L3 verifies Hydroscope project design JSON generation, confirms substantial component and net counts, and checks that SVG ID indexes are present. Additional contract tests should pin the JSON schema.</p></section>
+</main>
+</body>
+</html>

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from colorama import Fore, Style
 
-from altium_cruncher._cli import _color_command_names_in_help
+from altium_cruncher._cli import _color_command_names_in_help, _format_parser_error_line
 from altium_cruncher._version import __version__, cli_version_text
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -76,6 +76,25 @@ def test_cli_help_lists_global_logging_controls() -> None:
     assert "--log-level" in result.stdout
 
 
+def test_design_help_describes_design_json_contents() -> None:
+    """Verify design help explains the broader design JSON payload."""
+    result = _run_cli("design", "--help")
+
+    assert result.returncode == 0, result.stderr
+    assert "netlist data" in result.stdout
+    assert "component records" in result.stdout
+    assert "SVG IDs" in result.stdout
+
+
+def test_netlist_command_name_is_retired() -> None:
+    """Verify the old netlist command name is not a public command."""
+    result = _run_cli("netlist", "--help")
+
+    assert result.returncode != 0
+    assert "invalid choice" in result.stderr
+    assert Style.BRIGHT not in result.stderr
+
+
 def test_cli_quiet_suppresses_info_logs(tmp_path: Path) -> None:
     """Verify that --quiet hides normal command info logs."""
     config_path = tmp_path / "bom.config"
@@ -124,6 +143,21 @@ def test_cli_help_colorizes_root_command_names_with_altium_amber() -> None:
 
     assert f"    {color}bom{Style.RESET_ALL}                 generate BOM" in colored
     assert f"    {color}pcblib-footprint-3d{Style.RESET_ALL}" in colored
+
+
+def test_cli_parser_error_formatter_supports_red_terminal_output() -> None:
+    """Verify parser errors can be highlighted in red for terminal output."""
+    formatted = _format_parser_error_line(
+        "altium-cruncher",
+        "invalid choice: 'netlist'",
+        color=True,
+    )
+
+    assert formatted == (
+        f"{Style.BRIGHT}{Fore.RED}"
+        "altium-cruncher: error: invalid choice: 'netlist'"
+        f"{Style.RESET_ALL}\n"
+    )
 
 
 def test_cli_command_help_starts_for_manifest_commands() -> None:

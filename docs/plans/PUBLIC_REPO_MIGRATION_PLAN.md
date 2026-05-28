@@ -244,7 +244,7 @@ templates and output-folder path templates.
 Required behavior:
 
 - apply to output-producing commands including `svg`, `sch-svg`, `pcb-svg`,
-  `netlist`, `bom`, `pnp`, and the planned `jlc` meta command;
+  `design`, `bom`, `pnp`, and the planned `jlc` meta command;
 - support config-controlled filename and output-folder templates with stable
   placeholders such as command name, project stem, source stem, variant, layer,
   view name, output kind, and extension;
@@ -706,15 +706,17 @@ Required fixtures/tests:
   as a candidate source of Altium-generated reference outputs after
   redistribution review.
 
-## Netlist Command
+## Design Command
 
-`netlist` stays in the first public command set as-is for the first release.
-It is a key machine-consumable output command.
+`design` replaces the earlier `netlist` public command name for the first
+release. It is a key machine-consumable output command.
 
 Required follow-up:
 
 - preserve the current behavior that emits full Altium design JSON from
   `AltiumDesign.to_json()`;
+- document that the payload includes netlist data, component records,
+  hierarchy, SVG IDs, and lookup indexes;
 - keep support for `.SchDoc` and `.PrjPcb` inputs plus current auto-detection;
 - keep the `--no-indexes` option;
 - add or confirm design-doc and manifest coverage so L99 treats the command as

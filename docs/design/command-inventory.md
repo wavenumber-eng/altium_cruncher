@@ -1,7 +1,7 @@
 # Command Inventory
 
 Status: initial migration inventory
-Last updated: 2026-05-26
+Last updated: 2026-05-28
 
 This inventory records the command set migrated from the private
 `toolz/altium_cruncher` package into the standalone public repo.
@@ -17,7 +17,7 @@ This inventory records the command set migrated from the private
 | `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, flat raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy/highlighting, and source selection. |
 | `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL CSV/XLSX, units, variant/no-BOM filtering, and configurable sorting. |
 | `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
-| `netlist` | public | `L3_public_workflows` | Key command. Keep current netlist JSON behavior for Altium schematic/project documents. |
+| `design` | public | `L3_public_workflows` | Key command. Exports AltiumDesign JSON for schematic/project documents, including netlist data, components, hierarchy, SVG IDs, and lookup indexes. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
 | `easyeda-import` | optional-public | placeholder plus extra lane | Work in progress. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; audit and fixture-backed tests are required before release ownership. |
 | `easyeda-review` | optional-public | placeholder plus extra lane | Development review command. Audit before deciding whether to keep public, move behind a dev namespace, or defer. |
@@ -45,7 +45,7 @@ Shared output naming requirements:
 
 - output-producing commands should use one filename-template resolver rather
   than command-local naming rules;
-- the shared resolver applies to `svg`, `sch-svg`, `pcb-svg`, `netlist`, `bom`,
+- the shared resolver applies to `svg`, `sch-svg`, `pcb-svg`, `design`, `bom`,
   `pnp`, and the `jlc` command;
 - filename and output-folder templates should support stable placeholders,
   fixed string fragments, `PrjPcb` project parameters, and the runtime
@@ -143,10 +143,14 @@ JLC notes:
 - tests should prove meta-command output matches the equivalent independent
   `bom` and `pnp` JLC modes.
 
-Netlist notes:
+Design JSON notes:
 
-- `netlist` stays in the first public command set;
-- preserve current JSON model output from `.SchDoc` and `.PrjPcb` inputs;
+- `design` replaces the earlier `netlist` public command name in the first
+  public command set;
+- preserve current `AltiumDesign.to_json()` model output from `.SchDoc` and
+  `.PrjPcb` inputs;
+- the help text must explain that this is design JSON with netlist data,
+  component records, hierarchy, SVG IDs, and lookup indexes;
 - keep `--no-indexes`;
 - treat the command as a first-class machine-consumable output surface in
   design docs and L99 command coverage.

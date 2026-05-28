@@ -63,7 +63,7 @@ def test_cli_help_mentions_intlib_extract_support() -> None:
 
 
 def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -> None:
-    """Exercise Sch SVG, BOM, PnP, and netlist commands on Hydroscope."""
+    """Exercise Sch SVG, BOM, PnP, and design JSON commands on Hydroscope."""
     sch_svg_dir = tmp_path / "sch-svg"
     _run_cli("sch-svg", str(HYDROSCOPE_SCHDOC), "-o", str(sch_svg_dir))
     sch_svg = sch_svg_dir / "CPU.svg"
@@ -104,13 +104,14 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
     assert pnp_payload["units"] == "mm"
     assert len(pnp_payload["placements"]) >= 100
 
-    netlist_dir = tmp_path / "netlist"
-    _run_cli("netlist", str(HYDROSCOPE_PROJECT), "-o", str(netlist_dir))
-    netlist_payload = json.loads(
-        (netlist_dir / "Hydroscope_netlist.json").read_text(encoding="utf-8")
+    design_dir = tmp_path / "design"
+    _run_cli("design", str(HYDROSCOPE_PROJECT), "-o", str(design_dir))
+    design_payload = json.loads(
+        (design_dir / "Hydroscope_design.json").read_text(encoding="utf-8")
     )
-    assert len(netlist_payload["components"]) >= 100
-    assert len(netlist_payload["nets"]) >= 100
+    assert len(design_payload["components"]) >= 100
+    assert len(design_payload["nets"]) >= 100
+    assert design_payload["indexes"]["svg_to_component"]
 
 
 def test_bom_pnp_config_and_jlc_command_use_public_project(tmp_path: Path) -> None:
