@@ -18,7 +18,7 @@ def _sample_bom() -> list[dict]:
     return [
         {
             "designator": "R1",
-            "value": "10k",
+            "value": "330Ω",
             "footprint": "R0603",
             "library_ref": "RES",
             "description": "resistor",
@@ -104,6 +104,7 @@ def test_xlsx_table_preserves_text_and_highlights_selected_rows(tmp_path) -> Non
 def test_write_bom_output_supports_grouped_json_and_jlc_csv(tmp_path) -> None:
     source = tmp_path / "project.PrjPcb"
     raw_json = tmp_path / "raw.json"
+    bom_csv = tmp_path / "bom.csv"
     grouped_json = tmp_path / "grouped.json"
     jlc_csv = tmp_path / "jlc.csv"
     jlc_xlsx = tmp_path / "jlc.xlsx"
@@ -114,6 +115,13 @@ def test_write_bom_output_supports_grouped_json_and_jlc_csv(tmp_path) -> None:
         raw_json,
         bom,
         output_format="raw-json",
+        source=source,
+        variant=None,
+    )
+    _write_bom_output(
+        bom_csv,
+        bom,
+        output_format="csv",
         source=source,
         variant=None,
     )
@@ -144,11 +152,15 @@ def test_write_bom_output_supports_grouped_json_and_jlc_csv(tmp_path) -> None:
     assert raw_payload[0]["parameters"]["LCSC"] == "C25804"
     assert "canonical_fields" not in raw_payload[0]
 
+    assert bom_csv.read_bytes().startswith(b"\xef\xbb\xbf")
+    assert "330Ω" in bom_csv.read_text(encoding="utf-8-sig")
+
     grouped_payload = json.loads(grouped_json.read_text(encoding="utf-8"))
     assert grouped_payload["schema"] == "wn.altium_cruncher.bom.grouped.v1"
     assert grouped_payload["component_count"] == 2
 
     jlc_text = jlc_csv.read_text(encoding="utf-8")
+    assert jlc_csv.read_bytes().startswith(b"\xef\xbb\xbf")
     assert "Comment,Designator,Footprint,JLCPCB Part #" in jlc_text
     assert "C25804" in jlc_text
 

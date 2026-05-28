@@ -14,6 +14,7 @@ from altium_cruncher.altium_cruncher_common import (
 )
 from altium_cruncher.bom_pnp_cli_common import (
     configured_output_root,
+    load_or_create_bom_pnp_config,
     load_optional_bom_pnp_config,
     project_parameters_from_design,
     warn_for_unknown_variants,
@@ -45,6 +46,8 @@ from altium_cruncher.output_path_templates import TemplateValue
 from altium_cruncher.simple_xlsx import write_xlsx_table
 
 log = logging.getLogger(__name__)
+
+BOM_CSV_ENCODING = "utf-8-sig"
 
 BOM_FIXED_COLUMNS = [
     "Designator",
@@ -111,7 +114,7 @@ def _bom_rows(
 
 def _write_bom_csv(output_file: Path, bom: list[dict]) -> None:
     param_columns = _bom_parameter_columns(bom)
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
+    with open(output_file, "w", newline="", encoding=BOM_CSV_ENCODING) as f:
         writer = csv.writer(f)
         writer.writerow(BOM_FIXED_COLUMNS + param_columns)
         writer.writerows(_bom_rows(bom, param_columns=param_columns))
@@ -123,7 +126,7 @@ def _write_named_rows_csv(
     rows: Sequence[Mapping[str, str]],
 ) -> None:
     """Write named rows to CSV using a fixed column order."""
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
+    with open(output_file, "w", newline="", encoding=BOM_CSV_ENCODING) as f:
         writer = csv.DictWriter(f, fieldnames=list(columns), extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
@@ -537,8 +540,20 @@ def cmd_bom(args) -> int:
     else:
         log.info("No variants defined in project")
 
-    config, config_path = load_optional_bom_pnp_config(getattr(args, "config", None))
-    config_mode = config_path is not None and getattr(args, "format", None) is None
+    requested_format_value = getattr(args, "format", None)
+    requested_format = (
+        requested_format_value if isinstance(requested_format_value, str) else None
+    )
+    if requested_format is None:
+        config, config_path, created_config = load_or_create_bom_pnp_config(
+            getattr(args, "config", None)
+        )
+        if created_config:
+            log.info("Created BOM/PnP config template: %s", config_path)
+        config_mode = True
+    else:
+        config, config_path = load_optional_bom_pnp_config(getattr(args, "config", None))
+        config_mode = False
     variants_to_process = select_variant_names(
         available_variants,
         config,
@@ -547,7 +562,6 @@ def cmd_bom(args) -> int:
     )
     warn_for_unknown_variants(log, variants_to_process, available_variants)
 
-    output_format = getattr(args, "format", None) or "csv"
     project_parameters = project_parameters_from_design(design)
     output_dir = (
         configured_output_root(args.output)
@@ -571,8 +585,9 @@ def cmd_bom(args) -> int:
             files_written += len(written)
             output_names = ", ".join(path.name for path in written)
         else:
+            assert requested_format is not None
             base_name = input_file.stem
-            ext = _bom_output_extension(output_format)
+            ext = _bom_output_extension(requested_format)
             if var:
                 output_file = output_dir / f"{base_name}_{var}_bom.{ext}"
             else:
@@ -581,7 +596,7 @@ def cmd_bom(args) -> int:
             _write_bom_output(
                 output_file,
                 bom,
-                output_format=output_format,
+                output_format=requested_format,
                 source=input_file,
                 variant=var,
             )
@@ -653,7 +668,10 @@ def register_parser(subparsers):
     bom_parser.add_argument(
         "--config",
         type=Path,
-        help="BOM/PnP JSON/JSONC config (default: ./bom.config if present)",
+        help=(
+            "BOM/PnP JSON/JSONC config "
+            "(default: ./bom.config; created when omitted in config mode)"
+        ),
     )
     bom_parser.add_argument(
         "--write-config",

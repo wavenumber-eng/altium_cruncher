@@ -76,6 +76,21 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
     assert bom_payload["schema"] == "wn.altium_cruncher.bom.v1"
     assert bom_payload["component_count"] >= 100
 
+    default_bom_dir = tmp_path / "bom-default"
+    default_config = tmp_path / "bom-default.config"
+    _run_cli(
+        "bom",
+        str(HYDROSCOPE_PROJECT),
+        "--config",
+        str(default_config),
+        "-o",
+        str(default_bom_dir),
+    )
+    assert default_config.exists()
+    assert (default_bom_dir / "bom" / "Hydroscope_base_raw-json.json").exists()
+    assert (default_bom_dir / "bom" / "Hydroscope_base_grouped-xlsx.xlsx").exists()
+    assert not (default_bom_dir / "bom" / "Hydroscope_base_grouped-json.json").exists()
+
     pnp_dir = tmp_path / "pnp"
     _run_cli("pnp", str(HYDROSCOPE_PROJECT), "--format", "json", "-o", str(pnp_dir))
     pnp_payload = json.loads((pnp_dir / "Hydroscope_pnp.json").read_text(encoding="utf-8"))

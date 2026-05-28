@@ -37,7 +37,7 @@
     <h3>Test Requirements</h3>
     <p>Tests must cover parsing, default serialization, output kind validation, DNP display policy, default grouped BOM columns, PnP position mode selection, and configured output path resolution.</p>
     <h3>Working Definition</h3>
-    <p>Working when a JSON-style mapping can select outputs, resolve paths, and round-trip into a deterministic template. Default grouped BOM review output starts with DNP state and omits line numbers unless the user explicitly adds the <code>item</code> field.</p>
+    <p>Working when a JSON-style mapping can select outputs, resolve paths, and round-trip into a deterministic template. Default grouped BOM review output uses <code>mfg</code>, <code>mpn</code>, <code>description</code>, <code>quantity</code>, and <code>designators</code>, and omits line numbers unless the user explicitly adds the <code>item</code> field.</p>
   </section>
 
   <section

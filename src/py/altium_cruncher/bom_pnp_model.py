@@ -43,15 +43,11 @@ JLC_CPL_COLUMNS: tuple[str, ...] = (
     "Rotation",
 )
 BOM_GROUPED_DEFAULT_COLUMNS: tuple[str, ...] = (
-    "dnp",
+    "mfg",
+    "mpn",
+    "description",
     "quantity",
     "designators",
-    "manufacturer",
-    "manufacturer_part_number",
-    "value",
-    "footprint",
-    "description",
-    "jlcpcb_part_number",
 )
 PNP_DEFAULT_COLUMNS: tuple[str, ...] = (
     "designator",
@@ -82,6 +78,16 @@ _VARIANT_MODES = frozenset({"base", "all", "named"})
 
 _DESIGNATOR_TOKEN_RE = re.compile(r"\d+|[A-Za-z]+|[^A-Za-z\d]+")
 _LEADING_PREFIX_RE = re.compile(r"^[A-Za-z]+")
+_BOM_FIELD_NAME_ALIASES = {
+    "mfg": "manufacturer",
+    "manufacturer_part": "manufacturer_part_number",
+    "manufacturer_part_no": "manufacturer_part_number",
+    "manufacturer_part_number": "manufacturer_part_number",
+    "mpn": "manufacturer_part_number",
+    "part_number": "manufacturer_part_number",
+    "pn": "manufacturer_part_number",
+    "qty": "quantity",
+}
 
 
 def _default_aliases() -> dict[str, tuple[str, ...]]:
@@ -168,20 +174,15 @@ class BomPnpConfig:
 
     schema: str = BOM_PNP_CONFIG_SCHEMA
     field_aliases: FieldAliasConfig = field(default_factory=FieldAliasConfig)
-    variant_mode: str = "base"
+    variant_mode: str = "all"
     variant_names: tuple[str, ...] = ()
     include_base_variant: bool = True
     bom_source_mode: str = "schematic"
-    bom_outputs: tuple[str, ...] = (
-        "raw-json",
-        "grouped-json",
-        "grouped-xlsx",
-    )
+    bom_outputs: tuple[str, ...] = ("raw-json", "grouped-xlsx")
     bom_group_fields: tuple[str, ...] = (
-        "manufacturer",
-        "manufacturer_part_number",
-        "value",
-        "footprint",
+        "mfg",
+        "mpn",
+        "description",
     )
     bom_output_fields: tuple[str, ...] = BOM_GROUPED_DEFAULT_COLUMNS
     include_dnp: bool = True
@@ -220,7 +221,7 @@ class BomPnpConfig:
             if aliases
             else FieldAliasConfig(),
             variant_mode=_choice(
-                _string_value(variants.get("mode") or "base"),
+                _string_value(variants.get("mode") or "all"),
                 _VARIANT_MODES,
                 "variant mode",
             ),
@@ -237,17 +238,12 @@ class BomPnpConfig:
             bom_outputs=_choices_tuple(
                 bom.get("outputs"),
                 _BOM_OUTPUT_KINDS,
-                ("raw-json", "grouped-json", "grouped-xlsx"),
+                ("raw-json", "grouped-xlsx"),
                 "BOM output",
             ),
             bom_group_fields=_string_tuple(
                 bom.get("group_fields"),
-                default=(
-                    "manufacturer",
-                    "manufacturer_part_number",
-                    "value",
-                    "footprint",
-                ),
+                default=("mfg", "mpn", "description"),
             ),
             bom_output_fields=_string_tuple(
                 bom.get("output_fields"),
@@ -937,7 +933,7 @@ def _normalize_bom_component(
 
 def _grouped_line_field(line: GroupedBomLine, field_name: str) -> str:
     """Return one configured grouped BOM field as text."""
-    normalized = _normalize_name(field_name)
+    normalized = _normalize_bom_field_name(field_name)
     if normalized == "item":
         return str(line.item)
     if normalized == "quantity":
@@ -1100,6 +1096,12 @@ def _normalize_name(name: str) -> str:
     return name.strip().casefold().replace(" ", "_").replace("-", "_")
 
 
+def _normalize_bom_field_name(name: str) -> str:
+    """Normalize configured BOM table and grouping field names."""
+    normalized = _normalize_name(name)
+    return _BOM_FIELD_NAME_ALIASES.get(normalized, normalized)
+
+
 def _mapping_value(value: object) -> Mapping[str, object]:
     """Return a mapping value or an empty mapping."""
     if isinstance(value, Mapping):
@@ -1215,7 +1217,7 @@ def _bom_group_key(
 ) -> tuple[str, ...]:
     """Build the BOM grouping key for one normalized component."""
     values = [
-        component.canonical_fields.get(_normalize_name(field), "").casefold()
+        component.canonical_fields.get(_normalize_bom_field_name(field), "").casefold()
         for field in group_fields
     ]
     if not any(values):

@@ -42,6 +42,8 @@ from altium_cruncher.simple_xlsx import write_xlsx_table
 
 log = logging.getLogger(__name__)
 
+PNP_CSV_ENCODING = "utf-8-sig"
+
 
 PNP_FIXED_COLUMNS = [
     "Designator",
@@ -68,7 +70,7 @@ def _write_pnp_csv(
     )
     fixed_columns = [column.format(units=units) for column in PNP_FIXED_COLUMNS]
 
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
+    with open(output_file, "w", newline="", encoding=PNP_CSV_ENCODING) as f:
         writer = csv.writer(f)
         writer.writerow(fixed_columns + param_columns)
         for entry in sort_placements(normalized):
@@ -97,7 +99,7 @@ def _write_jlc_cpl_csv(
     """Write normalized placements in JLCPCB CPL upload format."""
     normalized = normalize_pnp_entries(placements, units=units)
     rows = jlc_cpl_rows(normalized)
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
+    with open(output_file, "w", newline="", encoding=PNP_CSV_ENCODING) as f:
         writer = csv.DictWriter(
             f,
             fieldnames=list(JLC_CPL_COLUMNS),
@@ -113,7 +115,7 @@ def _write_named_rows_csv(
     rows: Sequence[Mapping[str, str]],
 ) -> None:
     """Write named rows to CSV using a fixed column order."""
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
+    with open(output_file, "w", newline="", encoding=PNP_CSV_ENCODING) as f:
         writer = csv.DictWriter(f, fieldnames=list(columns), extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)

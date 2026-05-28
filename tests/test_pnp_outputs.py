@@ -48,7 +48,8 @@ def test_write_pnp_csv_uses_normalized_sort_and_parameters(tmp_path) -> None:
 
     _write_pnp_csv(output, _sample_placements(), units="mm")
 
-    rows = list(csv.reader(output.open(encoding="utf-8")))
+    assert output.read_bytes().startswith(b"\xef\xbb\xbf")
+    rows = list(csv.reader(output.open(encoding="utf-8-sig")))
     assert rows[0] == [
         "Designator",
         "Comment",
@@ -70,7 +71,8 @@ def test_write_jlc_cpl_csv_uses_jlc_columns_and_mm_guard(tmp_path) -> None:
 
     _write_jlc_cpl_csv(output, _sample_placements(), units="mm")
 
-    rows = list(csv.DictReader(output.open(encoding="utf-8")))
+    assert output.read_bytes().startswith(b"\xef\xbb\xbf")
+    rows = list(csv.DictReader(output.open(encoding="utf-8-sig")))
     assert rows[0] == {
         "Designator": "R2",
         "Layer": "Top",

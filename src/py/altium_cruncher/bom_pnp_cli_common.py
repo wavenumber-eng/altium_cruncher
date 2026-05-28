@@ -43,6 +43,20 @@ def load_optional_bom_pnp_config(
     return load_bom_pnp_config(config_path), config_path
 
 
+def load_or_create_bom_pnp_config(
+    config_arg: Path | None,
+) -> tuple[BomPnpConfig, Path, bool]:
+    """Load a BOM/PnP config, creating the default template when absent."""
+    config_path = config_arg.resolve() if config_arg else find_bom_pnp_config_path()
+    if config_path is None:
+        config_path = Path.cwd() / BOM_PNP_DEFAULT_CONFIG_NAME
+    created = False
+    if not config_path.exists():
+        write_bom_pnp_config(config_path)
+        created = True
+    return load_bom_pnp_config(config_path), config_path, created
+
+
 def write_config_template(write_arg: Path | None) -> Path:
     """Write a default BOM/PnP config template and return its path."""
     path = (write_arg or Path(BOM_PNP_DEFAULT_CONFIG_NAME)).resolve()

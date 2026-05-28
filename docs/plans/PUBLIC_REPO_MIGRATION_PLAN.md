@@ -1252,10 +1252,13 @@ Current local status:
   JSON/CSV/XLSX, and JLC CPL CSV/XLSX; configured outputs write
   `bom.config.used.json` beside generated artifacts. Focused unit tests cover
   the model and L3 covers Hydroscope BOM/PnP config plus paired `jlc` output
-  execution. The grouped BOM XLSX default now starts with DNP state, omits the
-  line-number `item` column unless explicitly configured, uses inverse knockout
-  headers, preserves text cells, and leaves Excel filter dropdowns disabled for
-  BOM, PnP, JLC BOM, and JLC CPL spreadsheets. The `jlc` default keeps paired
+  execution. Config-mode BOM now auto-creates `bom.config` when missing; the
+  generated default processes all variants including the no-variant base and
+  writes raw JSON plus grouped XLSX with `mfg`, `mpn`, `description`,
+  `quantity`, and `designators`. Grouped XLSX output omits the line-number
+  `item` column unless explicitly configured, uses inverse knockout headers,
+  preserves text cells, and leaves Excel filter dropdowns disabled for BOM,
+  PnP, JLC BOM, and JLC CPL spreadsheets. The `jlc` default keeps paired
   BOM/CPL files as siblings in the same output folder;
 - BOM/PnP oracle tests now exercise `node_test_array` and `loz-old-man`:
   raw BOM JSON is checked against Altium XML-BOM designators and key fields,

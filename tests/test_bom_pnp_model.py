@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 from typing import cast
 
+import pytest
+
+from altium_cruncher.bom_pnp_cli_common import load_or_create_bom_pnp_config
 from altium_cruncher.bom_pnp_model import (
     BOM_PNP_CONFIG_SCHEMA,
     BomPnpConfig,
@@ -292,7 +295,16 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
 
     assert config.schema == BOM_PNP_CONFIG_SCHEMA
     assert config.bom_outputs == ("raw-json", "grouped-xlsx", "jlc-csv", "jlc-xlsx")
-    assert BomPnpConfig().bom_output_fields[0] == "dnp"
+    assert BomPnpConfig().variant_mode == "all"
+    assert BomPnpConfig().bom_outputs == ("raw-json", "grouped-xlsx")
+    assert BomPnpConfig().bom_group_fields == ("mfg", "mpn", "description")
+    assert BomPnpConfig().bom_output_fields == (
+        "mfg",
+        "mpn",
+        "description",
+        "quantity",
+        "designators",
+    )
     assert "item" not in BomPnpConfig().bom_output_fields
     assert config.pnp_outputs == ("json", "xlsx", "jlc-cpl", "jlc-cpl-xlsx")
     assert config.highlight_dnp_rows is False
@@ -317,6 +329,30 @@ def test_bom_pnp_config_loader_accepts_utf8_bom(tmp_path: Path) -> None:
     config = load_bom_pnp_config(config_path)
 
     assert config.schema == BOM_PNP_CONFIG_SCHEMA
+
+
+def test_bom_config_auto_create_uses_default_policy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Create the editable BOM config in the working folder on first use."""
+    monkeypatch.chdir(tmp_path)
+
+    config, config_path, created = load_or_create_bom_pnp_config(None)
+
+    assert created is True
+    assert config_path == tmp_path / "bom.config"
+    assert config_path.exists()
+    assert config.variant_mode == "all"
+    assert config.include_base_variant is True
+    assert config.bom_outputs == ("raw-json", "grouped-xlsx")
+    assert config.bom_output_fields == (
+        "mfg",
+        "mpn",
+        "description",
+        "quantity",
+        "designators",
+    )
 
 
 def test_configured_bom_and_pnp_table_rows_use_selected_fields() -> None:
@@ -350,12 +386,14 @@ def test_configured_bom_and_pnp_table_rows_use_selected_fields() -> None:
 
     assert grouped_bom_table_rows(
         bom_lines,
-        fields=("quantity", "designators", "manufacturer_part_number"),
+        fields=("mfg", "mpn", "description", "quantity", "designators"),
     ) == [
         {
+            "mfg": "",
+            "mpn": "RC0603",
+            "description": "",
             "quantity": "1",
             "designators": "R1",
-            "manufacturer_part_number": "RC0603",
         }
     ]
     assert pnp_table_rows(placements, fields=("designator", "layer", "center_x")) == [
