@@ -160,6 +160,26 @@ def _options_from_config_and_args(config: PcbLayerStepConfig, args) -> PcbLayerS
         if bool(getattr(args, "exclude_poured_polygons", False))
         else config.include_poured_polygons,
         cut_holes=False if bool(getattr(args, "no_hole_cuts", False)) else config.cut_holes,
+        drill_hole_mode="none"
+        if bool(getattr(args, "no_hole_cuts", False))
+        else str(_arg_or_config(args, "drill_hole_mode", config.drill_hole_mode)),
+        max_boolean_drill_cuts=int(
+            _arg_or_config(
+                args,
+                "max_boolean_drill_cuts",
+                config.max_boolean_drill_cuts,
+            )
+        ),
+        drill_hole_color=str(
+            _arg_or_config(args, "drill_hole_color", config.drill_hole_color)
+        ),
+        drill_overlay_thickness_mm=float(
+            _arg_or_config(
+                args,
+                "drill_overlay_thickness_mm",
+                config.drill_overlay_thickness_mm,
+            )
+        ),
         fuse_copper=False if bool(getattr(args, "no_fuse", False)) else config.fuse_copper,
         fuse_board_outline=False
         if bool(getattr(args, "no_fuse", False))
@@ -306,7 +326,33 @@ def register_parser(subparsers):
     parser.add_argument(
         "--no-hole-cuts",
         action="store_true",
-        help="do not subtract pad/via drill holes from copper geometry",
+        help="do not subtract or overlay pad/via drill holes in copper geometry",
+    )
+    parser.add_argument(
+        "--drill-hole-mode",
+        choices=["auto", "cut", "overlay", "none"],
+        default=None,
+        help=(
+            "drill-hole handling: auto cuts small boards and overlays dense boards, "
+            "cut uses precise booleans, overlay uses fast visible disks, none omits them"
+        ),
+    )
+    parser.add_argument(
+        "--max-boolean-drill-cuts",
+        type=int,
+        default=None,
+        help="auto mode uses boolean drill cuts up to this count (default: 128)",
+    )
+    parser.add_argument(
+        "--drill-hole-color",
+        default=None,
+        help="STEP color for drill overlays, #RRGGBB or #AARRGGBB (default: #FFFFFF)",
+    )
+    parser.add_argument(
+        "--drill-overlay-thickness-mm",
+        type=float,
+        default=None,
+        help="thickness for fast drill-overlay disks in millimeters (default: 0.001)",
     )
     parser.add_argument(
         "--no-fuse",

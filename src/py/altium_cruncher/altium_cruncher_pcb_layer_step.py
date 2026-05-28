@@ -23,8 +23,22 @@ MIL_TO_MM = 0.0254
 INTERNAL_UNITS_PER_MIL = 10000.0
 DEFAULT_COPPER_COLOR = "#B87333"
 DEFAULT_OUTLINE_COLOR = "#111111"
+DEFAULT_DRILL_HOLE_COLOR = "#FFFFFF"
+DEFAULT_MAX_BOOLEAN_DRILL_CUTS = 128
 PCB_LAYER_STEP_CONFIG_FILENAME = "pcb-layer-step.json"
 PCB_LAYER_STEP_CONFIG_SCHEMA = "wn.altium_cruncher.pcb_layer_step.config.v1"
+DRILL_HOLE_MODE_AUTO = "auto"
+DRILL_HOLE_MODE_CUT = "cut"
+DRILL_HOLE_MODE_OVERLAY = "overlay"
+DRILL_HOLE_MODE_NONE = "none"
+DRILL_HOLE_MODES = frozenset(
+    {
+        DRILL_HOLE_MODE_AUTO,
+        DRILL_HOLE_MODE_CUT,
+        DRILL_HOLE_MODE_OVERLAY,
+        DRILL_HOLE_MODE_NONE,
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +55,10 @@ class PcbLayerStepOptions:
     include_board_outline: bool = True
     include_poured_polygons: bool = True
     cut_holes: bool = True
+    drill_hole_mode: str = DRILL_HOLE_MODE_AUTO
+    max_boolean_drill_cuts: int = DEFAULT_MAX_BOOLEAN_DRILL_CUTS
+    drill_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
+    drill_overlay_thickness_mm: float = 0.001
     fuse_copper: bool = True
     fuse_board_outline: bool = True
     arc_segments: int = 32
@@ -98,6 +116,26 @@ def _coerce_bool(value: Any, default: bool) -> bool:
     raise ValueError(f"Invalid boolean value in pcb-layer-step config: {value!r}")
 
 
+def _coerce_drill_hole_mode(value: Any, *, cut_holes: bool) -> str:
+    """Return the configured drill-hole rendering strategy."""
+    if value is None:
+        return DRILL_HOLE_MODE_AUTO if cut_holes else DRILL_HOLE_MODE_NONE
+    normalized = str(value).strip().casefold().replace("-", "_")
+    aliases = {
+        "boolean": DRILL_HOLE_MODE_CUT,
+        "boolean_cut": DRILL_HOLE_MODE_CUT,
+        "cutout": DRILL_HOLE_MODE_CUT,
+        "cutouts": DRILL_HOLE_MODE_CUT,
+        "cuts": DRILL_HOLE_MODE_CUT,
+        "off": DRILL_HOLE_MODE_NONE,
+        "omit": DRILL_HOLE_MODE_NONE,
+    }
+    mode = aliases.get(normalized, normalized)
+    if mode not in DRILL_HOLE_MODES:
+        raise ValueError(f"Invalid drill_hole_mode in pcb-layer-step config: {value!r}")
+    return mode
+
+
 @dataclass(frozen=True, slots=True)
 class PcbLayerStepConfig:
     """JSON config for one-layer PCB STEP export."""
@@ -114,6 +152,10 @@ class PcbLayerStepConfig:
     include_board_outline: bool = True
     include_poured_polygons: bool = True
     cut_holes: bool = True
+    drill_hole_mode: str = DRILL_HOLE_MODE_AUTO
+    max_boolean_drill_cuts: int = DEFAULT_MAX_BOOLEAN_DRILL_CUTS
+    drill_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
+    drill_overlay_thickness_mm: float = 0.001
     fuse_copper: bool = True
     fuse_board_outline: bool = True
     arc_segments: int = 32
@@ -155,6 +197,24 @@ class PcbLayerStepConfig:
                 merged.get("include_poured_polygons"), default.include_poured_polygons
             ),
             cut_holes=_coerce_bool(merged.get("cut_holes"), default.cut_holes),
+            drill_hole_mode=_coerce_drill_hole_mode(
+                merged.get("drill_hole_mode"),
+                cut_holes=_coerce_bool(merged.get("cut_holes"), default.cut_holes),
+            ),
+            max_boolean_drill_cuts=int(
+                _coerce_float(
+                    merged.get("max_boolean_drill_cuts"),
+                    default.max_boolean_drill_cuts,
+                )
+            ),
+            drill_hole_color=_coerce_str(
+                merged.get("drill_hole_color"),
+                default.drill_hole_color,
+            ),
+            drill_overlay_thickness_mm=_coerce_float(
+                merged.get("drill_overlay_thickness_mm"),
+                default.drill_overlay_thickness_mm,
+            ),
             fuse_copper=_coerce_bool(merged.get("fuse_copper"), default.fuse_copper),
             fuse_board_outline=_coerce_bool(
                 merged.get("fuse_board_outline"), default.fuse_board_outline
@@ -176,6 +236,10 @@ class PcbLayerStepConfig:
             "include_board_outline": self.include_board_outline,
             "include_poured_polygons": self.include_poured_polygons,
             "cut_holes": self.cut_holes,
+            "drill_hole_mode": self.drill_hole_mode,
+            "max_boolean_drill_cuts": self.max_boolean_drill_cuts,
+            "drill_hole_color": self.drill_hole_color,
+            "drill_overlay_thickness_mm": self.drill_overlay_thickness_mm,
             "fuse_copper": self.fuse_copper,
             "fuse_board_outline": self.fuse_board_outline,
             "arc_segments": self.arc_segments,
@@ -193,6 +257,10 @@ class PcbLayerStepConfig:
             include_board_outline=self.include_board_outline,
             include_poured_polygons=self.include_poured_polygons,
             cut_holes=self.cut_holes,
+            drill_hole_mode=self.drill_hole_mode,
+            max_boolean_drill_cuts=self.max_boolean_drill_cuts,
+            drill_hole_color=self.drill_hole_color,
+            drill_overlay_thickness_mm=self.drill_overlay_thickness_mm,
             fuse_copper=self.fuse_copper,
             fuse_board_outline=self.fuse_board_outline,
             arc_segments=self.arc_segments,
@@ -336,8 +404,12 @@ def export_pcb_layer_step(
 
     layer_regions = _collect_layer_regions(pcbdoc, layer, opts)
     drill_cutouts = _collect_drill_cutout_regions(pcbdoc, layer, opts)
+    drill_hole_mode = _effective_drill_hole_mode(opts, len(drill_cutouts))
     board_cutouts = _collect_board_cutout_regions(pcbdoc)
-    all_cutouts = [*drill_cutouts, *board_cutouts] if opts.cut_holes else []
+    boolean_drill_cutouts = (
+        drill_cutouts if drill_hole_mode == DRILL_HOLE_MODE_CUT else []
+    )
+    all_cutouts = [*boolean_drill_cutouts, *board_cutouts]
     outline_regions = (
         _collect_board_outline_regions(pcbdoc, opts)
         if opts.include_board_outline and opts.outline_width_mm > 0.0
@@ -359,6 +431,21 @@ def export_pcb_layer_step(
         if all_cutouts:
             copper_body["cutouts"] = [cutout.to_json() for cutout in all_cutouts]
         bodies.append(copper_body)
+
+    drill_overlay_regions = (
+        drill_cutouts if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY else []
+    )
+    if drill_overlay_regions:
+        bodies.append(
+            {
+                "id": "drill_holes",
+                "name": "drill_holes",
+                "color": opts.drill_hole_color,
+                "z_mm": opts.z_mm + opts.thickness_mm,
+                "thickness_mm": max(0.0001, opts.drill_overlay_thickness_mm),
+                "regions": [region.to_json() for region in drill_overlay_regions],
+            }
+        )
 
     if outline_regions:
         outline_body: dict[str, Any] = {
@@ -406,6 +493,11 @@ def export_pcb_layer_step(
             "include_board_outline": bool(opts.include_board_outline),
             "include_poured_polygons": bool(opts.include_poured_polygons),
             "cut_holes": bool(opts.cut_holes),
+            "drill_hole_mode": opts.drill_hole_mode,
+            "effective_drill_hole_mode": drill_hole_mode,
+            "max_boolean_drill_cuts": int(opts.max_boolean_drill_cuts),
+            "drill_hole_color": opts.drill_hole_color,
+            "drill_overlay_thickness_mm": float(opts.drill_overlay_thickness_mm),
             "fuse_copper": bool(opts.fuse_copper),
             "fuse_board_outline": bool(opts.fuse_board_outline),
             "arc_segments": int(opts.arc_segments),
@@ -413,6 +505,8 @@ def export_pcb_layer_step(
         "counts": {
             "source_layer_geometries": len(layer_regions),
             "drill_cut_geometries": len(drill_cutouts),
+            "drill_boolean_cut_geometries": len(boolean_drill_cutouts),
+            "drill_overlay_geometries": len(drill_overlay_regions),
             "board_cutout_geometries": len(board_cutouts),
             "copper_bodies": len(layer_regions) if opts.include_copper else 0,
             "outline_bodies": len(outline_regions),
@@ -431,6 +525,24 @@ def export_pcb_layer_step(
         drill_cut_count=len(drill_cutouts),
         source_input=source_input,
     )
+
+
+def _effective_drill_hole_mode(opts: PcbLayerStepOptions, drill_count: int) -> str:
+    """Choose the drill-hole strategy for this board."""
+    if not opts.cut_holes:
+        return DRILL_HOLE_MODE_NONE
+    requested = _coerce_drill_hole_mode(opts.drill_hole_mode, cut_holes=True)
+    if requested != DRILL_HOLE_MODE_AUTO:
+        return requested
+    if drill_count <= max(0, int(opts.max_boolean_drill_cuts)):
+        return DRILL_HOLE_MODE_CUT
+    log.info(
+        "Using drill overlay instead of boolean drill cuts for %d holes "
+        "(threshold: %d)",
+        drill_count,
+        int(opts.max_boolean_drill_cuts),
+    )
+    return DRILL_HOLE_MODE_OVERLAY
 
 
 def _collect_layer_regions(

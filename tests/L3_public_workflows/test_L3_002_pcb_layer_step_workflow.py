@@ -82,5 +82,7 @@ def test_pcb_layer_step_cricket_bottom_layer_uses_configured_colors(
     bodies = cast(list[dict[str, Any]], request["bodies"])
     assert bodies[0]["id"] == "copper"
     assert bodies[0]["color"] == "#3D85C6"
-    assert bodies[1]["id"] == "board_outline"
-    assert bodies[1]["color"] == "#CCCCCC"
+    assert bodies[1]["id"] == "drill_holes"
+    assert bodies[1]["color"] == "#FFFFFF"
+    assert bodies[2]["id"] == "board_outline"
+    assert bodies[2]["color"] == "#CCCCCC"

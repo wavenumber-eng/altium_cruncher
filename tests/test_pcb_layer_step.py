@@ -273,6 +273,54 @@ def test_export_pcb_layer_step_can_preserve_primitive_regions(monkeypatch, tmp_p
     assert outline_body["fuse_regions"] is True
 
 
+def test_export_pcb_layer_step_overlays_dense_drill_sets(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """Avoid slow boolean drill cuts when dense boards exceed the auto threshold."""
+    captured = {}
+
+    def write_planar_step(request, output_path):
+        captured["request"] = request
+        output_path.write_bytes(b"ISO-10303-21;\n")
+        return output_path
+
+    monkeypatch.setitem(
+        sys.modules, "geometer", SimpleNamespace(write_planar_step=write_planar_step)
+    )
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 5000, 5000)
+    pcbdoc.add_track((50, 50), (4950, 50), width_mils=12, layer=PcbLayer.BOTTOM)
+    for index in range(130):
+        pcbdoc.add_via(
+            position_mils=(100 + index * 30, 200),
+            diameter_mils=40,
+            hole_size_mils=20,
+        )
+
+    result = export_pcb_layer_step(
+        pcbdoc,
+        tmp_path / "bottom.step",
+        board_name="fixture_board",
+        options=PcbLayerStepOptions(layer=PcbLayer.BOTTOM),
+    )
+
+    bodies = captured["request"]["bodies"]
+    assert [body["id"] for body in bodies] == [
+        "copper",
+        "drill_holes",
+        "board_outline",
+    ]
+    assert "cutouts" not in bodies[0]
+    assert len(bodies[1]["regions"]) == 130
+
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["options"]["effective_drill_hole_mode"] == "overlay"
+    assert manifest["counts"]["drill_boolean_cut_geometries"] == 0
+    assert manifest["counts"]["drill_overlay_geometries"] == 130
+
+
 def test_export_pcb_layer_step_can_preserve_board_outline_regions(
     monkeypatch, tmp_path
 ) -> None:

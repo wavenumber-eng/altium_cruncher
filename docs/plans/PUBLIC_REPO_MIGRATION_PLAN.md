@@ -467,6 +467,11 @@ Initial `pcb-layer-step` coverage:
 - document and test color control:
   - copper color: `#3D85C6`;
   - board outline color: `#CCCCCC`;
+- dense drill-hole sets are a known expensive geometer boolean case. The
+  command now has `drill_hole_mode` with `auto`, `cut`, `overlay`, and `none`.
+  Auto mode uses exact boolean cuts for small hole counts and a visible drill
+  overlay for large boards such as `cricket-node`; the manifest records the
+  effective mode and overlay/cut counts.
 - verify the command creates a non-empty STEP artifact and any stable report or
   manifest output expected for the command;
 - later golden/reference checks should compare against `reference_output/` once
