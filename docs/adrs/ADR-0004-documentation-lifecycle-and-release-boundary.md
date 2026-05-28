@@ -33,8 +33,9 @@ plan is considered retired:
 - reusable examples or fixtures go into the package's public example/test
   locations when they are intended for users or downstream consumers.
 
-Completed plans may remain in the repository as development history, but they
-are not the source of truth for released behavior.
+Completed plans should be deleted from the public repository after durable
+information has been promoted. Development history remains available through
+Git, while the working tree stays focused on released behavior.
 
 ## Consequences
 
