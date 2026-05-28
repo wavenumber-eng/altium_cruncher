@@ -18,6 +18,10 @@ from altium_monkey.altium_record_types import PcbLayer
 from altium_monkey.altium_svg_arc_helpers import choose_svg_sweep_flag_for_center
 
 from altium_cruncher.config_json import load_json_config
+from altium_cruncher.altium_cruncher_pcb_layer_step_config import (
+    PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT,
+    resolve_pcb_layer_selector,
+)
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +29,7 @@ MIL_TO_MM = 0.0254
 INTERNAL_UNITS_PER_MIL = 10000.0
 DEFAULT_COPPER_COLOR = "#B87333"
 DEFAULT_OUTLINE_COLOR = "#111111"
+DEFAULT_BOARD_CUTOUT_COLOR = "#FF0000"
 DEFAULT_DRILL_HOLE_COLOR = "#FFFFFF"
 DEFAULT_MAX_BOOLEAN_DRILL_CUTS = 128
 PCB_LAYER_STEP_CONFIG_FILENAME = "pcb-layer-step.json"
@@ -37,6 +42,18 @@ DRILL_HOLE_MODE_NONE = "none"
 DRILL_HOLE_SHAPE_SOLID = "solid"
 DRILL_HOLE_SHAPE_RING = "ring"
 DRILL_HOLE_SHAPES = frozenset({DRILL_HOLE_SHAPE_SOLID, DRILL_HOLE_SHAPE_RING})
+DRILL_PLATED_RING_SHAPE_ANNULUS = "annulus"
+DRILL_PLATED_RING_SHAPE_PAD = "pad"
+DRILL_PLATED_RING_SHAPES = frozenset(("annulus", "pad"))
+_NON_COPPER_BODY_IDS = frozenset(
+    {
+        "board_outline",
+        "board_cutouts",
+        "drill_holes",
+        "plated_drill_holes",
+        "non_plated_drill_holes",
+    }
+)
 DRILL_HOLE_MODES = frozenset(
     {
         DRILL_HOLE_MODE_AUTO,
@@ -78,6 +95,8 @@ class PcbLayerStepOptions:
     copper_color: str = DEFAULT_COPPER_COLOR
     outline_width_mm: float = 0.2
     outline_color: str = DEFAULT_OUTLINE_COLOR
+    board_cutout_color: str = DEFAULT_BOARD_CUTOUT_COLOR
+    include_board_cutouts: bool = True
     include_copper: bool = True
     include_board_outline: bool = True
     include_poured_polygons: bool = True
@@ -85,10 +104,13 @@ class PcbLayerStepOptions:
     drill_hole_mode: str = DRILL_HOLE_MODE_AUTO
     max_boolean_drill_cuts: int = DEFAULT_MAX_BOOLEAN_DRILL_CUTS
     drill_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
+    drill_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
+    drill_non_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
     drill_overlay_thickness_mm: float = 0.001
     drill_minimum_diameter_mm: float = 0.0
     drill_hole_shape: str = DRILL_HOLE_SHAPE_SOLID
     drill_ring_width_mm: float = 0.12
+    drill_plated_ring_shape: str = DRILL_PLATED_RING_SHAPE_ANNULUS
     fuse_copper: bool = True
     fuse_board_outline: bool = True
     arc_segments: int = 32
@@ -205,6 +227,24 @@ def _coerce_drill_hole_shape(value: object, default: str) -> str:
     return shape
 
 
+def _coerce_drill_plated_ring_shape(value: object, default: str) -> str:
+    if value is None:
+        return default
+    normalized = str(value).strip().casefold().replace("-", "_")
+    aliases = {
+        "hole": DRILL_PLATED_RING_SHAPE_ANNULUS,
+        "drill": DRILL_PLATED_RING_SHAPE_ANNULUS,
+        "full_pad": DRILL_PLATED_RING_SHAPE_PAD,
+        "pad_shape": DRILL_PLATED_RING_SHAPE_PAD,
+    }
+    shape = aliases.get(normalized, normalized)
+    if shape not in DRILL_PLATED_RING_SHAPES:
+        raise ValueError(
+            f"Invalid drill plated ring shape in pcb-layer-step config: {value!r}"
+        )
+    return shape
+
+
 def _coerce_pad_color_rules(value: object) -> tuple[_PadColorRule, ...]:
     if value is None:
         return ()
@@ -299,6 +339,38 @@ def _component_pad_settings(
     return include_component_pads, component_pad_designators
 
 
+def _drill_color_source(
+    *,
+    drills: Mapping[str, object],
+    merged: Mapping[str, object],
+) -> object:
+    return drills.get("color", merged.get("drill_hole_color"))
+
+
+def _drill_plated_color_source(
+    *,
+    drills: Mapping[str, object],
+    merged: Mapping[str, object],
+    drill_color: object,
+) -> object:
+    return drills.get(
+        "plated_color",
+        merged.get("drill_plated_hole_color", drill_color),
+    )
+
+
+def _drill_non_plated_color_source(
+    *,
+    drills: Mapping[str, object],
+    merged: Mapping[str, object],
+    drill_color: object,
+) -> object:
+    return drills.get(
+        "non_plated_color",
+        merged.get("drill_non_plated_hole_color", drill_color),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class PcbLayerStepConfig:
     """JSON config for one-layer PCB STEP export."""
@@ -313,6 +385,8 @@ class PcbLayerStepConfig:
     copper_color: str = DEFAULT_COPPER_COLOR
     outline_width_mm: float = 0.2
     outline_color: str = DEFAULT_OUTLINE_COLOR
+    board_cutout_color: str = DEFAULT_BOARD_CUTOUT_COLOR
+    include_board_cutouts: bool = True
     include_copper: bool = True
     include_board_outline: bool = True
     include_poured_polygons: bool = True
@@ -320,10 +394,13 @@ class PcbLayerStepConfig:
     drill_hole_mode: str = DRILL_HOLE_MODE_AUTO
     max_boolean_drill_cuts: int = DEFAULT_MAX_BOOLEAN_DRILL_CUTS
     drill_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
+    drill_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
+    drill_non_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
     drill_overlay_thickness_mm: float = 0.001
     drill_minimum_diameter_mm: float = 0.0
     drill_hole_shape: str = DRILL_HOLE_SHAPE_SOLID
     drill_ring_width_mm: float = 0.12
+    drill_plated_ring_shape: str = DRILL_PLATED_RING_SHAPE_ANNULUS
     fuse_copper: bool = True
     fuse_board_outline: bool = True
     arc_segments: int = 32
@@ -386,6 +463,7 @@ class PcbLayerStepConfig:
             default=default,
         )
         cut_holes = _coerce_bool(merged.get("cut_holes"), default.cut_holes)
+        drill_color = _drill_color_source(drills=drills, merged=merged)
         return cls(
             schema=str(schema or merged.get("schema") or default.schema),
             name=_coerce_optional_str(merged.get("name")),
@@ -407,6 +485,20 @@ class PcbLayerStepConfig:
             outline_color=_coerce_color(
                 board_outline.get("color", merged.get("outline_color")),
                 default.outline_color,
+            ),
+            board_cutout_color=_coerce_color(
+                board_outline.get(
+                    "cutout_color",
+                    board_outline.get(
+                        "cutouts_color",
+                        merged.get("board_cutout_color"),
+                    ),
+                ),
+                default.board_cutout_color,
+            ),
+            include_board_cutouts=_coerce_bool(
+                board_outline.get("cutouts", merged.get("include_board_cutouts")),
+                default.include_board_cutouts,
             ),
             include_copper=_coerce_bool(
                 merged.get("include_copper"), default.include_copper
@@ -430,8 +522,24 @@ class PcbLayerStepConfig:
                 )
             ),
             drill_hole_color=_coerce_color(
-                drills.get("color", merged.get("drill_hole_color")),
+                drill_color,
                 default.drill_hole_color,
+            ),
+            drill_plated_hole_color=_coerce_color(
+                _drill_plated_color_source(
+                    drills=drills,
+                    merged=merged,
+                    drill_color=drill_color,
+                ),
+                default.drill_plated_hole_color,
+            ),
+            drill_non_plated_hole_color=_coerce_color(
+                _drill_non_plated_color_source(
+                    drills=drills,
+                    merged=merged,
+                    drill_color=drill_color,
+                ),
+                default.drill_non_plated_hole_color,
             ),
             drill_overlay_thickness_mm=_coerce_float(
                 drills.get(
@@ -454,6 +562,13 @@ class PcbLayerStepConfig:
             drill_ring_width_mm=_coerce_float(
                 drills.get("ring_width_mm", merged.get("drill_ring_width_mm")),
                 default.drill_ring_width_mm,
+            ),
+            drill_plated_ring_shape=_coerce_drill_plated_ring_shape(
+                drills.get(
+                    "plated_ring_shape",
+                    merged.get("drill_plated_ring_shape"),
+                ),
+                default.drill_plated_ring_shape,
             ),
             fuse_copper=_coerce_bool(merged.get("fuse_copper"), default.fuse_copper),
             fuse_board_outline=_coerce_bool(
@@ -504,17 +619,22 @@ class PcbLayerStepConfig:
             "copper_color": self.copper_color,
             "outline_width_mm": self.outline_width_mm,
             "outline_color": self.outline_color,
+            "board_cutout_color": self.board_cutout_color,
             "include_copper": self.include_copper,
             "include_board_outline": self.include_board_outline,
+            "include_board_cutouts": self.include_board_cutouts,
             "include_poured_polygons": self.include_poured_polygons,
             "cut_holes": self.cut_holes,
             "drill_hole_mode": self.drill_hole_mode,
             "max_boolean_drill_cuts": self.max_boolean_drill_cuts,
             "drill_hole_color": self.drill_hole_color,
+            "drill_plated_hole_color": self.drill_plated_hole_color,
+            "drill_non_plated_hole_color": self.drill_non_plated_hole_color,
             "drill_overlay_thickness_mm": self.drill_overlay_thickness_mm,
             "drill_minimum_diameter_mm": self.drill_minimum_diameter_mm,
             "drill_hole_shape": self.drill_hole_shape,
             "drill_ring_width_mm": self.drill_ring_width_mm,
+            "drill_plated_ring_shape": self.drill_plated_ring_shape,
             "fuse_copper": self.fuse_copper,
             "fuse_board_outline": self.fuse_board_outline,
             "arc_segments": self.arc_segments,
@@ -544,17 +664,22 @@ class PcbLayerStepConfig:
             copper_color=self.copper_color,
             outline_width_mm=self.outline_width_mm,
             outline_color=self.outline_color,
+            board_cutout_color=self.board_cutout_color,
             include_copper=self.include_copper,
             include_board_outline=self.include_board_outline,
+            include_board_cutouts=self.include_board_cutouts,
             include_poured_polygons=self.include_poured_polygons,
             cut_holes=self.cut_holes,
             drill_hole_mode=self.drill_hole_mode,
             max_boolean_drill_cuts=self.max_boolean_drill_cuts,
             drill_hole_color=self.drill_hole_color,
+            drill_plated_hole_color=self.drill_plated_hole_color,
+            drill_non_plated_hole_color=self.drill_non_plated_hole_color,
             drill_overlay_thickness_mm=self.drill_overlay_thickness_mm,
             drill_minimum_diameter_mm=self.drill_minimum_diameter_mm,
             drill_hole_shape=self.drill_hole_shape,
             drill_ring_width_mm=self.drill_ring_width_mm,
+            drill_plated_ring_shape=self.drill_plated_ring_shape,
             fuse_copper=self.fuse_copper,
             fuse_board_outline=self.fuse_board_outline,
             arc_segments=self.arc_segments,
@@ -631,123 +756,17 @@ class _DrillFeature:
     diameter_mm: float
     slot_length_mm: float | None = None
     rotation_degrees: float = 0.0
-
-
-def resolve_pcb_layer_selector(selector: str | int | PcbLayer | None) -> PcbLayer:
-    """Resolve CLI/user layer selectors to a native Altium PCB layer enum."""
-    if selector is None:
-        return PcbLayer.BOTTOM
-    if isinstance(selector, PcbLayer):
-        return selector
-    if isinstance(selector, int):
-        return PcbLayer(selector)
-
-    text = str(selector).strip()
-    if not text:
-        return PcbLayer.BOTTOM
-    if text.isdigit():
-        return PcbLayer(int(text))
-
-    normalized = re.sub(r"[\s_\-]+", "", text).upper()
-    if normalized.startswith("L") and normalized[1:].isdigit():
-        return PcbLayer(int(normalized[1:]))
-
-    aliases = {
-        "TOP": PcbLayer.TOP,
-        "TOPLAYER": PcbLayer.TOP,
-        "FRONT": PcbLayer.TOP,
-        "BOTTOM": PcbLayer.BOTTOM,
-        "BOTTOMLAYER": PcbLayer.BOTTOM,
-        "BOT": PcbLayer.BOTTOM,
-        "BACK": PcbLayer.BOTTOM,
-        "MULTILAYER": PcbLayer.MULTI_LAYER,
-    }
-    if normalized in aliases:
-        return aliases[normalized]
-
-    for layer in PcbLayer:
-        names = {
-            re.sub(r"[\s_\-]+", "", layer.name).upper(),
-            re.sub(r"[\s_\-]+", "", layer.to_json_name()).upper(),
-            re.sub(r"[\s_\-]+", "", layer.to_display_name()).upper(),
-        }
-        if normalized in names:
-            return layer
-
-    raise ValueError(f"Unknown PCB layer selector: {selector!r}")
+    plated: bool = True
+    pad_region: _Region | None = None
 
 
 def write_default_pcb_layer_step_config(config_path: Path) -> None:
     """Write a default editable pcb-layer-step JSON config."""
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(
-        _default_pcb_layer_step_config_text(),
+        PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT,
         encoding="utf-8",
     )
-
-
-def _default_pcb_layer_step_config_text() -> str:
-    return """{
-  /* pcb-layer-step creates compact fixture-alignment models, not full
-     fabrication STEP exports. Keep only the features that help verify pogo-pin
-     alignment against DUT pads. */
-  "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
-  "defaults": {
-    "pcbdoc": null,
-    "layer": "bottom",
-    "z_mm": 0.0,
-    "thickness_mm": 0.035,
-    "include_board_outline": true,
-    "board_outline": {
-      "color": "#111111",
-      "width_mm": 0.2,
-      "fuse": true
-    }
-  },
-  "outputs": [
-    {
-      "name": "fixture_alignment",
-      "output_step": "{board}__fixture_alignment.step",
-      "features": {
-        /* Use include_designators for component-owned pads. Examples:
-           ["TP*"] or ["TP*", "J*", "U1", "U2"]. */
-        "component_pads": {
-          "mode": "matching_designators",
-          "include_designators": ["TP*"]
-        },
-        "free_pads": false,
-        "tracks": true,
-        "arcs": true,
-        "fills": false,
-        "polygons": false,
-        "regions": false,
-        "vias": false
-      },
-      "colors": {
-        "default_copper": "#B87333",
-        "pad_rules": [
-          {
-            "designators": ["TP*"],
-            "color": "red",
-            "body": "test_points"
-          }
-        ]
-      },
-      "drills": {
-        /* none omits drills, cut performs boolean holes, overlay draws a
-           separate drill-reference body. */
-        "mode": "overlay",
-        "minimum_diameter_mm": 0.85,
-        "shape": "ring",
-        "color": "#666666",
-        "ring_width_mm": 0.12,
-        "overlay_thickness_mm": 0.001
-      },
-      "fuse_copper": false
-    }
-  ]
-}
-"""
 
 
 def load_pcb_layer_step_config(config_path: Path) -> PcbLayerStepConfig:
@@ -830,6 +849,8 @@ def _validate_options(opts: PcbLayerStepOptions) -> None:
         raise ValueError("Board outline width must be non-negative")
     if opts.drill_ring_width_mm < 0.0:
         raise ValueError("Drill ring width must be non-negative")
+    if opts.drill_plated_ring_shape not in DRILL_PLATED_RING_SHAPES:
+        raise ValueError("Drill plated ring shape must be 'annulus' or 'pad'")
 
 
 def _load_geometer() -> Any:
@@ -873,18 +894,23 @@ def _build_manifest(
             "copper_color": opts.copper_color,
             "outline_width_mm": float(opts.outline_width_mm),
             "outline_color": opts.outline_color,
+            "board_cutout_color": opts.board_cutout_color,
             "include_copper": bool(opts.include_copper),
             "include_board_outline": bool(opts.include_board_outline),
+            "include_board_cutouts": bool(opts.include_board_cutouts),
             "include_poured_polygons": bool(opts.include_poured_polygons),
             "cut_holes": bool(opts.cut_holes),
             "drill_hole_mode": opts.drill_hole_mode,
             "effective_drill_hole_mode": drill_hole_mode,
             "max_boolean_drill_cuts": int(opts.max_boolean_drill_cuts),
             "drill_hole_color": opts.drill_hole_color,
+            "drill_plated_hole_color": opts.drill_plated_hole_color,
+            "drill_non_plated_hole_color": opts.drill_non_plated_hole_color,
             "drill_overlay_thickness_mm": float(opts.drill_overlay_thickness_mm),
             "drill_minimum_diameter_mm": float(opts.drill_minimum_diameter_mm),
             "drill_hole_shape": opts.drill_hole_shape,
             "drill_ring_width_mm": float(opts.drill_ring_width_mm),
+            "drill_plated_ring_shape": opts.drill_plated_ring_shape,
             "fuse_copper": bool(opts.fuse_copper),
             "fuse_board_outline": bool(opts.fuse_board_outline),
             "arc_segments": int(opts.arc_segments),
@@ -989,40 +1015,73 @@ def _drill_overlay_bodies(
 ) -> list[dict[str, Any]]:
     if drill_hole_mode != DRILL_HOLE_MODE_OVERLAY or not drill_features:
         return []
+    grouped: dict[tuple[str, str], list[_DrillFeature]] = {}
+    for feature in drill_features:
+        body_id, color = _drill_body_style(feature, opts)
+        grouped.setdefault((body_id, color), []).append(feature)
     return [
         _body_from_regions(
-            body_id="drill_holes",
-            color=opts.drill_hole_color,
-            regions=[
-                _drill_overlay_region(feature, opts) for feature in drill_features
-            ],
+            body_id=body_id,
+            color=color,
+            regions=[_drill_overlay_region(feature, opts) for feature in features],
             z_mm=opts.z_mm + opts.thickness_mm,
             thickness_mm=max(0.0001, opts.drill_overlay_thickness_mm),
             fuse_regions=False,
             cutouts=[],
         )
+        for (body_id, color), features in grouped.items()
     ]
+
+
+def _drill_body_style(
+    feature: _DrillFeature,
+    opts: PcbLayerStepOptions,
+) -> tuple[str, str]:
+    if _drill_overlay_uses_single_color(opts):
+        return "drill_holes", opts.drill_hole_color
+    if feature.plated:
+        return "plated_drill_holes", opts.drill_plated_hole_color
+    return "non_plated_drill_holes", opts.drill_non_plated_hole_color
+
+
+def _drill_overlay_uses_single_color(opts: PcbLayerStepOptions) -> bool:
+    return (
+        opts.drill_plated_hole_color == opts.drill_hole_color
+        and opts.drill_non_plated_hole_color == opts.drill_hole_color
+    )
 
 
 def _outline_bodies(pcbdoc: Any, opts: PcbLayerStepOptions) -> list[dict[str, Any]]:
-    outline_regions = (
-        _collect_board_outline_regions(pcbdoc, opts)
-        if opts.include_board_outline and opts.outline_width_mm > 0.0
-        else []
-    )
-    if not outline_regions:
+    if not opts.include_board_outline or opts.outline_width_mm <= 0.0:
         return []
-    return [
-        _body_from_regions(
-            body_id="board_outline",
-            color=opts.outline_color,
-            regions=outline_regions,
-            z_mm=opts.z_mm,
-            thickness_mm=opts.thickness_mm,
-            fuse_regions=opts.fuse_board_outline,
-            cutouts=[],
+    bodies: list[dict[str, Any]] = []
+    outline_regions = _collect_board_outline_regions(pcbdoc, opts)
+    if outline_regions:
+        bodies.append(
+            _body_from_regions(
+                body_id="board_outline",
+                color=opts.outline_color,
+                regions=outline_regions,
+                z_mm=opts.z_mm,
+                thickness_mm=opts.thickness_mm,
+                fuse_regions=opts.fuse_board_outline,
+                cutouts=[],
+            )
         )
-    ]
+    cutout_regions = _collect_board_cutout_outline_regions(pcbdoc, opts)
+    if opts.include_board_cutouts and cutout_regions:
+        bodies.append(
+            _body_from_regions(
+                body_id="board_cutouts",
+                color=opts.board_cutout_color,
+                regions=cutout_regions,
+                z_mm=opts.z_mm,
+                thickness_mm=opts.thickness_mm,
+                fuse_regions=opts.fuse_board_outline,
+                cutouts=[],
+            )
+        )
+    return bodies
 
 
 def _body_from_regions(
@@ -1066,14 +1125,30 @@ def _build_counts(
         "drill_overlay_geometries": len(drill_features)
         if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
         else 0,
+        "drill_plated_overlay_geometries": sum(
+            1 for feature in drill_features if feature.plated
+        )
+        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
+        else 0,
+        "drill_non_plated_overlay_geometries": sum(
+            1 for feature in drill_features if not feature.plated
+        )
+        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
+        else 0,
         "board_cutout_geometries": len(board_cutouts),
-        "copper_bodies": sum(
-            1
+        "board_cutout_outline_geometries": sum(
+            len(body.get("regions", []))
             for body in bodies
-            if str(body.get("id")) not in {"board_outline", "drill_holes"}
+            if str(body.get("id")) == "board_cutouts"
+        ),
+        "copper_bodies": sum(
+            1 for body in bodies if str(body.get("id")) not in _NON_COPPER_BODY_IDS
         ),
         "outline_bodies": sum(
             1 for body in bodies if str(body.get("id")) == "board_outline"
+        ),
+        "board_cutout_outline_bodies": sum(
+            1 for body in bodies if str(body.get("id")) == "board_cutouts"
         ),
         "body_count": len(bodies),
     }
@@ -1444,8 +1519,25 @@ def _collect_board_outline_regions(
             getattr(outline, "vertices", []) or [], opts.outline_width_mm
         )
     )
+    return regions
+
+
+def _collect_board_cutout_outline_regions(
+    pcbdoc: Any, opts: PcbLayerStepOptions
+) -> list[_Region]:
+    board = getattr(pcbdoc, "board", None)
+    outline = getattr(board, "outline", None) if board is not None else None
+    regions: list[_Region] = []
     for cutout in getattr(outline, "cutouts", []) or []:
         regions.extend(_outline_stroke_regions(cutout, opts.outline_width_mm))
+    for region in getattr(pcbdoc, "regions", []) or []:
+        if bool(getattr(region, "is_board_cutout", False)):
+            regions.extend(
+                _outline_stroke_regions(
+                    getattr(region, "outline_vertices", []) or [],
+                    opts.outline_width_mm,
+                )
+            )
     return regions
 
 
@@ -1643,6 +1735,8 @@ def _pad_hole_feature(
             region=_circle_region(center, diameter_mm / 2.0),
             center=center,
             diameter_mm=diameter_mm,
+            plated=bool(getattr(pad, "is_plated", True)),
+            pad_region=_pad_region(pad, layer),
         )
     slot_length_mm = _mils_to_mm(slot_size_mils)
     rotation = float(getattr(pad, "slot_rotation", 0.0) or 0.0) + float(
@@ -1659,6 +1753,8 @@ def _pad_hole_feature(
         diameter_mm=diameter_mm,
         slot_length_mm=slot_length_mm,
         rotation_degrees=rotation,
+        plated=bool(getattr(pad, "is_plated", True)),
+        pad_region=_pad_region(pad, layer),
     )
 
 
@@ -1677,6 +1773,7 @@ def _via_hole_feature(via: Any) -> _DrillFeature | None:
         region=_circle_region(center, diameter_mm / 2.0),
         center=center,
         diameter_mm=diameter_mm,
+        plated=bool(getattr(via, "is_plated", True)),
     )
 
 
@@ -1684,10 +1781,18 @@ def _drill_overlay_region(
     feature: _DrillFeature,
     opts: PcbLayerStepOptions,
 ) -> _Region:
+    if opts.drill_hole_shape != DRILL_HOLE_SHAPE_RING:
+        return feature.region
     if (
-        opts.drill_hole_shape != DRILL_HOLE_SHAPE_RING
-        or opts.drill_ring_width_mm <= 0.0
+        feature.plated
+        and feature.pad_region is not None
+        and opts.drill_plated_ring_shape == DRILL_PLATED_RING_SHAPE_PAD
     ):
+        return _Region(
+            feature.pad_region.outer,
+            [*feature.pad_region.holes, feature.region.outer],
+        )
+    if opts.drill_ring_width_mm <= 0.0:
         return feature.region
     outer_diameter = feature.diameter_mm + (2.0 * opts.drill_ring_width_mm)
     if feature.slot_length_mm is not None:

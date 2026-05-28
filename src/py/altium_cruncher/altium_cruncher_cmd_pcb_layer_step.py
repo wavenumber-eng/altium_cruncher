@@ -222,6 +222,9 @@ def _options_from_config_and_args(
     config: PcbLayerStepConfig, args
 ) -> PcbLayerStepOptions:
     layer = resolve_pcb_layer_selector(getattr(args, "layer", None) or config.layer)
+    drill_hole_color = str(
+        _arg_or_config(args, "drill_hole_color", config.drill_hole_color)
+    )
     return PcbLayerStepOptions(
         layer=layer,
         thickness_mm=float(_arg_or_config(args, "thickness_mm", config.thickness_mm)),
@@ -231,12 +234,18 @@ def _options_from_config_and_args(
             _arg_or_config(args, "outline_width_mm", config.outline_width_mm)
         ),
         outline_color=str(_arg_or_config(args, "outline_color", config.outline_color)),
+        board_cutout_color=str(
+            _arg_or_config(args, "board_cutout_color", config.board_cutout_color)
+        ),
         include_copper=False
         if bool(getattr(args, "outline_only", False))
         else config.include_copper,
         include_board_outline=False
         if bool(getattr(args, "no_board_outline", False))
         else config.include_board_outline,
+        include_board_cutouts=False
+        if bool(getattr(args, "no_board_cutouts", False))
+        else config.include_board_cutouts,
         include_poured_polygons=False
         if bool(getattr(args, "exclude_poured_polygons", False))
         else config.include_poured_polygons,
@@ -253,8 +262,22 @@ def _options_from_config_and_args(
                 config.max_boolean_drill_cuts,
             )
         ),
-        drill_hole_color=str(
-            _arg_or_config(args, "drill_hole_color", config.drill_hole_color)
+        drill_hole_color=drill_hole_color,
+        drill_plated_hole_color=str(
+            _drill_plating_color_arg_or_config(
+                args=args,
+                name="drill_plated_hole_color",
+                config_value=config.drill_plated_hole_color,
+                drill_hole_color=drill_hole_color,
+            )
+        ),
+        drill_non_plated_hole_color=str(
+            _drill_plating_color_arg_or_config(
+                args=args,
+                name="drill_non_plated_hole_color",
+                config_value=config.drill_non_plated_hole_color,
+                drill_hole_color=drill_hole_color,
+            )
         ),
         drill_overlay_thickness_mm=float(
             _arg_or_config(
@@ -275,6 +298,13 @@ def _options_from_config_and_args(
         ),
         drill_ring_width_mm=float(
             _arg_or_config(args, "drill_ring_width_mm", config.drill_ring_width_mm)
+        ),
+        drill_plated_ring_shape=str(
+            _arg_or_config(
+                args,
+                "drill_plated_ring_shape",
+                config.drill_plated_ring_shape,
+            )
         ),
         fuse_copper=False
         if bool(getattr(args, "no_fuse", False))
@@ -298,6 +328,21 @@ def _options_from_config_and_args(
 def _arg_or_config(args, name: str, config_value):
     value = getattr(args, name, None)
     return config_value if value is None else value
+
+
+def _drill_plating_color_arg_or_config(
+    *,
+    args: argparse.Namespace,
+    name: str,
+    config_value: str,
+    drill_hole_color: str,
+) -> str:
+    value = getattr(args, name, None)
+    if value is not None:
+        return str(value)
+    if getattr(args, "drill_hole_color", None) is not None:
+        return drill_hole_color
+    return config_value
 
 
 def _resolve_input_files(file_arg: str | Path | None) -> list[Path] | None:
@@ -416,6 +461,11 @@ def register_parser(subparsers):
         help="STEP color for board outline, #RRGGBB or #AARRGGBB (default: #111111)",
     )
     parser.add_argument(
+        "--board-cutout-color",
+        default=None,
+        help="STEP color for interior board-cutout outline bodies (default: #FF0000)",
+    )
+    parser.add_argument(
         "--exclude-poured-polygons",
         action="store_true",
         help="exclude poured-polygon/rendered-region geometry from the selected layer",
@@ -429,6 +479,11 @@ def register_parser(subparsers):
         "--no-board-outline",
         action="store_true",
         help="do not include the board-outline body",
+    )
+    parser.add_argument(
+        "--no-board-cutouts",
+        action="store_true",
+        help="do not include separate interior board-cutout outline bodies",
     )
     parser.add_argument(
         "--no-hole-cuts",
@@ -456,6 +511,16 @@ def register_parser(subparsers):
         help="STEP color for drill overlays, #RRGGBB or #AARRGGBB (default: #FFFFFF)",
     )
     parser.add_argument(
+        "--drill-plated-hole-color",
+        default=None,
+        help="STEP color for plated drill overlays when plating colors are split",
+    )
+    parser.add_argument(
+        "--drill-non-plated-hole-color",
+        default=None,
+        help="STEP color for non-plated drill overlays when plating colors are split",
+    )
+    parser.add_argument(
         "--drill-overlay-thickness-mm",
         type=float,
         default=None,
@@ -478,6 +543,12 @@ def register_parser(subparsers):
         type=float,
         default=None,
         help="annular ring width when --drill-hole-shape ring is active",
+    )
+    parser.add_argument(
+        "--drill-plated-ring-shape",
+        choices=["annulus", "pad"],
+        default=None,
+        help="plated drill ring source: fixed annulus or full pad shape",
     )
     parser.add_argument(
         "--no-fuse",

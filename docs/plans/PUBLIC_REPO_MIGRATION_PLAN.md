@@ -473,6 +473,12 @@ Initial `pcb-layer-step` coverage:
   as `TP*`, `J*`, `U1`, and `U2`;
 - pad color rules split matching pads into separate Geometer bodies; the
   Cricket Node fixture validates `TP*` pads colored red as `test_points`;
+- board-profile interior cutouts now emit as a separate `board_cutouts` outline
+  body so fixture models can color them independently from the outer board
+  outline while still using them as copper cutouts;
+- drill overlays can split plated and non-plated holes into independently
+  colored bodies, and plated pad holes can render ring overlays from the full
+  pad shape for mounting-hole components such as Cricket Node `M1`;
 - generate bottom-layer copper STEP through the command handler with a small
   geometer writer stub so tests verify command behavior without checking in
   large generated STEP artifacts;

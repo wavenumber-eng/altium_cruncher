@@ -4,6 +4,7 @@ import json
 import sys
 from types import SimpleNamespace
 
+from altium_monkey.altium_board import BoardOutlineVertex
 from altium_monkey.altium_pcb_enums import PadShape
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 from altium_monkey.altium_record_types import PcbLayer
@@ -23,6 +24,15 @@ from altium_cruncher.altium_cruncher_pcb_layer_step import (
     _sample_svg_arc_points_mils,
     _svg_like_board_sweep_degrees,
 )
+
+
+def _region_width(region: dict[str, object]) -> float:
+    outer = region["outer"]
+    assert isinstance(outer, dict)
+    points = outer["points"]
+    assert isinstance(points, list)
+    x_values = [float(point[0]) for point in points]
+    return max(x_values) - min(x_values)
 
 
 def test_resolve_pcb_layer_selector_accepts_common_names() -> None:
@@ -113,7 +123,11 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
           "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
           "defaults": {
             "layer": "bottom",
-            "board_outline": {"color": "#CCCCCC", "fuse": false}
+            "board_outline": {
+              "color": "#CCCCCC",
+              "cutout_color": "red",
+              "fuse": false
+            }
           },
           "outputs": [
             {
@@ -138,7 +152,10 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
                 "mode": "overlay",
                 "minimum_diameter_mm": 0.85,
                 "shape": "ring",
+                "plated_color": "green",
+                "non_plated_color": "blue",
                 "ring_width_mm": 0.15,
+                "plated_ring_shape": "pad",
               },
               "fuse_copper": false,
             }
@@ -154,10 +171,14 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
     assert output.output_step == "{board}__fixture.step"
     assert output.include_tracks is False
     assert output.include_vias is False
+    assert output.board_cutout_color == "#FF0000"
     assert output.include_designators == ("TP*", "J*", "U1", "U2")
     assert output.pad_color_rules[0].color == "#FF0000"
     assert output.drill_minimum_diameter_mm == 0.85
     assert output.drill_hole_shape == "ring"
+    assert output.drill_plated_hole_color == "#008000"
+    assert output.drill_non_plated_hole_color == "#0000FF"
+    assert output.drill_plated_ring_shape == "pad"
 
 
 def test_pcb_layer_step_input_resolution_accepts_pcbdoc_and_prjpcb(tmp_path) -> None:
@@ -429,6 +450,92 @@ def test_export_pcb_layer_step_filters_designators_and_renders_drill_rings(
     assert manifest["counts"]["drill_overlay_geometries"] == 1
     assert manifest["options"]["features"]["tracks"] is False
     assert manifest["options"]["features"]["include_designators"] == ["TP*", "J*", "U1"]
+
+
+def test_export_pcb_layer_step_colors_cutouts_and_plating_specific_drills(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """Color cutout outlines and split plated/non-plated drill overlay bodies."""
+    captured = {}
+
+    def write_planar_step(request, output_path):
+        captured["request"] = request
+        output_path.write_bytes(json.dumps(request).encode("utf-8"))
+        return output_path
+
+    monkeypatch.setitem(
+        sys.modules, "geometer", SimpleNamespace(write_planar_step=write_planar_step)
+    )
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    plated_pad = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(250, 250),
+        width_mils=120,
+        height_mils=120,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=60,
+        plated=True,
+    )
+    non_plated_pad = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(750, 250),
+        width_mils=120,
+        height_mils=120,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=60,
+        plated=False,
+    )
+    assert plated_pad.is_plated is True
+    assert non_plated_pad.is_plated is False
+    pcbdoc.board.outline.cutouts.append(
+        [
+            BoardOutlineVertex.line(400, 180),
+            BoardOutlineVertex.line(600, 180),
+            BoardOutlineVertex.line(600, 320),
+            BoardOutlineVertex.line(400, 320),
+        ]
+    )
+
+    export_pcb_layer_step(
+        pcbdoc,
+        tmp_path / "fixture.step",
+        board_name="fixture_board",
+        options=PcbLayerStepOptions(
+            layer=PcbLayer.BOTTOM,
+            include_copper=False,
+            board_cutout_color="#FF00FF",
+            drill_hole_mode="overlay",
+            drill_hole_shape="ring",
+            drill_ring_width_mm=0.1,
+            drill_plated_hole_color="#00FF00",
+            drill_non_plated_hole_color="#0000FF",
+            drill_plated_ring_shape="pad",
+        ),
+    )
+
+    bodies = {body["id"]: body for body in captured["request"]["bodies"]}
+    assert set(bodies) == {
+        "plated_drill_holes",
+        "non_plated_drill_holes",
+        "board_outline",
+        "board_cutouts",
+    }
+    assert bodies["board_cutouts"]["color"] == "#FF00FF"
+    assert bodies["plated_drill_holes"]["color"] == "#00FF00"
+    assert bodies["non_plated_drill_holes"]["color"] == "#0000FF"
+
+    plated_region = bodies["plated_drill_holes"]["regions"][0]
+    non_plated_region = bodies["non_plated_drill_holes"]["regions"][0]
+    assert "holes" in plated_region
+    assert "holes" in non_plated_region
+    plated_width = _region_width(plated_region)
+    non_plated_width = _region_width(non_plated_region)
+    assert plated_width > non_plated_width
 
 
 def test_export_pcb_layer_step_overlays_dense_drill_sets(
