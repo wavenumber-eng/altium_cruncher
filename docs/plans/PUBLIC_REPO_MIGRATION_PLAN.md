@@ -943,6 +943,17 @@ Current behavior to preserve:
 - `.PcbLib` clean may discover `altium-pcblib-clean.json` from workspace config
   before falling back to an input-adjacent config.
 
+Current implementation notes:
+
+- generated schematic and PcbLib clean templates are now JSONC with comments
+  that describe config lifecycle, safe rerun practice, supported color/font
+  forms, and each major rule section;
+- `docs/design/cli/clean.html` now documents config discovery, first-run
+  template behavior, schematic rules, PcbLib rules, output/backup semantics,
+  and current test coverage;
+- tests verify that generated clean templates contain comments and still parse
+  through the shared JSONC config loader.
+
 Config documentation required before release:
 
 - add `docs/design/cli/clean.html` with a complete command design document;
