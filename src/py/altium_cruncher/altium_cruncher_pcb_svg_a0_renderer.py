@@ -248,6 +248,14 @@ def _component_designator(component: object) -> str:
     return str(getattr(component, "designator", "") or "").strip()
 
 
+def _reference_designator_prefix(designator: str) -> str:
+    text = str(designator or "").strip().upper()
+    index = 0
+    while index < len(text) and text[index].isalpha():
+        index += 1
+    return text[:index] if index > 0 else text
+
+
 def _normalize_draw_order(tokens: list[str]) -> list[str]:
     body: list[str] = []
     holes: list[str] = []
@@ -1306,8 +1314,8 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
             if _component_side(component) != side:
                 continue
-            override = self.config.components.get(_component_designator(component))
-            if override is not None and override.pin1_enabled is False:
+            designator = _component_designator(component)
+            if not self._pin1_component_enabled(designator):
                 continue
             if self._component_pad_designator_count(pcbdoc, component_index) <= 1:
                 continue
@@ -1317,6 +1325,23 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                     self._pin1_marker_svg(ctx, component, pad, layer, styles)
                 )
         return marker_elements
+
+    def _pin1_component_enabled(self, designator: str) -> bool:
+        override = self.config.components.get(designator)
+        if override is not None and override.pin1_enabled is not None:
+            return bool(override.pin1_enabled)
+        return not self._pin1_designator_excluded(designator)
+
+    def _pin1_designator_excluded(self, designator: str) -> bool:
+        prefix = _reference_designator_prefix(designator)
+        if not prefix:
+            return False
+        excluded = {
+            str(item or "").strip().upper()
+            for item in self.config.pin1.exclude_designator_prefixes
+            if str(item or "").strip()
+        }
+        return prefix in excluded
 
     def _component_pad_designator_count(
         self,

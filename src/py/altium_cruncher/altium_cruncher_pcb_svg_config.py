@@ -653,6 +653,38 @@ class PcbSvgDiodeConfig:
 
 
 @dataclass(slots=True)
+class PcbSvgPin1Config:
+    """Pin-1 overlay behavior defaults."""
+
+    exclude_designator_prefixes: list[str] = field(
+        default_factory=lambda: ["R", "C", "L"]
+    )
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgPin1Config":
+        if data is None:
+            return cls()
+        if not isinstance(data, dict):
+            raise ValueError("pcb-svg config field 'pin1' must be an object")
+        default = cls()
+        prefixes = _coerce_raw_str_list(
+            data.get("exclude_designator_prefixes"),
+            default.exclude_designator_prefixes,
+            field_name="pin1.exclude_designator_prefixes",
+        )
+        return cls(
+            exclude_designator_prefixes=[
+                prefix.upper() for prefix in prefixes if prefix.strip()
+            ]
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "exclude_designator_prefixes": list(self.exclude_designator_prefixes),
+        }
+
+
+@dataclass(slots=True)
 class PcbSvgComponentOverride:
     """Per-designator PCB SVG virtual assembly override."""
 
@@ -879,12 +911,6 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             ],
             mirror=False,
             assembly_hlr_mode="simple",
-            styles={
-                "assembly_hlr": {
-                    "include_visible": False,
-                    "include_outline": True,
-                }
-            },
             description="Top copper with pin-1 overlay",
         ),
         PcbSvgViewConfig(
@@ -901,12 +927,6 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
             ],
             mirror=True,
             assembly_hlr_mode="simple",
-            styles={
-                "assembly_hlr": {
-                    "include_visible": False,
-                    "include_outline": True,
-                }
-            },
             description="Bottom copper with pin-1 overlay",
         ),
     ]
@@ -921,6 +941,7 @@ class PcbSvgConfig:
     assembly: PcbSvgAssemblyConfig = field(default_factory=PcbSvgAssemblyConfig)
     dnp: PcbSvgDnpConfig = field(default_factory=PcbSvgDnpConfig)
     diodes: PcbSvgDiodeConfig = field(default_factory=PcbSvgDiodeConfig)
+    pin1: PcbSvgPin1Config = field(default_factory=PcbSvgPin1Config)
     components: dict[str, PcbSvgComponentOverride] = field(default_factory=dict)
     layer_outputs: dict[str, object] = field(default_factory=_default_layer_outputs)
     views: list[PcbSvgViewConfig] = field(default_factory=_default_pcb_svg_views)
@@ -960,6 +981,9 @@ class PcbSvgConfig:
             diodes=PcbSvgDiodeConfig.from_dict(
                 _coerce_object_mapping(data.get("diodes"), field_name="diodes")
             ),
+            pin1=PcbSvgPin1Config.from_dict(
+                _coerce_object_mapping(data.get("pin1"), field_name="pin1")
+            ),
             components=_normalize_component_overrides(
                 _coerce_object_mapping(
                     data.get("components"),
@@ -979,6 +1003,7 @@ class PcbSvgConfig:
         result: dict[str, object] = {
             "schema": self.schema,
             "global": self.global_options.to_dict(),
+            "pin1": self.pin1.to_dict(),
             "layer_outputs": dict(self.layer_outputs),
             "views": [view.to_dict() for view in self.views],
         }
@@ -1028,6 +1053,7 @@ __all__ = [
     "PcbSvgDiodeConfig",
     "PcbSvgDnpConfig",
     "PcbSvgGlobalConfig",
+    "PcbSvgPin1Config",
     "PcbSvgViewConfig",
     "default_pcb_svg_styles",
     "merge_pcb_svg_styles",

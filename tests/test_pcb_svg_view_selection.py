@@ -54,6 +54,7 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     global_options = cast(dict[str, object], payload["global"])
     layer_outputs = cast(dict[str, object], payload["layer_outputs"])
     views = cast(list[dict[str, object]], payload["views"])
+    pin1 = cast(dict[str, object], payload["pin1"])
 
     assert payload["schema"] == PCB_SVG_CONFIG_SCHEMA
     assert PCB_SVG_CONFIG_FILENAME == "pcb.svg.config"
@@ -62,6 +63,7 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     assert "dnp" not in payload
     assert "diodes" not in payload
     assert "components" not in payload
+    assert pin1["exclude_designator_prefixes"] == ["R", "C", "L"]
     assert layer_outputs["enabled"] is True
     assert "BOARD_CUTOUTS" in cast(list[str], layer_outputs["include_special_layers"])
     top_view = next(view for view in views if view["name"] == "top_view")
@@ -94,12 +96,6 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     ]
     assert top_pin1_view["assembly_hlr_mode"] == "simple"
     assert bottom_pin1_view["assembly_hlr_mode"] == "simple"
-    top_pin1_styles = cast(dict[str, dict[str, object]], top_pin1_view["styles"])
-    bottom_pin1_styles = cast(dict[str, dict[str, object]], bottom_pin1_view["styles"])
-    assert top_pin1_styles["assembly_hlr"]["include_visible"] is False
-    assert top_pin1_styles["assembly_hlr"]["include_outline"] is True
-    assert bottom_pin1_styles["assembly_hlr"]["include_visible"] is False
-    assert bottom_pin1_styles["assembly_hlr"]["include_outline"] is True
     assert top_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
     assert bottom_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
 
@@ -255,6 +251,9 @@ def test_pcb_svg_config_accepts_virtual_assembly_options() -> None:
                 "designator_prefixes": ["D", "LED"],
                 "parameter_terms": ["diode", "zener"],
             },
+            "pin1": {
+                "exclude_designator_prefixes": ["R", "C"],
+            },
             "components": {
                 "D15": {
                     "side": "top",
@@ -285,6 +284,7 @@ def test_pcb_svg_config_accepts_virtual_assembly_options() -> None:
     assert config.assembly.dnp_projection == "none"
     assert config.dnp.hatch_spacing_mm == 1.25
     assert config.diodes.numeric_cathode_pad == "1"
+    assert config.pin1.exclude_designator_prefixes == ["R", "C"]
     assert config.components["D15"].cathode_pad == "C"
     assert config.components["D15"].pin1_enabled is False
     assert config.components["D15"].assembly_hlr["color"] == "#FF0000"
@@ -353,6 +353,8 @@ def test_pcb_svg_config_template_comments_include_cricket_node_inventory() -> No
     assert "//   D15: top, footprint=LED-0805-RED, pin1=none" in text
     assert "Component override examples:" in text
     assert '"TP1": {"pin1_enabled": false}' in text
+    assert '"R12": {"pin1_enabled": true}' in text
+    assert "pin1.exclude_designator_prefixes" in text
     assert "drills.non_plated_color" in text
     assert "// Auto-detected diode candidates:" in text
     assert "//   D15: two-pin, side=top, pads=A,C, cathode=C" in text
@@ -619,6 +621,60 @@ def test_pcb_svg_pin1_layer_honors_disabled_component_override() -> None:
     )
 
     assert 'data-feature="pin1-marker"' not in svg
+
+
+def test_pcb_svg_pin1_layer_excludes_global_prefixes_with_component_enable_override() -> None:
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    for component_index, (designator, x_mils) in enumerate(
+        [("R1", 100.0), ("C1", 220.0), ("U1", 340.0)]
+    ):
+        pcbdoc.add_component(
+            designator=designator,
+            footprint="TWO_PAD",
+            position_mils=(x_mils, 100.0),
+            layer="TOP",
+        )
+        for pad_designator, pad_x in [("1", x_mils), ("2", x_mils + 40.0)]:
+            pad = pcbdoc.add_pad(
+                designator=pad_designator,
+                position_mils=(pad_x, 100.0),
+                width_mils=25.0,
+                height_mils=25.0,
+                layer=PcbLayer.TOP,
+                shape=PadShape.CIRCLE,
+            )
+            pad.component_index = component_index
+
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "components": {
+                "R1": {"pin1_enabled": True},
+            },
+        }
+    )
+    view = PcbSvgViewConfig(
+        name="pin1",
+        group_id="pcb-svg-view-pin1",
+        layers=["BOARD_OUTLINE", "PIN1_TOP"],
+        mirror=False,
+    )
+    renderer = PcbSvgA0Renderer(config)
+
+    svg = renderer.render_view_svg(
+        pcbdoc,
+        view,
+        project_parameters={},
+        layers=view.layers,
+        group_id=view.resolved_group_id(),
+        mirror=False,
+        styles=config.resolved_styles_for_view(view),
+    )
+
+    assert 'data-component-designator="R1"' in svg
+    assert 'data-component-designator="C1"' not in svg
+    assert 'data-component-designator="U1"' in svg
 
 
 def test_pcb_svg_pin1_layer_renders_bga_lga_grid_candidate_and_override() -> None:

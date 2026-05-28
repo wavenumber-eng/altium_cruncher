@@ -76,6 +76,16 @@
         }
       }
     },
+    "pin1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exclude_designator_prefixes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
     "components": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/componentOverride" }

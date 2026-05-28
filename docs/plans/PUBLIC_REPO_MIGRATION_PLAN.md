@@ -1277,9 +1277,10 @@ Current local status:
   inspection views. Pin-1 overlays skip free pads and single-pad components,
   through-hole pin-1 pads preserve visible drill/slot openings, and BGA/LGA
   letter-number pads use a deterministic pin-1 candidate with per-component
-  `pin1_pad` manual overrides. The default pin-1 views now force
-  `include_visible=false` and `include_outline=true` on their simple HLR style
-  so Geometer emits an outside profile without internal sharp-edge graphics.
+  `pin1_pad` manual overrides.
+  Global `pin1.exclude_designator_prefixes` suppresses noisy passive prefixes
+  such as `R`, `C`, and `L` before pin-1 selection, while per-component
+  `pin1_enabled=true` can turn a specific excluded component back on.
   Synthetic drill rendering now includes zero-annulus non-plated pad holes, such
   as Cricket Node J1 mechanical holes, because hole visibility is independent
   of copper pad size. Component overrides now also support
