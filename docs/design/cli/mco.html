@@ -17,7 +17,7 @@ altium-cruncher mco run debug-plate.mco.jsonc</code></pre></section>
     <tr><td><code>schema</code></td><td>MCO files use <code>wn.altium_cruncher.mco.v1</code>. JSONC comments, trailing commas, and UTF-8 BOM are accepted.</td></tr>
     <tr><td><code>operations[]</code></td><td>Ordered operation objects with required <code>id</code> and <code>op</code>, optional <code>args</code>, optional result <code>message</code>, and optional <code>on_fail</code> branch target.</td></tr>
     <tr><td>Core ops</td><td><code>mco.message</code>, <code>mco.fail</code>, and <code>file.copy</code>.</td></tr>
-    <tr><td>Project ops</td><td><code>project.create-skeleton</code> creates a minimal Altium PCB project, schematic, and board.</td></tr>
+    <tr><td>Project ops</td><td><code>project.create-skeleton</code> creates a minimal Altium PCB project, schematic, and board. Optional <code>board_outline_mils</code> and <code>board_origin_mils</code> args let generated mate boards preserve a source board coordinate frame.</td></tr>
     <tr><td>Schematic ops</td><td><code>schdoc.add-wire</code>, <code>schdoc.add-net-label</code>, and <code>schdoc.add-component</code>.</td></tr>
     <tr><td>PCB ops</td><td><code>pcbdoc.add-text</code>, <code>pcbdoc.add-component</code>, geometry insertion operations, user-union creation, and <code>pcbdoc.export-layer-step</code>.</td></tr>
   </table></section>

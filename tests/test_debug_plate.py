@@ -84,12 +84,18 @@ def _write_minimal_known_part_cache(tmp_path: Path) -> Path:
     )
 
 
-def _write_mate_source_pcbdoc(path: Path, *, tp2_layer: str = "BOTTOM") -> Path:
+def _write_mate_source_pcbdoc(
+    path: Path,
+    *,
+    tp2_layer: str = "BOTTOM",
+    origin_mils: tuple[float, float] = (0.0, 0.0),
+) -> Path:
     from altium_monkey import AltiumPcbDoc, PadShape, PcbLayer
 
     tp2_pcb_layer = PcbLayer.TOP if tp2_layer.upper() == "TOP" else PcbLayer.BOTTOM
     pcbdoc = AltiumPcbDoc()
     pcbdoc.set_outline_rectangle_mils(0, 0, 1400, 900)
+    pcbdoc.set_origin_mils(*origin_mils)
     pcbdoc.add_component(
         designator="TP1",
         footprint="TEST_POINT_2MM",
@@ -217,6 +223,7 @@ def test_debug_plate_inspection_classifies_components_and_free_pads() -> None:
 
     pcbdoc = AltiumPcbDoc()
     pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 700)
+    pcbdoc.set_origin_mils(1000, 2000)
     pcbdoc.add_pad(
         designator="A1",
         position_mils=(100, 120),
@@ -281,6 +288,7 @@ def test_debug_plate_inspection_classifies_components_and_free_pads() -> None:
         "right": 1000.0,
         "top": 700.0,
     }
+    assert payload["board_origin_mils"] == {"x": 1000.0, "y": 2000.0}
     assert payload["components"][0]["source_pad_geometries"] == [
         {
             "x_mils": 250.0,
@@ -618,7 +626,10 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
 
 
 def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
-    source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
+    source_path = _write_mate_source_pcbdoc(
+        tmp_path / "dut.PcbDoc",
+        origin_mils=(1000.0, 2000.0),
+    )
     manifest_path = _write_minimal_known_part_cache(tmp_path)
     manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest_payload["parts"].append(
@@ -784,6 +795,10 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         "bottom": 0.0,
         "right": 1400.0,
         "top": 900.0,
+    }
+    assert operations[0]["args"]["board_origin_mils"] == {
+        "x": 1000.0,
+        "y": 2000.0,
     }
     pcb_components = [
         operation

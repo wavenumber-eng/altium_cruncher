@@ -16,8 +16,8 @@ altium-cruncher debug-plate plan debug-plate.jsonc --output-mco debug-plate.mco.
 altium-cruncher debug-plate run debug-plate.jsonc --emit-mco debug-plate.mco.jsonc --force</code></pre></section>
 
   <section id="arguments"><h2>Arguments</h2><table><tr><th>Area</th><th>Contract</th></tr>
-    <tr><td><code>source</code></td><td>Identifies the DUT project or PCB document. The command extracts positions, source layers, nets, component footprints, free pads, and board outline information from source files.</td></tr>
-    <tr><td><code>output</code></td><td>Controls generated project path, filenames, overwrite policy, board outline, and layer-stack template.</td></tr>
+    <tr><td><code>source</code></td><td>Identifies the DUT project or PCB document. The command extracts absolute positions, source layers, nets, component footprints, free pads, board outline, and board origin information from source files.</td></tr>
+    <tr><td><code>output</code></td><td>Controls generated project path, filenames, overwrite policy, board outline/origin preservation, and layer-stack template.</td></tr>
     <tr><td><code>known_parts</code></td><td>Points to a known-parts manifest and cache root. The Cricket seed cache maps test points, mounting holes, and free NPTH alignment pads to fixture symbols and footprints.</td></tr>
     <tr><td><code>placement</code></td><td>Defines source mount side, mirroring, mirror origin, and output offset in mils. Source top/bottom mixing is rejected for normal component projections.</td></tr>
     <tr><td><code>selection</code></td><td>Uses reviewed source objects and projection selectors. Compact designator selectors such as <code>TP1-27</code>, <code>M1-4</code>, and explicit designator lists are accepted.</td></tr>

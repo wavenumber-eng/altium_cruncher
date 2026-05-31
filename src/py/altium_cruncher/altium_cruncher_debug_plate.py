@@ -22,6 +22,7 @@ from altium_cruncher.altium_cruncher_debug_plate_parts import (
     resolve_known_part,
 )
 from altium_cruncher.altium_cruncher_debug_plate_graphics import (
+    board_origin_mils,
     board_outline_bounds_mils,
     build_pcb_reference_graphics_operations,
     component_pad_geometries,
@@ -29,6 +30,7 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
     pad_width_mils,
     parse_selection_pad_geometries,
     parse_source_pad_geometries,
+    single_inspection_board_origin,
     single_inspection_board_outline,
     transform_source_pad_geometries,
 )
@@ -69,6 +71,7 @@ class DebugPlateOutputConfig:
     layer_stack_template: str
     overwrite: bool
     board_outline_mils: JsonObject | None
+    board_origin_mils: JsonObject | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -247,6 +250,7 @@ class DebugPlateBoardInspection:
     board_key: str
     pcb_path: str
     board_outline_mils: JsonObject | None
+    board_origin_mils: JsonObject | None
     components: tuple[DebugPlateComponentCandidate, ...]
     free_pads: tuple[DebugPlatePadCandidate, ...]
 
@@ -258,6 +262,7 @@ class DebugPlateBoardInspection:
             "free_pads": [candidate.to_dict() for candidate in self.free_pads],
         }
         _add_optional(payload, "board_outline_mils", self.board_outline_mils)
+        _add_optional(payload, "board_origin_mils", self.board_origin_mils)
         return payload
 
 
@@ -536,6 +541,7 @@ def inspect_pcbdoc_for_debug_plate(
         board_key=board_key,
         pcb_path=str(Path(pcb_path)),
         board_outline_mils=board_outline_bounds_mils(pcbdoc),
+        board_origin_mils=board_origin_mils(pcbdoc),
         components=tuple(_component_candidates(pcbdoc)),
         free_pads=tuple(_free_pad_candidates(pcbdoc)),
     )
@@ -556,6 +562,11 @@ def _parse_output_config(raw: Mapping[str, object]) -> DebugPlateOutputConfig:
             "board_outline_mils",
             ("left", "bottom", "right", "top"),
         ),
+        board_origin_mils=_optional_number_object(
+            raw,
+            "board_origin_mils",
+            ("x", "y"),
+        ),
     )
 
 
@@ -570,9 +581,12 @@ def _parse_mate_output_config(
     if origin != "preserve_source":
         return output
     outline = single_inspection_board_outline(inspection)
-    if outline is None:
-        return output
-    return replace(output, board_outline_mils=outline)
+    origin_mils = single_inspection_board_origin(inspection)
+    return replace(
+        output,
+        board_outline_mils=output.board_outline_mils or outline,
+        board_origin_mils=output.board_origin_mils or origin_mils,
+    )
 
 def _selection_from_inspection(inspection: Mapping[str, object]) -> JsonObject:
     boards = inspection.get("boards", [])
@@ -650,7 +664,7 @@ def _component_position_mils(
 ) -> tuple[float, float]:
     try:
         position_fn = getattr(pcbdoc, "get_component_pnp_position_mils")
-        x_mils, y_mils = position_fn(index)
+        x_mils, y_mils = position_fn(index, origin_relative=False)
         return (float(x_mils), float(y_mils))
     except Exception:
         x_fn = getattr(component, "get_x_mils")
@@ -1369,6 +1383,7 @@ def _project_create_operation(
     _add_optional(args, "board_filename", output.board_filename)
     _add_optional(args, "project_filename", output.project_filename)
     _add_optional(args, "board_outline_mils", output.board_outline_mils)
+    _add_optional(args, "board_origin_mils", output.board_origin_mils)
     if documents:
         args["documents"] = documents
     return {

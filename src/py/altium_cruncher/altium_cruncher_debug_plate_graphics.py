@@ -120,6 +120,17 @@ def board_outline_bounds_mils(pcbdoc: object) -> JsonObject | None:
     }
 
 
+def board_origin_mils(pcbdoc: object) -> JsonObject | None:
+    """Return the loaded board origin in mils."""
+    board = getattr(pcbdoc, "board", None)
+    if board is None:
+        return None
+    return {
+        "x": float(getattr(board, "origin_x", 0.0) or 0.0),
+        "y": float(getattr(board, "origin_y", 0.0) or 0.0),
+    }
+
+
 def single_inspection_board_outline(
     inspection: Mapping[str, object],
 ) -> JsonObject | None:
@@ -131,6 +142,20 @@ def single_inspection_board_outline(
     ]
     if len(outlines) == 1:
         return outlines[0]
+    return None
+
+
+def single_inspection_board_origin(
+    inspection: Mapping[str, object],
+) -> JsonObject | None:
+    """Return the only inspected board origin, if there is exactly one."""
+    origins = [
+        dict(board["board_origin_mils"])
+        for board in _list_field(inspection, "boards")
+        if isinstance(board, dict) and isinstance(board.get("board_origin_mils"), dict)
+    ]
+    if len(origins) == 1:
+        return origins[0]
     return None
 
 

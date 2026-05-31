@@ -243,6 +243,7 @@ class ProjectSkeletonArgs:
     layer_stack_template: str
     overwrite: bool
     board_outline_mils: tuple[float, ...] | None
+    board_origin_mils: tuple[float, ...] | None
     sheet_frame_mils: tuple[float, ...] | None
     documents: tuple[str, ...]
 
@@ -567,6 +568,7 @@ def _op_create_project_skeleton(
     if options.sheet_frame_mils is not None:
         builder.set_board_sheet_frame_mils(*options.sheet_frame_mils)
     written = builder.save(options.output_dir)
+    _apply_project_skeleton_board_origin(written.board_path, options.board_origin_mils)
     context.invalidate_documents(list(output_paths.values()))
     return McoOperationResult.succeeded(
         spec,
@@ -578,6 +580,20 @@ def _op_create_project_skeleton(
             "board": str(written.board_path.resolve()),
         },
     )
+
+
+def _apply_project_skeleton_board_origin(
+    board_path: Path,
+    board_origin_mils: tuple[float, ...] | None,
+) -> None:
+    if board_origin_mils is None:
+        return
+
+    from altium_monkey import AltiumPcbDoc
+
+    pcbdoc = AltiumPcbDoc.from_file(board_path)
+    pcbdoc.set_origin_mils(board_origin_mils[0], board_origin_mils[1])
+    pcbdoc.save(board_path)
 
 
 def _parse_project_skeleton_args(
@@ -597,6 +613,11 @@ def _parse_project_skeleton_args(
             args,
             "board_outline_mils",
             ("left", "bottom", "right", "top"),
+        ),
+        board_origin_mils=_optional_number_object(
+            args,
+            "board_origin_mils",
+            ("x", "y"),
         ),
         sheet_frame_mils=_optional_number_object(
             args,

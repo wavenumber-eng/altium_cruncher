@@ -197,6 +197,13 @@ def test_project_create_skeleton_writes_altium_project_bundle(tmp_path: Path) ->
                         "output_dir": "generated",
                         "project_name": "debug_plate",
                         "overwrite": True,
+                        "board_outline_mils": {
+                            "left": 100,
+                            "bottom": 200,
+                            "right": 600,
+                            "top": 500,
+                        },
+                        "board_origin_mils": {"x": 1234, "y": 5678},
                         "documents": [
                             "libraries/schlib/contact.SchLib",
                             "libraries/pcblib/contact.PcbLib",
@@ -213,7 +220,12 @@ def test_project_create_skeleton_writes_altium_project_bundle(tmp_path: Path) ->
     assert (tmp_path / "generated" / "debug_plate.SchDoc").exists()
     assert (tmp_path / "generated" / "debug_plate.PcbDoc").exists()
 
+    from altium_monkey import AltiumPcbDoc
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    assert pcbdoc.board.origin_x == 1234.0
+    assert pcbdoc.board.origin_y == 5678.0
 
     project = AltiumPrjPcb(tmp_path / "generated" / "debug_plate.PrjPcb")
     assert [document["path"] for document in project.documents] == [

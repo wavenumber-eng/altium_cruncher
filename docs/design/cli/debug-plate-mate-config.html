@@ -170,7 +170,7 @@
     <li>Mechanical mount features may be listed in <code>validation.side_agnostic_kinds</code> when they should not participate in signal-side inference.</li>
     <li>Through-hole or 1:1 copied connector workflows may be explicitly side-agnostic.</li>
     <li>For cricket-node bottom-mount style workflows, source and output board origins should remain aligned so STEP artifacts and projected geometry line up.</li>
-    <li>When <code>output.origin</code> is <code>preserve_source</code>, the planner resolves source outline bounds and passes them to the generated output project skeleton rather than requiring the config to repeat derived coordinates.</li>
+    <li>When <code>output.origin</code> is <code>preserve_source</code>, the planner resolves source outline bounds and source board origin, then passes both to the generated output project skeleton rather than requiring the config to repeat derived coordinates.</li>
   </ul>
 
   <h2 data-key="debug-plate-mate-config.cricket-node-target">Cricket-Node Feature-Complete Target</h2>
