@@ -35,6 +35,9 @@ from altium_cruncher.altium_cruncher_cmd_bom import (
 from altium_cruncher.altium_cruncher_cmd_clean import (
     register_parser as register_clean_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_debug_plate import (
+    register_parser as register_debug_plate_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_design import (
     register_parser as register_design_parser,
 )
@@ -44,11 +47,17 @@ from altium_cruncher.altium_cruncher_cmd_extract import (
 from altium_cruncher.altium_cruncher_cmd_jlc import (
     register_parser as register_jlc_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_json_dump import (
+    register_parser as register_json_dump_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_merge import (
     register_parser as register_merge_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_megamaid import (
     register_parser as register_megamaid_parser,
+)
+from altium_cruncher.altium_cruncher_cmd_mco import (
+    register_parser as register_mco_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     register_parser as register_pcb_svg_parser,
@@ -263,10 +272,13 @@ def main() -> None:
 
     register_bom_parser(command_subparsers)
     register_clean_parser(command_subparsers)
+    register_debug_plate_parser(command_subparsers)
     register_design_parser(command_subparsers)
     _register_easyeda_parsers(command_subparsers)
     register_extract_parser(command_subparsers)
     register_jlc_parser(command_subparsers)
+    register_json_dump_parser(command_subparsers)
+    register_mco_parser(command_subparsers)
     register_megamaid_parser(command_subparsers)
     register_merge_parser(command_subparsers)
     register_pcb_layer_step_parser(command_subparsers)

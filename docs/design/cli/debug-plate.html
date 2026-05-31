@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>debug-plate command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="debug-plate" data-config-contract="none">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>debug-plate</h1><p class="lede">Generates fixture mating-board plans and runnable MCO files from a DUT PCB selection.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>debug-plate</code> is the first Altium Cruncher mating-board workflow. It inspects a device-under-test PCB, writes editable JSONC configuration, resolves known fixture parts, emits Monkey Change Order operations, and can execute those operations to create a new Altium project. The Cricket Node and node-test-array assets are the reference case.</p><p>The current command remains Altium-specific. The config shape is being kept portable enough to later map to KiCad and generic PCB Cruncher workflows; the draft portable shape is documented in <a href="debug-plate-mate-config.html">debug-plate-mate-config.html</a>.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher debug-plate init debug-plate.jsonc --force
+altium-cruncher debug-plate inspect DUT.PrjPcb --doc board.PcbDoc
+altium-cruncher debug-plate seed DUT.PrjPcb --config debug-plate.jsonc
+altium-cruncher debug-plate parts-cache build node-test-array.PrjPcb
+altium-cruncher debug-plate plan debug-plate.jsonc --output-mco debug-plate.mco.jsonc --force
+altium-cruncher debug-plate run debug-plate.jsonc --emit-mco debug-plate.mco.jsonc --force</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><table><tr><th>Area</th><th>Contract</th></tr>
+    <tr><td><code>source</code></td><td>Identifies the DUT project or PCB document. The command extracts positions, source layers, nets, component footprints, free pads, and board outline information from source files.</td></tr>
+    <tr><td><code>output</code></td><td>Controls generated project path, filenames, overwrite policy, board outline, and layer-stack template.</td></tr>
+    <tr><td><code>known_parts</code></td><td>Points to a known-parts manifest and cache root. The Cricket seed cache maps test points, mounting holes, and free NPTH alignment pads to fixture symbols and footprints.</td></tr>
+    <tr><td><code>placement</code></td><td>Defines source mount side, mirroring, mirror origin, and output offset in mils. Source top/bottom mixing is rejected for normal component projections.</td></tr>
+    <tr><td><code>selection</code></td><td>Uses reviewed source objects and projection selectors. Compact designator selectors such as <code>TP1-27</code>, <code>M1-4</code>, and explicit designator lists are accepted.</td></tr>
+    <tr><td><code>projections</code></td><td>Describe which output actions are generated for a source selection: place a mate part, draw source reference graphics, copy source outline/cutouts, emit PCB labels, and produce related artifacts.</td></tr>
+  </table></section>
+
+  <section id="output"><h2>Output</h2><p><code>plan</code> writes an MCO JSONC file. <code>run</code> executes that MCO and creates a project with schematic, PCB, copied libraries, placed mating components, net labels, optional source-reference graphics, a user union named <code>DEBUG_PLATE_FEATURES</code>, and requested artifacts such as PCB layer STEP outputs. Generated outputs default under <code>output/debug-plate</code>.</p><p>The public example at <code>examples/debug-plate/cricket-node</code> includes a runnable config scaffold, a known-parts manifest seed, expected operations, and input/output folder notes. User-local Altium project files are intentionally not committed.</p></section>
+
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_debug_plate.py</code>. It verifies template generation, source inspection, selector seeding, known-parts cache metadata, config planning, CLI plan/run behavior, generated MCO shape, labels, part role mappings, source-reference graphics, and STEP artifact operation generation.</p></section>
+</main>
+</body>
+</html>

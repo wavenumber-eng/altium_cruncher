@@ -1,0 +1,148 @@
+{
+  // Draft next-generation config. This is human/GUI-authored mate-board intent.
+  // It is not the current implemented v1 contract yet. The planner should
+  // resolve coordinates, nets, source side, and source geometry from the DUT.
+  "schema": "wn.pcb_cruncher.mate_config.a0",
+
+  "source": {
+    // Copy the DUT project into input/cricket-node before running.
+    "board": "input/cricket-node/11-10028__cricket-node-hw__B.PrjPcb",
+    // Optional when a project has more than one PCB document.
+    "pcbdoc": null
+  },
+
+  "output": {
+    // The first backend is Altium. The config concepts should remain portable.
+    "backend": "altium",
+    "output_dir": "output/cricket-node-debug-plate",
+    "project_name": "cricket_node_debug_plate",
+    // Keep source and output board origins aligned for projected geometry and
+    // bottom-layer STEP alignment artifacts.
+    "origin": "preserve_source",
+    "overwrite": true
+  },
+
+  "known_parts": {
+    // For now this is the node-test-array cache. Longer term this likely points
+    // at ALX CAD part-library-backed metadata.
+    "manifest": "known-parts/debug-plate-known-parts.json"
+  },
+
+  "validation": {
+    // The planner infers source side from selected objects and rejects mixed
+    // top/bottom SMT-like selections.
+    "source_side": "infer_single_side",
+    // Through-hole / 1:1 projection workflows may be side agnostic.
+    "allow_side_agnostic_through_hole": true
+  },
+
+  "projections": [
+    {
+      "id": "test_points",
+      "source": {
+        "object": "component",
+        // Accepts compact expressions such as "TP*", "TP1-5", or
+        // "TP1-5, U12".
+        "designators": "TP1-27"
+      },
+      "actions": [
+        {
+          "kind": "mate_component",
+          "part": "test_point_pogo"
+        },
+        {
+          "kind": "reference_graphics",
+          "shape": "source_pad_outline",
+          "layer": "MECHANICAL_1",
+          "style": {
+            "mode": "double_ring",
+            "clearance_mils": 10
+          }
+        },
+        {
+          "kind": "label",
+          "text": "source_net",
+          "placement": {
+            "side": "right",
+            "offset_mils": [120, 0],
+            "box_size_mils": [450, 70],
+            "center_box_on_target": true
+          },
+          "style": {
+            "height_mils": 65,
+            "layer": "TOP_OVERLAY",
+            "font_kind": "truetype",
+            "font_name": "Arial",
+            "bold": true,
+            "stroke_width_mils": 10,
+            "text_justification": "RIGHT_TOP"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mounts",
+      "source": {
+        "object": "component",
+        "designators": "M1-4"
+      },
+      "actions": [
+        {
+          "kind": "mate_component",
+          "part": "m25_smt_standoff"
+        }
+      ]
+    },
+    {
+      "id": "alignment_pins",
+      "source": {
+        "object": "free_pad",
+        "kind": "free_npth",
+        "hole_size_mils": {
+          "min": 75,
+          "max": 85
+        },
+        "plated": false
+      },
+      "actions": [
+        {
+          "kind": "mate_component",
+          "part": "alignment_pin_2mm_npth"
+        },
+        {
+          "kind": "label",
+          "text": "source_net"
+        }
+      ]
+    }
+  ],
+
+  "board_projection": {
+    "outline": {
+      "graphics": {
+        "enabled": true,
+        "layer": "MECHANICAL_1"
+      }
+    },
+    "cutouts": {
+      "graphics": {
+        "enabled": true,
+        "layer": "MECHANICAL_1"
+      },
+      "actual_cutouts": false
+    }
+  },
+
+  "artifacts": {
+    "pcb_layer_step": {
+      "enabled": true,
+      "source_layer": "bottom",
+      "highlights": [
+        {
+          "projection": "test_points",
+          "color": "#ffcc00"
+        }
+      ]
+    }
+  }
+}

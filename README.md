@@ -103,10 +103,13 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `pnp` | Generate pick-and-place output as CSV, JSON, XLSX, or JLC CPL. | Public |
 | `jlc` | Generate JLCPCB BOM and CPL outputs from an Altium project. | Public |
 | `design` | Generate design JSON with nets, components, and SVG IDs. | Public |
+| `json-dump` | Dump parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to JSON for inspection. | Experimental |
 | `extract` | Extract symbols, footprints, or IntLib sources from Altium design documents. | Public |
 | `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
 | `megamaid` | Decompose a PrjPcb into libraries, BOM, netlist, and embedded assets. | Public |
+| `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
+| `debug-plate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |
 | `clean` | Normalize SchDoc, SchLib, or PcbLib assets using JSON/JSONC config. | Public |
 | `easyeda-import` | Generate Altium SchLib, PcbLib footprint, and downloaded 3D assets from EasyEDA/LCSC data. | Optional experimental |
 

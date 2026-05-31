@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>mco command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="mco" data-config-contract="none">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>mco</h1><p class="lede">Executes Monkey Change Order JSONC operation files for generated CAD automation.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>mco</code> is the execution substrate for generated workflows such as <code>debug-plate</code>. It keeps automation intent in JSONC while the executor owns CAD document lifecycle: open on first use, keep documents live during the run, and flush dirty documents on exit.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher mco init debug-plate.mco.jsonc --force
+altium-cruncher mco list-ops
+altium-cruncher mco run debug-plate.mco.jsonc --dry-run
+altium-cruncher mco run debug-plate.mco.jsonc</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><table><tr><th>Area</th><th>Contract</th></tr>
+    <tr><td><code>schema</code></td><td>MCO files use <code>wn.altium_cruncher.mco.v1</code>. JSONC comments, trailing commas, and UTF-8 BOM are accepted.</td></tr>
+    <tr><td><code>operations[]</code></td><td>Ordered operation objects with required <code>id</code> and <code>op</code>, optional <code>args</code>, optional result <code>message</code>, and optional <code>on_fail</code> branch target.</td></tr>
+    <tr><td>Core ops</td><td><code>mco.message</code>, <code>mco.fail</code>, and <code>file.copy</code>.</td></tr>
+    <tr><td>Project ops</td><td><code>project.create-skeleton</code> creates a minimal Altium PCB project, schematic, and board.</td></tr>
+    <tr><td>Schematic ops</td><td><code>schdoc.add-wire</code>, <code>schdoc.add-net-label</code>, and <code>schdoc.add-component</code>.</td></tr>
+    <tr><td>PCB ops</td><td><code>pcbdoc.add-text</code>, <code>pcbdoc.add-component</code>, geometry insertion operations, user-union creation, and <code>pcbdoc.export-layer-step</code>.</td></tr>
+  </table></section>
+
+  <section id="output"><h2>Output</h2><p><code>run</code> prints a JSON result containing overall success, dry-run state, and one result object per operation. Mutation operations return output paths and operation-specific fields. On a normal run, dirty CAD documents are saved after operation execution completes.</p><pre><code>{
+  "schema": "wn.altium_cruncher.mco.result.v1",
+  "ok": true,
+  "dry_run": false,
+  "results": []
+}</code></pre></section>
+
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_mco.py</code>. It verifies JSONC parsing, control flow, dry-run handling, CLI init/list/run behavior, document session flushing, schematic and PCB insertion operations, user unions, text style options, library placement, and STEP export operation plumbing.</p></section>
+</main>
+</body>
+</html>

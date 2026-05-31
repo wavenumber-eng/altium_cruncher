@@ -22,6 +22,10 @@ from altium_cruncher.altium_cruncher_pcb_layer_step_config import (
     PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT,
     resolve_pcb_layer_selector,
 )
+from altium_cruncher.altium_cruncher_pcb_layer_step_highlights import (
+    PcbLayerStepHighlight,
+    highlight_bodies_from_geometries,
+)
 from altium_cruncher import altium_cruncher_pcb_layer_step_origin as step_origin
 
 log = logging.getLogger(__name__)
@@ -124,6 +128,7 @@ class PcbLayerStepOptions:
     include_free_pads: bool = True
     include_designators: tuple[str, ...] = ()
     pad_color_rules: tuple[_PadColorRule, ...] = ()
+    highlights: tuple["PcbLayerStepHighlight", ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -944,6 +949,7 @@ def _build_manifest(
                 }
                 for rule in opts.pad_color_rules
             ],
+            "highlight_count": len(opts.highlights),
         },
         "counts": counts,
         "bytes": output_path.stat().st_size,
@@ -967,6 +973,7 @@ def _build_step_bodies(
     shared_cutouts = [*boolean_drill_cutouts, *board_cutouts]
     bodies = [
         *_copper_bodies_from_features(features, opts, shared_cutouts),
+        *_highlight_bodies(opts),
         *_drill_overlay_bodies(drill_features, drill_hole_mode, opts),
         *_outline_bodies(pcbdoc, opts),
     ]
@@ -1017,6 +1024,17 @@ def _body_style_for_feature(
             if _matches_any_pattern(designator, rule.designators):
                 return rule.body, rule.color
     return "copper", opts.copper_color
+
+
+def _highlight_bodies(opts: PcbLayerStepOptions) -> list[dict[str, Any]]:
+    return highlight_bodies_from_geometries(
+        highlights=opts.highlights,
+        layer=opts.layer,
+        z_mm=opts.z_mm,
+        copper_thickness_mm=opts.thickness_mm,
+        pad_shape_region=_pad_shape_region,
+        step_name=_step_name,
+    )
 
 
 def _drill_overlay_bodies(
@@ -1129,23 +1147,16 @@ def _build_counts(
     board_cutouts: list[_Region],
     bodies: list[dict[str, Any]],
 ) -> dict[str, int]:
+    drill_overlay_count, plated_overlay_count, non_plated_overlay_count = (
+        _drill_overlay_counts(drill_features, drill_hole_mode)
+    )
     return {
         "source_layer_geometries": len(features),
         "drill_cut_geometries": len(drill_features),
         "drill_boolean_cut_geometries": len(boolean_drill_cutouts),
-        "drill_overlay_geometries": len(drill_features)
-        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
-        else 0,
-        "drill_plated_overlay_geometries": sum(
-            1 for feature in drill_features if feature.plated
-        )
-        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
-        else 0,
-        "drill_non_plated_overlay_geometries": sum(
-            1 for feature in drill_features if not feature.plated
-        )
-        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
-        else 0,
+        "drill_overlay_geometries": drill_overlay_count,
+        "drill_plated_overlay_geometries": plated_overlay_count,
+        "drill_non_plated_overlay_geometries": non_plated_overlay_count,
         "board_cutout_geometries": len(board_cutouts),
         "board_cutout_outline_geometries": sum(
             len(body.get("regions", []))
@@ -1153,7 +1164,10 @@ def _build_counts(
             if str(body.get("id")) == "board_cutouts"
         ),
         "copper_bodies": sum(
-            1 for body in bodies if str(body.get("id")) not in _NON_COPPER_BODY_IDS
+            1 for body in bodies if _is_step_copper_body(body)
+        ),
+        "highlight_bodies": sum(
+            1 for body in bodies if str(body.get("kind")) == "highlight"
         ),
         "outline_bodies": sum(
             1 for body in bodies if str(body.get("id")) == "board_outline"
@@ -1163,6 +1177,23 @@ def _build_counts(
         ),
         "body_count": len(bodies),
     }
+
+
+def _drill_overlay_counts(
+    drill_features: list[_DrillFeature],
+    drill_hole_mode: str,
+) -> tuple[int, int, int]:
+    if drill_hole_mode != DRILL_HOLE_MODE_OVERLAY:
+        return (0, 0, 0)
+    plated_count = sum(1 for feature in drill_features if feature.plated)
+    return (len(drill_features), plated_count, len(drill_features) - plated_count)
+
+
+def _is_step_copper_body(body: Mapping[str, Any]) -> bool:
+    return (
+        str(body.get("id")) not in _NON_COPPER_BODY_IDS
+        and str(body.get("kind")) != "highlight"
+    )
 
 
 def _effective_drill_hole_mode(opts: PcbLayerStepOptions, drill_count: int) -> str:

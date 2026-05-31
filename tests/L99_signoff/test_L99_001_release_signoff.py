@@ -27,7 +27,7 @@ EXPECTED_VERSION = "2026.5.28"
 EXPECTED_RELEASE_DATE = date(2026, 5, 28)
 EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-05-28.md"
 CONTROLLED_DEPENDENCIES = {
-    "altium-monkey": "2026.5.26",
+    "altium-monkey": "2026.5.29",
     "wn-geometer": "2026.5.25",
 }
 

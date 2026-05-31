@@ -18,8 +18,11 @@
   EasyEDA workflows through `easyeda-monkey`.
 - Add ADR-0005 and L99 checks for CLI design docs plus public dataclass and
   major-interface design/test ownership.
-- Consume pinned `altium-monkey==2026.5.26` and expose explicit PnP position mode
+- Consume pinned `altium-monkey==2026.5.29` and expose explicit PnP position mode
   selection for BOM/PnP/JLC workflows.
+- Add experimental `json-dump`, `mco`, and `debug-plate` commands for
+  reference inspection, generated CAD operation execution, and Cricket Node
+  mating-board workflow development.
 - Align BOM/PnP spreadsheet output with `bom_cruncher` by using `openpyxl`;
   XLSX cells are written as text so package values such as `0603` retain
   leading zeroes.

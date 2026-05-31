@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>json-dump command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-kind="cli-design" data-command="json-dump" data-config-contract="none">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>json-dump</h1><p class="lede">Writes compact JSON snapshots of parsed Altium documents for reference inspection.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>json-dump</code> makes fixture and workflow development faster by exposing parsed <code>SchDoc</code>, <code>SchLib</code>, <code>PcbDoc</code>, and <code>PcbLib</code> contents without requiring custom Python snippets. The output is intended for inspection and future round-trip design, not as a complete canonical interchange format yet.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher json-dump [files-or-directories...] -o output/json-dump
+altium-cruncher json-dump board.PcbDoc --stdout
+altium-cruncher json-dump project.PrjPcb
+altium-cruncher json-dump . --recursive</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><table><tr><th>Argument</th><th>Contract</th></tr>
+    <tr><td><code>paths</code></td><td>Optional files or directories. With no paths, the command looks for one project in the current directory, otherwise dumps supported files in the current directory.</td></tr>
+    <tr><td><code>--recursive</code></td><td>When a directory is supplied, include supported files under descendants.</td></tr>
+    <tr><td><code>-o</code>, <code>--output</code></td><td>Output directory. Defaults to <code>output/json-dump</code>.</td></tr>
+    <tr><td><code>--stdout</code></td><td>Write the single resolved document payload to stdout. This is invalid when more than one document is resolved.</td></tr>
+  </table></section>
+
+  <section id="output"><h2>Output</h2><p>Each document payload uses schema <code>altium_cruncher.json_dump.a0</code> and includes only <code>schema</code>, <code>kind</code>, and <code>document</code>. Batch runs also write <code>manifest.json</code> with schema <code>altium_cruncher.json_dump.manifest.a0</code> to map source paths to output files.</p><pre><code>{
+  "schema": "altium_cruncher.json_dump.a0",
+  "kind": "PcbDoc",
+  "document": {}
+}</code></pre></section>
+
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_json_dump.py</code>. It verifies PcbDoc structural dumping, SchLib dumping, project expansion, manifest shape, stdout behavior, and CLI registration.</p></section>
+</main>
+</body>
+</html>

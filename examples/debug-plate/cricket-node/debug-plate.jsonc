@@ -1,0 +1,83 @@
+{
+  "schema": "wn.altium_cruncher.debug_plate.v1",
+  "source": {
+    // Replace with the local DUT project or use `debug-plate seed`.
+    "dut": "path/to/cricket-node.PrjPcb"
+  },
+  "output": {
+    "output_dir": "output/cricket-node-debug-plate",
+    "project_name": "cricket_node_debug_plate",
+    "overwrite": true,
+    "board_outline_mils": {
+      "left": 0,
+      "bottom": 0,
+      "right": 5000,
+      "top": 3500
+    }
+  },
+  "known_parts": {
+    "manifest": "known-parts/debug-plate-known-parts.json"
+  },
+  "placement": {
+    "source_mount_side": "bottom",
+    "offset_mils": [0, 0],
+    "mirror_x": false,
+    "mirror_y": false,
+    "mirror_origin_mils": [0, 0]
+  },
+  "pcb_labels": {
+    "enabled": true,
+    "side": "right",
+    "offset_mils": [120, 0],
+    "box_size_mils": [450, 70],
+    "center_box_on_target": true,
+    "style": {
+      "height_mils": 65,
+      "layer": "TOP_OVERLAY",
+      "font_kind": "truetype",
+      "font_name": "Arial",
+      "bold": true,
+      "stroke_width_mils": 10,
+      "text_justification": "RIGHT_TOP"
+    }
+  },
+  "marker": {
+    "enabled": false
+  },
+  "selection": {
+    "boards": [
+      {
+        "board_key": "cricket-node",
+        "pcb_path": "path/to/cricket-node.PcbDoc",
+        "components": [
+          {
+            "designator": "TP1",
+            "kind": "test_point",
+            "footprint": "2mm_test_pad",
+            "layer": "BOTTOM",
+            "x_mils": 3980,
+            "y_mils": 3200,
+            "net_name": "+VIN"
+          },
+          {
+            "designator": "M5",
+            "kind": "mount",
+            "footprint": "m2_5_mount",
+            "layer": "BOTTOM",
+            "x_mils": 1000,
+            "y_mils": 1000
+          }
+        ],
+        "free_pads": [
+          {
+            "designator": "P1",
+            "kind": "free_npth",
+            "x_mils": 1800,
+            "y_mils": 1250,
+            "net_name": "ALIGN_NET"
+          }
+        ]
+      }
+    ]
+  }
+}

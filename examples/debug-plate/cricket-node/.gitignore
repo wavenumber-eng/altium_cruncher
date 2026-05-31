@@ -1,0 +1,6 @@
+/input/*
+!/input/README.md
+/output/*
+!/output/README.md
+/known-parts/schlib/
+/known-parts/pcblib/

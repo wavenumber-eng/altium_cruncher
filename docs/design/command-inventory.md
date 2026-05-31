@@ -17,11 +17,14 @@ This inventory records the command set migrated from the private
 | `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL CSV/XLSX, units, variant/no-BOM filtering, and configurable sorting. |
 | `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
 | `design` | public | `L3_public_workflows` | Key command. Exports AltiumDesign JSON for schematic/project documents, including netlist data, components, hierarchy, SVG IDs, and lookup indexes. |
+| `json-dump` | experimental | unit/CLI | Dumps parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to compact JSON for reference inspection. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
 | `easyeda-import` | optional-experimental | optional fixture lane | Experimental. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; default output includes SchLib, PcbLib footprint, and downloaded 3D assets when available. 3D model placement into PcbLib is not implemented. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
+| `mco` | experimental | unit/CLI | Executes Monkey Change Order JSONC operation files used by generated workflows. |
+| `debug-plate` | experimental | unit/CLI/example | Generates Cricket Node fixture mating-board plans and runnable MCO files from DUT selections. |
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
 
 The command manifest lives at `docs/contracts/command_manifest.v0.json`. `L99` should

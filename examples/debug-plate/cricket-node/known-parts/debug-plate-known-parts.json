@@ -1,0 +1,56 @@
+{
+  "designator_normalization": {
+    "mount": {
+      "M5": "M1",
+      "M6": "M2",
+      "M7": "M3",
+      "M8": "M4"
+    }
+  },
+  "parts": [
+    {
+      "description": "Pogo fixture contact aligned to cricket-node 2 mm test pads.",
+      "designator_prefix": "TP",
+      "footprint_library": "pcblib/split/YZ209315103P-01.PcbLib",
+      "footprint_name": "YZ209315103P-01",
+      "role": "test_point_pogo",
+      "signal_pad_designator": "1",
+      "symbol_library": "schlib/YZ209315103P-01.SchLib",
+      "symbol_name": "YZ209315103P-01",
+      "target_kinds": [
+        "test_point"
+      ]
+    },
+    {
+      "description": "M2.5 SMT standoff aligned to cricket-node M1-M4 mounting features.",
+      "designator_prefix": "M",
+      "footprint_library": "pcblib/split/9774080360R-YIYUAN.PcbLib",
+      "footprint_name": "9774080360R-YIYUAN",
+      "role": "m25_smt_standoff",
+      "signal_pad_designator": null,
+      "symbol_library": "schlib/9774080360R.SchLib",
+      "symbol_name": "9774080360R",
+      "target_kinds": [
+        "mount"
+      ]
+    },
+    {
+      "description": "2 mm alignment pin associated with cricket-node free NPTH holes.",
+      "designator_prefix": "P",
+      "footprint_library": "pcblib/split/H2184-05.PcbLib",
+      "footprint_name": "H2184-05",
+      "role": "alignment_pin_2mm_npth",
+      "signal_pad_designator": "1",
+      "symbol_library": "schlib/H2184-05.SchLib",
+      "symbol_name": "H2184-05",
+      "target_kinds": [
+        "free_npth"
+      ]
+    }
+  ],
+  "schema": "wn.altium_cruncher.debug_plate.parts_cache.v1",
+  "source": {
+    "kind": "node_test_array",
+    "project": "path/to/node-test-array.PrjPcb"
+  }
+}
