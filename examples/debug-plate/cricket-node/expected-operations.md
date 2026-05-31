@@ -6,9 +6,11 @@ high-level shape after local inputs and the known-parts cache exist:
 1. `project.create-skeleton`, with a rectangular board outline expanded from
    the DUT bounds by the configured margin
 2. Six `file.copy` operations for the selected SchLib/PcbLib cache files
-3. For each selected `TP1-27`: schematic component, schematic net label, PCB
-   component, and one expanded source-pad reference outline
-4. For each selected `M1-M4`: schematic component and PCB standoff component
+3. For each selected `TP1-27`: schematic component with a stable unique ID,
+   schematic net label, PCB component linked back to that schematic ID, and one
+   expanded source-pad reference outline
+4. For each selected `M1-M4`: schematic component with a stable unique ID and
+   PCB standoff component linked back to that schematic ID
 5. For each matching free NPTH alignment pad: schematic component, optional
    schematic net label and PCB alignment-pin component
 6. `pcbdoc.add-track` operations projecting the DUT board outline onto the

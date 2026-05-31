@@ -672,6 +672,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                         "library": str(schlib_path),
                         "symbol": "DBG_CONTACT",
                         "designator": "TP1",
+                        "unique_id": "ABC12345",
                         "position_mils": [500, 700],
                         "parameters": {
                             "Value": "Debug Contact",
@@ -692,6 +693,12 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                         "designator": "TP1",
                         "position_mils": [500, 700],
                         "layer": "TOP",
+                        "source_unique_id": "ABC12345",
+                        "source_hierarchical_path": "debug_plate",
+                        "source_component_library": "fixture.SchLib",
+                        "source_lib_reference": "DBG_CONTACT",
+                        "source_description": "Debug contact symbol",
+                        "channel_offset": 0,
                     },
                 },
                 {
@@ -732,6 +739,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
     assert [component.lib_reference for component in schdoc.components] == [
         "DBG_CONTACT"
     ]
+    assert schdoc.components[0].unique_id == "ABC12345"
     params = {
         parameter.name: parameter.text
         for component in schdoc.components
@@ -745,6 +753,12 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
     assert [component.footprint for component in pcbdoc.components] == [
         "DBG_CONTACT_FP"
     ]
+    assert pcbdoc.components[0].source_unique_id == "\\ABC12345"
+    assert pcbdoc.components[0].source_hierarchical_path == "debug_plate"
+    assert pcbdoc.components[0].source_component_library == "fixture.SchLib"
+    assert pcbdoc.components[0].source_lib_reference == "DBG_CONTACT"
+    assert pcbdoc.components[0].description == "Debug contact symbol"
+    assert pcbdoc.components[0].channel_offset == 0
     assert len(pcbdoc.pads) == 1
     designator_text = next(text for text in pcbdoc.texts if text.is_designator)
     assert designator_text.text_content == "TP1"

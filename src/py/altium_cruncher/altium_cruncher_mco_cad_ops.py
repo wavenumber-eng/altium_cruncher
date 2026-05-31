@@ -109,6 +109,9 @@ def _op_schdoc_add_component(
         display_mode=int(_optional_float(spec.args, "display_mode", 0.0)),
     )
     component = schdoc.components[-1]
+    unique_id = _optional_string(spec.args, "unique_id", None)
+    if unique_id is not None:
+        setattr(component, "unique_id", unique_id)
     design_item_id = _optional_string(spec.args, "design_item_id", None)
     if design_item_id is not None:
         setattr(component, "design_item_id", design_item_id)
@@ -259,7 +262,7 @@ def _op_pcbdoc_add_component(
     pcblib = AltiumPcbLib.from_file(library_path)
     footprint = _pcblib_footprint(pcblib, footprint_name, library_path)
     pcbdoc = _open_pcbdoc_for_mutation(paths, context)
-    pcbdoc.add_component_from_pcblib(
+    component = pcbdoc.add_component_from_pcblib(
         footprint,
         designator=designator,
         position_mils=position,
@@ -276,6 +279,7 @@ def _op_pcbdoc_add_component(
         pad_nets=_optional_string_dict(spec.args, "pad_nets"),
         source_pcblib=pcblib,
     )
+    _apply_pcb_component_source_link_fields(component, spec.args)
     _mark_pcbdoc_dirty(context, paths)
     return _success_result(
         spec,
@@ -286,6 +290,62 @@ def _op_pcbdoc_add_component(
             "designator": designator,
         },
     )
+
+
+def _apply_pcb_component_source_link_fields(
+    component: object,
+    args: Mapping[str, object],
+) -> None:
+    raw_record = getattr(component, "raw_record", None)
+    if not isinstance(raw_record, dict):
+        return
+    _set_optional_raw_text(
+        raw_record,
+        "SOURCEDESIGNATOR",
+        _optional_string(args, "source_designator", None),
+    )
+    _set_optional_raw_text(
+        raw_record,
+        "SOURCEUNIQUEID",
+        _normalize_source_unique_id(_optional_string(args, "source_unique_id", None)),
+    )
+    _set_optional_raw_text(
+        raw_record,
+        "SOURCEHIERARCHICALPATH",
+        _optional_string(args, "source_hierarchical_path", None),
+    )
+    _set_optional_raw_text(
+        raw_record,
+        "SOURCECOMPONENTLIBRARY",
+        _optional_string(args, "source_component_library", None),
+    )
+    _set_optional_raw_text(
+        raw_record,
+        "SOURCELIBREFERENCE",
+        _optional_string(args, "source_lib_reference", None),
+    )
+    source_description = _optional_string(args, "source_description", None)
+    _set_optional_raw_text(raw_record, "SOURCEDESCRIPTION", source_description)
+    if source_description is not None:
+        setattr(component, "description", source_description)
+    channel_offset = _optional_int_or_none(args, "channel_offset")
+    if channel_offset is not None:
+        raw_record["CHANNELOFFSET"] = str(channel_offset)
+
+
+def _normalize_source_unique_id(value: str | None) -> str | None:
+    if value is None or value == "":
+        return value
+    return value if value.startswith("\\") else f"\\{value}"
+
+
+def _set_optional_raw_text(
+    raw_record: dict[object, object],
+    key: str,
+    value: str | None,
+) -> None:
+    if value is not None:
+        raw_record[key] = value
 
 
 def _op_pcbdoc_arrange_designators(

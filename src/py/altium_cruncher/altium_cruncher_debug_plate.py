@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import fnmatch
+import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from altium_cruncher.altium_cruncher_mco import (
     execute_mco,
     load_jsonc_file,
 )
+from altium_cruncher.bom_pnp_model import designator_sort_key
 from altium_cruncher.altium_cruncher_debug_plate_parts import (
     load_debug_plate_known_parts_manifest,
     manifest_path_for_cache_dir,
@@ -1649,7 +1651,8 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
     used_designators: set[str] = set()
     free_counts: dict[str, int] = {}
     placed_designators: list[str] = []
-    for index, target in enumerate(targets, start=1):
+    resolved_targets: list[tuple[JsonObject, Mapping[str, object], str]] = []
+    for target in targets:
         target_kind = str(target.get("kind", "") or "")
         part = resolve_known_part(
             manifest,
@@ -1663,6 +1666,11 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
             used_designators=used_designators,
             free_counts=free_counts,
         )
+        resolved_targets.append((target, part, designator))
+    channel_offsets = _component_link_channel_offsets(
+        designator for _, _, designator in resolved_targets
+    )
+    for index, (target, part, designator) in enumerate(resolved_targets, start=1):
         operations.append(
             _schematic_part_operation(
                 config.output,
@@ -1683,9 +1691,11 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
         operations.append(
             _pcb_part_operation(
                 config.output,
+                known_parts,
                 part,
                 target,
                 designator,
+                channel_offset=channel_offsets[designator],
             )
         )
         placed_designators.append(designator)
@@ -1881,6 +1891,7 @@ def _schematic_part_operation(
             "library": _copied_known_part_file(output, part, "symbol_library"),
             "symbol": symbol_name,
             "designator": designator,
+            "unique_id": _component_link_unique_id(output, target, designator),
             "position_mils": list(_schematic_position(index)),
             "design_item_id": symbol_name,
             "footprint_model": footprint_name,
@@ -1914,11 +1925,16 @@ def _schematic_net_label_operation(
 
 def _pcb_part_operation(
     output: DebugPlateOutputConfig,
+    known_parts: DebugPlateKnownPartsConfig,
     part: Mapping[str, object],
     target: Mapping[str, object],
     designator: str,
+    *,
+    channel_offset: int,
 ) -> JsonObject:
     footprint_library = _copied_known_part_file(output, part, "footprint_library")
+    symbol_name = _part_string(part, "symbol_name")
+    symbol_library = Path(_known_part_project_library_path(part, "symbol_library"))
     args: JsonObject = {
         "file": _output_file(output.output_dir, _board_filename(output)),
         "overwrite": True,
@@ -1931,7 +1947,13 @@ def _pcb_part_operation(
         ],
         "layer": "TOP",
         "source_footprint_library": Path(footprint_library).name,
-        "comment_text": _part_string(part, "role"),
+        "source_unique_id": _component_link_unique_id(output, target, designator),
+        "source_hierarchical_path": output.project_name,
+        "source_component_library": symbol_library.name,
+        "source_lib_reference": symbol_name,
+        "source_description": _known_part_symbol_description(known_parts, part),
+        "channel_offset": channel_offset,
+        "comment_text": "*",
         "component_parameters": _debug_plate_component_parameters(target, part),
     }
     pad_nets = _debug_plate_pad_nets(target, part)
@@ -2052,6 +2074,49 @@ def _known_part_project_library_path(
     field: str,
 ) -> str:
     return (Path("libraries") / Path(_part_string(part, field))).as_posix()
+
+
+def _component_link_unique_id(
+    output: DebugPlateOutputConfig,
+    target: Mapping[str, object],
+    designator: str,
+) -> str:
+    seed = "|".join(
+        [
+            output.project_name,
+            designator,
+            str(target.get("board_key", "") or ""),
+            str(target.get("source_designator", "") or ""),
+            str(target.get("kind", "") or ""),
+        ]
+    )
+    return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:8].upper()
+
+
+def _component_link_channel_offsets(designators: Iterable[str]) -> dict[str, int]:
+    ordered = sorted(
+        (str(designator) for designator in designators),
+        key=designator_sort_key,
+    )
+    return {designator: index for index, designator in enumerate(ordered)}
+
+
+def _known_part_symbol_description(
+    known_parts: DebugPlateKnownPartsConfig,
+    part: Mapping[str, object],
+) -> str:
+    try:
+        from altium_monkey import AltiumSchLib
+
+        schlib = AltiumSchLib(_known_part_file(known_parts, part, "symbol_library"))
+        symbol = schlib.get_symbol(_part_string(part, "symbol_name"))
+        if symbol is not None:
+            description = str(getattr(symbol, "description", "") or "")
+            if description:
+                return description
+    except Exception:
+        return _part_string(part, "description")
+    return _part_string(part, "description")
 
 
 def _projected_designator(

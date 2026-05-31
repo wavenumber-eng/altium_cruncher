@@ -1410,6 +1410,26 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
         "M1",
         "P1",
     ]
+    sch_ids_by_designator = {
+        parameter.text: component.unique_id
+        for component in schdoc.components
+        for parameter in component.parameters
+        if isinstance(parameter, AltiumSchDesignator)
+    }
+    pcb_components_by_designator = {
+        component.designator: component for component in pcbdoc.components
+    }
+    assert pcb_components_by_designator["TP1"].source_unique_id == (
+        f"\\{sch_ids_by_designator['TP1']}"
+    )
+    assert pcb_components_by_designator["TP1"].source_hierarchical_path == "debug_plate"
+    assert pcb_components_by_designator["TP1"].source_component_library == (
+        "YZ209315103P-01.SchLib"
+    )
+    assert pcb_components_by_designator["TP1"].source_lib_reference == "YZ209315103P-01"
+    assert pcb_components_by_designator["M1"].channel_offset == 0
+    assert pcb_components_by_designator["P1"].channel_offset == 1
+    assert pcb_components_by_designator["TP1"].channel_offset == 2
     labels_by_text = {
         text.text_content: text
         for text in pcbdoc.texts
