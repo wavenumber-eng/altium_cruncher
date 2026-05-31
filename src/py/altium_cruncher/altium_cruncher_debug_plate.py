@@ -22,8 +22,10 @@ from altium_cruncher.altium_cruncher_debug_plate_parts import (
     resolve_known_part,
 )
 from altium_cruncher.altium_cruncher_debug_plate_graphics import (
+    board_outline_geometry,
     board_origin_mils,
     board_outline_bounds_mils,
+    build_pcb_board_projection_operations,
     build_pcb_reference_graphics_operations,
     component_pad_geometries,
     pad_height_mils,
@@ -36,6 +38,18 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
 )
 from altium_cruncher.altium_cruncher_debug_plate_artifacts import (
     build_debug_plate_artifact_operations,
+)
+from altium_cruncher.altium_cruncher_debug_plate_defaults import (
+    default_known_parts_payload as _default_known_parts_payload,
+    default_marker_payload as _default_marker_payload,
+    default_mate_artifacts_payload as _default_mate_artifacts_payload,
+    default_mate_board_projection_payload as _default_mate_board_projection_payload,
+    default_mate_label_style_payload as _default_mate_label_style_payload,
+    default_mate_output_payload as _default_mate_output_payload,
+    default_output_config_payload as _default_output_config_payload,
+    default_pcb_labels_payload as _default_pcb_labels_payload,
+    default_placement_payload as _default_placement_payload,
+    mate_known_parts_payload as _mate_known_parts_payload,
 )
 
 DEBUG_PLATE_CONFIG_SCHEMA = "wn.altium_cruncher.debug_plate.v1"
@@ -157,6 +171,7 @@ class DebugPlateSelectionBoard:
     pcb_path: str
     components: tuple[DebugPlateSelectionComponent, ...]
     free_pads: tuple[DebugPlateSelectionPad, ...]
+    board_outline: JsonObject | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,6 +192,7 @@ class DebugPlateConfig:
     placement: DebugPlatePlacementConfig
     pcb_labels: DebugPlatePcbLabelsConfig
     selection: DebugPlateSelectionConfig
+    board_projection: JsonObject
     artifacts: JsonObject
 
 
@@ -250,6 +266,7 @@ class DebugPlateBoardInspection:
     board_key: str
     pcb_path: str
     board_outline_mils: JsonObject | None
+    board_outline: JsonObject | None
     board_origin_mils: JsonObject | None
     components: tuple[DebugPlateComponentCandidate, ...]
     free_pads: tuple[DebugPlatePadCandidate, ...]
@@ -262,6 +279,7 @@ class DebugPlateBoardInspection:
             "free_pads": [candidate.to_dict() for candidate in self.free_pads],
         }
         _add_optional(payload, "board_outline_mils", self.board_outline_mils)
+        _add_optional(payload, "board_outline", self.board_outline)
         _add_optional(payload, "board_origin_mils", self.board_origin_mils)
         return payload
 
@@ -297,6 +315,7 @@ def parse_debug_plate_config(
         placement=_parse_placement_config(_section(root, "placement")),
         pcb_labels=_parse_pcb_labels_config(_optional_section(root, "pcb_labels")),
         selection=_parse_selection_config(_section(root, "selection")),
+        board_projection=_optional_section(root, "board_projection") or {},
         artifacts=_section(root, "artifacts"),
     )
 
@@ -320,6 +339,7 @@ def _parse_mate_config(
         placement=_default_mate_placement_config(),
         pcb_labels=_parse_mate_pcb_labels_config(root),
         selection=_selection_from_mate_inspection(root, inspection),
+        board_projection=_section(root, "board_projection"),
         artifacts=_section(root, "artifacts"),
     )
 
@@ -336,7 +356,12 @@ def build_debug_plate_mco(config: DebugPlateConfig) -> JsonObject:
     if marker is not None:
         operations.append(_pcb_marker_operation(config.output, marker))
     operations.extend(_known_part_library_copy_operations(config))
-    operations.extend(_known_part_placement_operations(config))
+    placement_operations = _known_part_placement_operations(config)
+    board_projection_operations = _board_projection_operations(config)
+    operations.extend(placement_operations)
+    operations.extend(board_projection_operations)
+    if placement_operations or board_projection_operations:
+        operations.append(_debug_plate_user_union_operation(config.output))
     operations.extend(build_debug_plate_artifact_operations(config))
     return {"schema": MCO_SCHEMA, "operations": operations}
 
@@ -541,6 +566,7 @@ def inspect_pcbdoc_for_debug_plate(
         board_key=board_key,
         pcb_path=str(Path(pcb_path)),
         board_outline_mils=board_outline_bounds_mils(pcbdoc),
+        board_outline=board_outline_geometry(pcbdoc),
         board_origin_mils=board_origin_mils(pcbdoc),
         components=tuple(_component_candidates(pcbdoc)),
         free_pads=tuple(_free_pad_candidates(pcbdoc)),
@@ -607,6 +633,9 @@ def _selection_board(board: Mapping[str, object]) -> JsonObject:
         "pcb_path": str(board.get("pcb_path", "") or ""),
         "components": list(_list_field(board, "components")),
         "free_pads": list(_list_field(board, "free_pads")),
+        "board_outline": dict(board["board_outline"])
+        if isinstance(board.get("board_outline"), dict)
+        else None,
     }
 
 
@@ -875,6 +904,9 @@ def _selection_from_mate_inspection(
                 "pcb_path": str(board.get("pcb_path", "") or ""),
                 "components": components,
                 "free_pads": free_pads,
+                "board_outline": dict(board["board_outline"])
+                if isinstance(board.get("board_outline"), dict)
+                else None,
             }
         )
     _validate_mate_source_sides(root, boards)
@@ -1348,6 +1380,7 @@ def _parse_selection_board(raw: Mapping[str, object]) -> DebugPlateSelectionBoar
             for pad in _list_field(raw, "free_pads")
             if isinstance(pad, dict)
         ),
+        board_outline=_optional_section(raw, "board_outline"),
     )
 
 
@@ -1498,8 +1531,16 @@ def _known_part_placement_operations(config: DebugPlateConfig) -> list[JsonObjec
                 designator=designator,
             )
         )
-    operations.append(_debug_plate_user_union_operation(config.output))
     return operations
+
+
+def _board_projection_operations(config: DebugPlateConfig) -> list[JsonObject]:
+    return build_pcb_board_projection_operations(
+        output_dir=config.output.output_dir,
+        board_filename=_board_filename(config.output),
+        board_projection=config.board_projection,
+        selection=config.selection,
+    )
 
 
 def _known_part_project_documents(config: DebugPlateConfig) -> list[str]:
@@ -2264,7 +2305,6 @@ def _mate_seed_alignment_pins_projection(_pads: list[JsonObject]) -> JsonObject:
         "id": "alignment_pins",
         "source": {
             "object": "free_pad",
-            "kind": "free_npth",
             "hole_size_mils": {"min": 75, "max": 85},
             "plated": False,
         },
@@ -2313,126 +2353,6 @@ def _append_designator_run(
         tokens.append(f"{prefix}{start}")
     else:
         tokens.append(f"{prefix}{start}-{end}")
-
-
-def _default_mate_output_payload() -> JsonObject:
-    return {
-        "backend": "altium",
-        "output_dir": "output/debug-plate",
-        "project_name": "debug_plate",
-        "origin": "preserve_source",
-        "overwrite": False,
-        "layer_stack_template": "2-layer",
-    }
-
-
-def _mate_known_parts_payload(
-    known_parts_manifest: Path | str | None,
-) -> JsonObject:
-    if known_parts_manifest is None:
-        return _default_known_parts_payload()
-    return {"manifest": str(known_parts_manifest)}
-
-
-def _default_mate_label_style_payload() -> JsonObject:
-    return {
-        "height_mils": 65,
-        "layer": "TOP_OVERLAY",
-        "font_kind": "truetype",
-        "font_name": "Arial",
-        "bold": True,
-        "stroke_width_mils": 10,
-        "text_justification": "RIGHT_TOP",
-    }
-
-
-def _default_mate_board_projection_payload() -> JsonObject:
-    return {
-        "outline": {"graphics": {"enabled": True, "layer": "MECHANICAL_1"}},
-        "cutouts": {
-            "graphics": {"enabled": True, "layer": "MECHANICAL_1"},
-            "actual_cutouts": False,
-        },
-    }
-
-
-def _default_mate_artifacts_payload() -> JsonObject:
-    return {
-        "pcb_layer_step": {
-            "enabled": True,
-            "source_layer": "bottom",
-            "highlights": [
-                {
-                    "projection": "test_points",
-                    "color": "#ffcc00",
-                }
-            ],
-        }
-    }
-
-
-def _default_output_config_payload() -> JsonObject:
-    return {
-        "output_dir": "output/debug-plate",
-        "project_name": "debug_plate",
-        "overwrite": False,
-        "layer_stack_template": "2-layer",
-        "board_outline_mils": {
-            "left": 0,
-            "bottom": 0,
-            "right": 3000,
-            "top": 2000,
-        },
-    }
-
-
-def _default_known_parts_payload() -> JsonObject:
-    return {
-        "manifest": "",
-    }
-
-
-def _default_placement_payload() -> JsonObject:
-    return {
-        "source_mount_side": "bottom",
-        "offset_mils": [0, 0],
-        "mirror_x": False,
-        "mirror_y": False,
-        "mirror_origin_mils": [0, 0],
-    }
-
-
-def _default_pcb_labels_payload() -> JsonObject:
-    return {
-        "enabled": False,
-        "side": "right",
-        "offset_mils": [120, 0],
-        "box_size_mils": [450, 70],
-        "center_box_on_target": True,
-        "style": {
-            "height_mils": 65,
-            "layer": "TOP_OVERLAY",
-            "font_kind": "truetype",
-            "font_name": "Arial",
-            "bold": True,
-            "stroke_width_mils": 10,
-            "is_inverted": True,
-            "inverted_margin_mils": 10,
-            "use_inverted_rectangle": True,
-            "is_frame": True,
-            "text_justification": "RIGHT_TOP",
-        },
-    }
-
-
-def _default_marker_payload() -> JsonObject:
-    return {
-        "enabled": True,
-        "text": "DEBUG PLATE",
-        "position_mils": [200, 200],
-        "height_mils": 60,
-        "layer": "TOP_OVERLAY",
-    }
 
 
 def _debug_plate_template_text() -> str:

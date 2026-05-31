@@ -103,6 +103,39 @@ def build_pcb_reference_graphics_operations(
     return operations
 
 
+def build_pcb_board_projection_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_projection: Mapping[str, object],
+    selection: object,
+) -> list[JsonObject]:
+    """Build PCB MCO operations for source-board projection graphics."""
+    outline = _section(board_projection, "outline")
+    graphics = _section(outline, "graphics")
+    if not _optional_bool(graphics, "enabled", False):
+        return []
+
+    layer = _optional_string(graphics, "layer", "MECHANICAL_1") or "MECHANICAL_1"
+    width_mils = _mapping_number(graphics, "stroke_width_mils", 8.0)
+    operations: list[JsonObject] = []
+    for board in getattr(selection, "boards", ()) or ():
+        board_outline = getattr(board, "board_outline", None)
+        if not isinstance(board_outline, dict):
+            continue
+        operations.extend(
+            _board_outline_segment_operations(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                board_key=str(getattr(board, "board_key", "") or "board"),
+                outline=board_outline,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        )
+    return operations
+
+
 def board_outline_bounds_mils(pcbdoc: object) -> JsonObject | None:
     """Return rectangular bounds for the loaded board outline."""
     board = getattr(pcbdoc, "board", None)
@@ -117,6 +150,19 @@ def board_outline_bounds_mils(pcbdoc: object) -> JsonObject | None:
         "bottom": min(ys),
         "right": max(xs),
         "top": max(ys),
+    }
+
+
+def board_outline_geometry(pcbdoc: object) -> JsonObject | None:
+    """Return ordered source-board outline geometry for projection graphics."""
+    board = getattr(pcbdoc, "board", None)
+    outline = getattr(board, "outline", None) if board is not None else None
+    vertices = list(getattr(outline, "vertices", []) or [])
+    if not vertices:
+        return None
+    return {
+        "vertices": [_board_outline_vertex(vertex) for vertex in vertices],
+        "closed": True,
     }
 
 
@@ -235,6 +281,154 @@ def _transform_placement(
     transformed_y = 2.0 * mirror_origin_y - y_mils if getattr(placement, "mirror_y") else y_mils
     offset_x, offset_y = getattr(placement, "offset_mils")
     return (transformed_x + offset_x, transformed_y + offset_y)
+
+
+def _board_outline_segment_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_key: str,
+    outline: Mapping[str, object],
+    layer: str,
+    width_mils: float,
+) -> list[JsonObject]:
+    vertices = _outline_vertices(outline)
+    if len(vertices) < 2:
+        return []
+    operations: list[JsonObject] = []
+    for index, start in enumerate(vertices):
+        end = vertices[(index + 1) % len(vertices)]
+        if str(start.get("segment", "line") or "line").lower() == "arc":
+            operation = _board_outline_arc_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                board_key=board_key,
+                index=index + 1,
+                start=start,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        else:
+            operation = _board_outline_track_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                board_key=board_key,
+                index=index + 1,
+                start=start,
+                end=end,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        if operation is not None:
+            operations.append(operation)
+    return operations
+
+
+def _board_outline_track_operation(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_key: str,
+    index: int,
+    start: Mapping[str, object],
+    end: Mapping[str, object],
+    layer: str,
+    width_mils: float,
+) -> JsonObject:
+    return {
+        "id": f"project_{_safe_id(board_key)}_outline_segment_{index}",
+        "op": "pcbdoc.add-track",
+        "message": f"Project {board_key} board outline segment {index}",
+        "args": {
+            "file": (Path(output_dir) / board_filename).as_posix(),
+            "overwrite": True,
+            "start_mils": _outline_point(start),
+            "end_mils": _outline_point(end),
+            "width_mils": width_mils,
+            "layer": layer,
+        },
+    }
+
+
+def _board_outline_arc_operation(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_key: str,
+    index: int,
+    start: Mapping[str, object],
+    layer: str,
+    width_mils: float,
+) -> JsonObject | None:
+    center = start.get("center_mils")
+    if not isinstance(center, list | tuple) or len(center) != 2:
+        return None
+    center_payload = {"x": center[0], "y": center[1]}
+    return {
+        "id": f"project_{_safe_id(board_key)}_outline_arc_{index}",
+        "op": "pcbdoc.add-arc",
+        "message": f"Project {board_key} board outline arc {index}",
+        "args": {
+            "file": (Path(output_dir) / board_filename).as_posix(),
+            "overwrite": True,
+            "center_mils": [
+                _mapping_number(center_payload, "x", 0.0),
+                _mapping_number(center_payload, "y", 0.0),
+            ],
+            "radius_mils": _mapping_number(start, "radius_mils", 0.0),
+            "start_angle_degrees": _mapping_number(
+                start,
+                "start_angle_degrees",
+                0.0,
+            ),
+            "end_angle_degrees": _mapping_number(
+                start,
+                "end_angle_degrees",
+                0.0,
+            ),
+            "width_mils": width_mils,
+            "layer": layer,
+        },
+    }
+
+
+def _outline_vertices(outline: Mapping[str, object]) -> list[JsonObject]:
+    value = outline.get("vertices", [])
+    if not isinstance(value, list):
+        raise ValueError("Debug-plate board_outline.vertices must be an array")
+    return [dict(item) for item in value if isinstance(item, dict)]
+
+
+def _outline_point(vertex: Mapping[str, object]) -> list[float]:
+    return [
+        _mapping_number(vertex, "x_mils", 0.0),
+        _mapping_number(vertex, "y_mils", 0.0),
+    ]
+
+
+def _board_outline_vertex(vertex: object) -> JsonObject:
+    payload: JsonObject = {
+        "x_mils": _float_attr(vertex, "x_mils"),
+        "y_mils": _float_attr(vertex, "y_mils"),
+        "segment": "arc" if bool(getattr(vertex, "is_arc", False)) else "line",
+    }
+    if payload["segment"] == "arc":
+        payload.update(
+            {
+                "center_mils": [
+                    _float_attr(vertex, "center_x_mils"),
+                    _float_attr(vertex, "center_y_mils"),
+                ],
+                "radius_mils": _float_attr(vertex, "radius_mils"),
+                "start_angle_degrees": float(
+                    getattr(vertex, "start_angle_deg", 0.0) or 0.0
+                ),
+                "end_angle_degrees": float(
+                    getattr(vertex, "end_angle_deg", 0.0) or 0.0
+                ),
+            }
+        )
+    return payload
 
 
 def _pad_outline_operations(

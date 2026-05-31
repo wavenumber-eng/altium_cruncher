@@ -29,6 +29,7 @@ class FileMutationPaths:
 
 
 PcbPoint = tuple[float, float]
+MILS_PER_MM = 1000.0 / 25.4
 
 
 def _op_schdoc_add_wire(
@@ -584,6 +585,65 @@ def _op_pcbdoc_export_layer_step(
     )
 
 
+def _op_pcbdoc_add_embedded_3d_model(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    paths = _mutation_paths(spec.args, context)
+    model_file = _path_from_arg(spec.args, "model_file", context)
+    model_name = (
+        _optional_string(spec.args, "model_name", model_file.name) or model_file.name
+    )
+    body_name = _optional_string(spec.args, "name", model_name) or model_name
+    location_mils = _optional_number_pair(
+        spec.args,
+        "location_mils",
+        default=(0.0, 0.0),
+    )
+    assert location_mils is not None
+    if context.dry_run:
+        return _dry_run_result(
+            spec,
+            paths,
+            {
+                "model_file": str(model_file),
+                "name": body_name,
+                "z_mils": _model_z_mils(spec.args),
+            },
+        )
+
+    pcbdoc = _open_pcbdoc_for_mutation(paths, context)
+    model = pcbdoc.add_embedded_model(
+        name=model_name,
+        model_data=model_file.read_bytes(),
+    )
+    pcbdoc.add_embedded_3d_model(
+        model,
+        layer=_pcb_layer(spec.args.get("layer"), default="MECHANICAL_13"),
+        side=_pcb_body_projection(spec.args.get("side"), default="TOP"),
+        location_mils=location_mils,
+        rotation_x_degrees=_optional_float(spec.args, "rotation_x_degrees", 0.0),
+        rotation_y_degrees=_optional_float(spec.args, "rotation_y_degrees", 0.0),
+        rotation_z_degrees=_optional_float(spec.args, "rotation_z_degrees", 0.0),
+        standoff_height_mils=_model_z_mils(spec.args),
+        bounds_mils=_optional_bounds_mils(spec.args, "bounds_mils"),
+        projection_outline_mils=_optional_points_mils(
+            spec.args,
+            "projection_outline_mils",
+            minimum=3,
+        ),
+        overall_height_mils=_optional_float_or_none(spec.args, "overall_height_mils"),
+        name=body_name,
+        opacity=_optional_float(spec.args, "opacity", 1.0),
+    )
+    _mark_pcbdoc_dirty(context, paths)
+    return _success_result(
+        spec,
+        paths,
+        {"model_file": str(model_file), "name": body_name},
+    )
+
+
 def _pcb_layer_step_highlights(
     args: Mapping[str, object],
 ) -> tuple["PcbLayerStepHighlight", ...]:
@@ -859,6 +919,47 @@ def _required_points(
     return [_point_from_sequence(point, name) for point in value]
 
 
+def _optional_points_mils(
+    args: Mapping[str, object],
+    name: str,
+    *,
+    minimum: int,
+) -> list[PcbPoint] | None:
+    value = args.get(name)
+    if value is None:
+        return None
+    if not isinstance(value, list) or len(value) < minimum:
+        raise ValueError(f"Field {name!r} must contain at least {minimum} points")
+    return [_point_from_sequence(point, name) for point in value]
+
+
+def _optional_bounds_mils(
+    args: Mapping[str, object],
+    name: str,
+) -> tuple[float, float, float, float] | None:
+    value = args.get(name)
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return (
+            _required_float(value, "left"),
+            _required_float(value, "bottom"),
+            _required_float(value, "right"),
+            _required_float(value, "top"),
+        )
+    if isinstance(value, list | tuple) and len(value) == 4:
+        return (
+            _point_number(value[0], name),
+            _point_number(value[1], name),
+            _point_number(value[2], name),
+            _point_number(value[3], name),
+        )
+    raise ValueError(
+        f"Field {name!r} must be an object with left/bottom/right/top or a "
+        "four-number array"
+    )
+
+
 def _optional_hole_points(args: Mapping[str, object]) -> list[list[PcbPoint]] | None:
     value = args.get("hole_points_mils")
     if value is None:
@@ -908,6 +1009,24 @@ def _pcb_layer(value: object, *, default: str) -> object:
     if isinstance(value, str):
         return _enum_by_label(PcbLayer, value)
     raise ValueError("PCB layer must be a string name or native integer id")
+
+
+def _pcb_body_projection(value: object, *, default: str) -> object:
+    from altium_monkey import PcbBodyProjection
+
+    if value is None:
+        value = default
+    if isinstance(value, int) and not isinstance(value, bool):
+        return PcbBodyProjection(value)
+    if isinstance(value, str):
+        return _enum_by_label(PcbBodyProjection, value)
+    raise ValueError("PCB body projection must be a string name or native integer id")
+
+
+def _model_z_mils(args: Mapping[str, object]) -> float:
+    if "z_mils" in args:
+        return _required_float(args, "z_mils")
+    return _optional_float(args, "z_mm", 0.0) * MILS_PER_MM
 
 
 def _pad_shape(value: object) -> object:
@@ -1081,4 +1200,5 @@ CAD_MCO_OPERATIONS: dict[str, McoOperationHandler] = {
     "pcbdoc.add-region": _op_pcbdoc_add_region,
     "pcbdoc.create-user-union": _op_pcbdoc_create_user_union,
     "pcbdoc.export-layer-step": _op_pcbdoc_export_layer_step,
+    "pcbdoc.add-embedded-3d-model": _op_pcbdoc_add_embedded_3d_model,
 }

@@ -37,15 +37,28 @@ def build_debug_plate_artifact_operations(config: object) -> list[JsonObject]:
         return []
     selection = getattr(config, "selection")
     output = getattr(config, "output")
-    return [
-        _pcb_layer_step_operation(
+    operations: list[JsonObject] = []
+    for board in getattr(selection, "boards", ()):
+        if not str(getattr(board, "pcb_path", "") or ""):
+            continue
+        step_operation = _pcb_layer_step_operation(
             board=board,
             output_dir=str(getattr(output, "output_dir")),
             layer_step=layer_step,
         )
-        for board in getattr(selection, "boards", ())
-        if str(getattr(board, "pcb_path", "") or "")
-    ]
+        operations.append(step_operation)
+        insert_operation = _pcb_layer_step_insert_operation(
+            board=board,
+            output_dir=str(getattr(output, "output_dir")),
+            output_board_filename=_output_board_filename(output),
+            output_board_outline_mils=getattr(output, "board_outline_mils", None),
+            output_board_origin_mils=getattr(output, "board_origin_mils", None),
+            step_operation=step_operation,
+            layer_step=layer_step,
+        )
+        if insert_operation is not None:
+            operations.append(insert_operation)
+    return operations
 
 
 def _pcb_layer_step_operation(
@@ -78,6 +91,65 @@ def _pcb_layer_step_operation(
         "op": "pcbdoc.export-layer-step",
         "message": f"Export {board_key} {source_layer} PCB layer STEP artifact",
         "args": args,
+    }
+
+
+def _pcb_layer_step_insert_operation(
+    *,
+    board: object,
+    output_dir: str,
+    output_board_filename: str,
+    output_board_outline_mils: object,
+    output_board_origin_mils: object,
+    step_operation: Mapping[str, object],
+    layer_step: Mapping[str, object],
+) -> JsonObject | None:
+    insert = layer_step.get("insert_in_output")
+    if insert is True:
+        insert_config: JsonObject = {"enabled": True}
+    elif isinstance(insert, dict):
+        insert_config = dict(insert)
+    else:
+        return None
+    if not _optional_bool(insert_config, "enabled", False):
+        return None
+
+    args = step_operation.get("args", {})
+    if not isinstance(args, dict):
+        raise ValueError("Internal pcb_layer_step operation args must be an object")
+    step_file = str(args.get("output_file", "") or "")
+    if not step_file:
+        raise ValueError("Internal pcb_layer_step operation missing output_file")
+
+    board_key = str(getattr(board, "board_key", "") or Path(getattr(board, "pcb_path")).stem)
+    model_args: JsonObject = {
+        "file": (Path(output_dir) / output_board_filename).as_posix(),
+        "overwrite": True,
+        "model_file": step_file,
+        "model_name": Path(step_file).name,
+        "name": _optional_string(
+            insert_config,
+            "name",
+            f"{board_key} layer STEP",
+        ),
+        "layer": _optional_string(insert_config, "layer", "MECHANICAL_13"),
+        "side": _optional_string(insert_config, "side", "TOP"),
+        "location_mils": _optional_number_pair(
+            insert_config,
+            "location_mils",
+            default=_origin_location_mils(output_board_origin_mils),
+        ),
+        "z_mm": _optional_float(insert_config, "z_mm", 0.0),
+    }
+    _add_optional(model_args, "rotation_z_degrees", insert_config.get("rotation_z_degrees"))
+    _add_optional(model_args, "opacity", insert_config.get("opacity"))
+    bounds = insert_config.get("bounds_mils", output_board_outline_mils)
+    _add_optional(model_args, "bounds_mils", bounds)
+    return {
+        "id": f"insert_{_safe_id(board_key)}_pcb_layer_step",
+        "op": "pcbdoc.add-embedded-3d-model",
+        "message": f"Insert {board_key} PCB layer STEP into debug-plate board",
+        "args": model_args,
     }
 
 
@@ -168,9 +240,56 @@ def _optional_bool(args: Mapping[str, object], name: str, default: bool) -> bool
     return value
 
 
+def _optional_float(args: Mapping[str, object], name: str, default: float) -> float:
+    value = args.get(name)
+    if value is None:
+        return default
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        raise ValueError(f"Field {name!r} must be numeric")
+    return float(value)
+
+
+def _optional_number_pair(
+    args: Mapping[str, object],
+    name: str,
+    *,
+    default: list[float],
+) -> list[float]:
+    value = args.get(name)
+    if value is None:
+        return list(default)
+    if not isinstance(value, list | tuple) or len(value) != 2:
+        raise ValueError(f"Field {name!r} must be a two-number array")
+    result: list[float] = []
+    for item in value:
+        if not isinstance(item, int | float) or isinstance(item, bool):
+            raise ValueError(f"Field {name!r} must be a two-number array")
+        result.append(float(item))
+    return result
+
+
 def _add_optional(payload: JsonObject, name: str, value: object | None) -> None:
     if value is not None:
         payload[name] = value
+
+
+def _output_board_filename(output: object) -> str:
+    board_filename = getattr(output, "board_filename", None)
+    if board_filename:
+        return str(board_filename)
+    return f"{getattr(output, 'project_name')}.PcbDoc"
+
+
+def _origin_location_mils(origin: object) -> list[float]:
+    if not isinstance(origin, dict):
+        return [0.0, 0.0]
+    x_value = origin.get("x", 0.0)
+    y_value = origin.get("y", 0.0)
+    if not isinstance(x_value, int | float) or isinstance(x_value, bool):
+        return [0.0, 0.0]
+    if not isinstance(y_value, int | float) or isinstance(y_value, bool):
+        return [0.0, 0.0]
+    return [float(x_value), float(y_value)]
 
 
 def _safe_id(value: str) -> str:

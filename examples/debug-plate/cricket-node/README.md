@@ -2,8 +2,9 @@
 
 This example is a runnable workspace for the first cricket-node debug-plate
 workflow: use a node-test-array known-parts cache, select cricket-node DUT
-features, emit an MCO, then run it to create a new fixture/debug-plate project
-and bottom-layer STEP alignment artifact.
+features, emit an MCO, then run it to create a new fixture/debug-plate project,
+projected outline graphics, and a bottom-layer STEP alignment artifact inserted
+into the output board.
 
 The actual Altium source projects and extracted SchLib/PcbLib cache files are
 not committed here. Stage them locally under `input/` and `known-parts/` before
@@ -13,7 +14,8 @@ running the workflow.
 
 - `debug-plate.mate.a0.jsonc` is the primary selector/projection config for
   this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
-  reference graphics, labels, a user union, and the bottom-layer STEP artifact.
+  reference graphics, labels, source board outline graphics, a user union, and
+  the bottom-layer STEP artifact.
 - `debug-plate.jsonc` is the older reviewed config shape kept for comparison.
 - `known-parts/debug-plate-known-parts.json` records the node-test-array cache
   layout expected by the config.
@@ -77,3 +79,6 @@ Inspect the STEP artifact at:
 ```text
 output\cricket-node-debug-plate\artifacts\pcb-layer-step\cricket_node_hw__b__bottom.step
 ```
+
+The same STEP is also embedded in the generated output PcbDoc at the
+configured `artifacts.pcb_layer_step.insert_in_output.z_mm` height.

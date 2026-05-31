@@ -10,9 +10,13 @@ high-level shape after local inputs and the known-parts cache exist:
 4. For each selected `M1-M4`: schematic component and PCB standoff component
 5. For each matching free NPTH alignment pad: schematic component, optional
    schematic net label, PCB alignment-pin component, and optional PCB label
-6. `pcbdoc.create-user-union` named `DEBUG_PLATE_FEATURES`
-7. `pcbdoc.export-layer-step` for the DUT bottom layer, including copper, drill
+6. `pcbdoc.add-track` operations projecting the DUT board outline onto the
+   configured graphics layer
+7. `pcbdoc.create-user-union` named `DEBUG_PLATE_FEATURES`
+8. `pcbdoc.export-layer-step` for the DUT bottom layer, including copper, drill
    cutouts, board outline bodies, and the configured `test_points` highlight
+9. `pcbdoc.add-embedded-3d-model` to insert that STEP artifact into the output
+   PcbDoc at the configured Z height
 
 The example config uses cricket-node's `M1-M4` mount designators directly. The
 known-parts manifest still documents the old node-test-array `M5-M8` to

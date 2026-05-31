@@ -6,6 +6,8 @@ import sys
 import types
 from pathlib import Path
 
+import pytest
+
 from altium_cruncher.altium_cruncher_mco import (
     MCO_SCHEMA,
     McoExecutionContext,
@@ -572,6 +574,44 @@ def test_pcbdoc_export_layer_step_operation_writes_artifact(
     ]
 
 
+def test_pcbdoc_add_embedded_3d_model_operation_dry_run(tmp_path: Path) -> None:
+    (tmp_path / "generated").mkdir()
+    (tmp_path / "generated" / "bottom.step").write_text(
+        "ISO-10303-21;\n",
+        encoding="utf-8",
+    )
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "insert_step",
+                    "op": "pcbdoc.add-embedded-3d-model",
+                    "args": {
+                        "file": "generated/debug_plate.PcbDoc",
+                        "overwrite": True,
+                        "model_file": "generated/bottom.step",
+                        "name": "DUT bottom layer",
+                        "z_mm": 1.6,
+                        "bounds_mils": {
+                            "left": 0,
+                            "bottom": 0,
+                            "right": 1000,
+                            "top": 700,
+                        },
+                    },
+                }
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path, dry_run=True),
+    )
+
+    assert result.ok is True
+    assert result.results[0].outputs["name"] == "DUT bottom layer"
+    assert result.results[0].outputs["z_mils"] == pytest.approx(62.992126)
+
+
 def test_library_component_operations_place_schematic_and_pcb_parts(
     tmp_path: Path,
 ) -> None:
@@ -706,6 +746,7 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
         "message",
         "pcbdoc.add-arc",
         "pcbdoc.add-component",
+        "pcbdoc.add-embedded-3d-model",
         "pcbdoc.add-fill",
         "pcbdoc.add-pad",
         "pcbdoc.add-region",

@@ -594,7 +594,10 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     projections = {projection["id"]: projection for projection in payload["projections"]}
     assert projections["test_points"]["source"]["designators"] == "TP1-27"
     assert projections["mounts"]["source"]["designators"] == "M1-4"
+    assert "kind" not in projections["alignment_pins"]["source"]
+    assert payload["board_projection"]["outline"]["graphics"]["layer"] == "TOP_OVERLAY"
     assert payload["artifacts"]["pcb_layer_step"]["source_layer"] == "bottom"
+    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 1.6
 
 
 def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
@@ -627,15 +630,20 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     }
     assert projections["alignment_pins"]["source"] == {
         "object": "free_pad",
-        "kind": "free_npth",
         "hole_size_mils": {"min": 75, "max": 85},
         "plated": False,
+    }
+    assert payload["board_projection"]["outline"]["graphics"] == {
+        "enabled": True,
+        "layer": "TOP_OVERLAY",
+        "stroke_width_mils": 8,
     }
     assert payload["validation"]["source_side"] == "infer_single_side"
     assert payload["validation"]["side_agnostic_kinds"] == ["mount"]
     assert payload["artifacts"]["pcb_layer_step"]["highlights"] == [
         {"projection": "test_points", "color": "#ffcc00"}
     ]
+    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 1.6
 
 
 def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
@@ -680,10 +688,24 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
                 "pcb_layer_step": {
                     "enabled": True,
                     "source_layer": "bottom",
+                    "insert_in_output": {
+                        "enabled": True,
+                        "z_mm": 1.6,
+                        "layer": "MECHANICAL_13",
+                    },
                     "highlights": [
                         {"projection": "test_points", "color": "#ffcc00"},
                         {"projection": "alignment_pins", "color": "#44aaee"},
                     ],
+                }
+            },
+            "board_projection": {
+                "outline": {
+                    "graphics": {
+                        "enabled": True,
+                        "layer": "TOP_OVERLAY",
+                        "stroke_width_mils": 9,
+                    }
                 }
             },
             "projections": [
@@ -741,7 +763,6 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
                     "id": "alignment_pins",
                     "source": {
                         "object": "free_pad",
-                        "kind": "free_npth",
                         "plated": False,
                         "hole_size_mils": {"min": 75, "max": 85},
                     },
@@ -799,6 +820,8 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     assert board.free_pads[0].mate_part_role == "alignment_pin_2mm_npth"
     assert board.free_pads[0].mate_projection_id == "alignment_pins"
     assert board.free_pads[0].mate_pcb_label is not None
+    assert board.board_outline is not None
+    assert len(board.board_outline["vertices"]) == 4
     assert config.pcb_labels.enabled is False
 
     payload = build_debug_plate_mco(config)
@@ -870,6 +893,19 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     assert {operation["args"]["width_mils"] for operation in pcb_reference_arcs} == {
         4.0
     }
+    outline_tracks = [
+        operation
+        for operation in operations
+        if operation["op"] == "pcbdoc.add-track"
+        and str(operation["id"]).startswith("project_dut_outline_segment")
+    ]
+    assert len(outline_tracks) == 4
+    assert outline_tracks[0]["args"]["start_mils"] == [0.0, 0.0]
+    assert outline_tracks[0]["args"]["end_mils"] == [1400.0, 0.0]
+    assert {operation["args"]["layer"] for operation in outline_tracks} == {
+        "TOP_OVERLAY"
+    }
+    assert {operation["args"]["width_mils"] for operation in outline_tracks} == {9.0}
     assert pcb_labels[0]["args"]["position_mils"] == [320.0, 265.0]
     assert pcb_labels[0]["args"]["height_mils"] == 50.0
     assert pcb_labels[0]["args"]["text_justification"] == "RIGHT_TOP"
@@ -882,7 +918,11 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         if operation["op"] == "pcbdoc.create-user-union"
     ][0]
     assert user_union["args"]["name"] == "DEBUG_PLATE_FEATURES"
-    step_op = operations[-1]
+    step_op = [
+        operation
+        for operation in operations
+        if operation["op"] == "pcbdoc.export-layer-step"
+    ][0]
     assert step_op["op"] == "pcbdoc.export-layer-step"
     assert step_op["args"]["file"] == str(source_path)
     assert step_op["args"]["output_file"] == (
@@ -896,6 +936,20 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         ("test_points", "#ffcc00", 2),
         ("alignment_pins", "#44aaee", 1),
     ]
+    insert_step_op = operations[-1]
+    assert insert_step_op["op"] == "pcbdoc.add-embedded-3d-model"
+    assert insert_step_op["args"]["file"] == "generated/debug_plate.PcbDoc"
+    assert insert_step_op["args"]["model_file"] == (
+        "generated/artifacts/pcb-layer-step/dut__bottom.step"
+    )
+    assert insert_step_op["args"]["location_mils"] == [1000.0, 2000.0]
+    assert insert_step_op["args"]["z_mm"] == 1.6
+    assert insert_step_op["args"]["bounds_mils"] == {
+        "left": 0.0,
+        "bottom": 0.0,
+        "right": 1400.0,
+        "top": 900.0,
+    }
 
 
 def test_debug_plate_mate_config_keeps_duplicate_free_pad_designators(

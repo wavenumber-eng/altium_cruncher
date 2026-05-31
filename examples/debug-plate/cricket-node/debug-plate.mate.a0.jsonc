@@ -97,7 +97,6 @@
       "id": "alignment_pins",
       "source": {
         "object": "free_pad",
-        "kind": "free_npth",
         "hole_size_mils": {
           "min": 75,
           "max": 85
@@ -121,7 +120,8 @@
     "outline": {
       "graphics": {
         "enabled": true,
-        "layer": "MECHANICAL_1"
+        "layer": "TOP_OVERLAY",
+        "stroke_width_mils": 8
       }
     },
     "cutouts": {
@@ -137,6 +137,12 @@
     "pcb_layer_step": {
       "enabled": true,
       "source_layer": "bottom",
+      "insert_in_output": {
+        "enabled": true,
+        "z_mm": 1.6,
+        "layer": "MECHANICAL_13",
+        "side": "TOP"
+      },
       "highlights": [
         {
           "projection": "test_points",
