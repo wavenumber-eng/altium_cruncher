@@ -495,6 +495,7 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[5]["args"]["library"] == (
         "generated/libraries/schlib/9774080360R.SchLib"
     )
+    assert operations[5]["args"]["position_mils"] == [1200.0, 1200.0]
     assert operations[6]["args"]["footprint"] == "9774080360R-YIYUAN"
     assert operations[6]["args"]["library"] == (
         "generated/libraries/pcblib/split/9774080360R-YIYUAN.PcbLib"
@@ -502,9 +503,11 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[6]["args"]["position_mils"] == [1910.0, 220.0]
     assert operations[7]["args"]["designator"] == "P1"
     assert operations[7]["args"]["parameters"]["DebugPlateSourceNet"] == "ALIGN_NET"
-    assert operations[8]["args"]["points_mils"] == [[2700.0, 1080.0], [2700.0, 730.0]]
+    assert operations[7]["args"]["position_mils"] == [1200.0, 3000.0]
+    assert operations[8]["args"]["points_mils"] == [[1200.0, 2880.0], [1200.0, 1925.0]]
     assert operations[9]["args"]["text"] == "ALIGN_NET"
-    assert operations[9]["args"]["location_mils"] == [2700.0, 900.0]
+    assert operations[9]["args"]["location_mils"] == [1200.0, 2720.0]
+    assert operations[9]["args"]["orientation"] == 3
     assert operations[10]["args"]["footprint"] == "H2184-05"
     assert operations[10]["args"]["position_mils"] == [1710.0, 420.0]
     assert operations[10]["args"]["pad_nets"] == {"1": "ALIGN_NET"}
@@ -587,10 +590,14 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
         None,
         None,
     ]
-    assert operations[8]["args"]["points_mils"] == [[1300.0, 1200.0], [1650.0, 1200.0]]
-    assert operations[9]["args"]["location_mils"] == [1480.0, 1200.0]
-    assert operations[14]["args"]["points_mils"] == [[4200.0, 1080.0], [4200.0, 730.0]]
-    assert operations[15]["args"]["location_mils"] == [4200.0, 900.0]
+    assert operations[8]["args"]["points_mils"] == [[1300.0, 1200.0], [1930.0, 1200.0]]
+    assert operations[9]["args"]["location_mils"] == [1460.0, 1200.0]
+    assert operations[9]["args"]["orientation"] == 0
+    assert operations[11]["args"]["position_mils"] == [1200.0, 3000.0]
+    assert operations[13]["args"]["position_mils"] == [1200.0, 4800.0]
+    assert operations[14]["args"]["points_mils"] == [[1200.0, 4680.0], [1200.0, 3725.0]]
+    assert operations[15]["args"]["location_mils"] == [1200.0, 4520.0]
+    assert operations[15]["args"]["orientation"] == 3
     assert [
         operation["args"].get("text")
         for operation in operations
@@ -1528,9 +1535,10 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
         [(point.x_mils, point.y_mils) for point in wire.points_mils]
         for wire in schdoc.wires
     ] == [
-        [(1300.0, 1200.0), (1650.0, 1200.0)],
-        [(4200.0, 1080.0), (4200.0, 730.0)],
+        [(1300.0, 1200.0), (1930.0, 1200.0)],
+        [(1200.0, 4680.0), (1200.0, 3725.0)],
     ]
+    assert [int(label.orientation) for label in schdoc.net_labels] == [0, 3]
     assert [component.designator for component in pcbdoc.components] == [
         "TP1",
         "M1",

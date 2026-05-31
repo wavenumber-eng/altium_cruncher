@@ -7,13 +7,15 @@ high-level shape after local inputs and the known-parts cache exist:
    the DUT bounds by the configured margin and an ANSI `D` schematic sheet
 2. Six `file.copy` operations for the selected SchLib/PcbLib cache files
 3. For each selected `TP1-27`: schematic component with a stable unique ID,
-   pin-directed schematic wire, schematic net label on that wire, PCB component
-   linked back to that schematic ID, and one expanded source-pad reference
-   outline
+   pin-directed schematic wire, matching-orientation schematic net label on
+   that wire, PCB component linked back to that schematic ID, and one expanded
+   source-pad reference outline. Symbols are grouped by symbol type on the
+   schematic sheet.
 4. For each selected `M1-M4`: schematic component with a stable unique ID and
    PCB standoff component linked back to that schematic ID
 5. For each matching free NPTH alignment pad: schematic component, optional
-   pin-directed schematic wire and net label, and PCB alignment-pin component
+   pin-directed schematic wire and matching-orientation net label, and PCB
+   alignment-pin component
 6. `pcbdoc.add-track` operations projecting the DUT board outline onto the
    configured graphics layer, plus configured internal cutout outlines on
    `MECHANICAL_1`

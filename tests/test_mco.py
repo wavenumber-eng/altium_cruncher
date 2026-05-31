@@ -302,6 +302,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                         "overwrite": True,
                         "text": "DBG_NET",
                         "location_mils": [1200, 1000],
+                        "orientation": "DEG_90",
                     },
                 },
                 {
@@ -419,6 +420,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
     pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
     assert len(schdoc.wires) == 1
     assert [label.text for label in schdoc.net_labels] == ["DBG_NET"]
+    assert [int(label.orientation) for label in schdoc.net_labels] == [1]
     assert [text.text_content for text in pcbdoc.texts] == ["DBG"]
     assert len(pcbdoc.tracks) == 1
     assert len(pcbdoc.arcs) == 1

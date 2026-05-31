@@ -17,7 +17,7 @@ from altium_cruncher.altium_cruncher_mco import (
 
 if TYPE_CHECKING:
     from altium_cruncher.altium_cruncher_pcb_layer_step import PcbLayerStepHighlight
-    from altium_monkey import AltiumPcbDoc, AltiumSchDoc
+    from altium_monkey import AltiumPcbDoc, AltiumSchDoc, TextOrientation
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +60,7 @@ def _op_schdoc_add_net_label(
     paths = _mutation_paths(spec.args, context)
     text = _required_string(spec.args, "text")
     location = _required_point(spec.args, "location_mils")
+    orientation = _sch_text_orientation(spec.args.get("orientation"))
     if context.dry_run:
         return _dry_run_result(spec, paths, {"text": text})
 
@@ -70,6 +71,7 @@ def _op_schdoc_add_net_label(
         make_sch_net_label(
             location_mils=SchPointMils.from_mils(*location),
             text=text,
+            orientation=orientation,
         )
     )
     _mark_schdoc_dirty(context, paths)
@@ -1203,6 +1205,21 @@ def _pcb_barcode_render_mode(value: object) -> object:
     raise ValueError(
         "PCB barcode_render_mode must be a string name or native integer id"
     )
+
+
+def _sch_text_orientation(value: object) -> "TextOrientation":
+    from altium_monkey import TextOrientation
+
+    if value is None:
+        return TextOrientation.DEGREES_0
+    if isinstance(value, int) and not isinstance(value, bool):
+        return TextOrientation(value)
+    if isinstance(value, str):
+        normalized = value.strip().replace(" ", "_").replace("-", "_").upper()
+        if normalized.startswith("DEG_"):
+            normalized = "DEGREES_" + normalized.removeprefix("DEG_")
+        return cast("TextOrientation", _enum_by_label(TextOrientation, normalized))
+    raise ValueError("Schematic text orientation must be a string name or native integer id")
 
 
 def _enum_by_label(enum_type: type[IntEnum], value: str) -> IntEnum:

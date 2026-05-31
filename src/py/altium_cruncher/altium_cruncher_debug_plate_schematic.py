@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
+from math import ceil
 
 from altium_cruncher.altium_cruncher_mco import JsonObject
 
@@ -10,8 +12,11 @@ _SCHEMATIC_COLUMN_COUNT = 4
 _SCHEMATIC_ORIGIN_MILS = (1200.0, 1200.0)
 _SCHEMATIC_COLUMN_SPACING_MILS = 1500.0
 _SCHEMATIC_ROW_SPACING_MILS = 900.0
-_SCHEMATIC_WIRE_LENGTH_MILS = 350.0
-_SCHEMATIC_NET_LABEL_OFFSET_MILS = 180.0
+_SCHEMATIC_GROUP_GAP_ROWS = 1
+_SCHEMATIC_NET_LABEL_OFFSET_MILS = 160.0
+_SCHEMATIC_NET_LABEL_MIN_SPAN_MILS = 350.0
+_SCHEMATIC_NET_LABEL_CHAR_WIDTH_MILS = 75.0
+_SCHEMATIC_NET_LABEL_TRAILING_MARGIN_MILS = 120.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,16 +27,34 @@ class DebugPlateSchematicNetRoute:
     wire_end_mils: tuple[float, float]
     label_position_mils: tuple[float, float]
     pin_orientation: int
+    label_orientation: int
 
 
-def schematic_position(index: int) -> tuple[float, float]:
-    column = (index - 1) % _SCHEMATIC_COLUMN_COUNT
-    row = (index - 1) // _SCHEMATIC_COLUMN_COUNT
-    origin_x, origin_y = _SCHEMATIC_ORIGIN_MILS
-    return (
-        origin_x + column * _SCHEMATIC_COLUMN_SPACING_MILS,
-        origin_y + row * _SCHEMATIC_ROW_SPACING_MILS,
-    )
+def schematic_grouped_positions(group_keys: Sequence[str]) -> list[tuple[float, float]]:
+    group_start_rows: dict[str, int] = {}
+    group_counts: dict[str, int] = {}
+    group_order: list[str] = []
+    for key in group_keys:
+        if key not in group_counts:
+            group_order.append(key)
+            group_counts[key] = 0
+        group_counts[key] += 1
+
+    next_row = 0
+    for key in group_order:
+        group_start_rows[key] = next_row
+        group_rows = ceil(group_counts[key] / _SCHEMATIC_COLUMN_COUNT)
+        next_row += group_rows + _SCHEMATIC_GROUP_GAP_ROWS
+
+    positions: list[tuple[float, float]] = []
+    group_indices: dict[str, int] = {}
+    for key in group_keys:
+        group_index = group_indices.get(key, 0)
+        group_indices[key] = group_index + 1
+        row = group_start_rows[key] + group_index // _SCHEMATIC_COLUMN_COUNT
+        column = group_index % _SCHEMATIC_COLUMN_COUNT
+        positions.append(_schematic_position_at(row=row, column=column))
+    return positions
 
 
 def schematic_net_route(
@@ -55,9 +78,10 @@ def schematic_net_route(
         component_x + pin_x + direction_x * pin_length,
         component_y + pin_y + direction_y * pin_length,
     )
+    wire_length = _net_label_wire_length_mils(net_name)
     wire_end = (
-        wire_start[0] + direction_x * _SCHEMATIC_WIRE_LENGTH_MILS,
-        wire_start[1] + direction_y * _SCHEMATIC_WIRE_LENGTH_MILS,
+        wire_start[0] + direction_x * wire_length,
+        wire_start[1] + direction_y * wire_length,
     )
     label_position = (
         wire_start[0] + direction_x * _SCHEMATIC_NET_LABEL_OFFSET_MILS,
@@ -68,6 +92,7 @@ def schematic_net_route(
         wire_end_mils=wire_end,
         label_position_mils=label_position,
         pin_orientation=orientation,
+        label_orientation=orientation % 4,
     )
 
 
@@ -108,6 +133,7 @@ def schematic_net_label_operation(
             "overwrite": True,
             "text": net_name,
             "location_mils": list(route.label_position_mils),
+            "orientation": route.label_orientation,
         },
     }
 
@@ -166,6 +192,26 @@ def _pin_direction(orientation: int) -> tuple[float, float]:
     if normalized == 3:
         return (0.0, -1.0)
     return (1.0, 0.0)
+
+
+def _net_label_wire_length_mils(net_name: str) -> float:
+    label_span = max(
+        _SCHEMATIC_NET_LABEL_MIN_SPAN_MILS,
+        len(net_name) * _SCHEMATIC_NET_LABEL_CHAR_WIDTH_MILS,
+    )
+    return (
+        _SCHEMATIC_NET_LABEL_OFFSET_MILS
+        + label_span
+        + _SCHEMATIC_NET_LABEL_TRAILING_MARGIN_MILS
+    )
+
+
+def _schematic_position_at(*, row: int, column: int) -> tuple[float, float]:
+    origin_x, origin_y = _SCHEMATIC_ORIGIN_MILS
+    return (
+        origin_x + column * _SCHEMATIC_COLUMN_SPACING_MILS,
+        origin_y + row * _SCHEMATIC_ROW_SPACING_MILS,
+    )
 
 
 def _safe_id(value: str) -> str:

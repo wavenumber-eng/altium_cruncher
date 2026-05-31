@@ -39,9 +39,9 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
     transform_source_pad_geometries,
 )
 from altium_cruncher.altium_cruncher_debug_plate_schematic import (
+    schematic_grouped_positions,
     schematic_net_label_operation,
     schematic_net_route,
-    schematic_position,
     schematic_wire_operation,
 )
 from altium_cruncher.altium_cruncher_debug_plate_artifacts import (
@@ -1681,14 +1681,21 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
     channel_offsets = _component_link_channel_offsets(
         designator for _, _, designator in resolved_targets
     )
-    for index, (target, part, designator) in enumerate(resolved_targets, start=1):
+    schematic_positions = schematic_grouped_positions(
+        [_part_string(part, "symbol_name") for _, part, _ in resolved_targets]
+    )
+    for (target, part, designator), schematic_position in zip(
+        resolved_targets,
+        schematic_positions,
+        strict=True,
+    ):
         operations.append(
             _schematic_part_operation(
                 config.output,
                 part,
                 target,
                 designator,
-                index,
+                schematic_position,
             )
         )
         schematic_file = _output_file(config.output.output_dir, _schematic_filename(config.output))
@@ -1697,7 +1704,7 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
             symbol_library_path=_known_part_file(known_parts, part, "symbol_library"),
             symbol_name=_part_string(part, "symbol_name"),
             signal_pin_designator=_part_optional_string(part, "signal_pad_designator"),
-            component_position_mils=schematic_position(index),
+            component_position_mils=schematic_position,
             net_name=net_name,
         )
         if net_route is not None:
@@ -1905,7 +1912,7 @@ def _schematic_part_operation(
     part: Mapping[str, object],
     target: Mapping[str, object],
     designator: str,
-    index: int,
+    position_mils: tuple[float, float],
 ) -> JsonObject:
     symbol_name = _part_string(part, "symbol_name")
     footprint_name = _part_string(part, "footprint_name")
@@ -1920,7 +1927,7 @@ def _schematic_part_operation(
             "symbol": symbol_name,
             "designator": designator,
             "unique_id": _component_link_unique_id(output, target, designator),
-            "position_mils": list(schematic_position(index)),
+            "position_mils": list(position_mils),
             "design_item_id": symbol_name,
             "footprint_model": footprint_name,
             "footprint_library": footprint_name,
