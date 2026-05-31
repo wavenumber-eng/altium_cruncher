@@ -1069,7 +1069,7 @@ def _selected_mate_free_pads(
     projections: list[JsonObject],
 ) -> list[JsonObject]:
     selected: list[JsonObject] = []
-    seen: set[str] = set()
+    seen: set[tuple[object, ...]] = set()
     for projection in projections:
         pad_selector = _projection_selector(projection, "free_pads")
         if pad_selector is None:
@@ -1077,8 +1077,8 @@ def _selected_mate_free_pads(
         for pad in _list_field(board, "free_pads"):
             if not isinstance(pad, dict):
                 continue
-            designator = str(pad.get("designator", "") or "")
-            if designator.upper() in seen:
+            selection_key = _free_pad_selection_key(pad)
+            if selection_key in seen:
                 continue
             if _free_pad_matches_selector(pad, pad_selector):
                 selected_pad = dict(pad)
@@ -1103,8 +1103,25 @@ def _selected_mate_free_pads(
                     _projection_reference_graphics_config(projection),
                 )
                 selected.append(selected_pad)
-                seen.add(designator.upper())
+                seen.add(selection_key)
     return selected
+
+
+def _free_pad_selection_key(pad: Mapping[str, object]) -> tuple[object, ...]:
+    return (
+        str(pad.get("designator", "") or "").upper(),
+        _selection_key_number(pad.get("x_mils")),
+        _selection_key_number(pad.get("y_mils")),
+        _selection_key_number(pad.get("hole_size_mils")),
+        _selection_key_number(pad.get("width_mils")),
+        _selection_key_number(pad.get("height_mils")),
+        pad.get("layer"),
+        pad.get("plated"),
+    )
+
+
+def _selection_key_number(value: object) -> float | object:
+    return round(float(value), 6) if isinstance(value, int | float) else value
 
 
 def _projection_selector(

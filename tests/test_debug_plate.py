@@ -89,6 +89,7 @@ def _write_mate_source_pcbdoc(
     *,
     tp2_layer: str = "BOTTOM",
     origin_mils: tuple[float, float] = (0.0, 0.0),
+    duplicate_alignment_designator: bool = False,
 ) -> Path:
     from altium_monkey import AltiumPcbDoc, PadShape, PcbLayer
 
@@ -151,6 +152,18 @@ def _write_mate_source_pcbdoc(
         plated=False,
         net="ALIGN_NET",
     )
+    if duplicate_alignment_designator:
+        pcbdoc.add_pad(
+            designator="A1",
+            position_mils=(1100, 550),
+            width_mils=100,
+            height_mils=100,
+            layer=PcbLayer.MULTI_LAYER,
+            shape=PadShape.CIRCLE,
+            hole_size_mils=80,
+            plated=False,
+            net="ALIGN_NET_2",
+        )
     pcbdoc.add_pad(
         designator="B1",
         position_mils=(1200, 500),
@@ -882,6 +895,71 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     ] == [
         ("test_points", "#ffcc00", 2),
         ("alignment_pins", "#44aaee", 1),
+    ]
+
+
+def test_debug_plate_mate_config_keeps_duplicate_free_pad_designators(
+    tmp_path: Path,
+) -> None:
+    source_path = _write_mate_source_pcbdoc(
+        tmp_path / "dut.PcbDoc",
+        duplicate_alignment_designator=True,
+    )
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    config_path = _write_json(
+        tmp_path / "debug-plate.mate.a0.jsonc",
+        {
+            "schema": MATE_CONFIG_SCHEMA,
+            "source": {
+                "board": str(source_path),
+                "project_context": "none",
+            },
+            "output": {
+                "backend": "altium",
+                "output_dir": "generated",
+                "project_name": "debug_plate",
+                "overwrite": True,
+            },
+            "known_parts": {
+                "manifest": str(manifest_path),
+            },
+            "projections": [
+                {
+                    "id": "alignment_pins",
+                    "source": {
+                        "object": "free_pad",
+                        "kind": "free_npth",
+                        "hole_size_mils": {"min": 75, "max": 85},
+                        "plated": False,
+                    },
+                    "actions": [
+                        {
+                            "kind": "mate_component",
+                            "part": "alignment_pin_2mm_npth",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    config = load_debug_plate_config(config_path)
+    board = config.selection.boards[0]
+
+    assert [pad.designator for pad in board.free_pads] == ["A1", "A1"]
+    payload = build_debug_plate_mco(config)
+    pcb_components = [
+        operation
+        for operation in payload["operations"]
+        if operation["op"] == "pcbdoc.add-component"
+    ]
+    assert [operation["args"]["designator"] for operation in pcb_components] == [
+        "P1",
+        "P2",
+    ]
+    assert [operation["args"]["position_mils"] for operation in pcb_components] == [
+        [1000.0, 500.0],
+        [1100.0, 550.0],
     ]
 
 
