@@ -82,7 +82,11 @@ def default_mate_board_projection_payload() -> JsonObject:
             }
         },
         "cutouts": {
-            "graphics": {"enabled": True, "layer": "MECHANICAL_1"},
+            "graphics": {
+                "enabled": True,
+                "layer": "MECHANICAL_1",
+                "stroke_width_mils": 8,
+            },
             "actual_cutouts": False,
         },
     }

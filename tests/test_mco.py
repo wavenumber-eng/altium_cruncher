@@ -495,6 +495,52 @@ def test_pcbdoc_add_text_exposes_inverted_frame_label_options(
     assert label.margin_border_width == 100000
 
 
+def test_pcbdoc_add_region_can_create_board_cutout(tmp_path: Path) -> None:
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "create",
+                    "op": "project.create-skeleton",
+                    "args": {
+                        "output_dir": "generated",
+                        "project_name": "debug_plate",
+                        "overwrite": True,
+                    },
+                },
+                {
+                    "id": "cutout",
+                    "op": "pcbdoc.add-region",
+                    "args": {
+                        "file": "generated/debug_plate.PcbDoc",
+                        "overwrite": True,
+                        "outline_points_mils": [
+                            [100, 100],
+                            [250, 100],
+                            [250, 220],
+                            [100, 220],
+                        ],
+                        "layer": "MULTI_LAYER",
+                        "is_board_cutout": True,
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumPcbDoc
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    assert len(pcbdoc.regions) == 1
+    assert pcbdoc.regions[0].is_board_cutout is True
+    assert pcbdoc.regions[0].properties["ISBOARDCUTOUT"] == "TRUE"
+    assert len(pcbdoc.board.outline.cutouts) == 1
+
+
 def test_pcbdoc_export_layer_step_operation_writes_artifact(
     monkeypatch,
     tmp_path: Path,

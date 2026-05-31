@@ -191,7 +191,7 @@
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
     <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad shape where the writer can express it.</li>
     <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
-    <li>Detect and project internal board cutouts as graphics and later actual cutouts.</li>
+    <li>Detect and project internal board cutouts as Mechanical 1 graphics, actual output board-cutout regions, or both.</li>
     <li>Generate a bottom-layer <code>pcb-layer-step</code> artifact for visual/mechanical alignment and optionally insert the generated STEP into the output PcbDoc at a configurable Z height.</li>
     <li>Group generated PCB-side features into <code>DEBUG_PLATE_FEATURES</code>, excluding movable PCB net-label text.</li>
   </ul>
@@ -309,8 +309,12 @@
       }
     },
     "cutouts": {
-      "graphics": {"enabled": true, "layer": "MECHANICAL_1"},
-      "actual_cutouts": false
+      "graphics": {
+        "enabled": true,
+        "layer": "MECHANICAL_1",
+        "stroke_width_mils": 8
+      },
+      "actual_cutouts": true
     }
   },
   "artifacts": {

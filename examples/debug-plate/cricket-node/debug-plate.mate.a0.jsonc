@@ -114,6 +114,17 @@
         {
           "kind": "mate_component",
           "part": "m25_smt_standoff"
+        },
+        {
+          "kind": "reference_graphics",
+          "shape": "source_pad_outline",
+          "layer": "MECHANICAL_1",
+          "style": {
+            "mode": "outline",
+            "outline_count": 1,
+            "clearance_mils": 10,
+            "stroke_width_mils": 10
+          }
         }
       ]
     },
@@ -131,6 +142,17 @@
         {
           "kind": "mate_component",
           "part": "alignment_pin_2mm_npth"
+        },
+        {
+          "kind": "reference_graphics",
+          "shape": "source_pad_outline",
+          "layer": "MECHANICAL_1",
+          "style": {
+            "mode": "outline",
+            "outline_count": 1,
+            "clearance_mils": 10,
+            "stroke_width_mils": 10
+          }
         },
         {
           "kind": "label",
@@ -185,9 +207,10 @@
     "cutouts": {
       "graphics": {
         "enabled": true,
-        "layer": "MECHANICAL_1"
+        "layer": "MECHANICAL_1",
+        "stroke_width_mils": 8
       },
-      "actual_cutouts": false
+      "actual_cutouts": true
     }
   },
 

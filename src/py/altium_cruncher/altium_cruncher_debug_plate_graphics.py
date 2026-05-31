@@ -4,12 +4,25 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_mco import JsonObject
 
 _PAD_SHAPE_CIRCLE = 1
 _PAD_SHAPE_OCTAGONAL = 3
+
+
+@dataclass(frozen=True, slots=True)
+class _BoardProjectionOptions:
+    outline_graphics_enabled: bool
+    outline_layer: str
+    outline_width_mils: float
+    cutout_graphics_enabled: bool
+    cutout_layer: str
+    cutout_width_mils: float
+    actual_cutouts_enabled: bool
+    actual_cutout_layer: str
 
 
 def component_pad_geometries(
@@ -147,28 +160,169 @@ def build_pcb_board_projection_operations(
     selection: object,
 ) -> list[JsonObject]:
     """Build PCB MCO operations for source-board projection graphics."""
-    outline = _section(board_projection, "outline")
-    graphics = _section(outline, "graphics")
-    if not _optional_bool(graphics, "enabled", False):
+    options = _board_projection_options(board_projection)
+    if not _board_projection_has_enabled_outputs(options):
         return []
 
-    layer = _optional_string(graphics, "layer", "MECHANICAL_1") or "MECHANICAL_1"
-    width_mils = _mapping_number(graphics, "stroke_width_mils", 8.0)
     operations: list[JsonObject] = []
     for board in getattr(selection, "boards", ()) or ():
-        board_outline = getattr(board, "board_outline", None)
-        if not isinstance(board_outline, dict):
-            continue
+        operations.extend(
+            _board_projection_operations_for_board(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                board=board,
+                options=options,
+            )
+        )
+    return operations
+
+
+def _board_projection_options(
+    board_projection: Mapping[str, object],
+) -> _BoardProjectionOptions:
+    outline_graphics = _section(_section(board_projection, "outline"), "graphics")
+    cutouts = _section(board_projection, "cutouts")
+    cutout_graphics = _section(cutouts, "graphics")
+    return _BoardProjectionOptions(
+        outline_graphics_enabled=_optional_bool(outline_graphics, "enabled", False),
+        outline_layer=(
+            _optional_string(outline_graphics, "layer", "MECHANICAL_1")
+            or "MECHANICAL_1"
+        ),
+        outline_width_mils=_mapping_number(
+            outline_graphics,
+            "stroke_width_mils",
+            8.0,
+        ),
+        cutout_graphics_enabled=_optional_bool(cutout_graphics, "enabled", False),
+        cutout_layer=(
+            _optional_string(cutout_graphics, "layer", "MECHANICAL_1")
+            or "MECHANICAL_1"
+        ),
+        cutout_width_mils=_mapping_number(cutout_graphics, "stroke_width_mils", 8.0),
+        actual_cutouts_enabled=_optional_bool(cutouts, "actual_cutouts", False),
+        actual_cutout_layer=_optional_string(cutouts, "layer", "MULTI_LAYER")
+        or "MULTI_LAYER",
+    )
+
+
+def _board_projection_has_enabled_outputs(options: _BoardProjectionOptions) -> bool:
+    return (
+        options.outline_graphics_enabled
+        or options.cutout_graphics_enabled
+        or options.actual_cutouts_enabled
+    )
+
+
+def _board_projection_operations_for_board(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board: object,
+    options: _BoardProjectionOptions,
+) -> list[JsonObject]:
+    board_outline = getattr(board, "board_outline", None)
+    if not isinstance(board_outline, dict):
+        return []
+    board_key = str(getattr(board, "board_key", "") or "board")
+    operations = _board_outline_projection_operations(
+        output_dir=output_dir,
+        board_filename=board_filename,
+        board_key=board_key,
+        board_outline=board_outline,
+        options=options,
+    )
+    operations.extend(
+        _board_cutout_projection_operations(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            board_key=board_key,
+            board_outline=board_outline,
+            options=options,
+        )
+    )
+    return operations
+
+
+def _board_outline_projection_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_key: str,
+    board_outline: Mapping[str, object],
+    options: _BoardProjectionOptions,
+) -> list[JsonObject]:
+    if not options.outline_graphics_enabled:
+        return []
+    return _board_outline_segment_operations(
+        output_dir=output_dir,
+        board_filename=board_filename,
+        board_key=board_key,
+        outline=board_outline,
+        layer=options.outline_layer,
+        width_mils=options.outline_width_mils,
+    )
+
+
+def _board_cutout_projection_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_key: str,
+    board_outline: Mapping[str, object],
+    options: _BoardProjectionOptions,
+) -> list[JsonObject]:
+    operations: list[JsonObject] = []
+    for cutout_index, cutout_outline in enumerate(
+        _outline_cutouts(board_outline),
+        start=1,
+    ):
+        operations.extend(
+            _board_cutout_operations(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                board_key=board_key,
+                cutout_index=cutout_index,
+                cutout_outline=cutout_outline,
+                options=options,
+            )
+        )
+    return operations
+
+
+def _board_cutout_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_key: str,
+    cutout_index: int,
+    cutout_outline: Mapping[str, object],
+    options: _BoardProjectionOptions,
+) -> list[JsonObject]:
+    operations: list[JsonObject] = []
+    cutout_key = f"{board_key}_cutout_{cutout_index}"
+    if options.cutout_graphics_enabled:
         operations.extend(
             _board_outline_segment_operations(
                 output_dir=output_dir,
                 board_filename=board_filename,
-                board_key=str(getattr(board, "board_key", "") or "board"),
-                outline=board_outline,
-                layer=layer,
-                width_mils=width_mils,
+                board_key=cutout_key,
+                outline=cutout_outline,
+                layer=options.cutout_layer,
+                width_mils=options.cutout_width_mils,
             )
         )
+    if options.actual_cutouts_enabled:
+        region = _board_cutout_region_operation(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            board_key=board_key,
+            cutout_index=cutout_index,
+            outline=cutout_outline,
+            layer=options.actual_cutout_layer,
+        )
+        if region is not None:
+            operations.append(region)
     return operations
 
 
@@ -196,10 +350,25 @@ def board_outline_geometry(pcbdoc: object) -> JsonObject | None:
     vertices = list(getattr(outline, "vertices", []) or [])
     if not vertices:
         return None
-    return {
+    payload: JsonObject = {
         "vertices": [_board_outline_vertex(vertex) for vertex in vertices],
         "closed": True,
     }
+    cutouts: list[JsonObject] = []
+    for cutout in list(getattr(outline, "cutouts", []) or []):
+        cutout_vertices = list(cutout or [])
+        if cutout_vertices:
+            cutouts.append(
+                {
+                    "vertices": [
+                        _board_outline_vertex(vertex) for vertex in cutout_vertices
+                    ],
+                    "closed": True,
+                }
+            )
+    if cutouts:
+        payload["cutouts"] = cutouts
+    return payload
 
 
 def board_origin_mils(pcbdoc: object) -> JsonObject | None:
@@ -428,6 +597,32 @@ def _board_outline_arc_operation(
     }
 
 
+def _board_cutout_region_operation(
+    *,
+    output_dir: str,
+    board_filename: str,
+    board_key: str,
+    cutout_index: int,
+    outline: Mapping[str, object],
+    layer: str,
+) -> JsonObject | None:
+    points = _linearized_outline_points(outline)
+    if len(points) < 3:
+        return None
+    return {
+        "id": f"project_{_safe_id(board_key)}_cutout_{cutout_index}_region",
+        "op": "pcbdoc.add-region",
+        "message": f"Project {board_key} board cutout {cutout_index}",
+        "args": {
+            "file": (Path(output_dir) / board_filename).as_posix(),
+            "overwrite": True,
+            "outline_points_mils": points,
+            "layer": layer,
+            "is_board_cutout": True,
+        },
+    }
+
+
 def _outline_vertices(outline: Mapping[str, object]) -> list[JsonObject]:
     value = outline.get("vertices", [])
     if not isinstance(value, list):
@@ -435,11 +630,137 @@ def _outline_vertices(outline: Mapping[str, object]) -> list[JsonObject]:
     return [dict(item) for item in value if isinstance(item, dict)]
 
 
+def _outline_cutouts(outline: Mapping[str, object]) -> list[JsonObject]:
+    value = outline.get("cutouts", [])
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError("Debug-plate board_outline.cutouts must be an array")
+    cutouts: list[JsonObject] = []
+    for item in value:
+        if isinstance(item, dict):
+            vertices = _outline_vertices(item)
+        elif isinstance(item, list):
+            vertices = [dict(vertex) for vertex in item if isinstance(vertex, dict)]
+        else:
+            continue
+        if len(vertices) >= 3:
+            cutouts.append({"vertices": vertices, "closed": True})
+    return cutouts
+
+
 def _outline_point(vertex: Mapping[str, object]) -> list[float]:
     return [
         _mapping_number(vertex, "x_mils", 0.0),
         _mapping_number(vertex, "y_mils", 0.0),
     ]
+
+
+def _linearized_outline_points(outline: Mapping[str, object]) -> list[list[float]]:
+    vertices = _outline_vertices(outline)
+    if len(vertices) < 3:
+        return []
+    points: list[list[float]] = []
+    for index, current in enumerate(vertices):
+        current_point = _outline_point(current)
+        if not points or points[-1] != current_point:
+            points.append(current_point)
+        next_vertex = vertices[(index + 1) % len(vertices)]
+        if str(current.get("segment", "line") or "line").lower() == "arc":
+            points.extend(_sample_outline_arc_points(current, next_vertex)[1:])
+    if len(points) > 1 and points[0] == points[-1]:
+        points.pop()
+    return points
+
+
+def _sample_outline_arc_points(
+    current: Mapping[str, object],
+    next_vertex: Mapping[str, object],
+) -> list[list[float]]:
+    center = current.get("center_mils")
+    if not isinstance(center, list | tuple) or len(center) != 2:
+        return [_outline_point(current), _outline_point(next_vertex)]
+    radius = _mapping_number(current, "radius_mils", 0.0)
+    if radius <= 0.0:
+        return [_outline_point(current), _outline_point(next_vertex)]
+    center_x = _number_from_value(center[0], "center_mils.x")
+    center_y = _number_from_value(center[1], "center_mils.y")
+    start_angle = math.degrees(
+        math.atan2(
+            _mapping_number(current, "y_mils", 0.0) - center_y,
+            _mapping_number(current, "x_mils", 0.0) - center_x,
+        )
+    ) % 360.0
+    end_angle = math.degrees(
+        math.atan2(
+            _mapping_number(next_vertex, "y_mils", 0.0) - center_y,
+            _mapping_number(next_vertex, "x_mils", 0.0) - center_x,
+        )
+    ) % 360.0
+    clockwise, sweep = _outline_arc_direction(current, next_vertex)
+    segments = max(2, int(math.ceil(abs(sweep) / 15.0)))
+    points: list[list[float]] = []
+    for step in range(segments + 1):
+        fraction = step / segments
+        angle = (
+            start_angle - sweep * fraction
+            if clockwise
+            else start_angle + sweep * fraction
+        )
+        if step == segments:
+            angle = end_angle
+        radians = math.radians(angle)
+        points.append(
+            [
+                center_x + radius * math.cos(radians),
+                center_y + radius * math.sin(radians),
+            ]
+        )
+    return points
+
+
+def _outline_arc_direction(
+    current: Mapping[str, object],
+    next_vertex: Mapping[str, object],
+) -> tuple[bool, float]:
+    center = current.get("center_mils")
+    if not isinstance(center, list | tuple) or len(center) != 2:
+        return (False, 0.0)
+    center_x = _number_from_value(center[0], "center_mils.x")
+    center_y = _number_from_value(center[1], "center_mils.y")
+    current_angle = math.degrees(
+        math.atan2(
+            _mapping_number(current, "y_mils", 0.0) - center_y,
+            _mapping_number(current, "x_mils", 0.0) - center_x,
+        )
+    ) % 360.0
+    next_angle = math.degrees(
+        math.atan2(
+            _mapping_number(next_vertex, "y_mils", 0.0) - center_y,
+            _mapping_number(next_vertex, "x_mils", 0.0) - center_x,
+        )
+    ) % 360.0
+    start_angle = _mapping_number(current, "start_angle_degrees", current_angle)
+    end_angle = _mapping_number(current, "end_angle_degrees", next_angle)
+    span = (end_angle - start_angle) % 360.0
+    if span == 0.0:
+        span = 360.0
+    if _angle_close(current_angle, start_angle) and _angle_close(
+        next_angle,
+        end_angle,
+    ):
+        return (False, span)
+    if _angle_close(current_angle, end_angle) and _angle_close(next_angle, start_angle):
+        return (True, span)
+    clockwise_sweep = (current_angle - next_angle) % 360.0
+    counterclockwise_sweep = (next_angle - current_angle) % 360.0
+    if clockwise_sweep <= counterclockwise_sweep:
+        return (True, clockwise_sweep)
+    return (False, counterclockwise_sweep)
+
+
+def _angle_close(left: float, right: float, *, tolerance: float = 1.0) -> bool:
+    return min((left - right) % 360.0, (right - left) % 360.0) <= tolerance
 
 
 def _board_outline_vertex(vertex: object) -> JsonObject:
@@ -834,6 +1155,10 @@ def _optional_bool(args: Mapping[str, object], name: str, default: bool) -> bool
 
 def _mapping_number(args: Mapping[str, object], name: str, default: float) -> float:
     value = args.get(name, default)
+    return _number_from_value(value, name)
+
+
+def _number_from_value(value: object, name: str) -> float:
     if not isinstance(value, int | float) or isinstance(value, bool):
         raise ValueError(f"Field {name!r} must be numeric")
     return float(value)

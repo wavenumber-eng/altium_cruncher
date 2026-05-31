@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -19,6 +20,7 @@ from altium_cruncher.altium_cruncher_debug_plate import (
     write_debug_plate_config_template,
 )
 from altium_cruncher.altium_cruncher_debug_plate_graphics import (
+    build_pcb_board_projection_operations,
     build_pcb_reference_graphics_operations,
 )
 from altium_cruncher.altium_cruncher_debug_plate_parts import (
@@ -321,6 +323,29 @@ def test_debug_plate_inspection_classifies_components_and_free_pads() -> None:
     assert payload["free_pads"][0]["net_name"] == "ALIGN_NET"
 
 
+def test_debug_plate_inspection_preserves_board_cutout_geometry() -> None:
+    from altium_monkey import AltiumPcbDoc
+
+    source_path = (
+        PACKAGE_ROOT
+        / "tests"
+        / "assets"
+        / "projects"
+        / "cricket-node"
+        / "input"
+        / "cricket-node-hw__B.PcbDoc"
+    )
+    pcbdoc = AltiumPcbDoc.from_file(source_path)
+
+    inspection = inspect_pcbdoc_for_debug_plate("cricket", pcbdoc, source_path)
+    payload = inspection.to_dict()
+    cutouts = payload["board_outline"]["cutouts"]
+
+    assert len(cutouts) == 1
+    assert len(cutouts[0]["vertices"]) >= 3
+    assert any(vertex["segment"] == "arc" for vertex in cutouts[0]["vertices"])
+
+
 def test_debug_plate_known_parts_manifest_tracks_node_test_array_roles(
     tmp_path: Path,
 ) -> None:
@@ -608,6 +633,12 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     assert projections["mounts"]["source"]["designators"] == "M1-4"
     assert "kind" not in projections["alignment_pins"]["source"]
     assert payload["board_projection"]["outline"]["graphics"]["layer"] == "TOP_OVERLAY"
+    assert payload["board_projection"]["cutouts"]["graphics"] == {
+        "enabled": True,
+        "layer": "MECHANICAL_1",
+        "stroke_width_mils": 8,
+    }
+    assert payload["board_projection"]["cutouts"]["actual_cutouts"] is True
     assert payload["artifacts"]["pcb_layer_step"]["source_layer"] == "bottom"
     assert payload["artifacts"]["pcb_layer_step"]["z_mm"] == -0.0175
     assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"] == {
@@ -623,6 +654,8 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     assert projections["test_points"]["actions"][1]["style"]["outline_count"] == 1
     test_point_label = projections["test_points"]["actions"][2]
     assert test_point_label["placement"]["side"] == "board_right"
+    assert projections["mounts"]["actions"][1]["kind"] == "reference_graphics"
+    assert projections["alignment_pins"]["actions"][1]["kind"] == "reference_graphics"
     assert payload["pcb_designators"]["style"]["height_mils"] == 40
     assert payload["pcb_designators"]["style"]["font_name"] == "Arial"
 
@@ -669,6 +702,14 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
         "layer": "TOP_OVERLAY",
         "stroke_width_mils": 8,
     }
+    assert payload["board_projection"]["cutouts"] == {
+        "graphics": {
+            "enabled": True,
+            "layer": "MECHANICAL_1",
+            "stroke_width_mils": 8,
+        },
+        "actual_cutouts": False,
+    }
     assert payload["validation"]["source_side"] == "infer_single_side"
     assert payload["validation"]["side_agnostic_kinds"] == ["mount"]
     assert payload["artifacts"]["pcb_layer_step"]["highlights"] == [
@@ -689,6 +730,8 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
         },
     }
     assert payload["projections"][0]["actions"][2]["placement"]["side"] == "board_right"
+    assert payload["projections"][1]["actions"][1]["kind"] == "reference_graphics"
+    assert payload["projections"][2]["actions"][1]["kind"] == "reference_graphics"
     assert payload["pcb_designators"]["style"]["height_mils"] == 40
 
 
@@ -777,6 +820,71 @@ def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
     assert rectangle_ops[4]["args"]["start_mils"] == [43.5, 163.5]
     assert rectangle_ops[4]["args"]["end_mils"] == [156.5, 163.5]
     assert {operation["args"]["width_mils"] for operation in rectangle_ops} == {3.0}
+
+
+def test_debug_plate_board_projection_projects_cutout_graphics_and_regions() -> None:
+    selection = SimpleNamespace(
+        boards=(
+            SimpleNamespace(
+                board_key="dut",
+                board_outline={
+                    "vertices": [
+                        {"x_mils": 0, "y_mils": 0},
+                        {"x_mils": 1000, "y_mils": 0},
+                        {"x_mils": 1000, "y_mils": 700},
+                        {"x_mils": 0, "y_mils": 700},
+                    ],
+                    "cutouts": [
+                        {
+                            "vertices": [
+                                {"x_mils": 100, "y_mils": 100},
+                                {"x_mils": 250, "y_mils": 100},
+                                {"x_mils": 250, "y_mils": 220},
+                                {"x_mils": 100, "y_mils": 220},
+                            ]
+                        }
+                    ],
+                },
+            ),
+        )
+    )
+
+    operations = build_pcb_board_projection_operations(
+        output_dir="generated",
+        board_filename="debug_plate.PcbDoc",
+        board_projection={
+            "cutouts": {
+                "graphics": {
+                    "enabled": True,
+                    "layer": "MECHANICAL_1",
+                    "stroke_width_mils": 6,
+                },
+                "actual_cutouts": True,
+            }
+        },
+        selection=selection,
+    )
+
+    cutout_tracks = [
+        operation for operation in operations if operation["op"] == "pcbdoc.add-track"
+    ]
+    cutout_regions = [
+        operation for operation in operations if operation["op"] == "pcbdoc.add-region"
+    ]
+    assert len(cutout_tracks) == 4
+    assert len(cutout_regions) == 1
+    assert {operation["args"]["layer"] for operation in cutout_tracks} == {
+        "MECHANICAL_1"
+    }
+    assert {operation["args"]["width_mils"] for operation in cutout_tracks} == {6.0}
+    assert cutout_regions[0]["args"]["layer"] == "MULTI_LAYER"
+    assert cutout_regions[0]["args"]["is_board_cutout"] is True
+    assert cutout_regions[0]["args"]["outline_points_mils"] == [
+        [100.0, 100.0],
+        [250.0, 100.0],
+        [250.0, 220.0],
+        [100.0, 220.0],
+    ]
 
 
 def test_debug_plate_mate_output_board_outline_modes(tmp_path: Path) -> None:
@@ -1082,19 +1190,25 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         [200.0, 300.0],
         [250.0, 350.0],
         [250.0, 350.0],
+        [1000.0, 500.0],
     ]
     assert [operation["args"]["radius_mils"] for operation in pcb_reference_arcs] == [
         52.0,
         62.0,
         52.0,
         62.0,
+        65.0,
     ]
     assert {operation["args"]["layer"] for operation in pcb_reference_arcs} == {
         "MECHANICAL_1"
     }
-    assert {operation["args"]["width_mils"] for operation in pcb_reference_arcs} == {
-        4.0
-    }
+    assert [operation["args"]["width_mils"] for operation in pcb_reference_arcs] == [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        10.0,
+    ]
     outline_tracks = [
         operation
         for operation in operations

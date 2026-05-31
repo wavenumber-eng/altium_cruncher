@@ -1215,8 +1215,10 @@ def _projection_reference_graphics_config(
         if not isinstance(action, dict) or action.get("kind") != "reference_graphics":
             continue
         raw = dict(action)
-        raw["enabled"] = True
+        raw["enabled"] = _optional_bool(raw, "enabled", True)
         return raw
+    if _projection_requests_mate_component(projection):
+        return _default_mate_reference_graphics_payload()
     return None
 
 
@@ -2482,17 +2484,7 @@ def _mate_seed_test_points_projection(designators: list[str]) -> JsonObject:
         },
         "actions": [
             {"kind": "mate_component", "part": "test_point_pogo"},
-            {
-                "kind": "reference_graphics",
-                "shape": "source_pad_outline",
-                "layer": "MECHANICAL_1",
-                "style": {
-                    "mode": "outline",
-                    "outline_count": 1,
-                    "clearance_mils": 10,
-                    "stroke_width_mils": 10,
-                },
-            },
+            _default_mate_reference_graphics_payload(),
             {
                 "kind": "label",
                 "text": "source_net",
@@ -2512,6 +2504,7 @@ def _mate_seed_mounts_projection(designators: list[str]) -> JsonObject:
         },
         "actions": [
             {"kind": "mate_component", "part": "m25_smt_standoff"},
+            _default_mate_reference_graphics_payload(),
         ],
     }
 
@@ -2526,6 +2519,7 @@ def _mate_seed_alignment_pins_projection(_pads: list[JsonObject]) -> JsonObject:
         },
         "actions": [
             {"kind": "mate_component", "part": "alignment_pin_2mm_npth"},
+            _default_mate_reference_graphics_payload(),
             {
                 "kind": "label",
                 "text": "source_net",
@@ -2533,6 +2527,20 @@ def _mate_seed_alignment_pins_projection(_pads: list[JsonObject]) -> JsonObject:
                 "style": _default_mate_label_style_payload(),
             },
         ],
+    }
+
+
+def _default_mate_reference_graphics_payload() -> JsonObject:
+    return {
+        "kind": "reference_graphics",
+        "shape": "source_pad_outline",
+        "layer": "MECHANICAL_1",
+        "style": {
+            "mode": "outline",
+            "outline_count": 1,
+            "clearance_mils": 10,
+            "stroke_width_mils": 10,
+        },
     }
 
 

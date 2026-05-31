@@ -551,11 +551,16 @@ def _op_pcbdoc_add_region(
 ) -> McoOperationResult:
     paths = _mutation_paths(spec.args, context)
     outline_points = _required_points(spec.args, "outline_points_mils", minimum=3)
+    is_board_cutout = _optional_bool(spec.args, "is_board_cutout", False)
     if context.dry_run:
-        return _dry_run_result(spec, paths, {"points": len(outline_points)})
+        return _dry_run_result(
+            spec,
+            paths,
+            {"points": len(outline_points), "is_board_cutout": is_board_cutout},
+        )
 
     pcbdoc = _open_pcbdoc_for_mutation(paths, context)
-    pcbdoc.add_region(
+    region = pcbdoc.add_region(
         outline_points_mils=outline_points,
         layer=_pcb_layer(spec.args.get("layer"), default="TOP"),
         hole_points_mils=_optional_hole_points(spec.args),
@@ -563,8 +568,23 @@ def _op_pcbdoc_add_region(
         keepout_restrictions=int(_optional_float(spec.args, "keepout_restrictions", 0)),
         net=_optional_string(spec.args, "net", None),
     )
+    if is_board_cutout:
+        _mark_region_as_board_cutout(region)
     _mark_pcbdoc_dirty(context, paths)
-    return _success_result(spec, paths, {"points": len(outline_points)})
+    return _success_result(
+        spec,
+        paths,
+        {"points": len(outline_points), "is_board_cutout": is_board_cutout},
+    )
+
+
+def _mark_region_as_board_cutout(region: object) -> None:
+    setattr(region, "is_board_cutout", True)
+    setattr(region, "kind", 0)
+    properties = getattr(region, "properties", None)
+    if isinstance(properties, dict):
+        properties["KIND"] = "0"
+        properties["ISBOARDCUTOUT"] = "TRUE"
 
 
 def _op_pcbdoc_create_user_union(
