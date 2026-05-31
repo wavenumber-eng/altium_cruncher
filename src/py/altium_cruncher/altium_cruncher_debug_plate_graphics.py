@@ -85,7 +85,7 @@ def build_pcb_reference_graphics_operations(
 
     style = _section(config, "style")
     layer = _optional_string(config, "layer", "MECHANICAL_1") or "MECHANICAL_1"
-    width_mils = _mapping_number(style, "stroke_width_mils", 5.0)
+    width_mils = _mapping_number(style, "stroke_width_mils", 10.0)
     clearance_mils = _mapping_number(style, "clearance_mils", 10.0)
     outline_spacing_mils = _mapping_number(
         style,
@@ -488,8 +488,11 @@ def _pad_outline_operations(
         return []
     operations: list[JsonObject] = []
     for outline_index in range(1, outline_count + 1):
-        expansion_mils = clearance_mils + (
-            float(outline_index - 1) * outline_spacing_mils
+        expansion_mils = _outline_centerline_expansion_mils(
+            clearance_mils=clearance_mils,
+            stroke_width_mils=width_mils,
+            outline_index=outline_index,
+            outline_spacing_mils=outline_spacing_mils,
         )
         operations.extend(
             _pad_single_outline_operations(
@@ -505,6 +508,20 @@ def _pad_outline_operations(
             )
         )
     return operations
+
+
+def _outline_centerline_expansion_mils(
+    *,
+    clearance_mils: float,
+    stroke_width_mils: float,
+    outline_index: int,
+    outline_spacing_mils: float,
+) -> float:
+    return (
+        clearance_mils
+        + (stroke_width_mils / 2.0)
+        + (float(outline_index - 1) * outline_spacing_mils)
+    )
 
 
 def _pad_single_outline_operations(

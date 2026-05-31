@@ -14,7 +14,8 @@ running the workflow.
 
 - `debug-plate.mate.a0.jsonc` is the primary selector/projection config for
   this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
-  one-outline `MECHANICAL_1` source-pad reference graphics, right-side
+  one-outline `MECHANICAL_1` source-pad reference graphics with `10 mil` stroke
+  and visible edge-to-edge clearance semantics, right-side
   board-edge net-label columns with group headers, arranged component
   designators, source board outline graphics, a user union, and the bottom-layer
   STEP artifact. The PCB net labels and headers are emitted outside the union so

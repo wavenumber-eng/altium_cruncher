@@ -142,7 +142,7 @@
       </tr>
       <tr>
         <td><code>reference_graphics</code></td>
-        <td>Add mechanical or silkscreen reference geometry, such as source-pad outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports <code>source_pad_outline</code> from inspected source pad geometry, with one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>.</td>
+        <td>Add mechanical or silkscreen reference geometry, such as source-pad outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports <code>source_pad_outline</code> from inspected source pad geometry, with one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>. <code>clearance_mils</code> is the visible gap from the source pad edge to the inside edge of the outline stroke, so zero clearance makes the outline touch the pad edge.</td>
       </tr>
       <tr>
         <td><code>label</code></td>
@@ -246,7 +246,7 @@
             "mode": "outline",
             "outline_count": 1,
             "clearance_mils": 10,
-            "stroke_width_mils": 5
+            "stroke_width_mils": 10
           }
         },
         {

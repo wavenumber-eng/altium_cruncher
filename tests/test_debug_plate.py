@@ -685,7 +685,7 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
             "mode": "outline",
             "outline_count": 1,
             "clearance_mils": 10,
-            "stroke_width_mils": 5,
+            "stroke_width_mils": 10,
         },
     }
     assert payload["projections"][0]["actions"][2]["placement"]["side"] == "board_right"
@@ -718,7 +718,30 @@ def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
     assert len(circle_ops) == 1
     assert circle_ops[0]["op"] == "pcbdoc.add-arc"
     assert circle_ops[0]["args"]["center_mils"] == [100.0, 200.0]
-    assert circle_ops[0]["args"]["radius_mils"] == 45.0
+    assert circle_ops[0]["args"]["radius_mils"] == 46.5
+
+    touching_ops = build_pcb_reference_graphics_operations(
+        output_dir="generated",
+        board_filename="debug_plate.PcbDoc",
+        designator="TP2",
+        target={
+            "mate_reference_graphics": {
+                "shape": "source_pad_outline",
+                "layer": "MECHANICAL_1",
+                "style": {"clearance_mils": 0, "stroke_width_mils": 10},
+            },
+            "source_pad_geometries": [
+                {
+                    "x_mils": 100,
+                    "y_mils": 200,
+                    "width_mils": 80,
+                    "height_mils": 80,
+                    "shape": 1,
+                }
+            ],
+        },
+    )
+    assert touching_ops[0]["args"]["radius_mils"] == 45.0
 
     rectangle_ops = build_pcb_reference_graphics_operations(
         output_dir="generated",
@@ -749,10 +772,10 @@ def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
     )
 
     assert [operation["op"] for operation in rectangle_ops] == ["pcbdoc.add-track"] * 8
-    assert rectangle_ops[0]["args"]["start_mils"] == [55.0, 175.0]
-    assert rectangle_ops[0]["args"]["end_mils"] == [145.0, 175.0]
-    assert rectangle_ops[4]["args"]["start_mils"] == [45.0, 165.0]
-    assert rectangle_ops[4]["args"]["end_mils"] == [155.0, 165.0]
+    assert rectangle_ops[0]["args"]["start_mils"] == [53.5, 173.5]
+    assert rectangle_ops[0]["args"]["end_mils"] == [146.5, 173.5]
+    assert rectangle_ops[4]["args"]["start_mils"] == [43.5, 163.5]
+    assert rectangle_ops[4]["args"]["end_mils"] == [156.5, 163.5]
     assert {operation["args"]["width_mils"] for operation in rectangle_ops} == {3.0}
 
 
@@ -1061,10 +1084,10 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         [250.0, 350.0],
     ]
     assert [operation["args"]["radius_mils"] for operation in pcb_reference_arcs] == [
-        50.0,
-        60.0,
-        50.0,
-        60.0,
+        52.0,
+        62.0,
+        52.0,
+        62.0,
     ]
     assert {operation["args"]["layer"] for operation in pcb_reference_arcs} == {
         "MECHANICAL_1"

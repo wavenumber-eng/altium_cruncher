@@ -2425,7 +2425,7 @@ def _mate_seed_test_points_projection(designators: list[str]) -> JsonObject:
                     "mode": "outline",
                     "outline_count": 1,
                     "clearance_mils": 10,
-                    "stroke_width_mils": 5,
+                    "stroke_width_mils": 10,
                 },
             },
             {
