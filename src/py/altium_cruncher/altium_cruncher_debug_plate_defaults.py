@@ -44,6 +44,23 @@ def default_mate_label_style_payload() -> JsonObject:
     }
 
 
+def default_mate_designators_payload() -> JsonObject:
+    return {
+        "enabled": True,
+        "placement": "above_component",
+        "offset_mils": [0, 10],
+        "width_factor": 0.6,
+        "style": {
+            "height_mils": 40,
+            "layer": "TOP_OVERLAY",
+            "font_kind": "truetype",
+            "font_name": "Arial",
+            "bold": True,
+            "stroke_width_mils": 8,
+        },
+    }
+
+
 def default_mate_board_projection_payload() -> JsonObject:
     return {
         "outline": {
@@ -151,6 +168,12 @@ def default_pcb_labels_payload() -> JsonObject:
             "text_justification": "RIGHT_TOP",
         },
     }
+
+
+def default_pcb_designators_payload() -> JsonObject:
+    payload = default_mate_designators_payload()
+    payload["enabled"] = False
+    return payload
 
 
 def default_marker_payload() -> JsonObject:

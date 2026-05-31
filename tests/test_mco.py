@@ -694,6 +694,22 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                         "layer": "TOP",
                     },
                 },
+                {
+                    "id": "designator",
+                    "op": "pcbdoc.arrange-designators",
+                    "args": {
+                        "file": "generated/debug_plate.PcbDoc",
+                        "overwrite": True,
+                        "designators": ["TP1"],
+                        "placement": "above_component",
+                        "offset_mils": [0, 10],
+                        "height_mils": 40,
+                        "font_kind": "truetype",
+                        "font_name": "Arial",
+                        "bold": True,
+                        "stroke_width_mils": 8,
+                    },
+                },
             ],
         },
         McoExecutionContext(work_dir=tmp_path),
@@ -730,6 +746,15 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
         "DBG_CONTACT_FP"
     ]
     assert len(pcbdoc.pads) == 1
+    designator_text = next(text for text in pcbdoc.texts if text.is_designator)
+    assert designator_text.text_content == "TP1"
+    assert designator_text.component_index == 0
+    assert designator_text.x_mils == 464.0
+    assert designator_text.y_mils == 750.0
+    assert designator_text.height_mils == 40.0
+    assert designator_text.stroke_width_mils == 8.0
+    assert designator_text.font_name == "Arial"
+    assert designator_text.is_bold is True
 
 
 def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
@@ -767,6 +792,7 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
         "pcbdoc.add-text",
         "pcbdoc.add-track",
         "pcbdoc.add-via",
+        "pcbdoc.arrange-designators",
         "pcbdoc.create-user-union",
         "pcbdoc.export-layer-step",
         "project.create-skeleton",

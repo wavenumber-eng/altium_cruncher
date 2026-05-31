@@ -7,19 +7,23 @@ high-level shape after local inputs and the known-parts cache exist:
    the DUT bounds by the configured margin
 2. Six `file.copy` operations for the selected SchLib/PcbLib cache files
 3. For each selected `TP1-27`: schematic component, schematic net label, PCB
-   component, PCB net label, and two mechanical reference rings
+   component, board-edge PCB net label, and two mechanical reference rings
 4. For each selected `M1-M4`: schematic component and PCB standoff component
 5. For each matching free NPTH alignment pad: schematic component, optional
-   schematic net label, PCB alignment-pin component, and optional PCB label
+   schematic net label, PCB alignment-pin component, and optional board-edge
+   PCB label
 6. `pcbdoc.add-track` operations projecting the DUT board outline onto the
    configured graphics layer
-7. `pcbdoc.create-user-union` named `DEBUG_PLATE_FEATURES`
+7. `pcbdoc.arrange-designators` to move generated component-owned designator
+   text above each mate component using the configured Arial 40 mil bold style
 8. `pcbdoc.export-layer-step` for the DUT bottom layer, including explicit
    track/polygon feature settings, copper, drill cutouts, board outline bodies,
    and the configured red `test_points` highlight
 9. `pcbdoc.add-embedded-3d-model` to insert that STEP artifact into the output
    PcbDoc at the configured 8.5 mm Z height, using the DUT outline bounds for
    the body projection
+10. `pcbdoc.create-user-union` named `DEBUG_PLATE_FEATURES` after PCB-side
+    generation completes, so the group reflects the final generated board state
 
 The example config uses cricket-node's `M1-M4` mount designators directly. The
 known-parts manifest still documents the old node-test-array `M5-M8` to

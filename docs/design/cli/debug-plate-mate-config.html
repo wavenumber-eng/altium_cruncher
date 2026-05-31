@@ -15,8 +15,8 @@
     and the generated Altium MCO operation contract remains
     <a href="mco.html">mco.html</a>. Current draft implementation covers mate
     config seeding, selector resolution, mate part roles, PCB labels, board
-    outline graphics, STEP artifact insertion, and source-side validation;
-    remaining projection actions are still draft.
+    outline graphics, STEP artifact insertion, PCB designator arrangement, and
+    source-side validation; remaining projection actions are still draft.
   </p>
 
   <h2 data-key="debug-plate-mate-config.goal">Goal</h2>
@@ -187,7 +187,8 @@
     <li>Select mount features and allow node-test-array <code>M5-M8</code> normalization to output <code>M1-M4</code> where needed.</li>
     <li>Select free NPTH alignment holes as source free-pad/drill objects; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
     <li>Project mate components from the current node-test-array cache.</li>
-    <li>Add configurable right or left side PCB net labels for source nets.</li>
+    <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>.</li>
+    <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
     <li>Add optional circular reference graphics on a configurable mechanical layer for source pad alignment.</li>
     <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
     <li>Detect and project internal board cutouts as graphics and later actual cutouts.</li>
@@ -247,9 +248,10 @@
           "kind": "label",
           "text": "source_net",
           "placement": {
-            "side": "right",
-            "offset_mils": [120, 0],
-            "box_size_mils": [450, 70]
+            "side": "board_right",
+            "offset_mils": [250, 250],
+            "box_size_mils": [450, 70],
+            "row_spacing_mils": 90
           }
         }
       ]
@@ -277,6 +279,20 @@
       ]
     }
   ],
+  "pcb_designators": {
+    "enabled": true,
+    "placement": "above_component",
+    "offset_mils": [0, 10],
+    "width_factor": 0.6,
+    "style": {
+      "height_mils": 40,
+      "layer": "TOP_OVERLAY",
+      "font_kind": "truetype",
+      "font_name": "Arial",
+      "bold": true,
+      "stroke_width_mils": 8
+    }
+  },
   "board_projection": {
     "outline": {
       "graphics": {
@@ -338,7 +354,18 @@
     groups may both use <code>label</code> actions but choose different
     placement side, offsets, box sizes, and text style. Mate configs therefore
     do not use the legacy global <code>pcb_labels</code> block as the primary
-    label contract.
+    label contract. A label <code>side</code> of <code>left</code> or
+    <code>right</code> places the label relative to the projected target, while
+    <code>board_left</code> or <code>board_right</code> places labels in a
+    vertical column inside the output board outline using
+    <code>row_spacing_mils</code>.
+  </p>
+  <p>
+    <code>pcb_designators</code> is a post-placement PCB text normalization
+    block. The current implemented placement is <code>above_component</code>;
+    it updates the generated component-owned designator text instead of adding
+    duplicate loose text. The cricket-node default is Arial TrueType, 40 mil,
+    bold, on top overlay.
   </p>
   <p>
     Artifact highlights reference projection ids instead of duplicating source

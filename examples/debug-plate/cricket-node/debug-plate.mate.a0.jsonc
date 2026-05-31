@@ -76,10 +76,12 @@
           "kind": "label",
           "text": "source_net",
           "placement": {
-            "side": "right",
-            "offset_mils": [120, 0],
+            // Board-edge label placement creates a neat column inside the
+            // expanded output outline. Use board_left to move the column.
+            "side": "board_right",
+            "offset_mils": [250, 250],
             "box_size_mils": [450, 70],
-            "center_box_on_target": true
+            "row_spacing_mils": 90
           },
           "style": {
             "height_mils": 65,
@@ -123,11 +125,43 @@
         },
         {
           "kind": "label",
-          "text": "source_net"
+          "text": "source_net",
+          "placement": {
+            "side": "board_right",
+            "offset_mils": [250, 250],
+            "box_size_mils": [450, 70],
+            "row_spacing_mils": 90
+          },
+          "style": {
+            "height_mils": 65,
+            "layer": "TOP_OVERLAY",
+            "font_kind": "truetype",
+            "font_name": "Arial",
+            "bold": true,
+            "stroke_width_mils": 10,
+            "text_justification": "RIGHT_TOP"
+          }
         }
       ]
     }
   ],
+
+  "pcb_designators": {
+    "enabled": true,
+    "placement": "above_component",
+    // Keep generated mate component designators compact, above the target
+    // feature, and editable after the board is opened in Altium.
+    "offset_mils": [0, 10],
+    "width_factor": 0.6,
+    "style": {
+      "height_mils": 40,
+      "layer": "TOP_OVERLAY",
+      "font_kind": "truetype",
+      "font_name": "Arial",
+      "bold": true,
+      "stroke_width_mils": 8
+    }
+  },
 
   "board_projection": {
     "outline": {

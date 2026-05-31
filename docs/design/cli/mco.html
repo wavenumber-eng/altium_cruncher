@@ -19,7 +19,7 @@ altium-cruncher mco run debug-plate.mco.jsonc</code></pre></section>
     <tr><td>Core ops</td><td><code>mco.message</code>, <code>mco.fail</code>, and <code>file.copy</code>.</td></tr>
     <tr><td>Project ops</td><td><code>project.create-skeleton</code> creates a minimal Altium PCB project, schematic, and board. Optional <code>board_outline_mils</code> and <code>board_origin_mils</code> args let generated mate boards preserve a source board coordinate frame.</td></tr>
     <tr><td>Schematic ops</td><td><code>schdoc.add-wire</code>, <code>schdoc.add-net-label</code>, and <code>schdoc.add-component</code>.</td></tr>
-    <tr><td>PCB ops</td><td><code>pcbdoc.add-text</code>, <code>pcbdoc.add-component</code>, geometry insertion operations, user-union creation, <code>pcbdoc.export-layer-step</code>, and <code>pcbdoc.add-embedded-3d-model</code> for placing generated STEP artifacts into an output board.</td></tr>
+    <tr><td>PCB ops</td><td><code>pcbdoc.add-text</code>, <code>pcbdoc.add-component</code>, <code>pcbdoc.arrange-designators</code>, geometry insertion operations, user-union creation, <code>pcbdoc.export-layer-step</code>, and <code>pcbdoc.add-embedded-3d-model</code> for placing generated STEP artifacts into an output board.</td></tr>
   </table></section>
 
   <section id="output"><h2>Output</h2><p><code>run</code> prints a JSON result containing overall success, dry-run state, and one result object per operation. Mutation operations return output paths and operation-specific fields. On a normal run, dirty CAD documents are saved after operation execution completes.</p><pre><code>{
@@ -29,7 +29,7 @@ altium-cruncher mco run debug-plate.mco.jsonc</code></pre></section>
   "results": []
 }</code></pre></section>
 
-  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_mco.py</code>. It verifies JSONC parsing, control flow, dry-run handling, CLI init/list/run behavior, document session flushing, schematic and PCB insertion operations, user unions, text style options, library placement, STEP export operation plumbing, and embedded STEP model insertion plumbing.</p></section>
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_mco.py</code>. It verifies JSONC parsing, control flow, dry-run handling, CLI init/list/run behavior, document session flushing, schematic and PCB insertion operations, user unions, text style options, component designator arrangement, library placement, STEP export operation plumbing, and embedded STEP model insertion plumbing.</p></section>
 </main>
 </body>
 </html>

@@ -616,6 +616,10 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
         "color": "#7A8F2A",
     }
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
+    test_point_label = projections["test_points"]["actions"][2]
+    assert test_point_label["placement"]["side"] == "board_right"
+    assert payload["pcb_designators"]["style"]["height_mils"] == 40
+    assert payload["pcb_designators"]["style"]["font_name"] == "Arial"
 
 
 def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
@@ -668,6 +672,8 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is True
     assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"] is True
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
+    assert payload["projections"][0]["actions"][2]["placement"]["side"] == "board_right"
+    assert payload["pcb_designators"]["style"]["height_mils"] == 40
 
 
 def test_debug_plate_mate_output_board_outline_modes(tmp_path: Path) -> None:
@@ -954,6 +960,15 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         "I2C-SDA",
         "ALIGN_NET",
     ]
+    arrange_designators = [
+        operation
+        for operation in operations
+        if operation["op"] == "pcbdoc.arrange-designators"
+    ]
+    assert len(arrange_designators) == 1
+    assert arrange_designators[0]["args"]["designators"] == ["TP1", "TP2", "M1", "P1"]
+    assert arrange_designators[0]["args"]["height_mils"] == 40.0
+    assert arrange_designators[0]["args"]["font_name"] == "Arial"
     pcb_reference_arcs = [
         operation
         for operation in operations
@@ -996,11 +1011,8 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     assert pcb_labels[-1]["args"]["position_mils"] == [610.0, 470.0]
     assert pcb_labels[-1]["args"]["height_mils"] == 45.0
     assert pcb_labels[-1]["args"]["text_justification"] == "LEFT_TOP"
-    user_union = [
-        operation
-        for operation in operations
-        if operation["op"] == "pcbdoc.create-user-union"
-    ][0]
+    user_union = operations[-1]
+    assert user_union["op"] == "pcbdoc.create-user-union"
     assert user_union["args"]["name"] == "DEBUG_PLATE_FEATURES"
     step_op = [
         operation
@@ -1029,7 +1041,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         "enabled": True,
         "color": "#7A8F2A",
     }
-    insert_step_op = operations[-1]
+    insert_step_op = operations[-2]
     assert insert_step_op["op"] == "pcbdoc.add-embedded-3d-model"
     assert insert_step_op["args"]["file"] == "generated/debug_plate.PcbDoc"
     assert insert_step_op["args"]["model_file"] == (
@@ -1373,6 +1385,88 @@ def test_debug_plate_left_side_pcb_labels_default_left_justified(
     assert label_op["args"]["text"] == "ALIGN_NET"
     assert label_op["args"]["position_mils"] == [560.0, 470.0]
     assert label_op["args"]["text_justification"] == "LEFT_TOP"
+
+
+def test_debug_plate_board_edge_pcb_labels_stack_in_column(
+    tmp_path: Path,
+) -> None:
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    config = load_debug_plate_config(
+        _write_json(
+            tmp_path / "debug-plate.jsonc",
+            {
+                "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+                "output": {
+                    "output_dir": "generated",
+                    "project_name": "debug_plate",
+                    "overwrite": True,
+                    "board_outline_mils": {
+                        "left": 0,
+                        "bottom": 0,
+                        "right": 2000,
+                        "top": 1000,
+                    },
+                },
+                "known_parts": {
+                    "manifest": str(manifest_path),
+                },
+                "placement": {
+                    "source_mount_side": "bottom",
+                    "offset_mils": [0, 0],
+                    "mirror_x": False,
+                    "mirror_y": False,
+                    "mirror_origin_mils": [0, 0],
+                },
+                "pcb_labels": {
+                    "enabled": True,
+                    "side": "board_right",
+                    "offset_mils": [100, 50],
+                    "box_size_mils": [300, 60],
+                    "row_spacing_mils": 80,
+                },
+                "marker": {"enabled": False},
+                "selection": {
+                    "boards": [
+                        {
+                            "board_key": "fixture",
+                            "free_pads": [
+                                {
+                                    "designator": "G1",
+                                    "kind": "free_npth",
+                                    "net_name": "NET_A",
+                                    "x_mils": 1000,
+                                    "y_mils": 500,
+                                },
+                                {
+                                    "designator": "G2",
+                                    "kind": "free_npth",
+                                    "net_name": "NET_B",
+                                    "x_mils": 1100,
+                                    "y_mils": 600,
+                                },
+                            ],
+                        }
+                    ]
+                },
+            },
+        )
+    )
+
+    payload = build_debug_plate_mco(config)
+    label_ops = [
+        operation
+        for operation in payload["operations"]
+        if operation["op"] == "pcbdoc.add-text"
+    ]
+
+    assert [operation["args"]["text"] for operation in label_ops] == ["NET_A", "NET_B"]
+    assert [operation["args"]["position_mils"] for operation in label_ops] == [
+        [1600.0, 890.0],
+        [1600.0, 810.0],
+    ]
+    assert {operation["args"]["text_justification"] for operation in label_ops} == {
+        "RIGHT_TOP"
+    }
 
 
 def test_debug_plate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:

@@ -14,8 +14,9 @@ running the workflow.
 
 - `debug-plate.mate.a0.jsonc` is the primary selector/projection config for
   this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
-  reference graphics, labels, source board outline graphics, a user union, and
-  the bottom-layer STEP artifact. Its output board outline defaults to the DUT
+  reference graphics, right-side board-edge net labels, arranged component
+  designators, source board outline graphics, a user union, and the
+  bottom-layer STEP artifact. Its output board outline defaults to the DUT
   bounds plus `500 mil` on the left, top, and bottom, and `3000 mil` on the
   right.
 - `debug-plate.jsonc` is the older reviewed config shape kept for comparison.

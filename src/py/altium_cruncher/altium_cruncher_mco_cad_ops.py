@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from enum import IntEnum
 from pathlib import Path
@@ -286,6 +286,56 @@ def _op_pcbdoc_add_component(
             "designator": designator,
         },
     )
+
+
+def _op_pcbdoc_arrange_designators(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    paths = _mutation_paths(spec.args, context)
+    designators = _optional_string_list(spec.args, "designators")
+    placement = _optional_string(spec.args, "placement", "above_component")
+    if placement != "above_component":
+        raise ValueError("pcbdoc.arrange-designators placement must be above_component")
+    offset = _optional_number_pair(spec.args, "offset_mils", default=(0.0, 10.0))
+    if offset is None:
+        offset = (0.0, 10.0)
+    height_mils = _optional_float(spec.args, "height_mils", 40.0)
+    stroke_width_mils = _optional_float(spec.args, "stroke_width_mils", 8.0)
+    width_factor = _optional_float(spec.args, "width_factor", 0.6)
+    layer = _pcb_layer(spec.args.get("layer"), default="TOP_OVERLAY")
+    layer_id = int(cast(IntEnum, layer))
+    font_kind = _pcb_text_kind(spec.args.get("font_kind", "truetype"))
+    font_name = _optional_string(spec.args, "font_name", "Arial") or "Arial"
+    bold = _optional_bool(spec.args, "bold", True)
+    italic = _optional_bool(spec.args, "italic", False)
+    if context.dry_run:
+        return _dry_run_result(
+            spec,
+            paths,
+            {
+                "designators": len(designators) if designators is not None else "all",
+                "placement": placement,
+            },
+        )
+
+    pcbdoc = _open_pcbdoc_for_mutation(paths, context)
+    updated = _arrange_pcb_designators(
+        pcbdoc,
+        designators=designators,
+        offset_mils=offset,
+        height_mils=height_mils,
+        stroke_width_mils=stroke_width_mils,
+        width_factor=width_factor,
+        layer=layer_id,
+        font_kind=_pcb_text_kind_id(font_kind),
+        font_name=font_name,
+        bold=bold,
+        italic=italic,
+    )
+    if updated:
+        _mark_pcbdoc_dirty(context, paths)
+    return _success_result(spec, paths, {"updated": updated})
 
 
 def _op_pcbdoc_add_track(
@@ -792,6 +842,23 @@ def _optional_string_dict(
     return result
 
 
+def _optional_string_list(
+    args: Mapping[str, object],
+    name: str,
+) -> list[str] | None:
+    value = args.get(name)
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        raise ValueError(f"Field {name!r} must be an array")
+    result: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item:
+            raise ValueError(f"Field {name!r} must contain non-empty strings")
+        result.append(item)
+    return result
+
+
 def _optional_mapping(
     args: Mapping[str, object],
     name: str,
@@ -1009,6 +1076,17 @@ def _pcb_text_kind(value: object) -> object:
     raise ValueError("PCB text font_kind must be a string")
 
 
+def _pcb_text_kind_id(value: object) -> int:
+    raw = getattr(value, "value", value)
+    normalized = str(raw).strip().replace(" ", "_").replace("-", "_").upper()
+    normalized = {"TRUE_TYPE": "TRUETYPE"}.get(normalized, normalized)
+    if normalized == "TRUETYPE":
+        return 1
+    if normalized == "BARCODE":
+        return 2
+    return 0
+
+
 def _pcb_text_justification(value: object) -> object | None:
     from altium_monkey import PcbTextJustification
 
@@ -1101,6 +1179,408 @@ def _apply_schematic_text_style(
     )
 
 
+def _arrange_pcb_designators(
+    pcbdoc: object,
+    *,
+    designators: list[str] | None,
+    offset_mils: PcbPoint,
+    height_mils: float,
+    stroke_width_mils: float,
+    width_factor: float,
+    layer: int,
+    font_kind: int,
+    font_name: str,
+    bold: bool,
+    italic: bool,
+) -> int:
+    component_lookup = _component_index_by_designator(pcbdoc)
+    requested = _requested_designator_keys(designators, component_lookup)
+    if not requested:
+        return 0
+
+    updated = 0
+    for text in _pcb_designator_texts(pcbdoc):
+        target = _arrange_designator_target(pcbdoc, text, component_lookup)
+        if target is None or target.key not in requested:
+            continue
+        bounds = _component_bounds_or_position_mils(pcbdoc, target.component_index)
+        if bounds is None:
+            continue
+        text_width_mils = max(
+            height_mils,
+            float(len(target.text)) * height_mils * width_factor,
+        )
+        left, _bottom, right, top = bounds
+        x_mils = ((left + right) / 2.0) - (text_width_mils / 2.0) + offset_mils[0]
+        y_mils = top + offset_mils[1]
+        _apply_pcb_designator_text_style(
+            text,
+            text=target.text,
+            position_mils=(x_mils, y_mils),
+            text_width_mils=text_width_mils,
+            height_mils=height_mils,
+            stroke_width_mils=stroke_width_mils,
+            layer=layer,
+            font_kind=font_kind,
+            font_name=font_name,
+            bold=bold,
+            italic=italic,
+        )
+        updated += 1
+    return updated
+
+
+@dataclass(frozen=True, slots=True)
+class PcbDesignatorArrangementTarget:
+    component_index: int
+    key: str
+    text: str
+
+
+def _requested_designator_keys(
+    designators: list[str] | None,
+    component_lookup: Mapping[str, int],
+) -> set[str]:
+    if designators is None:
+        return set(component_lookup)
+    return {designator.strip().upper() for designator in designators if designator}
+
+
+def _pcb_designator_texts(pcbdoc: object) -> list[object]:
+    return [
+        text
+        for text in list(getattr(pcbdoc, "texts", []) or [])
+        if bool(getattr(text, "is_designator", False))
+    ]
+
+
+def _arrange_designator_target(
+    pcbdoc: object,
+    text: object,
+    component_lookup: Mapping[str, int],
+) -> PcbDesignatorArrangementTarget | None:
+    designator = str(getattr(text, "text_content", "") or "").strip()
+    component_index = _designator_text_component_index(
+        text,
+        designator,
+        component_lookup,
+    )
+    if component_index is None:
+        return None
+    component_designator = _component_designator_by_index(pcbdoc, component_index)
+    text_value = component_designator or designator
+    key = text_value.strip().upper()
+    if not key:
+        return None
+    return PcbDesignatorArrangementTarget(
+        component_index=component_index,
+        key=key,
+        text=text_value,
+    )
+
+
+def _component_index_by_designator(pcbdoc: object) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for index, component in enumerate(list(getattr(pcbdoc, "components", []) or [])):
+        designator = str(getattr(component, "designator", "") or "").strip()
+        if designator:
+            result[designator.upper()] = index
+    return result
+
+
+def _designator_text_component_index(
+    text: object,
+    designator: str,
+    component_lookup: Mapping[str, int],
+) -> int | None:
+    component_index = getattr(text, "component_index", None)
+    if isinstance(component_index, int):
+        return component_index
+    return component_lookup.get(designator.strip().upper())
+
+
+def _component_designator_by_index(pcbdoc: object, index: int) -> str | None:
+    components = list(getattr(pcbdoc, "components", []) or [])
+    if 0 <= index < len(components):
+        designator = str(getattr(components[index], "designator", "") or "").strip()
+        return designator or None
+    return None
+
+
+def _component_position_bounds_mils(
+    pcbdoc: object,
+    component_index: int,
+) -> tuple[float, float, float, float] | None:
+    components = list(getattr(pcbdoc, "components", []) or [])
+    if not (0 <= component_index < len(components)):
+        return None
+    component = components[component_index]
+    x_mils = _component_position_value(component, "x")
+    y_mils = _component_position_value(component, "y")
+    if x_mils is None or y_mils is None:
+        return None
+    return (x_mils - 20.0, y_mils - 20.0, x_mils + 20.0, y_mils + 20.0)
+
+
+def _component_position_value(component: object, axis: str) -> float | None:
+    method = getattr(component, f"get_{axis}_mils", None)
+    if callable(method):
+        value = _call_position_method(method)
+    else:
+        value = getattr(component, axis, None)
+    return _coerce_mils_value(value)
+
+
+def _call_position_method(method: object) -> object | None:
+    try:
+        return cast(Callable[[], object], method)()
+    except (TypeError, ValueError):
+        return None
+
+
+def _coerce_mils_value(value: object) -> float | None:
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.lower().replace("mil", "").strip())
+        except ValueError:
+            return None
+    return None
+
+
+def _component_bounds_or_position_mils(
+    pcbdoc: object,
+    component_index: int,
+) -> tuple[float, float, float, float] | None:
+    bounds = _component_bounds_mils(pcbdoc, component_index)
+    if bounds is not None:
+        return bounds
+    return _component_position_bounds_mils(pcbdoc, component_index)
+
+
+def _component_bounds_mils(
+    pcbdoc: object,
+    component_index: int,
+) -> tuple[float, float, float, float] | None:
+    xs: list[float] = []
+    ys: list[float] = []
+    _append_component_centered_bounds(pcbdoc, component_index, xs, ys)
+    _append_component_track_bounds(pcbdoc, component_index, xs, ys)
+    _append_component_arc_bounds(pcbdoc, component_index, xs, ys)
+    _append_component_fill_bounds(pcbdoc, component_index, xs, ys)
+    _append_component_vertex_bounds(pcbdoc, component_index, xs, ys)
+    return _bounds_from_points(xs, ys)
+
+
+def _append_component_centered_bounds(
+    pcbdoc: object,
+    component_index: int,
+    xs: list[float],
+    ys: list[float],
+) -> None:
+    for collection in ("pads", "vias"):
+        for primitive in _component_primitives(pcbdoc, collection, component_index):
+            _append_centered_primitive_bounds(xs, ys, primitive)
+
+
+def _append_component_track_bounds(
+    pcbdoc: object,
+    component_index: int,
+    xs: list[float],
+    ys: list[float],
+) -> None:
+    for track in _component_primitives(pcbdoc, "tracks", component_index):
+        _append_track_bounds(xs, ys, track)
+
+
+def _append_component_arc_bounds(
+    pcbdoc: object,
+    component_index: int,
+    xs: list[float],
+    ys: list[float],
+) -> None:
+    for arc in _component_primitives(pcbdoc, "arcs", component_index):
+        _append_arc_bounds(xs, ys, arc)
+
+
+def _append_component_fill_bounds(
+    pcbdoc: object,
+    component_index: int,
+    xs: list[float],
+    ys: list[float],
+) -> None:
+    for fill in _component_primitives(pcbdoc, "fills", component_index):
+        _append_fill_bounds(xs, ys, fill)
+
+
+def _append_component_vertex_bounds(
+    pcbdoc: object,
+    component_index: int,
+    xs: list[float],
+    ys: list[float],
+) -> None:
+    for collection, attr_name in (
+        ("regions", "outline_vertices"),
+        ("shapebased_regions", "outline"),
+        ("component_bodies", "outline"),
+        ("shapebased_component_bodies", "outline"),
+    ):
+        for primitive in _component_primitives(pcbdoc, collection, component_index):
+            _append_vertex_bounds(xs, ys, getattr(primitive, attr_name, []) or [])
+
+
+def _bounds_from_points(
+    xs: list[float],
+    ys: list[float],
+) -> tuple[float, float, float, float] | None:
+    if not xs or not ys:
+        return None
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _component_primitives(
+    pcbdoc: object,
+    collection: str,
+    component_index: int,
+) -> list[object]:
+    return [
+        primitive
+        for primitive in list(getattr(pcbdoc, collection, []) or [])
+        if getattr(primitive, "component_index", None) == component_index
+    ]
+
+
+def _append_centered_primitive_bounds(
+    xs: list[float],
+    ys: list[float],
+    primitive: object,
+) -> None:
+    x_mils = _attr_float(primitive, "x_mils")
+    y_mils = _attr_float(primitive, "y_mils")
+    if x_mils is None or y_mils is None:
+        return
+    width_mils = _attr_float(primitive, "width_mils") or 0.0
+    height_mils = _attr_float(primitive, "height_mils")
+    if height_mils is None:
+        height_mils = _attr_float(primitive, "diameter_mils") or width_mils
+    xs.extend((x_mils - width_mils / 2.0, x_mils + width_mils / 2.0))
+    ys.extend((y_mils - height_mils / 2.0, y_mils + height_mils / 2.0))
+
+
+def _append_track_bounds(xs: list[float], ys: list[float], track: object) -> None:
+    points = (
+        (_attr_float(track, "start_x_mils"), _attr_float(track, "start_y_mils")),
+        (_attr_float(track, "end_x_mils"), _attr_float(track, "end_y_mils")),
+    )
+    width = (_attr_float(track, "width_mils") or 0.0) / 2.0
+    for x_mils, y_mils in points:
+        if x_mils is not None and y_mils is not None:
+            xs.extend((x_mils - width, x_mils + width))
+            ys.extend((y_mils - width, y_mils + width))
+
+
+def _append_arc_bounds(xs: list[float], ys: list[float], arc: object) -> None:
+    center_x = _attr_float(arc, "center_x_mils")
+    center_y = _attr_float(arc, "center_y_mils")
+    radius = _attr_float(arc, "radius_mils")
+    if center_x is None or center_y is None or radius is None:
+        return
+    width = (_attr_float(arc, "width_mils") or 0.0) / 2.0
+    extent = radius + width
+    xs.extend((center_x - extent, center_x + extent))
+    ys.extend((center_y - extent, center_y + extent))
+
+
+def _append_fill_bounds(xs: list[float], ys: list[float], fill: object) -> None:
+    for name in ("pos1", "pos2"):
+        x_mils = _attr_float(fill, f"{name}_x_mils")
+        y_mils = _attr_float(fill, f"{name}_y_mils")
+        if x_mils is not None and y_mils is not None:
+            xs.append(x_mils)
+            ys.append(y_mils)
+
+
+def _append_vertex_bounds(
+    xs: list[float],
+    ys: list[float],
+    vertices: object,
+) -> None:
+    if not isinstance(vertices, list | tuple):
+        return
+    for vertex in vertices:
+        x_mils = _attr_float(vertex, "x_mils")
+        y_mils = _attr_float(vertex, "y_mils")
+        if x_mils is not None and y_mils is not None:
+            xs.append(x_mils)
+            ys.append(y_mils)
+
+
+def _attr_float(obj: object, name: str) -> float | None:
+    value = getattr(obj, name, None)
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return float(value)
+    return None
+
+
+def _apply_pcb_designator_text_style(
+    text_obj: object,
+    *,
+    text: str,
+    position_mils: PcbPoint,
+    text_width_mils: float,
+    height_mils: float,
+    stroke_width_mils: float,
+    layer: int,
+    font_kind: int,
+    font_name: str,
+    bold: bool,
+    italic: bool,
+) -> None:
+    to_internal_units = getattr(text_obj, "_to_internal_units")
+    x_raw = int(to_internal_units(position_mils[0]))
+    y_raw = int(to_internal_units(position_mils[1]))
+    setattr(text_obj, "text_content", text)
+    setattr(text_obj, "x", x_raw)
+    setattr(text_obj, "y", y_raw)
+    setattr(text_obj, "height", int(to_internal_units(height_mils)))
+    setattr(text_obj, "stroke_width", int(to_internal_units(stroke_width_mils)))
+    setattr(text_obj, "width", int(to_internal_units(stroke_width_mils)))
+    setattr(text_obj, "layer", int(layer))
+    setattr(text_obj, "font_name", font_name)
+    setattr(text_obj, "barcode_font_name", font_name)
+    setattr(text_obj, "rotation", 0.0)
+    setattr(text_obj, "is_mirrored", False)
+    setattr(text_obj, "is_inverted", False)
+    setattr(text_obj, "use_inverted_rectangle", False)
+    setattr(text_obj, "is_frame", False)
+    setattr(text_obj, "is_designator", True)
+    setattr(text_obj, "is_comment", False)
+    setattr(text_obj, "textbox_rect_width", int(to_internal_units(text_width_mils)))
+    setattr(text_obj, "textbox_rect_height", int(to_internal_units(height_mils)))
+    setattr(text_obj, "snap_point_x", x_raw)
+    setattr(text_obj, "snap_point_y", y_raw)
+    setattr(text_obj, "margin_border_width", 0)
+    if font_kind == 1:
+        setattr(text_obj, "font_type", 1)
+        setattr(text_obj, "_font_type_offset43", 1)
+        setattr(text_obj, "stroke_font_type", max(1, int(getattr(text_obj, "stroke_font_type", 1))))
+        setattr(text_obj, "is_bold", bool(bold))
+        setattr(text_obj, "is_italic", bool(italic))
+    elif font_kind == 2:
+        setattr(text_obj, "font_type", 2)
+        setattr(text_obj, "_font_type_offset43", 0)
+        setattr(text_obj, "stroke_font_type", max(1, int(getattr(text_obj, "stroke_font_type", 1))))
+        setattr(text_obj, "is_bold", bool(bold))
+        setattr(text_obj, "is_italic", bool(italic))
+    else:
+        setattr(text_obj, "font_type", 0)
+        setattr(text_obj, "_font_type_offset43", 0)
+        setattr(text_obj, "stroke_font_type", max(1, int(getattr(text_obj, "stroke_font_type", 1))))
+        setattr(text_obj, "is_bold", False)
+        setattr(text_obj, "is_italic", False)
+
+
 def _set_optional_attr(obj: object, name: str, value: object | None) -> None:
     if value is not None:
         setattr(obj, name, value)
@@ -1139,6 +1619,7 @@ CAD_MCO_OPERATIONS: dict[str, McoOperationHandler] = {
     "schdoc.add-wire": _op_schdoc_add_wire,
     "schdoc.add-net-label": _op_schdoc_add_net_label,
     "schdoc.add-component": _op_schdoc_add_component,
+    "pcbdoc.arrange-designators": _op_pcbdoc_arrange_designators,
     "pcbdoc.add-text": _op_pcbdoc_add_text,
     "pcbdoc.add-component": _op_pcbdoc_add_component,
     "pcbdoc.add-track": _op_pcbdoc_add_track,
