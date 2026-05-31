@@ -172,6 +172,7 @@
     <li>Through-hole or 1:1 copied connector workflows may be explicitly side-agnostic.</li>
     <li>For cricket-node bottom-mount style workflows, source and output board origins should remain aligned so STEP artifacts and projected geometry line up.</li>
     <li>When <code>output.origin</code> is <code>preserve_source</code>, the planner resolves source outline bounds and source board origin, then passes both to the generated output project skeleton rather than requiring the config to repeat derived coordinates.</li>
+    <li>The current Altium project skeleton supports rectangular output board outlines. <code>output.board_outline.mode</code> may use <code>source_bounds</code> for the DUT bounds or <code>source_bounds_with_margin</code> for a larger rectangle. Exact <code>match_shape</code> output is deferred until the skeleton supports arbitrary outline geometry.</li>
   </ul>
 
   <h2 data-key="debug-plate-mate-config.cricket-node-target">Cricket-Node Feature-Complete Target</h2>
@@ -209,7 +210,11 @@
     "backend": "altium",
     "output_dir": "output/cricket-node-mate",
     "project_name": "cricket_node_mate",
-    "origin": "preserve_source"
+    "origin": "preserve_source",
+    "board_outline": {
+      "mode": "source_bounds_with_margin",
+      "margin_mils": 250
+    }
   },
   "known_parts": {
     "manifest": "known-parts/debug-plate-known-parts.json"
@@ -347,6 +352,7 @@
     <li>ALX CAD part-library-backed metadata for durable mate part associations.</li>
     <li>Full Saleae-style breakout connector automation.</li>
     <li>Multi-pin connector mate pin mapping and mirrored pin-order policies.</li>
+    <li>Exact source-shape output board outlines once the project skeleton can set arbitrary board outline geometry.</li>
     <li>Generic update-in-place behavior for existing mate boards.</li>
     <li>Final naming if the command eventually becomes <code>mate</code> or moves under a generic PCB package.</li>
   </ul>

@@ -15,7 +15,8 @@ running the workflow.
 - `debug-plate.mate.a0.jsonc` is the primary selector/projection config for
   this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
   reference graphics, labels, source board outline graphics, a user union, and
-  the bottom-layer STEP artifact.
+  the bottom-layer STEP artifact. Its output board outline defaults to the DUT
+  bounds plus `250 mil` margin on each side.
 - `debug-plate.jsonc` is the older reviewed config shape kept for comparison.
 - `known-parts/debug-plate-known-parts.json` records the node-test-array cache
   layout expected by the config.
@@ -84,4 +85,5 @@ The same STEP is also embedded in the generated output PcbDoc at the
 configured `artifacts.pcb_layer_step.insert_in_output.z_mm` height. For this
 example the exported STEP uses `z_mm: -0.0175` with `0.035 mm` copper, so local
 `Z=0` is the copper mid-plane. The inserted 3D body is placed at `8.5 mm` in
-the output PcbDoc.
+the output PcbDoc and keeps its 2D bounds tied to the DUT outline rather than
+the larger output board outline.

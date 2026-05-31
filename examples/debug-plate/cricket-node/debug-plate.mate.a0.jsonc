@@ -19,6 +19,13 @@
     // Keep source and output board origins aligned for projected geometry and
     // bottom-layer STEP alignment artifacts.
     "origin": "preserve_source",
+    // The generated project skeleton currently supports rectangular output
+    // outlines. This default makes the mate board 250 mil larger on each side
+    // than the DUT outline bounds. Use "source_bounds" to match the DUT bounds.
+    "board_outline": {
+      "mode": "source_bounds_with_margin",
+      "margin_mils": 250
+    },
     "overwrite": true
   },
 

@@ -80,6 +80,7 @@ def build_debug_plate_artifact_operations(config: object) -> list[JsonObject]:
             output_dir=str(getattr(output, "output_dir")),
             output_board_filename=_output_board_filename(output),
             output_board_outline_mils=getattr(output, "board_outline_mils", None),
+            source_board_outline_mils=getattr(board, "board_outline_mils", None),
             output_board_origin_mils=getattr(output, "board_origin_mils", None),
             step_operation=step_operation,
             layer_step=layer_step,
@@ -133,6 +134,7 @@ def _pcb_layer_step_insert_operation(
     output_dir: str,
     output_board_filename: str,
     output_board_outline_mils: object,
+    source_board_outline_mils: object,
     output_board_origin_mils: object,
     step_operation: Mapping[str, object],
     layer_step: Mapping[str, object],
@@ -176,7 +178,8 @@ def _pcb_layer_step_insert_operation(
     }
     _add_optional(model_args, "rotation_z_degrees", insert_config.get("rotation_z_degrees"))
     _add_optional(model_args, "opacity", insert_config.get("opacity"))
-    bounds = insert_config.get("bounds_mils", output_board_outline_mils)
+    default_bounds = source_board_outline_mils or output_board_outline_mils
+    bounds = insert_config.get("bounds_mils", default_bounds)
     _add_optional(model_args, "bounds_mils", bounds)
     return {
         "id": f"insert_{_safe_id(board_key)}_pcb_layer_step",

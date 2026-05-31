@@ -586,6 +586,10 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
         "input/cricket-node/11-10028__cricket-node-hw__B.PrjPcb"
     )
     assert payload["output"]["backend"] == "altium"
+    assert payload["output"]["board_outline"] == {
+        "mode": "source_bounds_with_margin",
+        "margin_mils": 250.0,
+    }
     assert [projection["id"] for projection in payload["projections"]] == [
         "test_points",
         "mounts",
@@ -623,6 +627,10 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     assert payload["source"]["board"] == str(source_path.resolve())
     assert payload["source"]["project_context"] == "none"
     assert payload["output"]["origin"] == "preserve_source"
+    assert payload["output"]["board_outline"] == {
+        "mode": "source_bounds_with_margin",
+        "margin_mils": 250.0,
+    }
     assert payload["known_parts"]["manifest"] == str(manifest_path)
     projections = {projection["id"]: projection for projection in payload["projections"]}
     assert projections["test_points"]["source"] == {
@@ -655,6 +663,62 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is True
     assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"] is True
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
+
+
+def test_debug_plate_mate_output_board_outline_modes(tmp_path: Path) -> None:
+    source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
+
+    def first_outline(output: object) -> object:
+        config_path = _write_json(
+            tmp_path / "debug-plate.mate.a0.jsonc",
+            {
+                "schema": MATE_CONFIG_SCHEMA,
+                "source": {"board": str(source_path), "project_context": "none"},
+                "output": output,
+            },
+        )
+        config = load_debug_plate_config(config_path)
+        return build_debug_plate_mco(config)["operations"][0]["args"].get(
+            "board_outline_mils"
+        )
+
+    assert first_outline(
+        {
+            "origin": "preserve_source",
+            "board_outline": {"mode": "source_bounds"},
+        }
+    ) == {
+        "left": 0.0,
+        "bottom": 0.0,
+        "right": 1400.0,
+        "top": 900.0,
+    }
+    assert first_outline(
+        {
+            "origin": "preserve_source",
+            "board_outline": {
+                "mode": "source_bounds_with_margin",
+                "margin_mils": {
+                    "left": 100,
+                    "bottom": 200,
+                    "right": 300,
+                    "top": 400,
+                },
+            },
+        }
+    ) == {
+        "left": -100.0,
+        "bottom": -200.0,
+        "right": 1700.0,
+        "top": 1300.0,
+    }
+    with pytest.raises(ValueError, match="match_shape"):
+        first_outline(
+            {
+                "origin": "preserve_source",
+                "board_outline": {"mode": "match_shape"},
+            }
+        )
 
 
 def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
@@ -842,10 +906,10 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     payload = build_debug_plate_mco(config)
     operations = payload["operations"]
     assert operations[0]["args"]["board_outline_mils"] == {
-        "left": 0.0,
-        "bottom": 0.0,
-        "right": 1400.0,
-        "top": 900.0,
+        "left": -250.0,
+        "bottom": -250.0,
+        "right": 1650.0,
+        "top": 1150.0,
     }
     assert operations[0]["args"]["board_origin_mils"] == {
         "x": 1000.0,

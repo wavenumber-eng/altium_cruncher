@@ -40,6 +40,7 @@ from altium_cruncher.altium_cruncher_debug_plate_artifacts import (
     build_debug_plate_artifact_operations,
 )
 from altium_cruncher.altium_cruncher_debug_plate_defaults import (
+    DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS,
     default_known_parts_payload as _default_known_parts_payload,
     default_marker_payload as _default_marker_payload,
     default_mate_artifacts_payload as _default_mate_artifacts_payload,
@@ -171,6 +172,7 @@ class DebugPlateSelectionBoard:
     pcb_path: str
     components: tuple[DebugPlateSelectionComponent, ...]
     free_pads: tuple[DebugPlateSelectionPad, ...]
+    board_outline_mils: JsonObject | None = None
     board_outline: JsonObject | None = None
 
 
@@ -574,14 +576,16 @@ def inspect_pcbdoc_for_debug_plate(
 
 
 def _parse_output_config(raw: Mapping[str, object]) -> DebugPlateOutputConfig:
+    output_dir = _optional_string(raw, "output_dir", "output/debug-plate")
     project_name = _optional_string(raw, "project_name", "debug_plate")
+    layer_stack_template = _optional_string(raw, "layer_stack_template", "2-layer")
     return DebugPlateOutputConfig(
-        output_dir=_optional_string(raw, "output_dir", "output/debug-plate"),
-        project_name=project_name,
+        output_dir=output_dir or "output/debug-plate",
+        project_name=project_name or "debug_plate",
         schematic_filename=_optional_string(raw, "schematic_filename", None),
         board_filename=_optional_string(raw, "board_filename", None),
         project_filename=_optional_string(raw, "project_filename", None),
-        layer_stack_template=_optional_string(raw, "layer_stack_template", "2-layer"),
+        layer_stack_template=layer_stack_template or "2-layer",
         overwrite=_optional_bool(raw, "overwrite", False),
         board_outline_mils=_optional_number_object(
             raw,
@@ -601,18 +605,127 @@ def _parse_mate_output_config(
     inspection: Mapping[str, object],
 ) -> DebugPlateOutputConfig:
     output = _parse_output_config(raw)
-    if output.board_outline_mils is not None:
-        return output
     origin = _optional_string(raw, "origin", "preserve_source")
-    if origin != "preserve_source":
-        return output
-    outline = single_inspection_board_outline(inspection)
-    origin_mils = single_inspection_board_origin(inspection)
+    source_outline = single_inspection_board_outline(inspection)
+    outline = output.board_outline_mils
+    if outline is None and (origin == "preserve_source" or "board_outline" in raw):
+        outline = _resolve_mate_output_board_outline(raw, source_outline)
+    origin_mils = output.board_origin_mils
+    if origin_mils is None and origin == "preserve_source":
+        origin_mils = single_inspection_board_origin(inspection)
     return replace(
         output,
-        board_outline_mils=output.board_outline_mils or outline,
-        board_origin_mils=output.board_origin_mils or origin_mils,
+        board_outline_mils=outline,
+        board_origin_mils=origin_mils,
     )
+
+
+def _resolve_mate_output_board_outline(
+    raw: Mapping[str, object],
+    source_outline: JsonObject | None,
+) -> JsonObject | None:
+    outline_config = _optional_section(raw, "board_outline") or {}
+    mode = _optional_string(
+        outline_config,
+        "mode",
+        "source_bounds_with_margin",
+    )
+    if source_outline is None:
+        return None
+    if mode in {"source_bounds", "match_source_bounds", "match_bounds"}:
+        return dict(source_outline)
+    if mode in {
+        "source_bounds_with_margin",
+        "source_bounds_plus_margin",
+        "padded_rectangle",
+        "padded_source_bounds",
+    }:
+        return _expand_board_outline_mils(
+            source_outline,
+            _board_outline_margin_mils(outline_config),
+        )
+    if mode in {"match_shape", "source_shape"}:
+        raise ValueError(
+            "Debug-plate output.board_outline.mode='match_shape' needs an "
+            "arbitrary-outline project skeleton; use 'source_bounds' or "
+            "'source_bounds_with_margin' for the current rectangular skeleton"
+        )
+    raise ValueError(
+        "Debug-plate output.board_outline.mode must be 'source_bounds' or "
+        "'source_bounds_with_margin'"
+    )
+
+
+def _board_outline_margin_mils(
+    raw: Mapping[str, object],
+) -> tuple[float, float, float, float]:
+    value = raw.get("margin_mils", DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS)
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        margin = float(value)
+        if margin < 0.0:
+            raise ValueError(
+                "Debug-plate output.board_outline.margin_mils must be non-negative"
+            )
+        return (margin, margin, margin, margin)
+    if isinstance(value, dict):
+        margin = (
+            _optional_margin_side_mils(value, "left"),
+            _optional_margin_side_mils(value, "bottom"),
+            _optional_margin_side_mils(value, "right"),
+            _optional_margin_side_mils(value, "top"),
+        )
+        if any(side < 0.0 for side in margin):
+            raise ValueError(
+                "Debug-plate output.board_outline.margin_mils sides must be "
+                "non-negative"
+            )
+        return margin
+    raise ValueError(
+        "Debug-plate output.board_outline.margin_mils must be a number or an object"
+    )
+
+
+def _optional_margin_side_mils(raw: Mapping[str, object], name: str) -> float:
+    value = raw.get(name, 0.0)
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        raise ValueError(
+            f"Debug-plate output.board_outline.margin_mils.{name} must be numeric"
+        )
+    return float(value)
+
+
+def _expand_board_outline_mils(
+    outline: Mapping[str, object],
+    margin_mils: tuple[float, float, float, float],
+) -> JsonObject:
+    left_margin, bottom_margin, right_margin, top_margin = margin_mils
+    return {
+        "left": _number_field(
+            outline,
+            "source board_outline_mils",
+            "left",
+        )
+        - left_margin,
+        "bottom": _number_field(
+            outline,
+            "source board_outline_mils",
+            "bottom",
+        )
+        - bottom_margin,
+        "right": _number_field(
+            outline,
+            "source board_outline_mils",
+            "right",
+        )
+        + right_margin,
+        "top": _number_field(
+            outline,
+            "source board_outline_mils",
+            "top",
+        )
+        + top_margin,
+    }
+
 
 def _selection_from_inspection(inspection: Mapping[str, object]) -> JsonObject:
     boards = inspection.get("boards", [])
@@ -633,10 +746,16 @@ def _selection_board(board: Mapping[str, object]) -> JsonObject:
         "pcb_path": str(board.get("pcb_path", "") or ""),
         "components": list(_list_field(board, "components")),
         "free_pads": list(_list_field(board, "free_pads")),
-        "board_outline": dict(board["board_outline"])
-        if isinstance(board.get("board_outline"), dict)
-        else None,
+        "board_outline_mils": _optional_dict_copy(board, "board_outline_mils"),
+        "board_outline": _optional_dict_copy(board, "board_outline"),
     }
+
+
+def _optional_dict_copy(payload: Mapping[str, object], name: str) -> JsonObject | None:
+    value = payload.get(name)
+    if isinstance(value, dict):
+        return dict(value)
+    return None
 
 
 def _list_field(payload: Mapping[str, object], name: str) -> list[object]:
@@ -776,11 +895,13 @@ def _parse_marker_config(raw: Mapping[str, object]) -> DebugPlateMarkerConfig | 
     enabled = _optional_bool(raw, "enabled", True)
     if not enabled:
         return None
+    marker_text = _optional_string(raw, "text", "DEBUG PLATE")
+    marker_layer = _optional_string(raw, "layer", "TOP_OVERLAY")
     return DebugPlateMarkerConfig(
-        text=_optional_string(raw, "text", "DEBUG PLATE"),
+        text=marker_text or "DEBUG PLATE",
         position_mils=_required_point(raw, "position_mils", default=(200.0, 200.0)),
         height_mils=_optional_float(raw, "height_mils", 60.0),
-        layer=_optional_string(raw, "layer", "TOP_OVERLAY"),
+        layer=marker_layer or "TOP_OVERLAY",
     )
 
 
@@ -904,9 +1025,11 @@ def _selection_from_mate_inspection(
                 "pcb_path": str(board.get("pcb_path", "") or ""),
                 "components": components,
                 "free_pads": free_pads,
-                "board_outline": dict(board["board_outline"])
-                if isinstance(board.get("board_outline"), dict)
-                else None,
+                "board_outline_mils": _optional_dict_copy(
+                    board,
+                    "board_outline_mils",
+                ),
+                "board_outline": _optional_dict_copy(board, "board_outline"),
             }
         )
     _validate_mate_source_sides(root, boards)
@@ -1379,6 +1502,11 @@ def _parse_selection_board(raw: Mapping[str, object]) -> DebugPlateSelectionBoar
             _parse_selection_pad(pad)
             for pad in _list_field(raw, "free_pads")
             if isinstance(pad, dict)
+        ),
+        board_outline_mils=_optional_number_object(
+            raw,
+            "board_outline_mils",
+            ("left", "bottom", "right", "top"),
         ),
         board_outline=_optional_section(raw, "board_outline"),
     )

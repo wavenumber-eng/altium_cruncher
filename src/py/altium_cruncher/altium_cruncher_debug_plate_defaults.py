@@ -6,6 +6,8 @@ from pathlib import Path
 
 from altium_cruncher.altium_cruncher_mco import JsonObject
 
+DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS = 250.0
+
 
 def default_mate_output_payload() -> JsonObject:
     return {
@@ -13,6 +15,10 @@ def default_mate_output_payload() -> JsonObject:
         "output_dir": "output/debug-plate",
         "project_name": "debug_plate",
         "origin": "preserve_source",
+        "board_outline": {
+            "mode": "source_bounds_with_margin",
+            "margin_mils": DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS,
+        },
         "overwrite": False,
         "layer_stack_template": "2-layer",
     }

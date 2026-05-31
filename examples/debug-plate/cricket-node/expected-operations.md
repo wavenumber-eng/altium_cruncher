@@ -3,7 +3,8 @@
 `debug-plate plan debug-plate.mate.a0.jsonc` should emit an MCO with this
 high-level shape after local inputs and the known-parts cache exist:
 
-1. `project.create-skeleton`
+1. `project.create-skeleton`, with a rectangular board outline expanded from
+   the DUT bounds by the configured margin
 2. Six `file.copy` operations for the selected SchLib/PcbLib cache files
 3. For each selected `TP1-27`: schematic component, schematic net label, PCB
    component, PCB net label, and two mechanical reference rings
@@ -17,7 +18,8 @@ high-level shape after local inputs and the known-parts cache exist:
    track/polygon feature settings, copper, drill cutouts, board outline bodies,
    and the configured red `test_points` highlight
 9. `pcbdoc.add-embedded-3d-model` to insert that STEP artifact into the output
-   PcbDoc at the configured 8.5 mm Z height
+   PcbDoc at the configured 8.5 mm Z height, using the DUT outline bounds for
+   the body projection
 
 The example config uses cricket-node's `M1-M4` mount designators directly. The
 known-parts manifest still documents the old node-test-array `M5-M8` to
