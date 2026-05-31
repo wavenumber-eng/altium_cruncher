@@ -22,8 +22,9 @@ running the workflow.
   they can be manually moved after generation. Its output board outline defaults
   to the DUT bounds plus `500 mil` on the left, top, and bottom, and `3000 mil`
   on the right. Its generated schematic defaults to an ANSI `D` sheet with
-  symbol-type groups, pin-directed wires, and matching-orientation net labels
-  placed on those wires.
+  natural designator order inside each symbol-type group, centered-above
+  schematic designators, pin-directed wires, and matching-orientation net
+  labels placed on those wires.
 - `debug-plate.jsonc` is the older reviewed config shape kept for comparison.
 - `known-parts/debug-plate-known-parts.json` records the node-test-array cache
   layout expected by the config.

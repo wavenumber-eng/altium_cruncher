@@ -10,7 +10,8 @@ high-level shape after local inputs and the known-parts cache exist:
    pin-directed schematic wire, matching-orientation schematic net label on
    that wire, PCB component linked back to that schematic ID, and one expanded
    source-pad reference outline. Symbols are grouped by symbol type on the
-   schematic sheet.
+   schematic sheet, sorted in natural designator order inside each group, and
+   written with centered-above schematic designators.
 4. For each selected `M1-M4`: schematic component with a stable unique ID and
    PCB standoff component linked back to that schematic ID
 5. For each matching free NPTH alignment pad: schematic component, optional

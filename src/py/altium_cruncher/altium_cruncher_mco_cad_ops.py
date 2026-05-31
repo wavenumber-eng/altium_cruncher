@@ -17,7 +17,12 @@ from altium_cruncher.altium_cruncher_mco import (
 
 if TYPE_CHECKING:
     from altium_cruncher.altium_cruncher_pcb_layer_step import PcbLayerStepHighlight
-    from altium_monkey import AltiumPcbDoc, AltiumSchDoc, TextOrientation
+    from altium_monkey import (
+        AltiumPcbDoc,
+        AltiumSchDoc,
+        TextJustification,
+        TextOrientation,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1222,6 +1227,18 @@ def _sch_text_orientation(value: object) -> "TextOrientation":
     raise ValueError("Schematic text orientation must be a string name or native integer id")
 
 
+def _sch_text_justification(value: object) -> "TextJustification":
+    from altium_monkey import TextJustification
+
+    if isinstance(value, int) and not isinstance(value, bool):
+        return TextJustification(value)
+    if isinstance(value, str):
+        return cast("TextJustification", _enum_by_label(TextJustification, value))
+    raise ValueError(
+        "Schematic text justification must be a string name or native integer id"
+    )
+
+
 def _enum_by_label(enum_type: type[IntEnum], value: str) -> IntEnum:
     normalized = value.strip().replace(" ", "_").replace("-", "_").upper()
     layer_aliases = {"TOP_LAYER": "TOP", "BOTTOM_LAYER": "BOTTOM"}
@@ -1267,13 +1284,22 @@ def _apply_schematic_text_style(
         if field_name == "designator_style"
         else "set_comment_style"
     )
-    getattr(component, method_name)(
+    text_record = getattr(component, method_name)(
         x=x,
         y=y,
         font_name=_optional_string(style, "font_name", "Arial"),
         font_size=int(_optional_float(style, "font_size", 12.0)),
         bold=_optional_bool(style, "bold", field_name == "designator_style"),
     )
+    justification = style.get("justification")
+    if justification is not None:
+        setattr(text_record, "justification", _sch_text_justification(justification))
+        if hasattr(text_record, "_has_justification"):
+            setattr(text_record, "_has_justification", True)
+    if position is not None and hasattr(text_record, "auto_position"):
+        setattr(text_record, "auto_position", False)
+        if hasattr(text_record, "_has_auto_position"):
+            setattr(text_record, "_has_auto_position", True)
 
 
 def _arrange_pcb_designators(

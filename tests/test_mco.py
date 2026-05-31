@@ -728,6 +728,13 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                         "designator": "TP1",
                         "unique_id": "ABC12345",
                         "position_mils": [500, 700],
+                        "designator_style": {
+                            "position_mils": [500, 850],
+                            "justification": "BOTTOM_CENTER",
+                            "font_name": "Arial",
+                            "font_size": 10,
+                            "bold": True,
+                        },
                         "parameters": {
                             "Value": "Debug Contact",
                             "Manufacturer Part Number": "DBG-001",
@@ -778,7 +785,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
 
     assert result.ok is True
 
-    from altium_monkey import AltiumPcbDoc, AltiumSchDoc
+    from altium_monkey import AltiumPcbDoc, AltiumSchDoc, TextJustification
     from altium_monkey.altium_record_sch__designator import AltiumSchDesignator
 
     schdoc = AltiumSchDoc(tmp_path / "generated" / "debug_plate.SchDoc")
@@ -790,6 +797,16 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
         if isinstance(parameter, AltiumSchDesignator)
     ]
     assert schematic_designators == ["TP1"]
+    designator_record = next(
+        parameter
+        for component in schdoc.components
+        for parameter in component.parameters
+        if isinstance(parameter, AltiumSchDesignator)
+    )
+    assert designator_record.location.x_mils == 500.0
+    assert designator_record.location.y_mils == 850.0
+    assert designator_record.justification == TextJustification.BOTTOM_CENTER
+    assert designator_record.auto_position is False
     assert [component.lib_reference for component in schdoc.components] == [
         "DBG_CONTACT"
     ]

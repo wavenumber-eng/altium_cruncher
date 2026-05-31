@@ -382,13 +382,16 @@
   </p>
   <p>
     Generated schematic placement is intentionally simple but collision-aware:
-    mate symbols are placed on a coarse grid grouped by symbol type, the
-    default sheet style is <code>D</code>, wires extend away from each symbol in
-    the selected signal pin orientation, and schematic net labels sit along
-    those wires with matching orientation. Wire length is estimated from the
-    label text so it remains visible beneath the label. This keeps the first
-    generated schematic reviewable while leaving connector-specific and
-    breakout-specific schematic organization for later slices.
+    mate symbols are placed on a coarse grid grouped by symbol type and sorted
+    in natural designator order within each group, the default sheet style is
+    <code>D</code>, schematic designators are centered just above their symbols,
+    wires extend away from each symbol in the selected signal pin orientation,
+    and schematic net labels sit along those wires with matching orientation.
+    Wire length is estimated from the label text so it remains visible beneath
+    the label, and the grid leaves room before the next symbol column. This
+    keeps the first generated schematic reviewable while leaving
+    connector-specific and breakout-specific schematic organization for later
+    slices.
   </p>
   <p>
     <code>pcb_designators</code> is a post-placement PCB text normalization

@@ -10,9 +10,11 @@ from altium_cruncher.altium_cruncher_mco import JsonObject
 
 _SCHEMATIC_COLUMN_COUNT = 4
 _SCHEMATIC_ORIGIN_MILS = (1200.0, 1200.0)
-_SCHEMATIC_COLUMN_SPACING_MILS = 1500.0
+_SCHEMATIC_COLUMN_SPACING_MILS = 2400.0
 _SCHEMATIC_ROW_SPACING_MILS = 900.0
 _SCHEMATIC_GROUP_GAP_ROWS = 1
+_SCHEMATIC_DESIGNATOR_Y_OFFSET_MILS = 180.0
+_SCHEMATIC_DESIGNATOR_FONT_SIZE = 10
 _SCHEMATIC_NET_LABEL_OFFSET_MILS = 160.0
 _SCHEMATIC_NET_LABEL_MIN_SPAN_MILS = 350.0
 _SCHEMATIC_NET_LABEL_CHAR_WIDTH_MILS = 75.0
@@ -55,6 +57,23 @@ def schematic_grouped_positions(group_keys: Sequence[str]) -> list[tuple[float, 
         column = group_index % _SCHEMATIC_COLUMN_COUNT
         positions.append(_schematic_position_at(row=row, column=column))
     return positions
+
+
+def schematic_designator_style(
+    designator: str,
+    component_position_mils: tuple[float, float],
+) -> JsonObject:
+    component_x, component_y = component_position_mils
+    return {
+        "position_mils": [
+            component_x,
+            component_y + _SCHEMATIC_DESIGNATOR_Y_OFFSET_MILS,
+        ],
+        "justification": "BOTTOM_CENTER",
+        "font_name": "Arial",
+        "font_size": _SCHEMATIC_DESIGNATOR_FONT_SIZE,
+        "bold": True,
+    }
 
 
 def schematic_net_route(

@@ -39,6 +39,7 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
     transform_source_pad_geometries,
 )
 from altium_cruncher.altium_cruncher_debug_plate_schematic import (
+    schematic_designator_style,
     schematic_grouped_positions,
     schematic_net_label_operation,
     schematic_net_route,
@@ -1678,6 +1679,9 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
             free_counts=free_counts,
         )
         resolved_targets.append((target, part, designator))
+    resolved_targets = _sort_known_part_targets_by_group_and_designator(
+        resolved_targets,
+    )
     channel_offsets = _component_link_channel_offsets(
         designator for _, _, designator in resolved_targets
     )
@@ -1765,6 +1769,22 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
             board_file=_output_file(config.output.output_dir, _board_filename(config.output)),
             board_outline_mils=config.output.board_outline_mils,
             requests=pcb_label_requests,
+        ),
+    )
+
+
+def _sort_known_part_targets_by_group_and_designator(
+    resolved_targets: list[tuple[JsonObject, Mapping[str, object], str]],
+) -> list[tuple[JsonObject, Mapping[str, object], str]]:
+    group_order: dict[str, int] = {}
+    for _target, part, _designator in resolved_targets:
+        group_key = _part_string(part, "symbol_name")
+        group_order.setdefault(group_key, len(group_order))
+    return sorted(
+        resolved_targets,
+        key=lambda item: (
+            group_order[_part_string(item[1], "symbol_name")],
+            designator_sort_key(item[2]),
         ),
     )
 
@@ -1932,6 +1952,10 @@ def _schematic_part_operation(
             "footprint_model": footprint_name,
             "footprint_library": footprint_name,
             "parameters": _debug_plate_component_parameters(target, part),
+            "designator_style": schematic_designator_style(
+                designator,
+                position_mils,
+            ),
         },
     }
 

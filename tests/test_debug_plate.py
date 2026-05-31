@@ -23,6 +23,9 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
     build_pcb_board_projection_operations,
     build_pcb_reference_graphics_operations,
 )
+from altium_cruncher.altium_cruncher_debug_plate_schematic import (
+    schematic_grouped_positions,
+)
 from altium_cruncher.altium_cruncher_debug_plate_parts import (
     DEBUG_PLATE_PARTS_CACHE_FILENAME,
     build_node_test_array_parts_manifest,
@@ -496,6 +499,13 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
         "generated/libraries/schlib/9774080360R.SchLib"
     )
     assert operations[5]["args"]["position_mils"] == [1200.0, 1200.0]
+    assert operations[5]["args"]["designator_style"] == {
+        "position_mils": [1200.0, 1380.0],
+        "justification": "BOTTOM_CENTER",
+        "font_name": "Arial",
+        "font_size": 10,
+        "bold": True,
+    }
     assert operations[6]["args"]["footprint"] == "9774080360R-YIYUAN"
     assert operations[6]["args"]["library"] == (
         "generated/libraries/pcblib/split/9774080360R-YIYUAN.PcbLib"
@@ -504,6 +514,10 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[7]["args"]["designator"] == "P1"
     assert operations[7]["args"]["parameters"]["DebugPlateSourceNet"] == "ALIGN_NET"
     assert operations[7]["args"]["position_mils"] == [1200.0, 3000.0]
+    assert operations[7]["args"]["designator_style"]["position_mils"] == [
+        1200.0,
+        3180.0,
+    ]
     assert operations[8]["args"]["points_mils"] == [[1200.0, 2880.0], [1200.0, 1925.0]]
     assert operations[9]["args"]["text"] == "ALIGN_NET"
     assert operations[9]["args"]["location_mils"] == [1200.0, 2720.0]
@@ -523,6 +537,83 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[12]["args"]["inverted_rectangle_size_mils"] == [450.0, 70.0]
     assert operations[12]["args"]["frame_size_mils"] == [450.0, 70.0]
     assert operations[12]["args"]["text_justification"] == "RIGHT_TOP"
+
+
+def test_debug_plate_schematic_grid_groups_and_buffers_columns() -> None:
+    positions = schematic_grouped_positions(["tp"] * 5 + ["mount"] + ["align"])
+
+    assert positions == [
+        (1200.0, 1200.0),
+        (3600.0, 1200.0),
+        (6000.0, 1200.0),
+        (8400.0, 1200.0),
+        (1200.0, 2100.0),
+        (1200.0, 3900.0),
+        (1200.0, 5700.0),
+    ]
+
+
+def test_debug_plate_known_part_operations_use_natural_designator_order(
+    tmp_path: Path,
+) -> None:
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    config = load_debug_plate_config(
+        _write_json(
+            tmp_path / "debug-plate.jsonc",
+            {
+                "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+                "output": {
+                    "output_dir": "generated",
+                    "project_name": "debug_plate",
+                    "overwrite": True,
+                },
+                "known_parts": {
+                    "manifest": str(manifest_path),
+                },
+                "marker": {"enabled": False},
+                "selection": {
+                    "boards": [
+                        {
+                            "board_key": "fixture",
+                            "components": [
+                                {
+                                    "designator": "TP10",
+                                    "kind": "test_point",
+                                    "footprint": "TEST_POINT",
+                                    "layer": "BOTTOM",
+                                    "x_mils": 400,
+                                    "y_mils": 500,
+                                },
+                                {
+                                    "designator": "TP2",
+                                    "kind": "test_point",
+                                    "footprint": "TEST_POINT",
+                                    "layer": "BOTTOM",
+                                    "x_mils": 200,
+                                    "y_mils": 300,
+                                },
+                            ],
+                        }
+                    ]
+                },
+            },
+        )
+    )
+
+    operations = build_debug_plate_mco(config)["operations"]
+    schematic_components = [
+        operation
+        for operation in operations
+        if operation["op"] == "schdoc.add-component"
+    ]
+
+    assert [operation["args"]["designator"] for operation in schematic_components] == [
+        "TP2",
+        "TP10",
+    ]
+    assert [
+        operation["args"]["position_mils"] for operation in schematic_components
+    ] == [[1200.0, 1200.0], [3600.0, 1200.0]]
 
 
 def test_cricket_node_debug_plate_example_config_is_planable() -> None:
@@ -593,6 +684,10 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
     assert operations[8]["args"]["points_mils"] == [[1300.0, 1200.0], [1930.0, 1200.0]]
     assert operations[9]["args"]["location_mils"] == [1460.0, 1200.0]
     assert operations[9]["args"]["orientation"] == 0
+    assert operations[7]["args"]["designator_style"]["position_mils"] == [
+        1200.0,
+        1380.0,
+    ]
     assert operations[11]["args"]["position_mils"] == [1200.0, 3000.0]
     assert operations[13]["args"]["position_mils"] == [1200.0, 4800.0]
     assert operations[14]["args"]["points_mils"] == [[1200.0, 4680.0], [1200.0, 3725.0]]
@@ -1515,7 +1610,12 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
 
     assert result.ok is True
 
-    from altium_monkey import AltiumPcbDoc, AltiumSchDoc, PcbTextJustification
+    from altium_monkey import (
+        AltiumPcbDoc,
+        AltiumSchDoc,
+        PcbTextJustification,
+        TextJustification,
+    )
     from altium_monkey.altium_record_sch__sheet import SheetStyle
     from altium_monkey.altium_record_sch__designator import AltiumSchDesignator
 
@@ -1530,6 +1630,19 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
         if isinstance(parameter, AltiumSchDesignator)
     ]
     assert schematic_designators == ["TP1", "M1", "P1"]
+    schematic_designator_records = {
+        parameter.text: parameter
+        for component in schdoc.components
+        for parameter in component.parameters
+        if isinstance(parameter, AltiumSchDesignator)
+    }
+    assert schematic_designator_records["TP1"].location.x_mils == 1200.0
+    assert schematic_designator_records["TP1"].location.y_mils == 1380.0
+    assert (
+        schematic_designator_records["TP1"].justification
+        == TextJustification.BOTTOM_CENTER
+    )
+    assert schematic_designator_records["TP1"].auto_position is False
     assert [label.text for label in schdoc.net_labels] == ["+VIN", "ALIGN_NET"]
     assert [
         [(point.x_mils, point.y_mils) for point in wire.points_mils]
