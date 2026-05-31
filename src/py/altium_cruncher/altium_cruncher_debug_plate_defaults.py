@@ -14,6 +14,7 @@ def default_mate_output_payload() -> JsonObject:
         "backend": "altium",
         "output_dir": "output/debug-plate",
         "project_name": "debug_plate",
+        "schematic_sheet_style": "D",
         "origin": "preserve_source",
         "board_outline": {
             "mode": "source_bounds_with_margin",
@@ -135,6 +136,7 @@ def default_output_config_payload() -> JsonObject:
     return {
         "output_dir": "output/debug-plate",
         "project_name": "debug_plate",
+        "schematic_sheet_style": "D",
         "overwrite": False,
         "layer_stack_template": "2-layer",
         "board_outline_mils": {

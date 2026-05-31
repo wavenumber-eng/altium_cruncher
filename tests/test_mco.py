@@ -198,6 +198,7 @@ def test_project_create_skeleton_writes_altium_project_bundle(tmp_path: Path) ->
                     "args": {
                         "output_dir": "generated",
                         "project_name": "debug_plate",
+                        "schematic_sheet_style": "D",
                         "overwrite": True,
                         "board_outline_mils": {
                             "left": 100,
@@ -222,8 +223,13 @@ def test_project_create_skeleton_writes_altium_project_bundle(tmp_path: Path) ->
     assert (tmp_path / "generated" / "debug_plate.SchDoc").exists()
     assert (tmp_path / "generated" / "debug_plate.PcbDoc").exists()
 
-    from altium_monkey import AltiumPcbDoc
+    from altium_monkey import AltiumPcbDoc, AltiumSchDoc
+    from altium_monkey.altium_record_sch__sheet import SheetStyle
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
+
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "debug_plate.SchDoc")
+    assert schdoc.sheet is not None
+    assert schdoc.sheet.sheet_style == SheetStyle.D
 
     pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
     assert pcbdoc.board.origin_x == 1234.0

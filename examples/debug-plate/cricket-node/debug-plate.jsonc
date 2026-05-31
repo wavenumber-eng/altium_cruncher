@@ -7,6 +7,7 @@
   "output": {
     "output_dir": "output/cricket-node-debug-plate",
     "project_name": "cricket_node_debug_plate",
+    "schematic_sheet_style": "D",
     "overwrite": true,
     "board_outline_mils": {
       "left": 0,

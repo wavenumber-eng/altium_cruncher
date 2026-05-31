@@ -238,6 +238,7 @@ class ProjectSkeletonArgs:
     output_dir: Path
     project_name: str
     schematic_filename: str | None
+    schematic_sheet_style: str | None
     board_filename: str | None
     project_filename: str | None
     layer_stack_template: str
@@ -416,7 +417,7 @@ def _raw_operation_items(payload: object) -> list[object]:
 def _parse_mco_operation(payload: object, index: int) -> McoOperationSpec:
     raw = _json_object(payload, f"MCO operation {index}")
     op = _required_string(raw, "op", f"MCO operation {index}")
-    operation_id = _optional_string(raw, "id", f"op{index}")
+    operation_id = _optional_string(raw, "id", f"op{index}") or f"op{index}"
     args = raw.get("args", {})
     message = _optional_string(raw, "message", None)
     on_fail = _optional_string(raw, "on_fail", None)
@@ -530,7 +531,10 @@ def _op_fail(
     spec: McoOperationSpec,
     _context: McoExecutionContext,
 ) -> McoOperationResult:
-    text = _optional_string(spec.args, "message", spec.message or "requested failure")
+    text = (
+        _optional_string(spec.args, "message", spec.message or "requested failure")
+        or "requested failure"
+    )
     return McoOperationResult.failed(spec, text)
 
 
@@ -560,6 +564,10 @@ def _op_create_project_skeleton(
         board_filename=options.board_filename,
         project_filename=options.project_filename,
         layer_stack_template=options.layer_stack_template,
+    )
+    _apply_project_skeleton_schematic_sheet_style(
+        builder.schematic_builder,
+        options.schematic_sheet_style,
     )
     for document in options.documents:
         builder.project_builder.add_document(document)
@@ -596,18 +604,43 @@ def _apply_project_skeleton_board_origin(
     pcbdoc.save(board_path)
 
 
+def _apply_project_skeleton_schematic_sheet_style(
+    schdoc: object,
+    sheet_style: str | None,
+) -> None:
+    if sheet_style is None:
+        return
+
+    from altium_monkey import SheetStyle
+
+    sheet = getattr(schdoc, "sheet", None)
+    if sheet is None:
+        raise ValueError("Schematic document has no sheet record")
+    normalized = sheet_style.strip().replace(" ", "_").replace("-", "_").upper()
+    if normalized in SheetStyle.__members__:
+        style = SheetStyle[normalized]
+    else:
+        style = SheetStyle(int(sheet_style))
+    sheet.sheet_style = int(style)
+    sheet.use_custom_sheet = False
+
+
 def _parse_project_skeleton_args(
     args: Mapping[str, object],
     context: McoExecutionContext,
 ) -> ProjectSkeletonArgs:
-    project_name = _optional_string(args, "project_name", "debug_plate")
+    project_name = _optional_string(args, "project_name", "debug_plate") or "debug_plate"
+    layer_stack_template = (
+        _optional_string(args, "layer_stack_template", "2-layer") or "2-layer"
+    )
     return ProjectSkeletonArgs(
         output_dir=_optional_path(args, "output_dir", context.work_dir / "output", context),
         project_name=project_name,
         schematic_filename=_optional_string(args, "schematic_filename", None),
+        schematic_sheet_style=_optional_string(args, "schematic_sheet_style", None),
         board_filename=_optional_string(args, "board_filename", None),
         project_filename=_optional_string(args, "project_filename", None),
-        layer_stack_template=_optional_string(args, "layer_stack_template", "2-layer"),
+        layer_stack_template=layer_stack_template,
         overwrite=_optional_bool(args, "overwrite", False),
         board_outline_mils=_optional_number_object(
             args,
@@ -792,6 +825,7 @@ def _mco_template_text() -> str:
         '      "args": {\n'
         '        "output_dir": "output/debug-plate",\n'
         '        "project_name": "debug_plate",\n'
+        '        "schematic_sheet_style": "D",\n'
         '        "overwrite": false,\n'
         '        "board_outline_mils": {\n'
         '          "left": 0,\n'

@@ -187,6 +187,7 @@
     <li>Select mount features and allow node-test-array <code>M5-M8</code> normalization to output <code>M1-M4</code> where needed.</li>
     <li>Select free NPTH alignment holes as source free-pad/drill objects; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
     <li>Project mate components from the current node-test-array cache.</li>
+    <li>Place generated schematic symbols on a roomy sheet, currently ANSI <code>D</code> by default, and route each netted symbol with a short wire that leaves the symbol in the known-part signal pin orientation. The schematic net label is placed on that wire, not directly on top of the symbol.</li>
     <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>DEBUG_PLATE_FEATURES</code> so they can be manually moved after generation.</li>
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
     <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad shape where the writer can express it.</li>
@@ -211,6 +212,7 @@
     "backend": "altium",
     "output_dir": "output/cricket-node-mate",
     "project_name": "cricket_node_mate",
+    "schematic_sheet_style": "D",
     "origin": "preserve_source",
     "board_outline": {
       "mode": "source_bounds_with_margin",
@@ -377,6 +379,14 @@
     estimate so every board-edge label box uses the same width. Board-edge
     labels and their headers are emitted after the generated feature union and
     are therefore not part of <code>DEBUG_PLATE_FEATURES</code>.
+  </p>
+  <p>
+    Generated schematic placement is intentionally simple but collision-aware:
+    mate symbols are placed on a coarse grid, the default sheet style is
+    <code>D</code>, wires extend away from each symbol in the selected signal
+    pin orientation, and schematic net labels sit along those wires. This keeps
+    the first generated schematic reviewable while leaving connector-group and
+    breakout-specific schematic organization for later slices.
   </p>
   <p>
     <code>pcb_designators</code> is a post-placement PCB text normalization

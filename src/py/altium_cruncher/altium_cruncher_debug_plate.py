@@ -38,6 +38,12 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
     single_inspection_board_outline,
     transform_source_pad_geometries,
 )
+from altium_cruncher.altium_cruncher_debug_plate_schematic import (
+    schematic_net_label_operation,
+    schematic_net_route,
+    schematic_position,
+    schematic_wire_operation,
+)
 from altium_cruncher.altium_cruncher_debug_plate_artifacts import (
     build_debug_plate_artifact_operations,
 )
@@ -76,6 +82,7 @@ class DebugPlateOutputConfig:
     output_dir: str
     project_name: str
     schematic_filename: str | None
+    schematic_sheet_style: str | None
     board_filename: str | None
     project_filename: str | None
     layer_stack_template: str
@@ -597,6 +604,7 @@ def _parse_output_config(raw: Mapping[str, object]) -> DebugPlateOutputConfig:
         output_dir=output_dir or "output/debug-plate",
         project_name=project_name or "debug_plate",
         schematic_filename=_optional_string(raw, "schematic_filename", None),
+        schematic_sheet_style=_optional_string(raw, "schematic_sheet_style", "D"),
         board_filename=_optional_string(raw, "board_filename", None),
         project_filename=_optional_string(raw, "project_filename", None),
         layer_stack_template=layer_stack_template or "2-layer",
@@ -1604,6 +1612,7 @@ def _project_create_operation(
         "overwrite": output.overwrite,
     }
     _add_optional(args, "schematic_filename", output.schematic_filename)
+    _add_optional(args, "schematic_sheet_style", output.schematic_sheet_style)
     _add_optional(args, "board_filename", output.board_filename)
     _add_optional(args, "project_filename", output.project_filename)
     _add_optional(args, "board_outline_mils", output.board_outline_mils)
@@ -1682,14 +1691,31 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
                 index,
             )
         )
-        net_label_operation = _schematic_net_label_operation(
-            config.output,
-            target,
-            designator,
-            index,
+        schematic_file = _output_file(config.output.output_dir, _schematic_filename(config.output))
+        net_name = _target_optional_string(target, "net_name")
+        net_route = schematic_net_route(
+            symbol_library_path=_known_part_file(known_parts, part, "symbol_library"),
+            symbol_name=_part_string(part, "symbol_name"),
+            signal_pin_designator=_part_optional_string(part, "signal_pad_designator"),
+            component_position_mils=schematic_position(index),
+            net_name=net_name,
         )
-        if net_label_operation is not None:
-            operations.append(net_label_operation)
+        if net_route is not None:
+            operations.append(
+                schematic_wire_operation(
+                    schematic_file=schematic_file,
+                    designator=designator,
+                    route=net_route,
+                )
+            )
+            operations.append(
+                schematic_net_label_operation(
+                    schematic_file=schematic_file,
+                    designator=designator,
+                    net_name=str(net_name),
+                    route=net_route,
+                )
+            )
         operations.append(
             _pcb_part_operation(
                 config.output,
@@ -1894,33 +1920,11 @@ def _schematic_part_operation(
             "symbol": symbol_name,
             "designator": designator,
             "unique_id": _component_link_unique_id(output, target, designator),
-            "position_mils": list(_schematic_position(index)),
+            "position_mils": list(schematic_position(index)),
             "design_item_id": symbol_name,
             "footprint_model": footprint_name,
             "footprint_library": footprint_name,
             "parameters": _debug_plate_component_parameters(target, part),
-        },
-    }
-
-
-def _schematic_net_label_operation(
-    output: DebugPlateOutputConfig,
-    target: Mapping[str, object],
-    designator: str,
-    index: int,
-) -> JsonObject | None:
-    net_name = _target_optional_string(target, "net_name")
-    if not net_name:
-        return None
-    return {
-        "id": f"label_{_safe_id(designator)}_net",
-        "op": "schdoc.add-net-label",
-        "message": f"Add debug-plate schematic net label for {designator}",
-        "args": {
-            "file": _output_file(output.output_dir, _schematic_filename(output)),
-            "overwrite": True,
-            "text": net_name,
-            "location_mils": list(_schematic_net_label_position(index)),
         },
     }
 
@@ -2173,17 +2177,6 @@ def _next_prefixed_designator(prefix: str, counters: dict[str, int]) -> str:
     current = counters.get(prefix, 0) + 1
     counters[prefix] = current
     return f"{prefix}{current}"
-
-
-def _schematic_position(index: int) -> tuple[float, float]:
-    column = (index - 1) % 4
-    row = (index - 1) // 4
-    return (1200.0 + column * 900.0, 1200.0 + row * 500.0)
-
-
-def _schematic_net_label_position(index: int) -> tuple[float, float]:
-    x_mils, y_mils = _schematic_position(index)
-    return (x_mils + 350.0, y_mils)
 
 
 def _schematic_filename(output: DebugPlateOutputConfig) -> str:
@@ -2594,6 +2587,7 @@ def _debug_plate_template_text() -> str:
         '  "output": {\n'
         '    "output_dir": "output/debug-plate",\n'
         '    "project_name": "debug_plate",\n'
+        '    "schematic_sheet_style": "D",\n'
         '    "overwrite": false,\n'
         '    "layer_stack_template": "2-layer",\n'
         '    "board_outline_mils": {\n'

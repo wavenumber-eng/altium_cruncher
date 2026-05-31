@@ -47,16 +47,25 @@ def _write_minimal_known_part_cache(tmp_path: Path) -> Path:
     from altium_monkey.altium_record_sch__pin import AltiumSchPin
 
     cache_dir = tmp_path / "cache"
-    for symbol_name, pin_name in [
-        ("YZ209315103P-01", "SIGNAL"),
-        ("9774080360R", "MOUNT"),
-        ("H2184-05", "ALIGN"),
+    for symbol_name, pin_name, x_mils, y_mils, orientation in [
+        ("YZ209315103P-01", "SIGNAL", 0, 0, 0),
+        ("9774080360R", "MOUNT", 0, -100, 3),
+        ("H2184-05", "ALIGN", 0, -20, 3),
     ]:
         schlib_path = cache_dir / "schlib" / f"{symbol_name}.SchLib"
         schlib_path.parent.mkdir(parents=True, exist_ok=True)
         schlib = AltiumSchLib()
         symbol = schlib.add_symbol(symbol_name)
-        symbol.add_pin(AltiumSchPin("1", pin_name, -100, 0, orientation=2, length=100))
+        symbol.add_pin(
+            AltiumSchPin(
+                "1",
+                pin_name,
+                x_mils,
+                y_mils,
+                orientation=orientation,
+                length=100,
+            )
+        )
         schlib.save(schlib_path)
 
     for footprint_name, pcblib_name in [
@@ -199,6 +208,7 @@ def test_debug_plate_template_builds_initial_mco(tmp_path: Path) -> None:
         "project.create-skeleton",
         "pcbdoc.add-text",
     ]
+    assert operations[0]["args"]["schematic_sheet_style"] == "D"
     assert operations[1]["args"]["file"] == "output/debug-plate/debug_plate.PcbDoc"
 
 
@@ -394,25 +404,7 @@ def test_debug_plate_known_parts_manifest_tracks_node_test_array_roles(
 
 
 def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> None:
-    cache_dir = tmp_path / "cache"
-    for relative_path in [
-        "schlib/YZ209315103P-01.SchLib",
-        "pcblib/split/YZ209315103P-01.PcbLib",
-        "schlib/9774080360R.SchLib",
-        "pcblib/split/9774080360R-YIYUAN.PcbLib",
-        "schlib/H2184-05.SchLib",
-        "pcblib/split/H2184-05.PcbLib",
-    ]:
-        output_path = cache_dir / relative_path
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_bytes(b"fixture")
-    manifest_path = write_debug_plate_known_parts_manifest(
-        build_node_test_array_parts_manifest(
-            tmp_path / "node-test-array.PrjPcb",
-            cache_dir,
-        ),
-        cache_dir / DEBUG_PLATE_PARTS_CACHE_FILENAME,
-    )
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
 
     config = load_debug_plate_config(
         _write_json(
@@ -492,6 +484,7 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
         "schdoc.add-component",
         "pcbdoc.add-component",
         "schdoc.add-component",
+        "schdoc.add-wire",
         "schdoc.add-net-label",
         "pcbdoc.add-component",
         "pcbdoc.create-user-union",
@@ -509,23 +502,24 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[6]["args"]["position_mils"] == [1910.0, 220.0]
     assert operations[7]["args"]["designator"] == "P1"
     assert operations[7]["args"]["parameters"]["DebugPlateSourceNet"] == "ALIGN_NET"
-    assert operations[8]["args"]["text"] == "ALIGN_NET"
-    assert operations[8]["args"]["location_mils"] == [2450.0, 1200.0]
-    assert operations[9]["args"]["footprint"] == "H2184-05"
-    assert operations[9]["args"]["position_mils"] == [1710.0, 420.0]
-    assert operations[9]["args"]["pad_nets"] == {"1": "ALIGN_NET"}
-    assert operations[10]["args"]["name"] == "DEBUG_PLATE_FEATURES"
-    assert operations[11]["args"]["text"] == "ALIGN_NET"
-    assert operations[11]["args"]["position_mils"] == [1830.0, 385.0]
-    assert operations[11]["args"]["height_mils"] == 65.0
-    assert operations[11]["args"]["layer"] == "TOP_OVERLAY"
-    assert operations[11]["args"]["font_kind"] == "truetype"
-    assert operations[11]["args"]["font_name"] == "Arial"
-    assert operations[11]["args"]["bold"] is True
-    assert operations[11]["args"]["is_inverted"] is True
-    assert operations[11]["args"]["inverted_rectangle_size_mils"] == [450.0, 70.0]
-    assert operations[11]["args"]["frame_size_mils"] == [450.0, 70.0]
-    assert operations[11]["args"]["text_justification"] == "RIGHT_TOP"
+    assert operations[8]["args"]["points_mils"] == [[2700.0, 1080.0], [2700.0, 730.0]]
+    assert operations[9]["args"]["text"] == "ALIGN_NET"
+    assert operations[9]["args"]["location_mils"] == [2700.0, 900.0]
+    assert operations[10]["args"]["footprint"] == "H2184-05"
+    assert operations[10]["args"]["position_mils"] == [1710.0, 420.0]
+    assert operations[10]["args"]["pad_nets"] == {"1": "ALIGN_NET"}
+    assert operations[11]["args"]["name"] == "DEBUG_PLATE_FEATURES"
+    assert operations[12]["args"]["text"] == "ALIGN_NET"
+    assert operations[12]["args"]["position_mils"] == [1830.0, 385.0]
+    assert operations[12]["args"]["height_mils"] == 65.0
+    assert operations[12]["args"]["layer"] == "TOP_OVERLAY"
+    assert operations[12]["args"]["font_kind"] == "truetype"
+    assert operations[12]["args"]["font_name"] == "Arial"
+    assert operations[12]["args"]["bold"] is True
+    assert operations[12]["args"]["is_inverted"] is True
+    assert operations[12]["args"]["inverted_rectangle_size_mils"] == [450.0, 70.0]
+    assert operations[12]["args"]["frame_size_mils"] == [450.0, 70.0]
+    assert operations[12]["args"]["text_justification"] == "RIGHT_TOP"
 
 
 def test_cricket_node_debug_plate_example_config_is_planable() -> None:
@@ -550,11 +544,13 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
         "file.copy",
         "file.copy",
         "schdoc.add-component",
+        "schdoc.add-wire",
         "schdoc.add-net-label",
         "pcbdoc.add-component",
         "schdoc.add-component",
         "pcbdoc.add-component",
         "schdoc.add-component",
+        "schdoc.add-wire",
         "schdoc.add-net-label",
         "pcbdoc.add-component",
         "pcbdoc.create-user-union",
@@ -579,16 +575,22 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
         None,
         "TP1",
         None,
+        None,
         "TP1",
         "M1",
         "M1",
         "P1",
+        None,
         None,
         "P1",
         None,
         None,
         None,
     ]
+    assert operations[8]["args"]["points_mils"] == [[1300.0, 1200.0], [1650.0, 1200.0]]
+    assert operations[9]["args"]["location_mils"] == [1480.0, 1200.0]
+    assert operations[14]["args"]["points_mils"] == [[4200.0, 1080.0], [4200.0, 730.0]]
+    assert operations[15]["args"]["location_mils"] == [4200.0, 900.0]
     assert [
         operation["args"].get("text")
         for operation in operations
@@ -1507,10 +1509,13 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
     assert result.ok is True
 
     from altium_monkey import AltiumPcbDoc, AltiumSchDoc, PcbTextJustification
+    from altium_monkey.altium_record_sch__sheet import SheetStyle
     from altium_monkey.altium_record_sch__designator import AltiumSchDesignator
 
     schdoc = AltiumSchDoc(tmp_path / "generated" / "debug_plate.SchDoc")
     pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    assert schdoc.sheet is not None
+    assert schdoc.sheet.sheet_style == SheetStyle.D
     schematic_designators = [
         parameter.text
         for component in schdoc.components
@@ -1519,6 +1524,13 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
     ]
     assert schematic_designators == ["TP1", "M1", "P1"]
     assert [label.text for label in schdoc.net_labels] == ["+VIN", "ALIGN_NET"]
+    assert [
+        [(point.x_mils, point.y_mils) for point in wire.points_mils]
+        for wire in schdoc.wires
+    ] == [
+        [(1300.0, 1200.0), (1650.0, 1200.0)],
+        [(4200.0, 1080.0), (4200.0, 730.0)],
+    ]
     assert [component.designator for component in pcbdoc.components] == [
         "TP1",
         "M1",

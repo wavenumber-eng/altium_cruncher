@@ -16,6 +16,7 @@
     "backend": "altium",
     "output_dir": "output/cricket-node-debug-plate",
     "project_name": "cricket_node_debug_plate",
+    "schematic_sheet_style": "D",
     // Keep source and output board origins aligned for projected geometry and
     // bottom-layer STEP alignment artifacts.
     "origin": "preserve_source",

@@ -21,7 +21,8 @@ running the workflow.
   STEP artifact. The PCB net labels and headers are emitted outside the union so
   they can be manually moved after generation. Its output board outline defaults
   to the DUT bounds plus `500 mil` on the left, top, and bottom, and `3000 mil`
-  on the right.
+  on the right. Its generated schematic defaults to an ANSI `D` sheet with
+  short pin-directed wires and net labels placed on those wires.
 - `debug-plate.jsonc` is the older reviewed config shape kept for comparison.
 - `known-parts/debug-plate-known-parts.json` records the node-test-array cache
   layout expected by the config.
