@@ -597,7 +597,16 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     assert "kind" not in projections["alignment_pins"]["source"]
     assert payload["board_projection"]["outline"]["graphics"]["layer"] == "TOP_OVERLAY"
     assert payload["artifacts"]["pcb_layer_step"]["source_layer"] == "bottom"
-    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 1.6
+    assert payload["artifacts"]["pcb_layer_step"]["z_mm"] == 0.0
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"] == {
+        "enabled": True,
+        "color": "#B87333",
+    }
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"] == {
+        "enabled": True,
+        "color": "#7A8F2A",
+    }
+    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
 
 
 def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
@@ -641,9 +650,11 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     assert payload["validation"]["source_side"] == "infer_single_side"
     assert payload["validation"]["side_agnostic_kinds"] == ["mount"]
     assert payload["artifacts"]["pcb_layer_step"]["highlights"] == [
-        {"projection": "test_points", "color": "#ffcc00"}
+        {"projection": "test_points", "color": "#FF0000"}
     ]
-    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 1.6
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is True
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"] is True
+    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
 
 
 def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
@@ -690,11 +701,15 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
                     "source_layer": "bottom",
                     "insert_in_output": {
                         "enabled": True,
-                        "z_mm": 1.6,
+                        "z_mm": 8.5,
                         "layer": "MECHANICAL_13",
                     },
+                    "features": {
+                        "tracks": {"enabled": True, "color": "#B87333"},
+                        "polygons": {"enabled": True, "color": "#7A8F2A"},
+                    },
                     "highlights": [
-                        {"projection": "test_points", "color": "#ffcc00"},
+                        {"projection": "test_points", "color": "#FF0000"},
                         {"projection": "alignment_pins", "color": "#44aaee"},
                     ],
                 }
@@ -933,9 +948,18 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         (highlight["id"], highlight["color"], len(highlight["pad_geometries"]))
         for highlight in step_op["args"]["highlights"]
     ] == [
-        ("test_points", "#ffcc00", 2),
+        ("test_points", "#FF0000", 2),
         ("alignment_pins", "#44aaee", 1),
     ]
+    assert step_op["args"]["z_mm"] == 0.0
+    assert step_op["args"]["features"]["tracks"] == {
+        "enabled": True,
+        "color": "#B87333",
+    }
+    assert step_op["args"]["features"]["polygons"] == {
+        "enabled": True,
+        "color": "#7A8F2A",
+    }
     insert_step_op = operations[-1]
     assert insert_step_op["op"] == "pcbdoc.add-embedded-3d-model"
     assert insert_step_op["args"]["file"] == "generated/debug_plate.PcbDoc"
@@ -943,7 +967,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         "generated/artifacts/pcb-layer-step/dut__bottom.step"
     )
     assert insert_step_op["args"]["location_mils"] == [1000.0, 2000.0]
-    assert insert_step_op["args"]["z_mm"] == 1.6
+    assert insert_step_op["args"]["z_mm"] == 8.5
     assert insert_step_op["args"]["bounds_mils"] == {
         "left": 0.0,
         "bottom": 0.0,

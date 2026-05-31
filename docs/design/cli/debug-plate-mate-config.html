@@ -284,14 +284,26 @@
     "pcb_layer_step": {
       "enabled": true,
       "source_layer": "bottom",
+      "thickness_mm": 0.035,
+      "z_mm": 0.0,
+      "features": {
+        "tracks": {"enabled": true, "color": "#B87333"},
+        "polygons": {"enabled": true, "color": "#7A8F2A"},
+        "arcs": true,
+        "fills": true,
+        "regions": true,
+        "vias": true,
+        "component_pads": true,
+        "free_pads": true
+      },
       "insert_in_output": {
         "enabled": true,
-        "z_mm": 1.6,
+        "z_mm": 8.5,
         "layer": "MECHANICAL_13",
         "side": "TOP"
       },
       "highlights": [
-        {"projection": "test_points", "color": "#ffcc00"}
+        {"projection": "test_points", "color": "#FF0000"}
       ]
     }
   }
@@ -320,9 +332,12 @@
   </p>
   <p>
     Artifact highlights reference projection ids instead of duplicating source
-    selectors. <code>pcb-layer-step</code> currently owns layer, thickness, and
-    base color options; the mate config adds projection-level highlight intent
-    and optional output-board model insertion with configurable <code>z_mm</code>.
+    selectors. <code>pcb-layer-step</code> owns layer, local STEP Z, thickness,
+    feature visibility, and feature colors. Output-board insertion owns the
+    model-placement <code>z_mm</code>; for the Cricket Node example that value
+    is <code>8.5</code> mm while the exported STEP remains at local
+    <code>z_mm: 0.0</code>. The first example renders selected TP pads red and
+    makes track and polygon visibility/color choices explicit.
   </p>
 
   <h2 data-key="debug-plate-mate-config.deferred">Deferred Topics</h2>

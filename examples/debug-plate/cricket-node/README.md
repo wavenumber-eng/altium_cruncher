@@ -81,4 +81,6 @@ output\cricket-node-debug-plate\artifacts\pcb-layer-step\cricket_node_hw__b__bot
 ```
 
 The same STEP is also embedded in the generated output PcbDoc at the
-configured `artifacts.pcb_layer_step.insert_in_output.z_mm` height.
+configured `artifacts.pcb_layer_step.insert_in_output.z_mm` height. For this
+example the exported STEP itself stays at local `z_mm: 0.0`; the inserted 3D
+body is placed at `8.5 mm` in the output PcbDoc.

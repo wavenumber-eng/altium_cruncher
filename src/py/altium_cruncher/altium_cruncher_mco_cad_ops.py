@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import IntEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -504,65 +504,14 @@ def _op_pcbdoc_export_layer_step(
 
     from altium_monkey import AltiumPcbDoc
     from altium_cruncher.altium_cruncher_pcb_layer_step import (
-        PcbLayerStepOptions,
+        PcbLayerStepConfig,
         export_pcb_layer_step,
-        resolve_pcb_layer_selector,
     )
 
     context.flush_documents()
-    defaults = PcbLayerStepOptions(
-        layer=resolve_pcb_layer_selector(spec.args.get("layer"))
-    )
-    options = PcbLayerStepOptions(
-        layer=defaults.layer,
-        thickness_mm=_optional_float(
-            spec.args,
-            "thickness_mm",
-            defaults.thickness_mm,
-        ),
-        z_mm=_optional_float(spec.args, "z_mm", defaults.z_mm),
-        copper_color=_optional_string(
-            spec.args,
-            "copper_color",
-            defaults.copper_color,
-        )
-        or defaults.copper_color,
-        outline_width_mm=_optional_float(
-            spec.args,
-            "outline_width_mm",
-            defaults.outline_width_mm,
-        ),
-        outline_color=_optional_string(
-            spec.args,
-            "outline_color",
-            defaults.outline_color,
-        )
-        or defaults.outline_color,
-        include_copper=_optional_bool(
-            spec.args,
-            "include_copper",
-            defaults.include_copper,
-        ),
-        include_board_outline=_optional_bool(
-            spec.args,
-            "include_board_outline",
-            defaults.include_board_outline,
-        ),
-        include_poured_polygons=_optional_bool(
-            spec.args,
-            "include_poured_polygons",
-            defaults.include_poured_polygons,
-        ),
-        cut_holes=_optional_bool(spec.args, "cut_holes", defaults.cut_holes),
-        fuse_copper=_optional_bool(spec.args, "fuse_copper", defaults.fuse_copper),
-        fuse_board_outline=_optional_bool(
-            spec.args,
-            "fuse_board_outline",
-            defaults.fuse_board_outline,
-        ),
-        arc_segments=int(
-            _optional_float(spec.args, "arc_segments", float(defaults.arc_segments))
-        ),
+    parsed_config = PcbLayerStepConfig.from_dict(spec.args)
+    options = replace(
+        parsed_config.to_options(),
         highlights=_pcb_layer_step_highlights(spec.args),
     )
     result = export_pcb_layer_step(

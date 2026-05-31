@@ -196,7 +196,16 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
               "name": "fixture_alignment",
               "output_step": "{board}__fixture.step",
               "features": {
-                "tracks": false,
+                "tracks": {
+                  "enabled": false,
+                  "color": "#123456",
+                  "body": "trace_copper"
+                },
+                "polygons": {
+                  "enabled": true,
+                  "color": "#654321",
+                  "body": "poured_copper"
+                },
                 "component_pads": {
                   "mode": "matching_designators",
                   "include_designators": ["TP*", "J*", "U1", "U2"]
@@ -232,6 +241,11 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
 
     assert output.output_step == "{board}__fixture.step"
     assert output.include_tracks is False
+    assert output.track_color == "#123456"
+    assert output.track_body == "trace_copper"
+    assert output.include_poured_polygons is True
+    assert output.polygon_color == "#654321"
+    assert output.polygon_body == "poured_copper"
     assert output.include_vias is False
     assert output.board_cutout_color == "#FF0000"
     assert output.include_designators == ("TP*", "J*", "U1", "U2")
@@ -652,6 +666,51 @@ def test_export_pcb_layer_step_colors_cutouts_and_plating_specific_drills(
     plated_width = _region_width(plated_region)
     non_plated_width = _region_width(non_plated_region)
     assert plated_width > non_plated_width
+
+
+def test_export_pcb_layer_step_splits_track_and_polygon_colors(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """Allow fixture configs to color traces and pours independently."""
+    captured = {}
+
+    def write_planar_step(request, output_path):
+        captured["request"] = request
+        output_path.write_bytes(json.dumps(request).encode("utf-8"))
+        return output_path
+
+    monkeypatch.setitem(
+        sys.modules, "geometer", SimpleNamespace(write_planar_step=write_planar_step)
+    )
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
+    pcbdoc.add_track((50, 50), (450, 50), width_mils=12, layer=PcbLayer.BOTTOM)
+    pcbdoc.add_track((50, 150), (450, 150), width_mils=20, layer=PcbLayer.BOTTOM)
+    pcbdoc.tracks[-1].polygon_index = 1
+
+    export_pcb_layer_step(
+        pcbdoc,
+        tmp_path / "fixture.step",
+        board_name="fixture_board",
+        options=PcbLayerStepOptions(
+            layer=PcbLayer.BOTTOM,
+            include_board_outline=False,
+            drill_hole_mode="none",
+            track_color="#123456",
+            track_body="trace_copper",
+            polygon_color="#654321",
+            polygon_body="poured_copper",
+        ),
+    )
+
+    bodies = {body["id"]: body for body in captured["request"]["bodies"]}
+    assert set(bodies) == {"trace_copper", "poured_copper"}
+    assert bodies["trace_copper"]["color"] == "#123456"
+    assert bodies["poured_copper"]["color"] == "#654321"
+    assert len(bodies["trace_copper"]["regions"]) == 1
+    assert len(bodies["poured_copper"]["regions"]) == 1
 
 
 def test_export_pcb_layer_step_overlays_dense_drill_sets(

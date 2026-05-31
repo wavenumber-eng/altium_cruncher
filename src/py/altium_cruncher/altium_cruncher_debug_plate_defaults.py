@@ -59,16 +59,34 @@ def default_mate_artifacts_payload() -> JsonObject:
         "pcb_layer_step": {
             "enabled": True,
             "source_layer": "bottom",
+            "thickness_mm": 0.035,
+            "z_mm": 0.0,
+            "features": {
+                "tracks": {
+                    "enabled": True,
+                    "color": "#B87333",
+                },
+                "polygons": {
+                    "enabled": True,
+                    "color": "#7A8F2A",
+                },
+                "arcs": True,
+                "fills": True,
+                "regions": True,
+                "vias": True,
+                "component_pads": True,
+                "free_pads": True,
+            },
             "insert_in_output": {
                 "enabled": True,
-                "z_mm": 1.6,
+                "z_mm": 8.5,
                 "layer": "MECHANICAL_13",
                 "side": "TOP",
             },
             "highlights": [
                 {
                     "projection": "test_points",
-                    "color": "#ffcc00",
+                    "color": "#FF0000",
                 }
             ],
         }

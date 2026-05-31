@@ -513,6 +513,7 @@ def test_pcbdoc_export_layer_step_operation_writes_artifact(
         shape=PadShape.CIRCLE,
         hole_size_mils=25,
     )
+    pcbdoc.add_track((100, 100), (300, 100), width_mils=12, layer=PcbLayer.BOTTOM)
     pcbdoc.save(source_path)
 
     requests: list[dict[str, object]] = []
@@ -539,6 +540,16 @@ def test_pcbdoc_export_layer_step_operation_writes_artifact(
                         "output_file": "generated/bottom.step",
                         "overwrite": True,
                         "layer": "bottom",
+                        "features": {
+                            "tracks": {
+                                "enabled": True,
+                                "color": "#123456",
+                            },
+                            "polygons": {
+                                "enabled": False,
+                                "color": "#654321",
+                            },
+                        },
                         "highlights": [
                             {
                                 "id": "test_points",
@@ -568,10 +579,13 @@ def test_pcbdoc_export_layer_step_operation_writes_artifact(
     assert (tmp_path / "generated" / "bottom.json").exists()
     assert result.results[0].outputs["highlight_count"] == 1
     assert [body["id"] for body in requests[0]["bodies"]] == [
+        "tracks",
         "copper",
         "test_points",
         "board_outline",
     ]
+    bodies = {body["id"]: body for body in requests[0]["bodies"]}
+    assert bodies["tracks"]["color"] == "#123456"
 
 
 def test_pcbdoc_add_embedded_3d_model_operation_dry_run(tmp_path: Path) -> None:

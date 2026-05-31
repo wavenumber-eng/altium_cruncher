@@ -47,6 +47,20 @@
     "copper_color": {
       "$ref": "#/$defs/color"
     },
+    "track_color": {
+      "$ref": "#/$defs/color"
+    },
+    "track_body": {
+      "type": "string",
+      "minLength": 1
+    },
+    "polygon_color": {
+      "$ref": "#/$defs/color"
+    },
+    "polygon_body": {
+      "type": "string",
+      "minLength": 1
+    },
     "outline_width_mm": {
       "type": "number",
       "minimum": 0
@@ -199,6 +213,20 @@
         },
         "copper_color": {
           "$ref": "#/$defs/color"
+        },
+        "track_color": {
+          "$ref": "#/$defs/color"
+        },
+        "track_body": {
+          "type": "string",
+          "minLength": 1
+        },
+        "polygon_color": {
+          "$ref": "#/$defs/color"
+        },
+        "polygon_body": {
+          "type": "string",
+          "minLength": 1
         },
         "outline_width_mm": {
           "type": "number",
@@ -362,7 +390,10 @@
       "type": "object",
       "properties": {
         "tracks": {
-          "type": "boolean"
+          "$ref": "#/$defs/featureSwitch"
+        },
+        "traces": {
+          "$ref": "#/$defs/featureSwitch"
         },
         "arcs": {
           "type": "boolean"
@@ -371,7 +402,10 @@
           "type": "boolean"
         },
         "polygons": {
-          "type": "boolean"
+          "$ref": "#/$defs/featureSwitch"
+        },
+        "poured_polygons": {
+          "$ref": "#/$defs/featureSwitch"
         },
         "regions": {
           "type": "boolean"
@@ -410,6 +444,18 @@
         "default_copper": {
           "$ref": "#/$defs/color"
         },
+        "tracks": {
+          "$ref": "#/$defs/featureColor"
+        },
+        "traces": {
+          "$ref": "#/$defs/featureColor"
+        },
+        "polygons": {
+          "$ref": "#/$defs/featureColor"
+        },
+        "poured_polygons": {
+          "$ref": "#/$defs/featureColor"
+        },
         "pad_rules": {
           "$ref": "#/$defs/padRules"
         }
@@ -435,6 +481,50 @@
         },
         "additionalProperties": false
       }
+    },
+    "featureSwitch": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "featureColor": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/color"
+        },
+        {
+          "type": "object",
+          "required": ["color"],
+          "properties": {
+            "color": {
+              "$ref": "#/$defs/color"
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "drills": {
       "type": "object",

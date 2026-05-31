@@ -128,6 +128,10 @@ class PcbLayerStepOptions:
     include_free_pads: bool = True
     include_designators: tuple[str, ...] = ()
     pad_color_rules: tuple[_PadColorRule, ...] = ()
+    track_color: str | None = None
+    track_body: str = "tracks"
+    polygon_color: str | None = None
+    polygon_body: str = "polygons"
     highlights: tuple["PcbLayerStepHighlight", ...] = ()
 
 
@@ -162,6 +166,12 @@ def _coerce_color(value: object, default: str) -> str:
     text = _coerce_str(value, default).strip()
     named = _COLOR_NAMES.get(text.casefold())
     return named or text
+
+
+def _coerce_optional_color(value: object) -> str | None:
+    if value is None:
+        return None
+    return _coerce_color(value, DEFAULT_COPPER_COLOR)
 
 
 def _coerce_str_tuple(value: object) -> tuple[str, ...]:
@@ -287,6 +297,62 @@ def _config_mapping(value: object, field_name: str) -> Mapping[str, object]:
             f"pcb-layer-step config field '{field_name}' must be an object"
         )
     return value
+
+
+def _feature_value(
+    features: Mapping[str, object],
+    name: str,
+    *aliases: str,
+) -> object:
+    for key in (name, *aliases):
+        if key in features:
+            return features[key]
+    return None
+
+
+def _feature_enabled(
+    *,
+    features: Mapping[str, object],
+    merged: Mapping[str, object],
+    name: str,
+    default: bool,
+    legacy_key: str,
+    aliases: tuple[str, ...] = (),
+) -> bool:
+    value = _feature_value(features, name, *aliases)
+    if isinstance(value, Mapping):
+        return _coerce_bool(value.get("enabled"), default)
+    if value is not None:
+        return _coerce_bool(value, default)
+    return _coerce_bool(merged.get(legacy_key), default)
+
+
+def _feature_color_and_body(
+    *,
+    features: Mapping[str, object],
+    colors: Mapping[str, object],
+    merged: Mapping[str, object],
+    name: str,
+    body_default: str,
+    color_key: str,
+    body_key: str,
+    aliases: tuple[str, ...] = (),
+) -> tuple[str | None, str]:
+    color_value = merged.get(color_key)
+    body_value = merged.get(body_key)
+    for candidate in (
+        _feature_value(colors, name, *aliases),
+        _feature_value(features, name, *aliases),
+    ):
+        if isinstance(candidate, Mapping):
+            color_value = candidate.get("color", color_value)
+            body_value = candidate.get("body", body_value)
+        elif candidate is not None and not isinstance(candidate, bool):
+            color_value = candidate
+    return (
+        _coerce_optional_color(color_value),
+        _step_name(str(body_value or body_default)),
+    )
 
 
 def _merge_options(data: Mapping[str, object]) -> dict[str, object]:
@@ -419,6 +485,10 @@ class PcbLayerStepConfig:
     include_free_pads: bool = True
     include_designators: tuple[str, ...] = ()
     pad_color_rules: tuple[_PadColorRule, ...] = ()
+    track_color: str | None = None
+    track_body: str = "tracks"
+    polygon_color: str | None = None
+    polygon_body: str = "polygons"
     outputs: tuple["PcbLayerStepConfig", ...] = ()
 
     @classmethod
@@ -468,6 +538,26 @@ class PcbLayerStepConfig:
             merged=merged,
             default=default,
         )
+        track_color, track_body = _feature_color_and_body(
+            features=features,
+            colors=colors,
+            merged=merged,
+            name="tracks",
+            aliases=("traces",),
+            body_default="tracks",
+            color_key="track_color",
+            body_key="track_body",
+        )
+        polygon_color, polygon_body = _feature_color_and_body(
+            features=features,
+            colors=colors,
+            merged=merged,
+            name="polygons",
+            aliases=("poured_polygons",),
+            body_default="polygons",
+            color_key="polygon_color",
+            body_key="polygon_body",
+        )
         cut_holes = _coerce_bool(merged.get("cut_holes"), default.cut_holes)
         drill_color = _drill_color_source(drills=drills, merged=merged)
         return cls(
@@ -512,9 +602,13 @@ class PcbLayerStepConfig:
             include_board_outline=_coerce_bool(
                 merged.get("include_board_outline"), default.include_board_outline
             ),
-            include_poured_polygons=_coerce_bool(
-                features.get("polygons", merged.get("include_poured_polygons")),
-                default.include_poured_polygons,
+            include_poured_polygons=_feature_enabled(
+                features=features,
+                merged=merged,
+                name="polygons",
+                aliases=("poured_polygons",),
+                legacy_key="include_poured_polygons",
+                default=default.include_poured_polygons,
             ),
             cut_holes=cut_holes,
             drill_hole_mode=_coerce_drill_hole_mode(
@@ -584,9 +678,13 @@ class PcbLayerStepConfig:
             arc_segments=int(
                 _coerce_float(merged.get("arc_segments"), default.arc_segments)
             ),
-            include_tracks=_coerce_bool(
-                features.get("tracks", merged.get("include_tracks")),
-                default.include_tracks,
+            include_tracks=_feature_enabled(
+                features=features,
+                merged=merged,
+                name="tracks",
+                aliases=("traces",),
+                legacy_key="include_tracks",
+                default=default.include_tracks,
             ),
             include_arcs=_coerce_bool(
                 features.get("arcs", merged.get("include_arcs")),
@@ -611,6 +709,10 @@ class PcbLayerStepConfig:
             ),
             include_designators=_coerce_str_tuple(component_pad_designators),
             pad_color_rules=_coerce_pad_color_rules(colors.get("pad_rules")),
+            track_color=track_color,
+            track_body=track_body,
+            polygon_color=polygon_color,
+            polygon_body=polygon_body,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -660,6 +762,10 @@ class PcbLayerStepConfig:
                 }
                 for rule in self.pad_color_rules
             ],
+            "track_color": self.track_color,
+            "track_body": self.track_body,
+            "polygon_color": self.polygon_color,
+            "polygon_body": self.polygon_body,
         }
 
     def to_options(self) -> PcbLayerStepOptions:
@@ -698,6 +804,10 @@ class PcbLayerStepConfig:
             include_free_pads=self.include_free_pads,
             include_designators=self.include_designators,
             pad_color_rules=self.pad_color_rules,
+            track_color=self.track_color,
+            track_body=self.track_body,
+            polygon_color=self.polygon_color,
+            polygon_body=self.polygon_body,
         )
 
 
@@ -949,6 +1059,16 @@ def _build_manifest(
                 }
                 for rule in opts.pad_color_rules
             ],
+            "feature_color_rules": {
+                "tracks": {
+                    "color": opts.track_color,
+                    "body": opts.track_body,
+                },
+                "polygons": {
+                    "color": opts.polygon_color,
+                    "body": opts.polygon_body,
+                },
+            },
             "highlight_count": len(opts.highlights),
         },
         "counts": counts,
@@ -1018,6 +1138,10 @@ def _body_style_for_feature(
     feature: _SourceFeature,
     opts: PcbLayerStepOptions,
 ) -> tuple[str, str]:
+    if feature.kind == "track" and opts.track_color is not None:
+        return opts.track_body, opts.track_color
+    if feature.kind == "polygon" and opts.polygon_color is not None:
+        return opts.polygon_body, opts.polygon_color
     if feature.kind in {"component_pad", "free_pad"}:
         designator = feature.component_designator or feature.pad_designator or ""
         for rule in opts.pad_color_rules:
@@ -1220,17 +1344,17 @@ def _collect_layer_features(
     opts: PcbLayerStepOptions,
 ) -> list[_SourceFeature]:
     features: list[_SourceFeature] = []
-    if opts.include_tracks:
+    if opts.include_tracks or opts.include_poured_polygons:
         features.extend(_track_features(pcbdoc, layer, opts))
-    if opts.include_arcs:
+    if opts.include_arcs or opts.include_poured_polygons:
         features.extend(_arc_features(pcbdoc, layer, opts))
-    if opts.include_fills:
+    if opts.include_fills or opts.include_poured_polygons:
         features.extend(_fill_features(pcbdoc, layer, opts))
     if layer.is_copper():
         features.extend(_pad_features(pcbdoc, layer, opts))
         if opts.include_vias:
             features.extend(_via_features(pcbdoc, layer))
-    if opts.include_regions:
+    if opts.include_regions or opts.include_poured_polygons:
         features.extend(_region_features(pcbdoc, layer, opts))
     return features
 
@@ -1244,11 +1368,16 @@ def _track_features(
     for track in getattr(pcbdoc, "tracks", []) or []:
         if int(getattr(track, "layer", 0) or 0) != layer.value:
             continue
-        if _is_poured_polygon_primitive(track) and not opts.include_poured_polygons:
+        is_polygon = _is_poured_polygon_primitive(track)
+        if is_polygon and not opts.include_poured_polygons:
+            continue
+        if not is_polygon and not opts.include_tracks:
             continue
         region = _track_region(track)
         if region is not None:
-            features.append(_SourceFeature("track", region))
+            features.append(
+                _SourceFeature("polygon" if is_polygon else "track", region)
+            )
     return features
 
 
@@ -1261,11 +1390,16 @@ def _arc_features(
     for arc in getattr(pcbdoc, "arcs", []) or []:
         if int(getattr(arc, "layer", 0) or 0) != layer.value:
             continue
-        if _is_poured_polygon_primitive(arc) and not opts.include_poured_polygons:
+        is_polygon = _is_poured_polygon_primitive(arc)
+        if is_polygon and not opts.include_poured_polygons:
+            continue
+        if not is_polygon and not opts.include_arcs:
             continue
         region = _arc_region(arc)
         if region is not None:
-            features.append(_SourceFeature("arc", region))
+            features.append(
+                _SourceFeature("polygon" if is_polygon else "arc", region)
+            )
     return features
 
 
@@ -1278,11 +1412,16 @@ def _fill_features(
     for fill in getattr(pcbdoc, "fills", []) or []:
         if int(getattr(fill, "layer", 0) or 0) != layer.value:
             continue
-        if _is_poured_polygon_primitive(fill) and not opts.include_poured_polygons:
+        is_polygon = _is_poured_polygon_primitive(fill)
+        if is_polygon and not opts.include_poured_polygons:
+            continue
+        if not is_polygon and not opts.include_fills:
             continue
         region = _fill_region(fill)
         if region is not None:
-            features.append(_SourceFeature("fill", region))
+            features.append(
+                _SourceFeature("polygon" if is_polygon else "fill", region)
+            )
     return features
 
 
@@ -1348,10 +1487,17 @@ def _normal_region_feature(
         getattr(region, "is_keepout", False)
     ):
         return None
-    if _is_poured_polygon_primitive(region) and not opts.include_poured_polygons:
+    is_polygon = _is_poured_polygon_primitive(region)
+    if is_polygon and not opts.include_poured_polygons:
+        return None
+    if not is_polygon and not opts.include_regions:
         return None
     converted = _region_from_outline_vertices(region)
-    return _SourceFeature("region", converted) if converted is not None else None
+    return (
+        _SourceFeature("polygon" if is_polygon else "region", converted)
+        if converted is not None
+        else None
+    )
 
 
 def _shapebased_region_feature(
@@ -1363,11 +1509,14 @@ def _shapebased_region_feature(
         return None
     if bool(getattr(region, "is_keepout", False)):
         return None
-    if _is_poured_polygon_primitive(region) and not opts.include_poured_polygons:
+    is_polygon = _is_poured_polygon_primitive(region)
+    if is_polygon and not opts.include_poured_polygons:
+        return None
+    if not is_polygon and not opts.include_regions:
         return None
     converted = _shapebased_region(region)
     return (
-        _SourceFeature("shapebased_region", converted)
+        _SourceFeature("polygon" if is_polygon else "shapebased_region", converted)
         if converted is not None
         else None
     )
