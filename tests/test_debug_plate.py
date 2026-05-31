@@ -588,7 +588,12 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     assert payload["output"]["backend"] == "altium"
     assert payload["output"]["board_outline"] == {
         "mode": "source_bounds_with_margin",
-        "margin_mils": 250.0,
+        "margin_mils": {
+            "left": 500,
+            "bottom": 500,
+            "right": 3000,
+            "top": 500,
+        },
     }
     assert [projection["id"] for projection in payload["projections"]] == [
         "test_points",

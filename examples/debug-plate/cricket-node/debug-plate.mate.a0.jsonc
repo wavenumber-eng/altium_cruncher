@@ -20,11 +20,17 @@
     // bottom-layer STEP alignment artifacts.
     "origin": "preserve_source",
     // The generated project skeleton currently supports rectangular output
-    // outlines. This default makes the mate board 250 mil larger on each side
-    // than the DUT outline bounds. Use "source_bounds" to match the DUT bounds.
+    // outlines. This example leaves extra room for labels/breakout features on
+    // the right side while keeping a smaller keepaway on the other sides. Use
+    // "source_bounds" to match the DUT bounds.
     "board_outline": {
       "mode": "source_bounds_with_margin",
-      "margin_mils": 250
+      "margin_mils": {
+        "left": 500,
+        "bottom": 500,
+        "right": 3000,
+        "top": 500
+      }
     },
     "overwrite": true
   },
