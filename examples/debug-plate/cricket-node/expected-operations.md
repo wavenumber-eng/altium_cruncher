@@ -7,7 +7,7 @@ high-level shape after local inputs and the known-parts cache exist:
    the DUT bounds by the configured margin
 2. Six `file.copy` operations for the selected SchLib/PcbLib cache files
 3. For each selected `TP1-27`: schematic component, schematic net label, PCB
-   component, and two mechanical reference rings
+   component, and one expanded source-pad reference outline
 4. For each selected `M1-M4`: schematic component and PCB standoff component
 5. For each matching free NPTH alignment pad: schematic component, optional
    schematic net label and PCB alignment-pin component

@@ -18,6 +18,9 @@ from altium_cruncher.altium_cruncher_debug_plate import (
     load_debug_plate_config,
     write_debug_plate_config_template,
 )
+from altium_cruncher.altium_cruncher_debug_plate_graphics import (
+    build_pcb_reference_graphics_operations,
+)
 from altium_cruncher.altium_cruncher_debug_plate_parts import (
     DEBUG_PLATE_PARTS_CACHE_FILENAME,
     build_node_test_array_parts_manifest,
@@ -616,6 +619,8 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
         "color": "#7A8F2A",
     }
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
+    assert projections["test_points"]["actions"][1]["style"]["mode"] == "outline"
+    assert projections["test_points"]["actions"][1]["style"]["outline_count"] == 1
     test_point_label = projections["test_points"]["actions"][2]
     assert test_point_label["placement"]["side"] == "board_right"
     assert payload["pcb_designators"]["style"]["height_mils"] == 40
@@ -672,8 +677,83 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is True
     assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"] is True
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
+    assert payload["projections"][0]["actions"][1] == {
+        "kind": "reference_graphics",
+        "shape": "source_pad_outline",
+        "layer": "MECHANICAL_1",
+        "style": {
+            "mode": "outline",
+            "outline_count": 1,
+            "clearance_mils": 10,
+            "stroke_width_mils": 5,
+        },
+    }
     assert payload["projections"][0]["actions"][2]["placement"]["side"] == "board_right"
     assert payload["pcb_designators"]["style"]["height_mils"] == 40
+
+
+def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
+    circle_ops = build_pcb_reference_graphics_operations(
+        output_dir="generated",
+        board_filename="debug_plate.PcbDoc",
+        designator="TP1",
+        target={
+            "mate_reference_graphics": {
+                "shape": "source_pad_outline",
+                "layer": "MECHANICAL_1",
+                "style": {"clearance_mils": 5, "stroke_width_mils": 3},
+            },
+            "source_pad_geometries": [
+                {
+                    "x_mils": 100,
+                    "y_mils": 200,
+                    "width_mils": 80,
+                    "height_mils": 80,
+                    "shape": 1,
+                }
+            ],
+        },
+    )
+
+    assert len(circle_ops) == 1
+    assert circle_ops[0]["op"] == "pcbdoc.add-arc"
+    assert circle_ops[0]["args"]["center_mils"] == [100.0, 200.0]
+    assert circle_ops[0]["args"]["radius_mils"] == 45.0
+
+    rectangle_ops = build_pcb_reference_graphics_operations(
+        output_dir="generated",
+        board_filename="debug_plate.PcbDoc",
+        designator="U1",
+        target={
+            "mate_reference_graphics": {
+                "shape": "source_pad_outline",
+                "layer": "MECHANICAL_1",
+                "style": {
+                    "mode": "double_outline",
+                    "clearance_mils": 5,
+                    "outline_spacing_mils": 10,
+                    "stroke_width_mils": 3,
+                },
+            },
+            "source_pad_geometries": [
+                {
+                    "x_mils": 100,
+                    "y_mils": 200,
+                    "width_mils": 80,
+                    "height_mils": 40,
+                    "shape": 2,
+                    "rotation_degrees": 0,
+                }
+            ],
+        },
+    )
+
+    assert [operation["op"] for operation in rectangle_ops] == ["pcbdoc.add-track"] * 8
+    assert rectangle_ops[0]["args"]["start_mils"] == [55.0, 175.0]
+    assert rectangle_ops[0]["args"]["end_mils"] == [145.0, 175.0]
+    assert rectangle_ops[4]["args"]["start_mils"] == [45.0, 165.0]
+    assert rectangle_ops[4]["args"]["end_mils"] == [155.0, 165.0]
+    assert {operation["args"]["width_mils"] for operation in rectangle_ops} == {3.0}
 
 
 def test_debug_plate_mate_output_board_outline_modes(tmp_path: Path) -> None:
@@ -981,10 +1061,10 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         [250.0, 350.0],
     ]
     assert [operation["args"]["radius_mils"] for operation in pcb_reference_arcs] == [
-        40.0,
         50.0,
-        40.0,
+        60.0,
         50.0,
+        60.0,
     ]
     assert {operation["args"]["layer"] for operation in pcb_reference_arcs} == {
         "MECHANICAL_1"

@@ -2421,7 +2421,12 @@ def _mate_seed_test_points_projection(designators: list[str]) -> JsonObject:
                 "kind": "reference_graphics",
                 "shape": "source_pad_outline",
                 "layer": "MECHANICAL_1",
-                "style": {"mode": "double_ring", "clearance_mils": 10},
+                "style": {
+                    "mode": "outline",
+                    "outline_count": 1,
+                    "clearance_mils": 10,
+                    "stroke_width_mils": 5,
+                },
             },
             {
                 "kind": "label",

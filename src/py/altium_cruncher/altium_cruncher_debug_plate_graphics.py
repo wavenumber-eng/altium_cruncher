@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_mco import JsonObject
+
+_PAD_SHAPE_CIRCLE = 1
+_PAD_SHAPE_OCTAGONAL = 3
 
 
 def component_pad_geometries(
@@ -83,7 +87,12 @@ def build_pcb_reference_graphics_operations(
     layer = _optional_string(config, "layer", "MECHANICAL_1") or "MECHANICAL_1"
     width_mils = _mapping_number(style, "stroke_width_mils", 5.0)
     clearance_mils = _mapping_number(style, "clearance_mils", 10.0)
-    mode = str(style.get("mode", "single_ring") or "single_ring")
+    outline_spacing_mils = _mapping_number(
+        style,
+        "outline_spacing_mils",
+        clearance_mils,
+    )
+    outline_count = _outline_count(style, str(style.get("mode", "outline") or "outline"))
 
     operations: list[JsonObject] = []
     for pad_index, geometry in enumerate(_target_source_pad_geometries(target), start=1):
@@ -97,10 +106,37 @@ def build_pcb_reference_graphics_operations(
                 layer=layer,
                 width_mils=width_mils,
                 clearance_mils=clearance_mils,
-                double_ring=mode == "double_ring",
+                outline_count=outline_count,
+                outline_spacing_mils=outline_spacing_mils,
             )
         )
     return operations
+
+
+def _outline_count(style: Mapping[str, object], mode: str) -> int:
+    explicit_count = style.get("outline_count")
+    if explicit_count is not None:
+        if not isinstance(explicit_count, int) or isinstance(explicit_count, bool):
+            raise ValueError("Field 'outline_count' must be an integer")
+        if explicit_count < 1:
+            raise ValueError("Field 'outline_count' must be at least 1")
+        return explicit_count
+
+    normalized = mode.strip().lower().replace("-", "_")
+    if normalized in {"double", "double_outline", "double_ring"}:
+        return 2
+    if normalized in {
+        "outline",
+        "pad_outline",
+        "single",
+        "single_outline",
+        "single_ring",
+        "trace_outline",
+    }:
+        return 1
+    raise ValueError(
+        "Debug-plate reference_graphics style.mode must be outline or double_outline"
+    )
 
 
 def build_pcb_board_projection_operations(
@@ -441,31 +477,267 @@ def _pad_outline_operations(
     layer: str,
     width_mils: float,
     clearance_mils: float,
-    double_ring: bool,
+    outline_count: int,
+    outline_spacing_mils: float,
 ) -> list[JsonObject]:
-    radius = max(
-        _mapping_number(geometry, "width_mils", 0.0),
-        _mapping_number(geometry, "height_mils", 0.0),
-    ) / 2.0
-    if radius <= 0.0:
+    if outline_count <= 0:
         return []
-    radii = [radius, radius + clearance_mils] if double_ring else [
-        radius + clearance_mils
-    ]
-    return [
-        _pad_ring_operation(
+    width = _mapping_number(geometry, "width_mils", 0.0)
+    height = _mapping_number(geometry, "height_mils", 0.0)
+    if width <= 0.0 or height <= 0.0:
+        return []
+    operations: list[JsonObject] = []
+    for outline_index in range(1, outline_count + 1):
+        expansion_mils = clearance_mils + (
+            float(outline_index - 1) * outline_spacing_mils
+        )
+        operations.extend(
+            _pad_single_outline_operations(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                outline_index=outline_index,
+                geometry=geometry,
+                layer=layer,
+                width_mils=width_mils,
+                expansion_mils=expansion_mils,
+            )
+        )
+    return operations
+
+
+def _pad_single_outline_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    geometry: Mapping[str, object],
+    layer: str,
+    width_mils: float,
+    expansion_mils: float,
+) -> list[JsonObject]:
+    shape = int(_mapping_number(geometry, "shape", float(_PAD_SHAPE_CIRCLE)))
+    if shape == _PAD_SHAPE_CIRCLE:
+        return _pad_circular_outline_operations(
             output_dir=output_dir,
             board_filename=board_filename,
             designator=designator,
             pad_index=pad_index,
-            ring_index=ring_index,
+            outline_index=outline_index,
             geometry=geometry,
-            radius_mils=ring_radius,
+            layer=layer,
+            width_mils=width_mils,
+            expansion_mils=expansion_mils,
+        )
+    if shape == _PAD_SHAPE_OCTAGONAL:
+        return _pad_polygon_outline_operations(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            designator=designator,
+            pad_index=pad_index,
+            outline_index=outline_index,
+            points=_pad_octagon_points(geometry, expansion_mils),
             layer=layer,
             width_mils=width_mils,
         )
-        for ring_index, ring_radius in enumerate(radii, start=1)
+    return _pad_polygon_outline_operations(
+        output_dir=output_dir,
+        board_filename=board_filename,
+        designator=designator,
+        pad_index=pad_index,
+        outline_index=outline_index,
+        points=_pad_rectangle_points(geometry, expansion_mils),
+        layer=layer,
+        width_mils=width_mils,
+    )
+
+
+def _pad_circular_outline_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    geometry: Mapping[str, object],
+    layer: str,
+    width_mils: float,
+    expansion_mils: float,
+) -> list[JsonObject]:
+    width = _mapping_number(geometry, "width_mils", 0.0)
+    height = _mapping_number(geometry, "height_mils", 0.0)
+    if math.isclose(width, height, rel_tol=1e-9, abs_tol=1e-9):
+        return [
+            _pad_ring_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                ring_index=outline_index,
+                geometry=geometry,
+                radius_mils=(width / 2.0) + expansion_mils,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        ]
+    return _pad_polygon_outline_operations(
+        output_dir=output_dir,
+        board_filename=board_filename,
+        designator=designator,
+        pad_index=pad_index,
+        outline_index=outline_index,
+        points=_pad_ellipse_points(geometry, expansion_mils),
+        layer=layer,
+        width_mils=width_mils,
+    )
+
+
+def _pad_polygon_outline_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    points: list[tuple[float, float]],
+    layer: str,
+    width_mils: float,
+) -> list[JsonObject]:
+    if len(points) < 2:
+        return []
+    operations: list[JsonObject] = []
+    for segment_index, start in enumerate(points, start=1):
+        end = points[segment_index % len(points)]
+        operations.append(
+            _pad_outline_track_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                outline_index=outline_index,
+                segment_index=segment_index,
+                start=start,
+                end=end,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        )
+    return operations
+
+
+def _pad_rectangle_points(
+    geometry: Mapping[str, object],
+    expansion_mils: float,
+) -> list[tuple[float, float]]:
+    cx = _mapping_number(geometry, "x_mils", 0.0)
+    cy = _mapping_number(geometry, "y_mils", 0.0)
+    half_w = (_mapping_number(geometry, "width_mils", 0.0) / 2.0) + expansion_mils
+    half_h = (_mapping_number(geometry, "height_mils", 0.0) / 2.0) + expansion_mils
+    points = [
+        (cx - half_w, cy - half_h),
+        (cx + half_w, cy - half_h),
+        (cx + half_w, cy + half_h),
+        (cx - half_w, cy + half_h),
     ]
+    return _rotate_points(points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0))
+
+
+def _pad_octagon_points(
+    geometry: Mapping[str, object],
+    expansion_mils: float,
+) -> list[tuple[float, float]]:
+    cx = _mapping_number(geometry, "x_mils", 0.0)
+    cy = _mapping_number(geometry, "y_mils", 0.0)
+    half_w = (_mapping_number(geometry, "width_mils", 0.0) / 2.0) + expansion_mils
+    half_h = (_mapping_number(geometry, "height_mils", 0.0) / 2.0) + expansion_mils
+    chamfer = min(half_w, half_h) / 2.0
+    points = [
+        (cx + half_w, cy - (half_h - chamfer)),
+        (cx + half_w, cy + half_h - chamfer),
+        (cx + half_w - chamfer, cy + half_h),
+        (cx - (half_w - chamfer), cy + half_h),
+        (cx - half_w, cy + half_h - chamfer),
+        (cx - half_w, cy - (half_h - chamfer)),
+        (cx - (half_w - chamfer), cy - half_h),
+        (cx + half_w - chamfer, cy - half_h),
+    ]
+    return _rotate_points(points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0))
+
+
+def _pad_ellipse_points(
+    geometry: Mapping[str, object],
+    expansion_mils: float,
+) -> list[tuple[float, float]]:
+    cx = _mapping_number(geometry, "x_mils", 0.0)
+    cy = _mapping_number(geometry, "y_mils", 0.0)
+    radius_x = (_mapping_number(geometry, "width_mils", 0.0) / 2.0) + expansion_mils
+    radius_y = (_mapping_number(geometry, "height_mils", 0.0) / 2.0) + expansion_mils
+    points = [
+        (
+            cx + (math.cos((2.0 * math.pi * index) / 32.0) * radius_x),
+            cy + (math.sin((2.0 * math.pi * index) / 32.0) * radius_y),
+        )
+        for index in range(32)
+    ]
+    return _rotate_points(points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0))
+
+
+def _rotate_points(
+    points: list[tuple[float, float]],
+    center: tuple[float, float],
+    rotation_degrees: float,
+) -> list[tuple[float, float]]:
+    if math.isclose(rotation_degrees, 0.0, abs_tol=1e-9):
+        return points
+    angle = math.radians(rotation_degrees)
+    cos_angle = math.cos(angle)
+    sin_angle = math.sin(angle)
+    cx, cy = center
+    rotated: list[tuple[float, float]] = []
+    for x, y in points:
+        dx = x - cx
+        dy = y - cy
+        rotated.append(
+            (
+                cx + (dx * cos_angle) - (dy * sin_angle),
+                cy + (dx * sin_angle) + (dy * cos_angle),
+            )
+        )
+    return rotated
+
+
+def _pad_outline_track_operation(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    segment_index: int,
+    start: tuple[float, float],
+    end: tuple[float, float],
+    layer: str,
+    width_mils: float,
+) -> JsonObject:
+    return {
+        "id": (
+            f"reference_{_safe_id(designator)}_pad_{pad_index}"
+            f"_outline_{outline_index}_segment_{segment_index}"
+        ),
+        "op": "pcbdoc.add-track",
+        "message": f"Add debug-plate reference outline for {designator}",
+        "args": {
+            "file": (Path(output_dir) / board_filename).as_posix(),
+            "overwrite": True,
+            "start_mils": [start[0], start[1]],
+            "end_mils": [end[0], end[1]],
+            "width_mils": width_mils,
+            "layer": layer,
+        },
+    }
 
 
 def _pad_ring_operation(

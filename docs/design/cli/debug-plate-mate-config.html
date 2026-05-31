@@ -142,7 +142,7 @@
       </tr>
       <tr>
         <td><code>reference_graphics</code></td>
-        <td>Add mechanical or silkscreen reference geometry, such as circular rings around source pads, square outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports circular <code>source_pad_outline</code> rings from inspected source pad geometry.</td>
+        <td>Add mechanical or silkscreen reference geometry, such as source-pad outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports <code>source_pad_outline</code> from inspected source pad geometry, with one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>.</td>
       </tr>
       <tr>
         <td><code>label</code></td>
@@ -189,7 +189,7 @@
     <li>Project mate components from the current node-test-array cache.</li>
     <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>DEBUG_PLATE_FEATURES</code> so they can be manually moved after generation.</li>
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
-    <li>Add optional circular reference graphics on a configurable mechanical layer for source pad alignment.</li>
+    <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad shape where the writer can express it.</li>
     <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
     <li>Detect and project internal board cutouts as graphics and later actual cutouts.</li>
     <li>Generate a bottom-layer <code>pcb-layer-step</code> artifact for visual/mechanical alignment and optionally insert the generated STEP into the output PcbDoc at a configurable Z height.</li>
@@ -242,7 +242,12 @@
           "kind": "reference_graphics",
           "shape": "source_pad_outline",
           "layer": "MECHANICAL_1",
-          "style": {"mode": "double_ring"}
+          "style": {
+            "mode": "outline",
+            "outline_count": 1,
+            "clearance_mils": 10,
+            "stroke_width_mils": 5
+          }
         },
         {
           "kind": "label",

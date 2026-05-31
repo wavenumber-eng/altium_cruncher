@@ -68,8 +68,12 @@
           "shape": "source_pad_outline",
           "layer": "MECHANICAL_1",
           "style": {
-            "mode": "double_ring",
-            "clearance_mils": 10
+            // Default reference graphics trace one expanded source-pad outline.
+            // Use "double_outline" or outline_count > 1 for multiple outlines.
+            "mode": "outline",
+            "outline_count": 1,
+            "clearance_mils": 10,
+            "stroke_width_mils": 5
           }
         },
         {

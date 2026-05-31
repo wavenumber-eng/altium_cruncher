@@ -14,12 +14,13 @@ running the workflow.
 
 - `debug-plate.mate.a0.jsonc` is the primary selector/projection config for
   this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
-  reference graphics, right-side board-edge net-label columns with group headers, arranged
-  component designators, source board outline graphics, a user union, and the
-  bottom-layer STEP artifact. The PCB net labels and headers are emitted outside
-  the union so they can be manually moved after generation. Its output board outline defaults to the DUT
-  bounds plus `500 mil` on the left, top, and bottom, and `3000 mil` on the
-  right.
+  one-outline `MECHANICAL_1` source-pad reference graphics, right-side
+  board-edge net-label columns with group headers, arranged component
+  designators, source board outline graphics, a user union, and the bottom-layer
+  STEP artifact. The PCB net labels and headers are emitted outside the union so
+  they can be manually moved after generation. Its output board outline defaults
+  to the DUT bounds plus `500 mil` on the left, top, and bottom, and `3000 mil`
+  on the right.
 - `debug-plate.jsonc` is the older reviewed config shape kept for comparison.
 - `known-parts/debug-plate-known-parts.json` records the node-test-array cache
   layout expected by the config.
