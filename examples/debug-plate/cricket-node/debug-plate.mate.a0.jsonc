@@ -81,7 +81,9 @@
             "side": "board_right",
             "offset_mils": [250, 250],
             "box_size_mils": [450, 70],
-            "row_spacing_mils": 90
+            "row_spacing_mils": 90,
+            "column_spacing_mils": 80,
+            "auto_width_padding_mils": 80
           },
           "style": {
             "height_mils": 65,
@@ -130,7 +132,9 @@
             "side": "board_right",
             "offset_mils": [250, 250],
             "box_size_mils": [450, 70],
-            "row_spacing_mils": 90
+            "row_spacing_mils": 90,
+            "column_spacing_mils": 80,
+            "auto_width_padding_mils": 80
           },
           "style": {
             "height_mils": 65,

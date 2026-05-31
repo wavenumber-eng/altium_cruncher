@@ -187,13 +187,13 @@
     <li>Select mount features and allow node-test-array <code>M5-M8</code> normalization to output <code>M1-M4</code> where needed.</li>
     <li>Select free NPTH alignment holes as source free-pad/drill objects; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
     <li>Project mate components from the current node-test-array cache.</li>
-    <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>.</li>
+    <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>DEBUG_PLATE_FEATURES</code> so they can be manually moved after generation.</li>
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
     <li>Add optional circular reference graphics on a configurable mechanical layer for source pad alignment.</li>
     <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
     <li>Detect and project internal board cutouts as graphics and later actual cutouts.</li>
     <li>Generate a bottom-layer <code>pcb-layer-step</code> artifact for visual/mechanical alignment and optionally insert the generated STEP into the output PcbDoc at a configurable Z height.</li>
-    <li>Group generated PCB-side features into <code>DEBUG_PLATE_FEATURES</code>.</li>
+    <li>Group generated PCB-side features into <code>DEBUG_PLATE_FEATURES</code>, excluding movable PCB net-label text.</li>
   </ul>
 
   <h2 data-key="debug-plate-mate-config.proposed-shape">Proposed Config Shape</h2>
@@ -251,7 +251,9 @@
             "side": "board_right",
             "offset_mils": [250, 250],
             "box_size_mils": [450, 70],
-            "row_spacing_mils": 90
+            "row_spacing_mils": 90,
+            "column_spacing_mils": 80,
+            "auto_width_padding_mils": 80
           }
         }
       ]
@@ -356,9 +358,16 @@
     do not use the legacy global <code>pcb_labels</code> block as the primary
     label contract. A label <code>side</code> of <code>left</code> or
     <code>right</code> places the label relative to the projected target, while
-    <code>board_left</code> or <code>board_right</code> places labels in a
-    vertical column inside the output board outline using
-    <code>row_spacing_mils</code>.
+    <code>board_left</code> or <code>board_right</code> places labels in
+    vertical columns inside the output board outline. Board-edge labels are
+    grouped by projection id, falling back to source kind when no projection id
+    is present. Each board-edge column gets a silkscreen text header using that
+    group name. <code>row_spacing_mils</code> sets spacing within a column,
+    <code>column_spacing_mils</code> sets spacing between columns, and
+    <code>auto_width_padding_mils</code> is added to the longest rendered label
+    estimate so every board-edge label box uses the same width. Board-edge
+    labels and their headers are emitted after the generated feature union and
+    are therefore not part of <code>DEBUG_PLATE_FEATURES</code>.
   </p>
   <p>
     <code>pcb_designators</code> is a post-placement PCB text normalization

@@ -39,6 +39,12 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
 from altium_cruncher.altium_cruncher_debug_plate_artifacts import (
     build_debug_plate_artifact_operations,
 )
+from altium_cruncher.altium_cruncher_debug_plate_labels import (
+    DebugPlatePcbLabelsConfig,
+    PcbNetLabelRequest,
+    pcb_net_label_operations,
+    pcb_net_label_request,
+)
 from altium_cruncher.altium_cruncher_debug_plate_defaults import (
     DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS,
     default_known_parts_payload as _default_known_parts_payload,
@@ -46,6 +52,7 @@ from altium_cruncher.altium_cruncher_debug_plate_defaults import (
     default_mate_artifacts_payload as _default_mate_artifacts_payload,
     default_mate_board_projection_payload as _default_mate_board_projection_payload,
     default_mate_designators_payload as _default_mate_designators_payload,
+    default_mate_label_placement_payload as _default_mate_label_placement_payload,
     default_mate_label_style_payload as _default_mate_label_style_payload,
     default_mate_output_payload as _default_mate_output_payload,
     default_output_config_payload as _default_output_config_payload,
@@ -58,22 +65,6 @@ from altium_cruncher.altium_cruncher_debug_plate_defaults import (
 DEBUG_PLATE_CONFIG_SCHEMA = "wn.altium_cruncher.debug_plate.v1"
 MATE_CONFIG_SCHEMA = "wn.pcb_cruncher.mate_config.a0"
 DEBUG_PLATE_INSPECTION_SCHEMA = "wn.altium_cruncher.debug_plate.inspect.v1"
-
-_PCB_LABEL_STYLE_PASSTHROUGH_KEYS = (
-    "rotation_degrees",
-    "stroke_font_type",
-    "italic",
-    "is_comment",
-    "is_designator",
-    "is_mirrored",
-    "barcode_kind",
-    "barcode_render_mode",
-    "barcode_full_size_mils",
-    "barcode_margin_mils",
-    "barcode_min_width_mils",
-    "barcode_show_text",
-    "barcode_inverted",
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,19 +109,6 @@ class DebugPlatePlacementConfig:
     mirror_x: bool
     mirror_y: bool
     mirror_origin_mils: tuple[float, float]
-
-
-@dataclass(frozen=True, slots=True)
-class DebugPlatePcbLabelsConfig:
-    """PCB-side net-label generation settings for projected DUT targets."""
-
-    enabled: bool
-    side: str
-    offset_mils: tuple[float, float]
-    box_size_mils: tuple[float, float] | None
-    center_box_on_target: bool
-    row_spacing_mils: float | None
-    style: JsonObject
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,6 +189,12 @@ class DebugPlateConfig:
     selection: DebugPlateSelectionConfig
     board_projection: JsonObject
     artifacts: JsonObject
+
+
+@dataclass(frozen=True, slots=True)
+class _KnownPartOperations:
+    placement_operations: list[JsonObject]
+    pcb_label_operations: list[JsonObject]
 
 
 @dataclass(frozen=True, slots=True)
@@ -381,7 +365,8 @@ def build_debug_plate_mco(config: DebugPlateConfig) -> JsonObject:
     if marker is not None:
         operations.append(_pcb_marker_operation(config.output, marker))
     operations.extend(_known_part_library_copy_operations(config))
-    placement_operations = _known_part_placement_operations(config)
+    known_part_operations = _known_part_operations(config)
+    placement_operations = known_part_operations.placement_operations
     board_projection_operations = _board_projection_operations(config)
     artifact_operations = build_debug_plate_artifact_operations(config)
     operations.extend(placement_operations)
@@ -389,6 +374,7 @@ def build_debug_plate_mco(config: DebugPlateConfig) -> JsonObject:
     operations.extend(artifact_operations)
     if placement_operations or board_projection_operations or artifact_operations:
         operations.append(_debug_plate_user_union_operation(config.output))
+    operations.extend(known_part_operations.pcb_label_operations)
     return {"schema": MCO_SCHEMA, "operations": operations}
 
 
@@ -993,6 +979,11 @@ def _parse_pcb_labels_config(
         box_size_mils=_optional_point(raw, "box_size_mils"),
         center_box_on_target=_optional_bool(raw, "center_box_on_target", True),
         row_spacing_mils=_optional_float_or_none(raw, "row_spacing_mils"),
+        column_spacing_mils=_optional_float_or_none(raw, "column_spacing_mils"),
+        auto_width_padding_mils=_optional_float_or_none(
+            raw,
+            "auto_width_padding_mils",
+        ),
         style=_section(raw, "style"),
     )
 
@@ -1642,20 +1633,22 @@ def _pcb_marker_operation(
     }
 
 
-def _known_part_placement_operations(config: DebugPlateConfig) -> list[JsonObject]:
+def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
     known_parts = config.known_parts
     if known_parts is None:
-        return []
+        return _KnownPartOperations([], [])
     targets = _placement_targets(config.selection, config.placement)
     if not targets:
-        return []
+        return _KnownPartOperations([], [])
 
     manifest = load_debug_plate_known_parts_manifest(known_parts.manifest_path)
     operations: list[JsonObject] = []
+    pcb_label_requests: list[PcbNetLabelRequest] = []
+    board_label_column_indices: dict[str, int] = {}
+    board_label_rows: dict[str, int] = {}
     used_designators: set[str] = set()
     free_counts: dict[str, int] = {}
     placed_designators: list[str] = []
-    board_label_row = 0
     for index, target in enumerate(targets, start=1):
         target_kind = str(target.get("kind", "") or "")
         part = resolve_known_part(
@@ -1697,17 +1690,15 @@ def _known_part_placement_operations(config: DebugPlateConfig) -> list[JsonObjec
         )
         placed_designators.append(designator)
         target_labels = _target_pcb_labels_config(config.pcb_labels, target)
-        pcb_label_operation = _pcb_net_label_operation(
-            config.output,
+        pcb_label_request = pcb_net_label_request(
             target_labels,
             target,
             designator,
-            board_label_row=board_label_row,
+            board_label_column_indices=board_label_column_indices,
+            board_label_rows=board_label_rows,
         )
-        if pcb_label_operation is not None:
-            operations.append(pcb_label_operation)
-            if _is_board_edge_label_side(target_labels.side):
-                board_label_row += 1
+        if pcb_label_request is not None:
+            pcb_label_requests.append(pcb_label_request)
         operations.extend(
             build_pcb_reference_graphics_operations(
                 output_dir=config.output.output_dir,
@@ -1723,7 +1714,14 @@ def _known_part_placement_operations(config: DebugPlateConfig) -> list[JsonObjec
     )
     if designators_operation is not None:
         operations.append(designators_operation)
-    return operations
+    return _KnownPartOperations(
+        operations,
+        pcb_net_label_operations(
+            board_file=_output_file(config.output.output_dir, _board_filename(config.output)),
+            board_outline_mils=config.output.board_outline_mils,
+            requests=pcb_label_requests,
+        ),
+    )
 
 
 def _board_projection_operations(config: DebugPlateConfig) -> list[JsonObject]:
@@ -1955,133 +1953,6 @@ def _target_pcb_labels_config(
     if isinstance(raw, dict):
         return _parse_pcb_labels_config(raw)
     return default_labels
-
-
-def _pcb_net_label_operation(
-    output: DebugPlateOutputConfig,
-    labels: DebugPlatePcbLabelsConfig,
-    target: Mapping[str, object],
-    designator: str,
-    *,
-    board_label_row: int = 0,
-) -> JsonObject | None:
-    net_name = _target_optional_string(target, "net_name")
-    if not labels.enabled or not net_name:
-        return None
-    args: JsonObject = {
-        "file": _output_file(output.output_dir, _board_filename(output)),
-        "overwrite": True,
-        "text": net_name,
-        "position_mils": list(
-            _pcb_net_label_position(
-                output,
-                target,
-                labels,
-                board_label_row=board_label_row,
-            )
-        ),
-        **_pcb_net_label_style_args(labels),
-    }
-    return {
-        "id": f"label_{_safe_id(designator)}_pcb_net",
-        "op": "pcbdoc.add-text",
-        "message": f"Add debug-plate PCB net label for {designator}",
-        "args": args,
-    }
-
-
-def _pcb_net_label_position(
-    output: DebugPlateOutputConfig,
-    target: Mapping[str, object],
-    labels: DebugPlatePcbLabelsConfig,
-    *,
-    board_label_row: int = 0,
-) -> tuple[float, float]:
-    if _is_board_edge_label_side(labels.side):
-        return _pcb_board_edge_label_position(output, labels, board_label_row)
-    x_mils = _target_float(target, "x_mils")
-    y_mils = _target_float(target, "y_mils")
-    offset_x, offset_y = labels.offset_mils
-    box_width = labels.box_size_mils[0] if labels.box_size_mils is not None else 0.0
-    if labels.side == "left":
-        x_mils = x_mils - offset_x - box_width
-    else:
-        x_mils = x_mils + offset_x
-    y_mils = y_mils + offset_y
-    if labels.center_box_on_target and labels.box_size_mils is not None:
-        y_mils -= labels.box_size_mils[1] / 2.0
-    return (x_mils, y_mils)
-
-
-def _pcb_board_edge_label_position(
-    output: DebugPlateOutputConfig,
-    labels: DebugPlatePcbLabelsConfig,
-    row: int,
-) -> tuple[float, float]:
-    outline = output.board_outline_mils
-    if not isinstance(outline, dict):
-        raise ValueError(
-            "Debug-plate board-edge PCB labels require output board_outline_mils"
-        )
-    offset_x, offset_y = labels.offset_mils
-    box_width = labels.box_size_mils[0] if labels.box_size_mils is not None else 0.0
-    box_height = labels.box_size_mils[1] if labels.box_size_mils is not None else 70.0
-    row_spacing = labels.row_spacing_mils
-    if row_spacing is None:
-        row_spacing = box_height + 20.0
-    left = _target_float(outline, "left")
-    right = _target_float(outline, "right")
-    top = _target_float(outline, "top")
-    if labels.side == "board_left":
-        x_mils = left + offset_x
-    else:
-        x_mils = right - offset_x - box_width
-    y_mils = top - offset_y - box_height - (float(row) * row_spacing)
-    return (x_mils, y_mils)
-
-
-def _is_board_edge_label_side(side: str) -> bool:
-    return side in {"board_left", "board_right"}
-
-
-def _pcb_net_label_style_args(labels: DebugPlatePcbLabelsConfig) -> JsonObject:
-    style = dict(labels.style)
-    use_box = labels.box_size_mils is not None
-    args: JsonObject = {
-        "height_mils": _style_float(style, "height_mils", 65.0),
-        "layer": _style_string_or_int(style, "layer", "TOP_OVERLAY"),
-        "font_kind": _style_string(style, "font_kind", "truetype"),
-        "font_name": _style_string(style, "font_name", "Arial"),
-        "bold": _style_bool(style, "bold", True),
-        "stroke_width_mils": _style_float(style, "stroke_width_mils", 10.0),
-        "is_inverted": _style_bool(style, "is_inverted", use_box),
-        "inverted_margin_mils": _style_float(style, "inverted_margin_mils", 10.0),
-        "use_inverted_rectangle": _style_bool(
-            style,
-            "use_inverted_rectangle",
-            use_box,
-        ),
-        "is_frame": _style_bool(style, "is_frame", use_box),
-        "text_justification": _style_string_or_int(
-            style,
-            "text_justification",
-            _default_pcb_label_justification(labels.side),
-        ),
-    }
-    if labels.box_size_mils is not None:
-        box_size = list(labels.box_size_mils)
-        if args["use_inverted_rectangle"]:
-            args["inverted_rectangle_size_mils"] = box_size
-        if args["is_frame"]:
-            args["frame_size_mils"] = box_size
-    for key in _PCB_LABEL_STYLE_PASSTHROUGH_KEYS:
-        if key not in args and key in style:
-            args[key] = style[key]
-    return args
-
-
-def _default_pcb_label_justification(side: str) -> str:
-    return "LEFT_TOP" if side in {"left", "board_left"} else "RIGHT_TOP"
 
 
 def _pcb_designator_arrangement_operation(
@@ -2555,12 +2426,7 @@ def _mate_seed_test_points_projection(designators: list[str]) -> JsonObject:
             {
                 "kind": "label",
                 "text": "source_net",
-                "placement": {
-                    "side": "board_right",
-                    "offset_mils": [250, 250],
-                    "box_size_mils": [450, 70],
-                    "row_spacing_mils": 90,
-                },
+                "placement": _default_mate_label_placement_payload(),
                 "style": _default_mate_label_style_payload(),
             },
         ],
@@ -2593,12 +2459,7 @@ def _mate_seed_alignment_pins_projection(_pads: list[JsonObject]) -> JsonObject:
             {
                 "kind": "label",
                 "text": "source_net",
-                "placement": {
-                    "side": "board_right",
-                    "offset_mils": [250, 250],
-                    "box_size_mils": [450, 70],
-                    "row_spacing_mils": 90,
-                },
+                "placement": _default_mate_label_placement_payload(),
                 "style": _default_mate_label_style_payload(),
             },
         ],
@@ -2680,6 +2541,9 @@ def _debug_plate_template_text() -> str:
         '    "offset_mils": [120, 0],\n'
         '    "box_size_mils": [450, 70],\n'
         '    "center_box_on_target": true,\n'
+        '    "row_spacing_mils": 90,\n'
+        '    "column_spacing_mils": 80,\n'
+        '    "auto_width_padding_mils": 80,\n'
         '    "style": {\n'
         '      "height_mils": 65,\n'
         '      "layer": "TOP_OVERLAY",\n'

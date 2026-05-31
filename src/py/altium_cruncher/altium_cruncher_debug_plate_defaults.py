@@ -44,6 +44,17 @@ def default_mate_label_style_payload() -> JsonObject:
     }
 
 
+def default_mate_label_placement_payload() -> JsonObject:
+    return {
+        "side": "board_right",
+        "offset_mils": [250, 250],
+        "box_size_mils": [450, 70],
+        "row_spacing_mils": 90,
+        "column_spacing_mils": 80,
+        "auto_width_padding_mils": 80,
+    }
+
+
 def default_mate_designators_payload() -> JsonObject:
     return {
         "enabled": True,
@@ -154,6 +165,9 @@ def default_pcb_labels_payload() -> JsonObject:
         "offset_mils": [120, 0],
         "box_size_mils": [450, 70],
         "center_box_on_target": True,
+        "row_spacing_mils": 90,
+        "column_spacing_mils": 80,
+        "auto_width_padding_mils": 80,
         "style": {
             "height_mils": 65,
             "layer": "TOP_OVERLAY",

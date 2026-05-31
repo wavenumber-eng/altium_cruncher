@@ -466,8 +466,8 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
         "schdoc.add-component",
         "schdoc.add-net-label",
         "pcbdoc.add-component",
-        "pcbdoc.add-text",
         "pcbdoc.create-user-union",
+        "pcbdoc.add-text",
     ]
     assert operations[5]["args"]["designator"] == "M1"
     assert operations[5]["args"]["symbol"] == "9774080360R"
@@ -486,18 +486,18 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[9]["args"]["footprint"] == "H2184-05"
     assert operations[9]["args"]["position_mils"] == [1710.0, 420.0]
     assert operations[9]["args"]["pad_nets"] == {"1": "ALIGN_NET"}
-    assert operations[10]["args"]["text"] == "ALIGN_NET"
-    assert operations[10]["args"]["position_mils"] == [1830.0, 385.0]
-    assert operations[10]["args"]["height_mils"] == 65.0
-    assert operations[10]["args"]["layer"] == "TOP_OVERLAY"
-    assert operations[10]["args"]["font_kind"] == "truetype"
-    assert operations[10]["args"]["font_name"] == "Arial"
-    assert operations[10]["args"]["bold"] is True
-    assert operations[10]["args"]["is_inverted"] is True
-    assert operations[10]["args"]["inverted_rectangle_size_mils"] == [450.0, 70.0]
-    assert operations[10]["args"]["frame_size_mils"] == [450.0, 70.0]
-    assert operations[10]["args"]["text_justification"] == "RIGHT_TOP"
-    assert operations[-1]["args"]["name"] == "DEBUG_PLATE_FEATURES"
+    assert operations[10]["args"]["name"] == "DEBUG_PLATE_FEATURES"
+    assert operations[11]["args"]["text"] == "ALIGN_NET"
+    assert operations[11]["args"]["position_mils"] == [1830.0, 385.0]
+    assert operations[11]["args"]["height_mils"] == 65.0
+    assert operations[11]["args"]["layer"] == "TOP_OVERLAY"
+    assert operations[11]["args"]["font_kind"] == "truetype"
+    assert operations[11]["args"]["font_name"] == "Arial"
+    assert operations[11]["args"]["bold"] is True
+    assert operations[11]["args"]["is_inverted"] is True
+    assert operations[11]["args"]["inverted_rectangle_size_mils"] == [450.0, 70.0]
+    assert operations[11]["args"]["frame_size_mils"] == [450.0, 70.0]
+    assert operations[11]["args"]["text_justification"] == "RIGHT_TOP"
 
 
 def test_cricket_node_debug_plate_example_config_is_planable() -> None:
@@ -524,14 +524,14 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
         "schdoc.add-component",
         "schdoc.add-net-label",
         "pcbdoc.add-component",
-        "pcbdoc.add-text",
         "schdoc.add-component",
         "pcbdoc.add-component",
         "schdoc.add-component",
         "schdoc.add-net-label",
         "pcbdoc.add-component",
-        "pcbdoc.add-text",
         "pcbdoc.create-user-union",
+        "pcbdoc.add-text",
+        "pcbdoc.add-text",
     ]
     assert operations[0]["args"]["documents"] == [
         "libraries/pcblib/split/9774080360R-YIYUAN.PcbLib",
@@ -552,12 +552,12 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
         "TP1",
         None,
         "TP1",
-        None,
         "M1",
         "M1",
         "P1",
         None,
         "P1",
+        None,
         None,
         None,
     ]
@@ -565,8 +565,8 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
         operation["args"].get("text")
         for operation in operations
         if operation["op"] in {"schdoc.add-net-label", "pcbdoc.add-text"}
-    ] == ["+VIN", "+VIN", "ALIGN_NET", "ALIGN_NET"]
-    assert operations[-1]["args"]["name"] == "DEBUG_PLATE_FEATURES"
+    ] == ["+VIN", "ALIGN_NET", "+VIN", "ALIGN_NET"]
+    assert operations[-3]["args"]["name"] == "DEBUG_PLATE_FEATURES"
 
 
 def test_cricket_node_draft_mate_config_is_parseable() -> None:
@@ -1011,7 +1011,11 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     assert pcb_labels[-1]["args"]["position_mils"] == [610.0, 470.0]
     assert pcb_labels[-1]["args"]["height_mils"] == 45.0
     assert pcb_labels[-1]["args"]["text_justification"] == "LEFT_TOP"
-    user_union = operations[-1]
+    user_union = next(
+        operation
+        for operation in operations
+        if operation["op"] == "pcbdoc.create-user-union"
+    )
     assert user_union["op"] == "pcbdoc.create-user-union"
     assert user_union["args"]["name"] == "DEBUG_PLATE_FEATURES"
     step_op = [
@@ -1041,7 +1045,11 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         "enabled": True,
         "color": "#7A8F2A",
     }
-    insert_step_op = operations[-2]
+    insert_step_op = next(
+        operation
+        for operation in operations
+        if operation["op"] == "pcbdoc.add-embedded-3d-model"
+    )
     assert insert_step_op["op"] == "pcbdoc.add-embedded-3d-model"
     assert insert_step_op["args"]["file"] == "generated/debug_plate.PcbDoc"
     assert insert_step_op["args"]["model_file"] == (
@@ -1318,6 +1326,7 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
         assert label.textbox_rect_width_mils == 300.0
         assert label.textbox_rect_height_mils == 60.0
         assert label.textbox_rect_justification == PcbTextJustification.RIGHT_TOP
+        assert label.union_index == 0xFFFFFFFF
     assert [user_union.name for user_union in pcbdoc.user_unions] == [
         "DEBUG_PLATE_FEATURES"
     ]
@@ -1429,6 +1438,17 @@ def test_debug_plate_board_edge_pcb_labels_stack_in_column(
                     "boards": [
                         {
                             "board_key": "fixture",
+                            "components": [
+                                {
+                                    "designator": "TP1",
+                                    "kind": "test_point",
+                                    "footprint": "TEST_POINT",
+                                    "layer": "BOTTOM",
+                                    "net_name": "LONG_NET_NAME",
+                                    "x_mils": 200,
+                                    "y_mils": 300,
+                                }
+                            ],
                             "free_pads": [
                                 {
                                     "designator": "G1",
@@ -1459,11 +1479,25 @@ def test_debug_plate_board_edge_pcb_labels_stack_in_column(
         if operation["op"] == "pcbdoc.add-text"
     ]
 
-    assert [operation["args"]["text"] for operation in label_ops] == ["NET_A", "NET_B"]
-    assert [operation["args"]["position_mils"] for operation in label_ops] == [
-        [1600.0, 890.0],
-        [1600.0, 810.0],
+    assert [operation["args"]["text"] for operation in label_ops] == [
+        "test_point",
+        "LONG_NET_NAME",
+        "free_npth",
+        "NET_A",
+        "NET_B",
     ]
+    assert [operation["args"]["position_mils"] for operation in label_ops] == [
+        [1313.0, 960.0],
+        [1313.0, 890.0],
+        [646.0, 960.0],
+        [646.0, 890.0],
+        [646.0, 810.0],
+    ]
+    assert {
+        tuple(operation["args"]["inverted_rectangle_size_mils"])
+        for operation in label_ops
+        if "inverted_rectangle_size_mils" in operation["args"]
+    } == {(587.0, 60.0)}
     assert {operation["args"]["text_justification"] for operation in label_ops} == {
         "RIGHT_TOP"
     }
