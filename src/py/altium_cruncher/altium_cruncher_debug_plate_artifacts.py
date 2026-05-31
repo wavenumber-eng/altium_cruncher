@@ -109,7 +109,11 @@ def _pcb_layer_step_operation(
         "overwrite": True,
         "layer": source_layer,
         "board_name": board_key,
-        "z_mm": _optional_float(layer_step, "z_mm", 0.0),
+        "z_mm": _optional_float(
+            layer_step,
+            "z_mm",
+            _centered_copper_z_mm(layer_step),
+        ),
         "highlights": _pcb_layer_step_highlights(board, layer_step),
     }
     for option_key in _PCB_LAYER_STEP_OPTION_KEYS:
@@ -319,6 +323,10 @@ def _origin_location_mils(origin: object) -> list[float]:
     if not isinstance(y_value, int | float) or isinstance(y_value, bool):
         return [0.0, 0.0]
     return [float(x_value), float(y_value)]
+
+
+def _centered_copper_z_mm(layer_step: Mapping[str, object]) -> float:
+    return -_optional_float(layer_step, "thickness_mm", 0.035) / 2.0
 
 
 def _safe_id(value: str) -> str:

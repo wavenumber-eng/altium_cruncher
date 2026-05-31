@@ -60,7 +60,7 @@ def default_mate_artifacts_payload() -> JsonObject:
             "enabled": True,
             "source_layer": "bottom",
             "thickness_mm": 0.035,
-            "z_mm": 0.0,
+            "z_mm": -0.0175,
             "features": {
                 "tracks": {
                     "enabled": True,

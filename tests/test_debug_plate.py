@@ -597,7 +597,7 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     assert "kind" not in projections["alignment_pins"]["source"]
     assert payload["board_projection"]["outline"]["graphics"]["layer"] == "TOP_OVERLAY"
     assert payload["artifacts"]["pcb_layer_step"]["source_layer"] == "bottom"
-    assert payload["artifacts"]["pcb_layer_step"]["z_mm"] == 0.0
+    assert payload["artifacts"]["pcb_layer_step"]["z_mm"] == -0.0175
     assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"] == {
         "enabled": True,
         "color": "#B87333",
@@ -951,7 +951,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         ("test_points", "#FF0000", 2),
         ("alignment_pins", "#44aaee", 1),
     ]
-    assert step_op["args"]["z_mm"] == 0.0
+    assert step_op["args"]["z_mm"] == -0.0175
     assert step_op["args"]["features"]["tracks"] == {
         "enabled": True,
         "color": "#B87333",

@@ -137,10 +137,10 @@
     "pcb_layer_step": {
       "enabled": true,
       "source_layer": "bottom",
-      // Keep the exported STEP in its own local Z frame. The visual placement
-      // height in the output PcbDoc is controlled by insert_in_output.z_mm.
+      // Keep local Z=0 on the copper mid-plane. z_mm is still the body bottom
+      // plane, so this is -thickness_mm / 2 for 0.035 mm copper.
       "thickness_mm": 0.035,
-      "z_mm": 0.0,
+      "z_mm": -0.0175,
       "features": {
         "tracks": {
           "enabled": true,

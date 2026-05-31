@@ -285,7 +285,7 @@
       "enabled": true,
       "source_layer": "bottom",
       "thickness_mm": 0.035,
-      "z_mm": 0.0,
+      "z_mm": -0.0175,
       "features": {
         "tracks": {"enabled": true, "color": "#B87333"},
         "polygons": {"enabled": true, "color": "#7A8F2A"},
@@ -335,8 +335,10 @@
     selectors. <code>pcb-layer-step</code> owns layer, local STEP Z, thickness,
     feature visibility, and feature colors. Output-board insertion owns the
     model-placement <code>z_mm</code>; for the Cricket Node example that value
-    is <code>8.5</code> mm while the exported STEP remains at local
-    <code>z_mm: 0.0</code>. The first example renders selected TP pads red and
+    is <code>8.5</code> mm while the exported STEP uses local
+    <code>z_mm: -0.0175</code>. Since <code>z_mm</code> is the bottom extrusion
+    plane and copper thickness is <code>0.035 mm</code>, local <code>Z=0</code>
+    is the copper mid-plane. The first example renders selected TP pads red and
     makes track and polygon visibility/color choices explicit.
   </p>
 
