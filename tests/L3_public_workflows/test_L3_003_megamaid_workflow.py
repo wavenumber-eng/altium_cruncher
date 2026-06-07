@@ -8,6 +8,7 @@ import sys
 from types import SimpleNamespace
 
 import pytest
+import jsonc  # type: ignore[import-untyped]
 
 from altium_cruncher import altium_cruncher_cmd_megamaid as megamaid
 import altium_monkey.altium_schdoc as schdoc_module
@@ -118,12 +119,13 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
         assert payload["schema"] == "altium_cruncher.json_dump.a0"
         assert payload["kind"] == entry["kind"]
 
-    notes_payload = _read_manifest_json(
+    notes_payload = _read_manifest_jsonc(
         output_dir,
         str(manifest["notes"]["notes_json"]),
     )
     assert notes_payload["schema"] == "altium_cruncher.notes.a0"
-    assert "all_text_annotations" in notes_payload["counts"]
+    assert str(manifest["notes"]["notes_json"]).endswith(".jsonc")
+    assert "counts" not in notes_payload
 
     library_jsons = manifest["library_jsons"]
     assert library_jsons["schlib"]
@@ -148,6 +150,15 @@ def _read_manifest_json(output_dir: Path, relative_path: str) -> dict[str, objec
     path = output_dir / relative_path
     assert path.exists(), relative_path
     payload = json.loads(path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    return payload
+
+
+def _read_manifest_jsonc(output_dir: Path, relative_path: str) -> dict[str, object]:
+    path = output_dir / relative_path
+    assert path.exists(), relative_path
+    assert path.suffix == ".jsonc"
+    payload = jsonc.loads(path.read_text(encoding="utf-8"))
     assert isinstance(payload, dict)
     return payload
 

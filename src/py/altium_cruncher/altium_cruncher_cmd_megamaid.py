@@ -18,6 +18,7 @@ from altium_cruncher.altium_cruncher_common import (
 )
 from altium_cruncher.altium_cruncher_json_dump import build_json_dump_payload
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
+from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
 
 log = logging.getLogger(__name__)
 
@@ -293,11 +294,11 @@ def _write_notes_json(
     output_root: Path,
 ) -> dict[str, object]:
     payload = build_notes_payload(input_project)
-    output_path = output_root / "notes" / f"{input_project.stem}_notes.json"
-    _write_json_payload(output_path, payload)
+    output_path = output_root / "notes" / f"{input_project.stem}_notes.jsonc"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(render_notes_jsonc(payload), encoding="utf-8")
     return {
         "notes_json": _relative_to_root(output_path, output_root),
-        "counts": payload.get("counts", {}),
     }
 
 

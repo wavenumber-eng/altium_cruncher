@@ -8,6 +8,19 @@ from pathlib import Path
 from altium_cruncher.altium_cruncher_common import _resolve_output_dir
 
 NOTES_SCHEMA = "altium_cruncher.notes.a0"
+NOTES_JSONC_HEADER = """/*
+altium-cruncher notes artifact
+
+Schema: altium_cruncher.notes.a0
+Intent: review-focused schematic annotations for agents and humans.
+Path policy: input and page file values are relative to the input SchDoc or PrjPcb
+directory, not absolute machine-local paths.
+Filtering: dedicated Note objects and schematic-owned text are included by
+default. Sheet-template/title-block owned text is suppressed by default. Use
+--include-sheet-template-text for raw diagnostic output. Empty annotation
+categories and pages without included annotations are omitted.
+*/
+"""
 
 
 def build_notes_payload(
@@ -17,29 +30,29 @@ def build_notes_payload(
 ) -> dict[str, object]:
     """Build structured note/text payloads for one SchDoc or PrjPcb input."""
     source = Path(input_file).resolve()
+    path_base = source.parent
     schdoc_paths = _resolve_schdoc_paths(source)
-    pages = [
-        _schdoc_notes_page(
+    pages: list[dict[str, object]] = []
+    for index, schdoc_path in enumerate(schdoc_paths):
+        page = _schdoc_notes_page(
             schdoc_path,
             page_number=index + 1,
             page_count=len(schdoc_paths),
             include_sheet_template_text=include_sheet_template_text,
+            path_base=path_base,
         )
-        for index, schdoc_path in enumerate(schdoc_paths)
-    ]
-    counts = _payload_counts(pages)
-    suppressed_counts = _payload_counts(pages, field="suppressed_counts")
+        if _page_has_annotations(page):
+            pages.append(page)
     return {
         "schema": NOTES_SCHEMA,
-        "input": str(source),
+        "input": _portable_path(source, path_base),
         "source_kind": source.suffix.lower().lstrip("."),
+        "path_base": "input_directory",
         "schdoc_count": len(schdoc_paths),
         "filters": {
             "include_sheet_template_text": include_sheet_template_text,
             "default_suppression": "sheet-template/title-block owned text",
         },
-        "counts": counts,
-        "suppressed_counts": suppressed_counts,
         "schdocs": pages,
     }
 
@@ -50,21 +63,25 @@ def write_notes_payload(
     output: Path | None = None,
     include_sheet_template_text: bool = False,
 ) -> Path:
-    """Write structured notes JSON and return the output path."""
+    """Write structured notes JSONC and return the output path."""
     source = Path(input_file).resolve()
     output_dir = _resolve_output_dir(output, "notes")
-    output_path = output_dir / f"{source.stem}_notes.json"
+    output_path = output_dir / f"{source.stem}_notes.jsonc"
     output_path.write_text(
-        json.dumps(
+        render_notes_jsonc(
             build_notes_payload(
                 source,
                 include_sheet_template_text=include_sheet_template_text,
-            ),
-            indent=2,
+            )
         ),
         encoding="utf-8",
     )
     return output_path
+
+
+def render_notes_jsonc(payload: dict[str, object]) -> str:
+    """Render a notes payload as commented JSONC."""
+    return NOTES_JSONC_HEADER + json.dumps(payload, indent=2) + "\n"
 
 
 def _resolve_schdoc_paths(source: Path) -> list[Path]:
@@ -84,44 +101,36 @@ def _schdoc_notes_page(
     page_number: int,
     page_count: int,
     include_sheet_template_text: bool,
+    path_base: Path,
 ) -> dict[str, object]:
     from altium_monkey.altium_schdoc import AltiumSchDoc
 
     schdoc = AltiumSchDoc(schdoc_path)
-    notes, suppressed_notes = _filtered_entries(
+    notes = _filtered_entries(
         "note",
         schdoc.notes,
         include_sheet_template_text=include_sheet_template_text,
     )
-    text_frames, suppressed_text_frames = _filtered_entries(
+    text_frames = _filtered_entries(
         "text_frame",
         schdoc.text_frames,
         include_sheet_template_text=include_sheet_template_text,
     )
-    free_text, suppressed_free_text = _filtered_entries(
+    free_text = _filtered_entries(
         "free_text",
         schdoc.text_strings,
         include_sheet_template_text=include_sheet_template_text,
     )
-    return {
-        "file": str(schdoc_path.resolve()),
+    page: dict[str, object] = {
+        "file": _portable_path(schdoc_path.resolve(), path_base),
         "page_number": page_number,
         "page_count": page_count,
         "page_name": schdoc_path.stem,
-        "notes": notes,
-        "text_frames": text_frames,
-        "free_text": free_text,
-        "counts": {
-            "notes": len(notes),
-            "text_frames": len(text_frames),
-            "free_text": len(free_text),
-        },
-        "suppressed_counts": _counts_dict(
-            notes=suppressed_notes,
-            text_frames=suppressed_text_frames,
-            free_text=suppressed_free_text,
-        ),
     }
+    _append_entries(page, "notes", notes)
+    _append_entries(page, "text_frames", text_frames)
+    _append_entries(page, "free_text", free_text)
+    return page
 
 
 def _filtered_entries(
@@ -129,19 +138,30 @@ def _filtered_entries(
     objects: object,
     *,
     include_sheet_template_text: bool,
-) -> tuple[list[dict[str, object]], int]:
+) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
-    suppressed_count = 0
     for obj in objects:
         entry = _object_entry(kind, obj)
         if (
             not include_sheet_template_text
             and entry["source_scope"] == "sheet_template"
         ):
-            suppressed_count += 1
             continue
         entries.append(entry)
-    return entries, suppressed_count
+    return entries
+
+
+def _append_entries(
+    page: dict[str, object],
+    name: str,
+    entries: list[dict[str, object]],
+) -> None:
+    if entries:
+        page[name] = entries
+
+
+def _page_has_annotations(page: dict[str, object]) -> bool:
+    return any(name in page for name in ("notes", "text_frames", "free_text"))
 
 
 def _object_entry(kind: str, obj: object) -> dict[str, object]:
@@ -154,6 +174,7 @@ def _object_entry(kind: str, obj: object) -> dict[str, object]:
         "is_hidden": bool(getattr(obj, "is_hidden", False)),
         "owner_index": owner_index,
         "source_scope": _source_scope(owner_index),
+        "unique_id": str(getattr(obj, "unique_id", "") or ""),
     }
     bounds = _bounds_to_json(obj)
     if bounds is not None:
@@ -237,34 +258,8 @@ def _bounds_to_json(obj: object) -> dict[str, float] | None:
     }
 
 
-def _payload_counts(
-    pages: list[dict[str, object]],
-    *,
-    field: str = "counts",
-) -> dict[str, int]:
-    totals = _counts_dict(notes=0, text_frames=0, free_text=0)
-    for page in pages:
-        counts = page.get(field, {})
-        if not isinstance(counts, dict):
-            continue
-        totals["notes"] += int(counts.get("notes", 0))
-        totals["text_frames"] += int(counts.get("text_frames", 0))
-        totals["free_text"] += int(counts.get("free_text", 0))
-    totals["all_text_annotations"] = (
-        totals["notes"] + totals["text_frames"] + totals["free_text"]
-    )
-    return totals
-
-
-def _counts_dict(
-    *,
-    notes: int,
-    text_frames: int,
-    free_text: int,
-) -> dict[str, int]:
-    return {
-        "notes": notes,
-        "text_frames": text_frames,
-        "free_text": free_text,
-        "all_text_annotations": notes + text_frames + free_text,
-    }
+def _portable_path(path: Path, base: Path) -> str:
+    try:
+        return path.resolve().relative_to(base.resolve()).as_posix()
+    except ValueError:
+        return path.name

@@ -157,7 +157,7 @@ Design review notes:
   and `.PrjPcb` inputs;
 - `design-review` and `dr` are aliases for the same bundle contract;
 - output includes `README.md`, `design_review_manifest.json`, root design JSON,
-  structured notes JSON, serialized SchDoc/PcbDoc JSON from `json-dump`,
+  structured notes JSONC, serialized SchDoc/PcbDoc JSON from `json-dump`,
   schematic SVGs, and PCB layer SVGs where a board exists;
 - the help text must explain that this is a design review bundle with design
   JSON, serialized document JSON, structured notes, and SVG artifacts;
@@ -236,7 +236,7 @@ Megamaid notes:
   `documents/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
   `sch_images/`, and `megamaid_manifest.json`;
 - generated combined libraries should reparse, combined-library JSON dumps
-  should exist, BOM CSV, netlist JSON, SchDoc/PcbDoc JSON, and notes JSON
+  should exist, BOM CSV, netlist JSON, SchDoc/PcbDoc JSON, and notes JSONC
   should exist, and manifest counts/paths should be validated;
 - rerun behavior should clear megamaid-owned stale artifacts while preserving
   unrelated files under the output root.

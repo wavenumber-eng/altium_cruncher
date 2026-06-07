@@ -85,14 +85,14 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `bom` | Generate BOM output as CSV, JSON, or XLSX. | Public |
 | `pnp` | Generate pick-and-place output as CSV, JSON, XLSX, or JLC CPL. | Public |
 | `jlc` | Generate JLCPCB BOM and CPL outputs from an Altium project. | Public |
-| `design` / `design-review` / `dr` | Generate an agent-facing design review bundle with design JSON, document JSON, notes JSON, schematic SVGs, and PCB layer SVGs. | Public |
+| `design` / `design-review` / `dr` | Generate an agent-facing design review bundle with design JSON, document JSON, notes JSONC, schematic SVGs, and PCB layer SVGs. | Public |
 | `json-dump` | Dump parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to JSON for inspection. | Experimental |
 | `extract` | Extract symbols, footprints, or IntLib sources from Altium design documents. | Public |
 | `installs` | List discovered Altium Designer install paths. | Public |
 | `launch` | Launch Altium Designer, optionally opening a file. | Public |
 | `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
-| `megamaid` | Decompose a PrjPcb into libraries, BOM, netlist, document/library JSON, notes JSON, and embedded assets. | Public |
+| `megamaid` | Decompose a PrjPcb into libraries, BOM, netlist, document/library JSON, notes JSONC, and embedded assets. | Public |
 | `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
 | `debug-plate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |

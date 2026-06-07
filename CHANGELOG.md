@@ -9,13 +9,14 @@
   launcher, and ProgramData profile diagnostics.
 - Expand `design` into an agent-facing design review bundle, with
   `design-review` and `dr` aliases, serialized SchDoc/PcbDoc JSON, structured
-  notes JSON, schematic SVGs, PCB layer SVGs, manifest, and README output.
+  notes JSONC, schematic SVGs, PCB layer SVGs, manifest, and README output.
 - Add a dedicated `notes` command for Altium Note objects, text frames, and
   free schematic text.
-- Suppress sheet-template/title-block owned text in `notes` and design-review
-  notes output by default, with an opt-in raw text flag for diagnostics.
+- Write `notes` and design-review note artifacts as sparse JSONC with relative
+  paths and Altium unique ids; sheet-template/title-block owned text is
+  suppressed by default, with an opt-in raw text flag for diagnostics.
 - Extend `megamaid` output with serialized document JSON, combined extracted
-  library JSON, and notes JSON artifacts.
+  library JSON, and notes JSONC artifacts.
 - Continue experimental `mco` and `debug-plate` development toward Cricket
   Node mating-board automation.
 

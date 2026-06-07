@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import jsonc  # type: ignore[import-untyped]
+
 from altium_monkey.altium_record_types import SchPointMils, SchRectMils
 from altium_monkey.altium_sch_object_factory import (
     make_sch_note,
@@ -90,19 +92,22 @@ def test_notes_payload_separates_note_text_frame_and_free_text(tmp_path: Path) -
 
     page = payload["schdocs"][0]
     assert payload["schema"] == "altium_cruncher.notes.a0"
-    assert payload["counts"] == {
-        "notes": 1,
-        "text_frames": 1,
-        "free_text": 1,
-        "all_text_annotations": 3,
-    }
+    assert payload["input"] == "annotated.SchDoc"
+    assert payload["path_base"] == "input_directory"
     assert page["notes"][0]["text"] == "Dedicated note\nsecond line"
     assert page["notes"][0]["author"] == "Reviewer"
+    assert "unique_id" in page["notes"][0]
     assert page["text_frames"][0]["text"] == "Frame note"
     assert page["text_frames"][0]["source_scope"] == "schematic"
+    assert "unique_id" in page["text_frames"][0]
     assert page["free_text"][0]["text"] == "Free text"
     assert page["free_text"][0]["position_mils"] == {"x": 1300.0, "y": 240.0}
-    assert payload["suppressed_counts"]["all_text_annotations"] == 0
+    assert "unique_id" in page["free_text"][0]
+    assert "counts" not in payload
+    assert "suppressed_counts" not in payload
+    assert "counts" not in page
+    assert "suppressed_counts" not in page
+    assert not Path(str(page["file"])).is_absolute()
 
 
 def test_notes_payload_suppresses_sheet_template_text_by_default(
@@ -119,24 +124,16 @@ def test_notes_payload_suppresses_sheet_template_text_by_default(
     )
 
     page = payload["schdocs"][0]
-    assert payload["counts"] == {
-        "notes": 0,
-        "text_frames": 1,
-        "free_text": 1,
-        "all_text_annotations": 2,
-    }
-    assert payload["suppressed_counts"] == {
-        "notes": 0,
-        "text_frames": 1,
-        "free_text": 1,
-        "all_text_annotations": 2,
-    }
+    assert "notes" not in page
     assert page["text_frames"][0]["text"] == "User frame note"
     assert page["free_text"][0]["text"] == "User free text"
-    assert raw_payload["counts"]["all_text_annotations"] == 4
+    assert len(page["text_frames"]) == 1
+    assert len(page["free_text"]) == 1
     raw_page = raw_payload["schdocs"][0]
     assert raw_page["text_frames"][1]["source_scope"] == "sheet_template"
     assert raw_page["free_text"][1]["owner_index"] == 1
+    assert "counts" not in raw_payload
+    assert "suppressed_counts" not in raw_payload
 
 
 def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
@@ -153,12 +150,21 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
     )
     assert manifest["schema"] == "altium_cruncher.design_review_manifest.a0"
+    assert manifest["input"] == "annotated.SchDoc"
     assert (output_dir / manifest["design_json"]).exists()
     assert (output_dir / manifest["notes_json"]).exists()
     assert (output_dir / manifest["readme"]).exists()
+    assert str(manifest["notes_json"]).endswith(".jsonc")
     assert len(manifest["document_jsons"]) == 1
     assert manifest["document_jsons"][0]["kind"] == "SchDoc"
+    assert manifest["document_jsons"][0]["source"] == "annotated.SchDoc"
     assert len(manifest["schematic_svgs"]) == 1
+    assert manifest["schematic_svgs"][0]["source"] == "annotated.SchDoc"
     assert manifest["pcb_svgs"] == []
+    notes_text = (output_dir / manifest["notes_json"]).read_text(encoding="utf-8")
+    assert notes_text.startswith("/*\naltium-cruncher notes artifact")
+    notes_payload = jsonc.loads(notes_text)
+    assert notes_payload["schema"] == "altium_cruncher.notes.a0"
+    assert notes_payload["input"] == "annotated.SchDoc"
     readme = (output_dir / "README.md").read_text(encoding="utf-8")
     assert "Altium Design Review Bundle" in readme

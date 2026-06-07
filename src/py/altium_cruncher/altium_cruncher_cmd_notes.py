@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_common import find_prjpcb_in_cwd
 from altium_cruncher.altium_cruncher_notes import build_notes_payload, write_notes_payload
+from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
 
 log = logging.getLogger(__name__)
 
@@ -21,13 +21,13 @@ def cmd_notes(args: argparse.Namespace) -> int:
     try:
         if getattr(args, "stdout", False):
             print(
-                json.dumps(
+                render_notes_jsonc(
                     build_notes_payload(
                         input_file,
                         include_sheet_template_text=args.include_sheet_template_text,
-                    ),
-                    indent=2,
-                )
+                    )
+                ),
+                end="",
             )
         else:
             output_path = write_notes_payload(
@@ -66,10 +66,10 @@ def register_parser(
     """Register the notes command parser."""
     parser = subparsers.add_parser(
         "notes",
-        help="extract schematic notes, text frames, and free text to JSON",
+        help="extract schematic notes, text frames, and free text to JSONC",
         description=(
             "Extract dedicated schematic Note objects, text frames, and free "
-            "text strings from a SchDoc or all SchDocs in a PrjPcb."
+            "text strings from a SchDoc or all SchDocs in a PrjPcb as JSONC."
         ),
         epilog=(
             "Examples:\n"
@@ -93,7 +93,7 @@ def register_parser(
     parser.add_argument(
         "--stdout",
         action="store_true",
-        help="write JSON payload to stdout instead of a file",
+        help="write JSONC payload to stdout instead of a file",
     )
     parser.add_argument(
         "--include-sheet-template-text",
