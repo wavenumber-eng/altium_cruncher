@@ -1493,8 +1493,14 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
         (highlight["id"], highlight["color"], len(highlight["pad_geometries"]))
         for highlight in step_op["args"]["highlights"]
     ] == [
-        ("test_points", "#FF0000", 2),
         ("alignment_pins", "#44aaee", 1),
+    ]
+    assert step_op["args"]["colors"]["pad_rules"] == [
+        {
+            "designators": ["TP1", "TP2"],
+            "color": "#FF0000",
+            "body": "test_points",
+        }
     ]
     assert step_op["args"]["z_mm"] == -0.0175
     assert step_op["args"]["features"]["tracks"] == {

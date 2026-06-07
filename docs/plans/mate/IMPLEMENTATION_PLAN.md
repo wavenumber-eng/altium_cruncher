@@ -188,3 +188,7 @@ Full signoff:
 - 2026-06-07: Fixed `pcb-layer-step` pad/highlight shape export so unequal
   circular pad bodies, such as Cricket TP9, emit obround/capsule STEP regions
   instead of oval approximations.
+- 2026-06-07: Changed mate-generated `pcb-layer-step` component highlights to
+  use projection-linked pad color rules instead of duplicate explicit highlight
+  bodies, so Cricket TP10 and other selected component pads are colored in
+  place on the copper layer.

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from altium_cruncher.bom_pnp_model import designator_sort_key
 from altium_cruncher.altium_cruncher_mco import JsonObject
 
 _PCB_LAYER_STEP_OPTION_KEYS = (
@@ -97,7 +98,9 @@ def _pcb_layer_step_operation(
     layer_step: Mapping[str, object],
 ) -> JsonObject:
     source_layer = _optional_string(layer_step, "source_layer", "bottom") or "bottom"
-    board_key = str(getattr(board, "board_key", "") or Path(getattr(board, "pcb_path")).stem)
+    board_key = str(
+        getattr(board, "board_key", "") or Path(getattr(board, "pcb_path")).stem
+    )
     output_file = (
         Path(output_dir)
         / "artifacts"
@@ -120,6 +123,9 @@ def _pcb_layer_step_operation(
     for option_key in _PCB_LAYER_STEP_OPTION_KEYS:
         if option_key in layer_step:
             args[option_key] = layer_step[option_key]
+    colors = _pcb_layer_step_colors(board, layer_step)
+    if colors:
+        args["colors"] = colors
     return {
         "id": f"export_{_safe_id(board_key)}_{_safe_id(source_layer)}_pcb_layer_step",
         "op": "pcbdoc.export-layer-step",
@@ -156,7 +162,9 @@ def _pcb_layer_step_insert_operation(
     if not step_file:
         raise ValueError("Internal pcb_layer_step operation missing output_file")
 
-    board_key = str(getattr(board, "board_key", "") or Path(getattr(board, "pcb_path")).stem)
+    board_key = str(
+        getattr(board, "board_key", "") or Path(getattr(board, "pcb_path")).stem
+    )
     model_args: JsonObject = {
         "file": (Path(output_dir) / output_board_filename).as_posix(),
         "overwrite": True,
@@ -176,7 +184,9 @@ def _pcb_layer_step_insert_operation(
         ),
         "z_mm": _optional_float(insert_config, "z_mm", 0.0),
     }
-    _add_optional(model_args, "rotation_z_degrees", insert_config.get("rotation_z_degrees"))
+    _add_optional(
+        model_args, "rotation_z_degrees", insert_config.get("rotation_z_degrees")
+    )
     _add_optional(model_args, "opacity", insert_config.get("opacity"))
     default_bounds = source_board_outline_mils or output_board_outline_mils
     bounds = insert_config.get("bounds_mils", default_bounds)
@@ -197,7 +207,12 @@ def _pcb_layer_step_highlights(
     result: list[JsonObject] = []
     for spec in specs:
         projection_id = _required_string(spec, "projection")
-        geometries = _source_pad_geometries_for_projection(board, projection_id)
+        geometries = _source_pad_geometries_for_projection(
+            board,
+            projection_id,
+            include_components=False,
+            include_free_pads=True,
+        )
         if not geometries:
             continue
         highlight: JsonObject = {
@@ -212,6 +227,38 @@ def _pcb_layer_step_highlights(
     return result
 
 
+def _pcb_layer_step_colors(
+    board: object,
+    layer_step: Mapping[str, object],
+) -> JsonObject | None:
+    rules: list[JsonObject] = []
+    for spec in _highlight_specs(layer_step):
+        projection_id = _required_string(spec, "projection")
+        designators = _component_designators_for_projection(board, projection_id)
+        if not designators:
+            continue
+        rules.append(
+            {
+                "designators": designators,
+                "color": _optional_string(spec, "color", "#ffcc00") or "#ffcc00",
+                "body": projection_id,
+            }
+        )
+    existing = layer_step.get("colors")
+    if existing is not None and not isinstance(existing, dict):
+        raise ValueError("Mate pcb_layer_step.colors must be an object")
+    colors: JsonObject = dict(existing) if isinstance(existing, dict) else {}
+    if not rules:
+        return colors or None
+    existing_rules = colors.get("pad_rules", [])
+    if existing_rules is None:
+        existing_rules = []
+    if not isinstance(existing_rules, list):
+        raise ValueError("Mate pcb_layer_step.colors.pad_rules must be an array")
+    colors["pad_rules"] = [*existing_rules, *rules]
+    return colors
+
+
 def _highlight_specs(layer_step: Mapping[str, object]) -> list[JsonObject]:
     value = layer_step.get("highlights", [])
     if value is None:
@@ -221,9 +268,7 @@ def _highlight_specs(layer_step: Mapping[str, object]) -> list[JsonObject]:
     result: list[JsonObject] = []
     for item in value:
         if not isinstance(item, dict):
-            raise ValueError(
-                "Mate pcb_layer_step.highlights items must be objects"
-            )
+            raise ValueError("Mate pcb_layer_step.highlights items must be objects")
         result.append(dict(item))
     return result
 
@@ -231,12 +276,16 @@ def _highlight_specs(layer_step: Mapping[str, object]) -> list[JsonObject]:
 def _source_pad_geometries_for_projection(
     board: object,
     projection_id: str,
+    *,
+    include_components: bool = True,
+    include_free_pads: bool = True,
 ) -> list[JsonObject]:
     geometries: list[JsonObject] = []
-    for item in [
-        *list(getattr(board, "components", ()) or ()),
-        *list(getattr(board, "free_pads", ()) or ()),
-    ]:
+    items = [
+        *(list(getattr(board, "components", ()) or ()) if include_components else []),
+        *(list(getattr(board, "free_pads", ()) or ()) if include_free_pads else []),
+    ]
+    for item in items:
         if getattr(item, "mate_projection_id", None) != projection_id:
             continue
         geometries.extend(
@@ -245,6 +294,20 @@ def _source_pad_geometries_for_projection(
             if isinstance(geometry, dict)
         )
     return geometries
+
+
+def _component_designators_for_projection(
+    board: object,
+    projection_id: str,
+) -> list[str]:
+    designators: list[str] = []
+    for component in getattr(board, "components", ()) or ():
+        if getattr(component, "mate_projection_id", None) != projection_id:
+            continue
+        designator = str(getattr(component, "designator", "") or "").strip()
+        if designator:
+            designators.append(designator)
+    return sorted(set(designators), key=designator_sort_key)
 
 
 def _required_string(args: Mapping[str, object], name: str) -> str:
