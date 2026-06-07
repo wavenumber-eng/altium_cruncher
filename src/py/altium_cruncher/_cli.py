@@ -56,6 +56,9 @@ from altium_cruncher.altium_cruncher_cmd_json_dump import (
 from altium_cruncher.altium_cruncher_cmd_launch import (
     register_parser as register_launch_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_libraries import (
+    register_parser as register_libraries_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_mate import (
     register_parser as register_mate_parser,
 )
@@ -257,6 +260,7 @@ def main() -> None:
     register_jlc_parser(command_subparsers)
     register_json_dump_parser(command_subparsers)
     register_launch_parser(command_subparsers)
+    register_libraries_parser(command_subparsers)
     register_mate_parser(command_subparsers)
     register_mco_parser(command_subparsers)
     register_megamaid_parser(command_subparsers)

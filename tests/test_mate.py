@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from altium_cruncher.altium_cruncher_cmd_libraries import print_library_scan_result
 from altium_cruncher.altium_cruncher_mate import (
     LEGACY_MATE_CONFIG_SCHEMA,
     MATE_CONFIG_SCHEMA,
@@ -35,7 +36,10 @@ from altium_cruncher.altium_cruncher_mate_parts import (
     resolve_known_part,
     write_mate_known_parts_manifest,
 )
-from altium_cruncher.altium_cruncher_mate_libraries import scan_mate_libraries
+from altium_cruncher.altium_cruncher_mate_libraries import (
+    scan_altium_libraries,
+    scan_mate_libraries,
+)
 from altium_cruncher.altium_cruncher_mco import MCO_SCHEMA, load_jsonc_file
 
 
@@ -469,6 +473,7 @@ def test_mate_library_scan_resolves_symbols_and_footprints(tmp_path: Path) -> No
 
     result = scan_mate_libraries([cache_dir])
 
+    assert result.to_dict()["schema"] == "altium_cruncher.libraries.scan.a0"
     assert [entry.name for entry in result.symbols] == [
         "9774080360R",
         "H2184-05",
@@ -480,6 +485,67 @@ def test_mate_library_scan_resolves_symbols_and_footprints(tmp_path: Path) -> No
         "YZ209315103P-01",
     ]
     assert result.warnings == ()
+
+
+def test_libraries_scan_human_output_uses_relative_paths(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    result = scan_altium_libraries([manifest_path.parent])
+
+    print_library_scan_result(result, base_dir=tmp_path, color=False)
+
+    output = capsys.readouterr().out
+    assert "Symbols (3)" in output
+    assert "Footprints (3)" in output
+    assert "YZ209315103P-01  cache/schlib/YZ209315103P-01.SchLib" in output
+    assert "cache/pcblib/split/YZ209315103P-01.PcbLib" in output
+    assert str(tmp_path.resolve()) not in output
+
+
+def test_libraries_cli_scans_symbols_and_footprints(tmp_path: Path) -> None:
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "libraries",
+            "cache",
+            "--no-color",
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "Symbols (3)" in completed.stdout
+    assert "cache/schlib/H2184-05.SchLib" in completed.stdout
+    assert str(tmp_path.resolve()) not in completed.stdout
+
+    json_completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "libraries",
+            str(manifest_path.parent),
+            "--json",
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert json_completed.returncode == 0, json_completed.stderr
+    payload = json.loads(json_completed.stdout)
+    assert payload["schema"] == "altium_cruncher.libraries.scan.a0"
+    assert Path(payload["symbols"][0]["library"]).is_absolute()
 
 
 def test_mate_mco_places_named_library_parts_from_selection(tmp_path: Path) -> None:

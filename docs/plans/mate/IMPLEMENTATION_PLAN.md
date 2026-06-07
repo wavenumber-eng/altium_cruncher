@@ -37,8 +37,9 @@ remaining work, and release exit criteria.
 
 - `mate` now owns the normal public workflow: with no config it writes an
   editable `mate.a0.jsonc`; with a config it emits the derived MCO and runs it.
-- `mate plan` emits the derived MCO only, and `mate libs` lists discoverable
-  SchLib symbols and PcbLib footprints from search roots.
+- `mate plan` emits the derived MCO only, and the generic `libraries` command
+  lists discoverable SchLib symbols and PcbLib footprints from search roots.
+  `mate libs` remains a compatibility shortcut to the same scanner.
 - `mate` can create a generated Altium project with schematic, PCB, copied
   libraries, mate components, reference graphics, board cutouts, PCB labels,
   schematic wires/net labels, designator arrangement, feature union, and STEP
@@ -206,8 +207,8 @@ Full signoff:
   selected `TP*` component pads and large drill overlays. Full bottom-layer
   routing copper remains opt-in through the mate config.
 - 2026-06-07: Simplified the public `mate` workflow so a bare command creates
-  or runs `mate.a0.jsonc`, added `mate libs` for SchLib/PcbLib discovery,
-  added name-based `mate_component` resolution from `libraries.roots`, removed
-  the checked-in Cricket config and known-parts manifest, and moved the public
-  Cricket example to a README-driven layout with committed DUT files and
-  minimal `mating_parts/` libraries.
+  or runs `mate.a0.jsonc`, added generic `libraries` scanning for SchLib/PcbLib
+  discovery, added name-based `mate_component` resolution from
+  `libraries.roots`, removed the checked-in Cricket config and known-parts
+  manifest, and moved the public Cricket example to a README-driven layout with
+  committed DUT files and minimal `mating_parts/` libraries.

@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_cmd_launch import cmd_launch
+from altium_cruncher.altium_cruncher_cmd_libraries import print_library_scan_result
 from altium_cruncher.altium_cruncher_mate import (
     execute_mate_config,
     inspect_mate_source,
@@ -175,16 +176,12 @@ def _cmd_mate_libraries(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
         return 0
-    print("Symbols")
-    for entry in result.symbols:
-        print(f"  {entry.name}: {entry.library_path}")
-    print("Footprints")
-    for entry in result.footprints:
-        print(f"  {entry.name}: {entry.library_path}")
-    if result.warnings:
-        print("Warnings")
-        for warning in result.warnings:
-            print(f"  {warning}")
+    print_library_scan_result(
+        result,
+        base_dir=Path.cwd(),
+        absolute=bool(args.absolute),
+        color=not bool(args.no_color),
+    )
     return 0
 
 
@@ -346,6 +343,16 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         "--no-recursive",
         action="store_true",
         help="scan only the direct files in each root",
+    )
+    libs_parser.add_argument(
+        "--absolute",
+        action="store_true",
+        help="show absolute paths in human output instead of paths relative to cwd",
+    )
+    libs_parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="disable terminal color in human output",
     )
     libs_parser.add_argument(
         "--json",

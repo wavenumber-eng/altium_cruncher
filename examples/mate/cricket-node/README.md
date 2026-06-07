@@ -37,7 +37,7 @@ uv run python -m altium_cruncher mate
 Inspect the discovered mating libraries:
 
 ```powershell
-uv run python -m altium_cruncher mate libs mating_parts
+uv run python -m altium_cruncher libraries mating_parts
 ```
 
 After reviewing `mate.a0.jsonc`, generate the debug MCO without executing it:

@@ -1,4 +1,4 @@
-"""Library discovery helpers for mate workflows."""
+"""Altium SchLib/PcbLib discovery helpers."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from altium_cruncher.altium_cruncher_mco import JsonObject
 
 
 @dataclass(frozen=True, slots=True)
-class MateLibraryEntry:
+class AltiumLibraryEntry:
     """One symbol or footprint discovered in an Altium library file."""
 
     name: str
@@ -27,18 +27,18 @@ class MateLibraryEntry:
 
 
 @dataclass(frozen=True, slots=True)
-class MateLibraryScanResult:
-    """Symbols and footprints found under configured mate library roots."""
+class AltiumLibraryScanResult:
+    """Symbols and footprints found under configured library roots."""
 
     roots: tuple[Path, ...]
     recursive: bool
-    symbols: tuple[MateLibraryEntry, ...]
-    footprints: tuple[MateLibraryEntry, ...]
+    symbols: tuple[AltiumLibraryEntry, ...]
+    footprints: tuple[AltiumLibraryEntry, ...]
     warnings: tuple[str, ...]
 
     def to_dict(self) -> JsonObject:
         return {
-            "schema": "wn.altium_cruncher.mate.library_scan.v1",
+            "schema": "altium_cruncher.libraries.scan.a0",
             "roots": [root.as_posix() for root in self.roots],
             "recursive": self.recursive,
             "symbols": [entry.to_dict() for entry in self.symbols],
@@ -47,15 +47,15 @@ class MateLibraryScanResult:
         }
 
 
-def scan_mate_libraries(
+def scan_altium_libraries(
     roots: Sequence[Path | str],
     *,
     recursive: bool = True,
-) -> MateLibraryScanResult:
+) -> AltiumLibraryScanResult:
     """Scan Altium SchLib/PcbLib files for symbol and footprint names."""
     resolved_roots = tuple(Path(root).resolve() for root in roots)
-    symbols: list[MateLibraryEntry] = []
-    footprints: list[MateLibraryEntry] = []
+    symbols: list[AltiumLibraryEntry] = []
+    footprints: list[AltiumLibraryEntry] = []
     warnings: list[str] = []
     for library_path in _iter_library_files(resolved_roots, recursive=recursive):
         suffix = library_path.suffix.lower()
@@ -69,7 +69,7 @@ def scan_mate_libraries(
                 footprints.extend(_pcblib_entries(library_path))
             except Exception as exc:
                 warnings.append(f"{library_path}: {exc}")
-    return MateLibraryScanResult(
+    return AltiumLibraryScanResult(
         roots=resolved_roots,
         recursive=recursive,
         symbols=tuple(sorted(symbols, key=_entry_sort_key)),
@@ -78,19 +78,19 @@ def scan_mate_libraries(
     )
 
 
-def resolve_mate_symbol(
-    scan: MateLibraryScanResult,
+def resolve_library_symbol(
+    scan: AltiumLibraryScanResult,
     symbol_name: str,
-) -> MateLibraryEntry:
-    """Resolve a unique symbol name from a mate library scan."""
+) -> AltiumLibraryEntry:
+    """Resolve a unique symbol name from a library scan."""
     return _resolve_unique(scan.symbols, symbol_name, "symbol")
 
 
-def resolve_mate_footprint(
-    scan: MateLibraryScanResult,
+def resolve_library_footprint(
+    scan: AltiumLibraryScanResult,
     footprint_name: str,
-) -> MateLibraryEntry:
-    """Resolve a unique footprint name from a mate library scan."""
+) -> AltiumLibraryEntry:
+    """Resolve a unique footprint name from a library scan."""
     return _resolve_unique(scan.footprints, footprint_name, "footprint")
 
 
@@ -119,26 +119,26 @@ def _iter_library_files(
             yield resolved
 
 
-def _schlib_entries(library_path: Path) -> list[MateLibraryEntry]:
+def _schlib_entries(library_path: Path) -> list[AltiumLibraryEntry]:
     from altium_monkey import AltiumSchLib
 
     with _quiet_library_loader():
         schlib = AltiumSchLib(library_path)
     return [
-        MateLibraryEntry(name=name, library_path=library_path)
+        AltiumLibraryEntry(name=name, library_path=library_path)
         for symbol in list(getattr(schlib, "symbols", []) or [])
         for name in [_object_name(symbol)]
         if name
     ]
 
 
-def _pcblib_entries(library_path: Path) -> list[MateLibraryEntry]:
+def _pcblib_entries(library_path: Path) -> list[AltiumLibraryEntry]:
     from altium_monkey import AltiumPcbLib
 
     with _quiet_library_loader():
         pcblib = AltiumPcbLib.from_file(library_path)
     return [
-        MateLibraryEntry(name=name, library_path=library_path)
+        AltiumLibraryEntry(name=name, library_path=library_path)
         for footprint in list(getattr(pcblib, "footprints", []) or [])
         for name in [_object_name(footprint)]
         if name
@@ -165,10 +165,10 @@ class _quiet_library_loader:
 
 
 def _resolve_unique(
-    entries: Sequence[MateLibraryEntry],
+    entries: Sequence[AltiumLibraryEntry],
     requested_name: str,
     label: str,
-) -> MateLibraryEntry:
+) -> AltiumLibraryEntry:
     normalized_name = requested_name.strip().casefold()
     matches = [
         entry
@@ -176,15 +176,44 @@ def _resolve_unique(
         if entry.name.strip().casefold() == normalized_name
     ]
     if not matches:
-        raise ValueError(f"Mate {label} not found in configured libraries: {requested_name}")
+        raise ValueError(f"{label.title()} not found in configured libraries: {requested_name}")
     unique_paths = {entry.library_path.resolve() for entry in matches}
     if len(unique_paths) > 1:
         paths = ", ".join(path.as_posix() for path in sorted(unique_paths))
         raise ValueError(
-            f"Mate {label} {requested_name!r} is ambiguous across libraries: {paths}"
+            f"{label.title()} {requested_name!r} is ambiguous across libraries: {paths}"
         )
     return matches[0]
 
 
-def _entry_sort_key(entry: MateLibraryEntry) -> tuple[str, str]:
+def _entry_sort_key(entry: AltiumLibraryEntry) -> tuple[str, str]:
     return (entry.name.casefold(), entry.library_path.as_posix().casefold())
+
+
+MateLibraryEntry = AltiumLibraryEntry
+MateLibraryScanResult = AltiumLibraryScanResult
+
+
+def scan_mate_libraries(
+    roots: Sequence[Path | str],
+    *,
+    recursive: bool = True,
+) -> AltiumLibraryScanResult:
+    """Compatibility wrapper for mate code that scans Altium libraries."""
+    return scan_altium_libraries(roots, recursive=recursive)
+
+
+def resolve_mate_symbol(
+    scan: AltiumLibraryScanResult,
+    symbol_name: str,
+) -> AltiumLibraryEntry:
+    """Compatibility wrapper for resolving a mate symbol name."""
+    return resolve_library_symbol(scan, symbol_name)
+
+
+def resolve_mate_footprint(
+    scan: AltiumLibraryScanResult,
+    footprint_name: str,
+) -> AltiumLibraryEntry:
+    """Compatibility wrapper for resolving a mate footprint name."""
+    return resolve_library_footprint(scan, footprint_name)

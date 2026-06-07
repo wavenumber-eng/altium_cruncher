@@ -10,6 +10,7 @@
     {"name": "jlc", "status": "public", "requires_extra": null},
     {"name": "json-dump", "status": "experimental", "requires_extra": null},
     {"name": "launch", "status": "public", "requires_extra": null},
+    {"name": "libraries", "status": "public", "requires_extra": null},
     {"name": "mate", "status": "experimental", "requires_extra": null},
     {"name": "mco", "status": "experimental", "requires_extra": null},
     {"name": "megamaid", "status": "public", "requires_extra": null},
