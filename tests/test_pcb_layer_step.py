@@ -19,6 +19,7 @@ from altium_cruncher.altium_cruncher_cmd_pcb_layer_step import (
 from altium_cruncher.altium_cruncher_pcb_workflow import load_design_for_pcb_input
 from altium_cruncher.altium_cruncher_pcb_layer_step import (
     PCB_LAYER_STEP_CONFIG_SCHEMA_V2,
+    PcbLayerStepHighlight,
     PcbLayerStepConfig,
     PcbLayerStepOptions,
     export_pcb_layer_step,
@@ -47,6 +48,38 @@ def _region_width(region: dict[str, object]) -> float:
     assert isinstance(points, list)
     x_values = [float(point[0]) for point in points]
     return max(x_values) - min(x_values)
+
+
+def _region_height(region: dict[str, object]) -> float:
+    outer = region["outer"]
+    assert isinstance(outer, dict)
+    points = outer["points"]
+    assert isinstance(points, list)
+    y_values = [float(point[1]) for point in points]
+    return max(y_values) - min(y_values)
+
+
+def _segment_kinds(region: dict[str, object]) -> list[str]:
+    outer = region["outer"]
+    assert isinstance(outer, dict)
+    segments = outer["segments"]
+    assert isinstance(segments, list)
+    return [str(segment["kind"]) for segment in segments if isinstance(segment, dict)]
+
+
+def _arc_segment_centers(region: dict[str, object]) -> list[list[float]]:
+    outer = region["outer"]
+    assert isinstance(outer, dict)
+    segments = outer["segments"]
+    assert isinstance(segments, list)
+    centers: list[list[float]] = []
+    for segment in segments:
+        if not isinstance(segment, dict) or segment.get("kind") != "arc":
+            continue
+        center = segment["center"]
+        assert isinstance(center, list)
+        centers.append([float(center[0]), float(center[1])])
+    return centers
 
 
 def test_resolve_pcb_layer_selector_accepts_common_names() -> None:
@@ -456,6 +489,110 @@ def test_export_pcb_layer_step_uses_board_origin_relative_coordinates(
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["coordinate_origin"]["mode"] == "board_origin"
     assert manifest["coordinate_origin"]["origin_mils"] == [1000.0, 1000.0]
+
+
+def test_export_pcb_layer_step_renders_obround_circle_pads_as_capsules(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    captured = {}
+
+    def write_planar_step(request, output_path):
+        captured["request"] = request
+        output_path.write_bytes(json.dumps(request).encode("utf-8"))
+        return output_path
+
+    monkeypatch.setitem(
+        sys.modules, "geometer", SimpleNamespace(write_planar_step=write_planar_step)
+    )
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 500, 300)
+    pcbdoc.add_pad(
+        designator="TP9",
+        position_mils=(250, 150),
+        width_mils=150,
+        height_mils=75,
+        layer=PcbLayer.BOTTOM,
+        shape=PadShape.CIRCLE,
+    )
+
+    export_pcb_layer_step(
+        pcbdoc,
+        tmp_path / "obround.step",
+        board_name="fixture_board",
+        options=PcbLayerStepOptions(
+            layer=PcbLayer.BOTTOM,
+            include_board_outline=False,
+            drill_hole_mode="none",
+        ),
+    )
+
+    copper_body = captured["request"]["bodies"][0]
+    region = copper_body["regions"][0]
+    arc_centers = _arc_segment_centers(region)
+
+    assert _segment_kinds(region) == ["line", "arc", "line", "arc"]
+    assert abs(abs(arc_centers[0][0] - arc_centers[1][0]) - 1.905) < 1e-9
+    assert abs(arc_centers[0][1] - arc_centers[1][1]) < 1e-9
+    assert abs(_region_height(region) - 1.905) < 1e-9
+
+
+def test_export_pcb_layer_step_renders_highlight_obround_pads_as_capsules(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    captured = {}
+
+    def write_planar_step(request, output_path):
+        captured["request"] = request
+        output_path.write_bytes(json.dumps(request).encode("utf-8"))
+        return output_path
+
+    monkeypatch.setitem(
+        sys.modules, "geometer", SimpleNamespace(write_planar_step=write_planar_step)
+    )
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 500, 300)
+
+    export_pcb_layer_step(
+        pcbdoc,
+        tmp_path / "highlight-obround.step",
+        board_name="fixture_board",
+        options=PcbLayerStepOptions(
+            layer=PcbLayer.BOTTOM,
+            include_copper=False,
+            include_board_outline=False,
+            drill_hole_mode="none",
+            highlights=(
+                PcbLayerStepHighlight(
+                    id="test_points",
+                    color="#FF0000",
+                    pad_geometries=(
+                        {
+                            "x_mils": 250,
+                            "y_mils": 150,
+                            "width_mils": 150,
+                            "height_mils": 75,
+                            "shape": int(PadShape.CIRCLE),
+                            "layer": int(PcbLayer.BOTTOM),
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    highlight_body = captured["request"]["bodies"][0]
+    region = highlight_body["regions"][0]
+    arc_centers = _arc_segment_centers(region)
+
+    assert highlight_body["id"] == "test_points"
+    assert _segment_kinds(region) == ["line", "arc", "line", "arc"]
+    assert abs(abs(arc_centers[0][0] - arc_centers[1][0]) - 1.905) < 1e-9
+    assert abs(arc_centers[0][1] - arc_centers[1][1]) < 1e-9
+    assert abs(_region_height(region) - 1.905) < 1e-9
 
 
 def test_export_pcb_layer_step_can_preserve_primitive_regions(

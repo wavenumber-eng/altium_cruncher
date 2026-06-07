@@ -185,3 +185,6 @@ Full signoff:
 - 2026-06-07: Updated source-pad reference graphics to read effective
   source-layer pad geometry and emit shape-specific outlines for circular,
   obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads.
+- 2026-06-07: Fixed `pcb-layer-step` pad/highlight shape export so unequal
+  circular pad bodies, such as Cricket TP9, emit obround/capsule STEP regions
+  instead of oval approximations.

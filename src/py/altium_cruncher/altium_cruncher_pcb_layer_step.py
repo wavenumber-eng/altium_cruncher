@@ -1287,9 +1287,7 @@ def _build_counts(
             for body in bodies
             if str(body.get("id")) == "board_cutouts"
         ),
-        "copper_bodies": sum(
-            1 for body in bodies if _is_step_copper_body(body)
-        ),
+        "copper_bodies": sum(1 for body in bodies if _is_step_copper_body(body)),
         "highlight_bodies": sum(
             1 for body in bodies if str(body.get("kind")) == "highlight"
         ),
@@ -1397,9 +1395,7 @@ def _arc_features(
             continue
         region = _arc_region(arc)
         if region is not None:
-            features.append(
-                _SourceFeature("polygon" if is_polygon else "arc", region)
-            )
+            features.append(_SourceFeature("polygon" if is_polygon else "arc", region))
     return features
 
 
@@ -1419,9 +1415,7 @@ def _fill_features(
             continue
         region = _fill_region(fill)
         if region is not None:
-            features.append(
-                _SourceFeature("polygon" if is_polygon else "fill", region)
-            )
+            features.append(_SourceFeature("polygon" if is_polygon else "fill", region))
     return features
 
 
@@ -1769,6 +1763,7 @@ def _pad_region(pad: Any, layer: PcbLayer) -> _Region | None:
         shape=shape,
         rotation_degrees=rotation,
         corner_radius_percent=corner_pct,
+        corner_radius_mm=None,
     )
     return region
 
@@ -2130,13 +2125,26 @@ def _pad_shape_region(
     shape: int,
     rotation_degrees: float,
     corner_radius_percent: int,
+    corner_radius_mm: float | None = None,
 ) -> _Region:
     if shape == int(PadShape.CIRCLE):
         if math.isclose(width_mm, height_mm, rel_tol=1e-9, abs_tol=1e-9):
             return _circle_region(center, width_mm / 2.0)
-        return _ellipse_region(
-            center, width_mm / 2.0, height_mm / 2.0, rotation_degrees, 48
+        length_mm = max(width_mm, height_mm)
+        diameter_mm = min(width_mm, height_mm)
+        axis_rotation = (
+            rotation_degrees if width_mm >= height_mm else rotation_degrees + 90.0
         )
+        region = _capsule_region(
+            center,
+            length_mm,
+            diameter_mm,
+            axis_rotation,
+            arc_segments=32,
+        )
+        if region is not None:
+            return region
+        return _circle_region(center, diameter_mm / 2.0)
     if shape == int(PadShape.OCTAGONAL):
         points = _octagon_points(center[0], center[1], width_mm / 2.0, height_mm / 2.0)
         if not math.isclose(rotation_degrees, 0.0, abs_tol=1e-9):
@@ -2146,7 +2154,11 @@ def _pad_shape_region(
         return _Region(_Ring(points))
     if shape == int(PadShape.ROUNDED_RECTANGLE):
         radius = (
-            (max(0, corner_radius_percent) / 100.0) * min(width_mm, height_mm) / 2.0
+            max(0.0, corner_radius_mm)
+            if corner_radius_mm is not None
+            else (max(0, corner_radius_percent) / 100.0)
+            * min(width_mm, height_mm)
+            / 2.0
         )
         return _rounded_rectangle_region(
             center, width_mm, height_mm, radius, rotation_degrees
