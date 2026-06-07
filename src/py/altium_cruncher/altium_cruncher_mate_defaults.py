@@ -116,6 +116,11 @@ def default_mate_artifacts_payload() -> JsonObject:
                 "component_pads": True,
                 "free_pads": True,
             },
+            "drills": {
+                "mode": "overlay",
+                "shape": "ring",
+                "ring_width_mm": 0.12,
+            },
             "insert_in_output": {
                 "enabled": True,
                 "z_mm": 8.5,

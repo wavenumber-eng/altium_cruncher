@@ -239,6 +239,11 @@
         "component_pads": true,
         "free_pads": true
       },
+      "drills": {
+        "mode": "overlay",
+        "shape": "ring",
+        "ring_width_mm": 0.12
+      },
       "insert_in_output": {
         "enabled": true,
         "z_mm": 8.5,

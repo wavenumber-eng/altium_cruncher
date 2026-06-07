@@ -95,5 +95,6 @@ The same STEP is also embedded in the generated output PcbDoc at the
 configured `artifacts.pcb_layer_step.insert_in_output.z_mm` height. For this
 example the exported STEP uses `z_mm: -0.0175` with `0.035 mm` copper, so local
 `Z=0` is the copper mid-plane. The inserted 3D body is placed at `8.5 mm` in
-the output PcbDoc and keeps its 2D bounds tied to the DUT outline rather than
-the larger output board outline.
+the output PcbDoc, renders drill overlays as rings so NPTH/alignment holes stay
+visible, and keeps its 2D bounds tied to the DUT outline rather than the larger
+output board outline.

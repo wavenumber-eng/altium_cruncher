@@ -791,6 +791,11 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
         "enabled": True,
         "color": "#7A8F2A",
     }
+    assert payload["artifacts"]["pcb_layer_step"]["drills"] == {
+        "mode": "overlay",
+        "shape": "ring",
+        "ring_width_mm": 0.12,
+    }
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert projections["test_points"]["actions"][1]["style"]["mode"] == "outline"
     assert projections["test_points"]["actions"][1]["style"]["outline_count"] == 1
@@ -866,6 +871,11 @@ def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
         payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"]
         is True
     )
+    assert payload["artifacts"]["pcb_layer_step"]["drills"] == {
+        "mode": "overlay",
+        "shape": "ring",
+        "ring_width_mm": 0.12,
+    }
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert payload["projections"][0]["actions"][1] == {
         "kind": "reference_graphics",
