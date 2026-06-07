@@ -27,7 +27,7 @@ def cmd_launch(args: argparse.Namespace) -> int:
 
     try:
         file_path = _resolve_launch_file(args)
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, MultipleLaunchProjectsFoundError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
 
@@ -54,13 +54,45 @@ def _resolve_launch_install(args: argparse.Namespace) -> AltiumInstall | None:
     )
 
 
-def _resolve_launch_file(args: argparse.Namespace) -> Path | None:
+class MultipleLaunchProjectsFoundError(ValueError):
+    """Raised when launch cannot infer which local Altium project to open."""
+
+    def __init__(self, projects: list[Path]) -> None:
+        self.projects = projects
+        project_list = "\n".join(f"  {project.name}" for project in projects)
+        super().__init__(
+            "Multiple .PrjPcb files found in the current directory; "
+            f"pass one explicitly:\n{project_list}"
+        )
+
+
+def _resolve_launch_file(
+    args: argparse.Namespace,
+    *,
+    cwd: Path | None = None,
+) -> Path | None:
     if not args.file:
-        return None
+        return _discover_default_project(cwd or Path.cwd())
     file_path = Path(args.file).resolve()
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
     return file_path
+
+
+def _discover_default_project(cwd: Path) -> Path | None:
+    projects = sorted(
+        (
+            item.resolve()
+            for item in cwd.iterdir()
+            if item.is_file() and item.suffix.lower() == ".prjpcb"
+        ),
+        key=lambda item: item.name.lower(),
+    )
+    if len(projects) == 1:
+        return projects[0]
+    if len(projects) > 1:
+        raise MultipleLaunchProjectsFoundError(projects)
+    return None
 
 
 def _print_launch_result(
@@ -93,7 +125,10 @@ def add_launch_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "file",
         nargs="?",
-        help="optional Altium document or project to open",
+        help=(
+            "optional Altium document or project to open; when omitted, one "
+            ".PrjPcb in the current directory is opened automatically"
+        ),
     )
     parser.add_argument(
         "--ad-version",
@@ -128,7 +163,9 @@ def register_parser(
         description=(
             "Launch Altium Designer using altium-monkey's launcher path. By "
             "default the newest discovered AD install is selected; --ad-version "
-            "selects a major series such as AD25 or AD26."
+            "selects a major series such as AD25 or AD26. With no file "
+            "argument, one .PrjPcb in the current directory is opened "
+            "automatically; multiple projects are listed for explicit choice."
         ),
     )
     add_launch_arguments(parser)

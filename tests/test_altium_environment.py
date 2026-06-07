@@ -2,14 +2,37 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 from pathlib import Path
 
+import pytest
+
+from altium_cruncher.altium_cruncher_cmd_launch import cmd_launch
 from altium_cruncher.altium_environment import (
     clean_altium_profiles,
     discover_altium_installs,
     discover_altium_profiles,
     select_altium_install,
 )
+
+
+def _fake_x2(tmp_path: Path) -> Path:
+    root = tmp_path / "Altium" / "AD26"
+    root.mkdir(parents=True)
+    x2_path = root / "X2.exe"
+    x2_path.write_text("", encoding="utf-8")
+    return x2_path
+
+
+def _launch_args(x2_path: Path, *, file: str | None = None) -> argparse.Namespace:
+    return argparse.Namespace(
+        altium_path=x2_path,
+        ad_version=None,
+        file=file,
+        dry_run=True,
+        json=True,
+    )
 
 
 def test_discover_altium_installs_sorts_latest_major_first(tmp_path: Path) -> None:
@@ -31,6 +54,65 @@ def test_discover_altium_installs_sorts_latest_major_first(tmp_path: Path) -> No
     assert [install.label for install in installs[:2]] == ["AD26", "AD25"]
     assert select_altium_install(installs).label == "AD26"
     assert select_altium_install(installs, version="ad25").label == "AD25"
+
+
+def test_launch_without_file_opens_single_project_in_cwd(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """No-argument launch should auto-open one local PrjPcb."""
+    x2_path = _fake_x2(tmp_path)
+    project = tmp_path / "demo.PrjPcb"
+    project.write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = cmd_launch(_launch_args(x2_path))
+
+    captured = capsys.readouterr()
+    assert exit_code == 0, captured.err
+    payload = json.loads(captured.out)
+    assert payload["file"] == str(project.resolve())
+    assert payload["command"] == [str(x2_path.resolve()), str(project.resolve())]
+
+
+def test_launch_without_file_launches_ad_when_no_project_exists(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """No-argument launch should still start AD when no local PrjPcb exists."""
+    x2_path = _fake_x2(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = cmd_launch(_launch_args(x2_path))
+
+    captured = capsys.readouterr()
+    assert exit_code == 0, captured.err
+    payload = json.loads(captured.out)
+    assert payload["file"] is None
+    assert payload["command"] == [str(x2_path.resolve())]
+
+
+def test_launch_without_file_lists_multiple_projects(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """No-argument launch should refuse ambiguous local PrjPcb choices."""
+    x2_path = _fake_x2(tmp_path)
+    (tmp_path / "Beta.PrjPcb").write_text("", encoding="utf-8")
+    (tmp_path / "alpha.PrjPcb").write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = cmd_launch(_launch_args(x2_path))
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "Multiple .PrjPcb files found" in captured.err
+    assert "  alpha.PrjPcb" in captured.err
+    assert "  Beta.PrjPcb" in captured.err
 
 
 def test_profiles_list_and_clean_extension_state(tmp_path: Path) -> None:
