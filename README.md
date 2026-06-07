@@ -94,6 +94,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
 | `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |
 | `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
+| `outjob` | Run project OutJob files through Altium Designer. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
 | `debug-plate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |
 | `clean` | Normalize SchDoc, SchLib, or PcbLib assets using JSON/JSONC config. | Public |

@@ -22,6 +22,11 @@
 - Extend `megamaid` output with serialized document JSON, combined extracted
   library JSON, and notes JSONC artifacts under the shared `json/<kind>/`
   folder convention.
+- Add `outjob run` for executing project-referenced or explicit `.OutJob`
+  files through the public `altium-monkey` runner.
+- Clean configured BOM/PnP/JLC output filenames so format-only outputs rely on
+  the file extension while semantic stems such as `raw`, `grouped`, and
+  `jlc-cpl` remain visible.
 - Continue experimental `mco` and `debug-plate` development toward Cricket
   Node mating-board automation.
 

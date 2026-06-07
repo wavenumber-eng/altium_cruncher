@@ -319,9 +319,9 @@ def test_jlc_command_writes_paired_outputs_for_primary_fixtures(tmp_path: Path) 
         )
 
         jlc_dir = output_root / "jlc"
-        bom_path = jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc-xlsx.xlsx"
+        bom_path = jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc.xlsx"
         cpl_path = (
-            jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc-cpl-xlsx.xlsx"
+            jlc_dir / f"{case.project.stem}_{case.cli_variant_label}_jlc-cpl.xlsx"
         )
         config_path = jlc_dir / "bom.config.used.json"
 

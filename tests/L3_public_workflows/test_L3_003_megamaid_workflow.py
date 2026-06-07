@@ -164,12 +164,10 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
         for output in bom_manifest["outputs"]
         for artifact in output["artifacts"]
     ]
-    assert any(str(path).endswith("_raw-json.json") for path in bom_artifacts)
-    assert any(str(path).endswith("_grouped-xlsx.xlsx") for path in bom_artifacts)
+    assert any(str(path).endswith("_raw.json") for path in bom_artifacts)
+    assert any(str(path).endswith("_grouped.xlsx") for path in bom_artifacts)
     assert not any("grouped-json" in str(path) for path in bom_artifacts)
-    flat_bom_json = next(
-        path for path in bom_artifacts if str(path).endswith("_raw-json.json")
-    )
+    flat_bom_json = next(path for path in bom_artifacts if str(path).endswith("_raw.json"))
     flat_bom_payload = json.loads((output_dir / flat_bom_json).read_text())
     assert isinstance(flat_bom_payload, list)
 
@@ -180,9 +178,9 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
         for output in pnp_manifest["outputs"]
         for artifact in output["artifacts"]
     ]
-    assert any(str(path).endswith("_json.json") for path in pnp_artifacts)
-    assert any(str(path).endswith("_csv.csv") for path in pnp_artifacts)
-    pnp_json = next(path for path in pnp_artifacts if str(path).endswith("_json.json"))
+    assert any(str(path).endswith("_base.json") for path in pnp_artifacts)
+    assert any(str(path).endswith("_base.csv") for path in pnp_artifacts)
+    pnp_json = next(path for path in pnp_artifacts if str(path).endswith("_base.json"))
     pnp_payload = json.loads((output_dir / pnp_json).read_text())
     assert pnp_payload["schema"] == "wn.altium_cruncher.pnp.v1"
 

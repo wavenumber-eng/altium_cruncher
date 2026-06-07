@@ -25,12 +25,17 @@ def _fake_x2(tmp_path: Path) -> Path:
     return x2_path
 
 
-def _launch_args(x2_path: Path, *, file: str | None = None) -> argparse.Namespace:
+def _launch_args(
+    x2_path: Path,
+    *,
+    file: str | None = None,
+    dry_run: bool = True,
+) -> argparse.Namespace:
     return argparse.Namespace(
         altium_path=x2_path,
         ad_version=None,
         file=file,
-        dry_run=True,
+        dry_run=dry_run,
         json=True,
     )
 
@@ -113,6 +118,25 @@ def test_launch_without_file_lists_multiple_projects(
     assert "Multiple .PrjPcb files found" in captured.err
     assert "  alpha.PrjPcb" in captured.err
     assert "  Beta.PrjPcb" in captured.err
+
+
+def test_launch_reports_windows_requirement_when_not_dry_run_on_non_windows(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Actual AD launch fails predictably on non-Windows hosts."""
+    from altium_cruncher import altium_environment
+
+    x2_path = _fake_x2(tmp_path)
+    monkeypatch.setattr(altium_environment.sys, "platform", "linux")
+
+    exit_code = cmd_launch(_launch_args(x2_path, dry_run=False))
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == ""
+    assert "supported on Windows only" in captured.err
 
 
 def test_profiles_list_and_clean_extension_state(tmp_path: Path) -> None:

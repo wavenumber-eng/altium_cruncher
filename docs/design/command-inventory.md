@@ -26,6 +26,7 @@ This inventory records the command set migrated from the private
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM/PnP, netlist, manifest, document/library JSON, notes, and embedded assets. |
 | `notes` | public | unit/CLI | Extracts dedicated schematic notes, text frames, and free text strings to structured JSON for agent review workflows. |
+| `outjob` | public | unit/CLI | Runs project-referenced or explicit `.OutJob` files through the public `altium-monkey` OutJob runner. |
 | `mco` | experimental | unit/CLI | Executes Monkey Change Order JSONC operation files used by generated workflows. |
 | `debug-plate` | experimental | unit/CLI/example | Generates Cricket Node fixture mating-board plans and runnable MCO files from DUT selections. |
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
@@ -251,6 +252,22 @@ Megamaid notes:
   counts/paths should be validated;
 - rerun behavior should clear megamaid-owned stale artifacts while preserving
   unrelated files under the output root.
+
+OutJob notes:
+
+- `outjob run` wraps `altium_monkey.altium_outjob_runner.AltiumOutJobRunner`;
+- with no arguments, require exactly one `.PrjPcb` in the current directory and
+  run all existing `.OutJob` files referenced by that project;
+- explicit project and OutJob arguments may select one or more jobs; OutJob
+  names resolve through the project while relative/absolute paths are accepted;
+- the command requires Windows with Altium Designer installed;
+- by default it runs the project-registered OutJob path, restores the source
+  OutJob after temporary normalization, and auto-binds the single project
+  `.PcbDoc` into embedded `DocumentPath=` tokens unless disabled;
+- JSON output uses schema `altium_cruncher.outjob.run.a0`;
+- the underlying runner writes a temporary Pascal script project and invokes
+  Altium Designer's GenerateReport flow, so command tests mock the runner
+  instead of launching Altium.
 
 Clean notes:
 
