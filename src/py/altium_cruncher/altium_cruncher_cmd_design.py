@@ -1,11 +1,11 @@
 """Design JSON command for altium_cruncher."""
 
 import argparse
-import json
 import logging
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_common import _resolve_output_dir, find_prjpcb_in_cwd
+from altium_cruncher.altium_cruncher_design_review import write_design_review_bundle
 
 log = logging.getLogger(__name__)
 
@@ -22,8 +22,6 @@ def cmd_design(args: argparse.Namespace) -> int:
     Returns:
         Exit code (0 for success, 1 for error).
     """
-    from altium_monkey.altium_design import AltiumDesign
-
     # Determine input file
     input_file: Path | None = None
 
@@ -41,55 +39,50 @@ def cmd_design(args: argparse.Namespace) -> int:
             return 1
         log.info(f"Auto-detected project: {input_file.name}")
 
-    # Validate file type
     suffix = input_file.suffix.lower()
-    if suffix == '.schdoc':
-        design = AltiumDesign.from_schdoc(input_file)
-    elif suffix == '.prjpcb':
-        design = AltiumDesign.from_prjpcb(input_file)
-    else:
+    if suffix not in {".schdoc", ".prjpcb"}:
         log.error(f"Unsupported file type: {suffix}")
         log.info("Supported types: .SchDoc, .PrjPcb")
         return 1
 
-    # Determine output directory
     output_dir = _resolve_output_dir(args.output, "design")
-
-    # Determine output filename
-    output_file = output_dir / f"{input_file.stem}_design.json"
-
-    # Include indexes option
     include_indexes = not getattr(args, 'no_indexes', False)
 
-    # Serialize the design model to JSON
-    design_json = design.to_json(include_indexes=include_indexes)
+    try:
+        manifest = write_design_review_bundle(
+            input_file,
+            output_dir,
+            include_indexes=include_indexes,
+        )
+    except Exception as exc:
+        log.error("Design review generation failed for %s: %s", input_file.name, exc)
+        return 1
 
-    # Write JSON
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(design_json, f, indent=2)
-
-    # Summary
-    log.info(
-        f"Design JSON: {len(design_json.get('components', []))} components, "
-        f"{len(design_json.get('nets', []))} nets -> {output_file.name}"
-    )
-
+    log.info("Design review bundle: %s", output_dir)
+    log.info("Design JSON: %s", manifest["design_json"])
+    log.info("Manifest: design_review_manifest.json")
     return 0
 
 
-def register_parser(subparsers):
+def register_parser(
+    subparsers: argparse._SubParsersAction,
+) -> argparse.ArgumentParser:
     """Register the design command parser."""
     design_parser = subparsers.add_parser(
         "design",
-        help="generate design JSON with nets, components, and SVG IDs",
+        aliases=["design-review", "dr"],
+        help="generate Altium design review artifacts",
         description=(
-            "Generate design JSON from Altium SchDoc or PrjPcb files. "
-            "The output is the full AltiumDesign model: netlist data, "
-            "component records, hierarchy, SVG IDs, and lookup indexes."
+            "Generate an Altium design review bundle from SchDoc or PrjPcb "
+            "files. The bundle includes AltiumDesign JSON, serialized SchDoc/"
+            "PcbDoc JSON, schematic SVGs, PCB layer SVGs, structured notes "
+            "JSON, a manifest, and an agent-facing README."
         ),
         epilog=(
             "Examples:\n"
             "  altium-cruncher design project.PrjPcb\n"
+            "  altium-cruncher design-review project.PrjPcb\n"
+            "  altium-cruncher dr project.PrjPcb\n"
             "  altium-cruncher design schematic.SchDoc\n"
             "  altium-cruncher design                    # Auto-detect PrjPcb in CWD\n"
             "  altium-cruncher design project.PrjPcb --no-indexes  # Without lookup indexes\n"

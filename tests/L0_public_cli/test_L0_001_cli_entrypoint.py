@@ -81,9 +81,18 @@ def test_design_help_describes_design_json_contents() -> None:
     result = _run_cli("design", "--help")
 
     assert result.returncode == 0, result.stderr
-    assert "netlist data" in result.stdout
-    assert "component records" in result.stdout
-    assert "SVG IDs" in result.stdout
+    assert "design review bundle" in result.stdout
+    assert "serialized SchDoc/PcbDoc JSON" in result.stdout
+    assert "structured notes" in result.stdout
+
+
+def test_design_review_alias_help_starts() -> None:
+    """Verify design-review and dr aliases route to design help."""
+    for alias in ("design-review", "dr"):
+        result = _run_cli(alias, "--help")
+
+        assert result.returncode == 0, result.stderr
+        assert "design review bundle" in result.stdout
 
 
 def test_easyeda_import_is_first_class_public_command() -> None:

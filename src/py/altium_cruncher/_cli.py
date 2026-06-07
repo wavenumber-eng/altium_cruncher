@@ -68,6 +68,9 @@ from altium_cruncher.altium_cruncher_cmd_megamaid import (
 from altium_cruncher.altium_cruncher_cmd_mco import (
     register_parser as register_mco_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_notes import (
+    register_parser as register_notes_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     register_parser as register_pcb_svg_parser,
 )
@@ -255,6 +258,7 @@ def main() -> None:
     register_mco_parser(command_subparsers)
     register_megamaid_parser(command_subparsers)
     register_merge_parser(command_subparsers)
+    register_notes_parser(command_subparsers)
     register_pcb_layer_step_parser(command_subparsers)
     register_pcb_svg_parser(command_subparsers)
     register_pnp_parser(command_subparsers)

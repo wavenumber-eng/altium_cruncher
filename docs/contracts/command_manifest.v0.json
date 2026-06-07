@@ -14,6 +14,7 @@
     {"name": "mco", "status": "experimental", "requires_extra": null},
     {"name": "megamaid", "status": "public", "requires_extra": null},
     {"name": "merge", "status": "public", "requires_extra": null},
+    {"name": "notes", "status": "public", "requires_extra": null},
     {"name": "pcb-layer-step", "status": "public", "requires_extra": null},
     {"name": "pcb-svg", "status": "public", "requires_extra": null},
     {"name": "pnp", "status": "public", "requires_extra": null},

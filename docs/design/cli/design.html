@@ -4,12 +4,13 @@
 <body data-doc-status="accepted" data-doc-kind="cli-design" data-command="design" data-config-contract="none">
 <main>
 <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
-<header><p class="status">CLI command design</p><h1>design</h1><p class="lede">Generates machine-consumable design JSON from Altium schematic or project inputs.</p></header>
+<header><p class="status">CLI command design</p><h1>design</h1><p class="lede">Generates an agent-facing Altium design review bundle from schematic or project inputs.</p></header>
 <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher design project.PrjPcb -o output/design
-altium-cruncher design schematic.SchDoc</code></pre></section>
-<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection in the current directory. <code>-o</code> selects the output directory.</p></section>
-<section id="output"><h2>Output</h2><p>The command writes <code>AltiumDesign.to_json()</code> output containing netlist data, component records, hierarchy, SVG IDs, and lookup indexes. Future output naming should use the shared output path template resolver.</p></section>
-<section id="tests"><h2>Tests</h2><p>L3 verifies Hydroscope project design JSON generation, confirms substantial component and net counts, and checks that SVG ID indexes are present. Additional contract tests should pin the JSON schema.</p></section>
+altium-cruncher design-review project.PrjPcb
+altium-cruncher dr schematic.SchDoc</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection in the current directory. <code>-o</code> selects the output directory. <code>--no-indexes</code> omits optional lookup indexes from the design JSON. <code>design-review</code> and <code>dr</code> are aliases for the same command and output contract.</p></section>
+<section id="output"><h2>Output</h2><p>The command writes <code>design_review_manifest.json</code> with schema <code>altium_cruncher.design_review_manifest.a0</code>, <code>README.md</code>, root <code>&lt;input&gt;_design.json</code> from <code>AltiumDesign.to_json()</code>, <code>notes/&lt;input&gt;_notes.json</code>, serialized SchDoc/PcbDoc JSON under <code>documents/</code>, schematic SVGs under <code>schematics/</code>, and PCB layer SVGs under <code>pcb/layers/</code> for project inputs with boards.</p></section>
+<section id="tests"><h2>Tests</h2><p>L0 verifies help and aliases. Unit workflow tests synthesize a SchDoc with dedicated notes, text frames, and free text, then verify the <code>dr</code> alias writes design JSON, notes JSON, document JSON, schematic SVG, manifest, and README artifacts. L3 continues to verify Hydroscope design JSON contents through the same command.</p></section>
 </main>
 </body>
 </html>
