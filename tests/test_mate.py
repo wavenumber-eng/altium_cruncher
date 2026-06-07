@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -795,6 +796,7 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
         "mode": "overlay",
         "shape": "ring",
         "ring_width_mm": 0.12,
+        "plated_ring_shape": "pad",
     }
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert projections["test_points"]["actions"][1]["style"]["mode"] == "outline"
@@ -875,6 +877,7 @@ def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
         "mode": "overlay",
         "shape": "ring",
         "ring_width_mm": 0.12,
+        "plated_ring_shape": "pad",
     }
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert payload["projections"][0]["actions"][1] == {
@@ -1495,8 +1498,9 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     ][0]
     assert step_op["op"] == "pcbdoc.export-layer-step"
     assert step_op["args"]["file"] == str(source_path)
-    assert step_op["args"]["output_file"] == (
-        "generated/artifacts/pcb-layer-step/dut__bottom.step"
+    assert re.fullmatch(
+        r"generated/artifacts/pcb-layer-step/dut__bottom__[0-9a-f]{10}\.step",
+        step_op["args"]["output_file"],
     )
     assert step_op["args"]["layer"] == "bottom"
     assert [
@@ -1528,9 +1532,10 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     )
     assert insert_step_op["op"] == "pcbdoc.add-embedded-3d-model"
     assert insert_step_op["args"]["file"] == "generated/mate.PcbDoc"
-    assert insert_step_op["args"]["model_file"] == (
-        "generated/artifacts/pcb-layer-step/dut__bottom.step"
-    )
+    assert insert_step_op["args"]["model_file"] == step_op["args"]["output_file"]
+    assert insert_step_op["args"]["model_name"] == Path(
+        step_op["args"]["output_file"]
+    ).name
     assert insert_step_op["args"]["location_mils"] == [1000.0, 2000.0]
     assert insert_step_op["args"]["z_mm"] == 8.5
     assert insert_step_op["args"]["bounds_mils"] == {

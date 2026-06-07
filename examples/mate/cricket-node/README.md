@@ -88,13 +88,15 @@ output\cricket-node-mate\cricket_node_mate.PrjPcb
 Inspect the STEP artifact at:
 
 ```text
-output\cricket-node-mate\artifacts\pcb-layer-step\cricket_node_hw__b__bottom.step
+output\cricket-node-mate\artifacts\pcb-layer-step\cricket_node_hw__b__bottom__*.step
 ```
 
 The same STEP is also embedded in the generated output PcbDoc at the
 configured `artifacts.pcb_layer_step.insert_in_output.z_mm` height. For this
 example the exported STEP uses `z_mm: -0.0175` with `0.035 mm` copper, so local
 `Z=0` is the copper mid-plane. The inserted 3D body is placed at `8.5 mm` in
-the output PcbDoc, renders drill overlays as rings so NPTH/alignment holes stay
-visible, and keeps its 2D bounds tied to the DUT outline rather than the larger
-output board outline.
+the output PcbDoc, renders NPTH drill overlays as rings while plated holes use
+the pad-shaped plated-ring mode, and keeps its 2D bounds tied to the DUT
+outline rather than the larger output board outline. The STEP filename includes
+a short artifact hash so Altium reloads regenerated embedded models instead of
+reusing a stale model with the same filename.

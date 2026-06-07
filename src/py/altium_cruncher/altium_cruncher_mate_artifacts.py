@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -50,6 +52,8 @@ _PCB_LAYER_STEP_OPTION_KEYS = (
     "drills",
     "board_outline",
 )
+
+_PCB_LAYER_STEP_CACHE_VERSION = "mate-pcb-layer-step-2026-06-07-a"
 
 
 def build_mate_artifact_operations(config: object) -> list[JsonObject]:
@@ -101,15 +105,8 @@ def _pcb_layer_step_operation(
     board_key = str(
         getattr(board, "board_key", "") or Path(getattr(board, "pcb_path")).stem
     )
-    output_file = (
-        Path(output_dir)
-        / "artifacts"
-        / "pcb-layer-step"
-        / f"{_safe_id(board_key)}__{_safe_id(source_layer)}.step"
-    )
     args: JsonObject = {
         "file": str(getattr(board, "pcb_path")),
-        "output_file": output_file.as_posix(),
         "overwrite": True,
         "layer": source_layer,
         "board_name": board_key,
@@ -126,12 +123,62 @@ def _pcb_layer_step_operation(
     colors = _pcb_layer_step_colors(board, layer_step)
     if colors:
         args["colors"] = colors
+    artifact_hash = _pcb_layer_step_artifact_hash(
+        board=board,
+        board_key=board_key,
+        source_layer=source_layer,
+        args=args,
+    )
+    output_file = (
+        Path(output_dir)
+        / "artifacts"
+        / "pcb-layer-step"
+        / f"{_safe_id(board_key)}__{_safe_id(source_layer)}__{artifact_hash}.step"
+    )
+    args["output_file"] = output_file.as_posix()
     return {
         "id": f"export_{_safe_id(board_key)}_{_safe_id(source_layer)}_pcb_layer_step",
         "op": "pcbdoc.export-layer-step",
         "message": f"Export {board_key} {source_layer} PCB layer STEP artifact",
         "args": args,
     }
+
+
+def _pcb_layer_step_artifact_hash(
+    *,
+    board: object,
+    board_key: str,
+    source_layer: str,
+    args: Mapping[str, object],
+) -> str:
+    source_path = Path(str(getattr(board, "pcb_path", "") or ""))
+    fingerprint: JsonObject = {
+        "name": source_path.name,
+    }
+    try:
+        stat = source_path.stat()
+    except OSError:
+        fingerprint["path"] = str(source_path)
+    else:
+        fingerprint["size"] = int(stat.st_size)
+        fingerprint["mtime_ns"] = int(stat.st_mtime_ns)
+    hash_args = dict(args)
+    if "file" in hash_args:
+        hash_args["file"] = source_path.name
+    payload = {
+        "version": _PCB_LAYER_STEP_CACHE_VERSION,
+        "board_key": board_key,
+        "source_layer": source_layer,
+        "source": fingerprint,
+        "args": hash_args,
+    }
+    data = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    ).encode("utf-8")
+    return hashlib.sha1(data).hexdigest()[:10]
 
 
 def _pcb_layer_step_insert_operation(

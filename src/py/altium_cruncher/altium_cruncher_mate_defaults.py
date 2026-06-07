@@ -120,6 +120,7 @@ def default_mate_artifacts_payload() -> JsonObject:
                 "mode": "overlay",
                 "shape": "ring",
                 "ring_width_mm": 0.12,
+                "plated_ring_shape": "pad",
             },
             "insert_in_output": {
                 "enabled": True,

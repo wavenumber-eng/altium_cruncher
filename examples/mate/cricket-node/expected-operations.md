@@ -27,7 +27,8 @@ high-level shape after local inputs and the known-parts cache exist:
    text above each mate component using the configured Arial 40 mil bold style
 9. `pcbdoc.export-layer-step` for the DUT bottom layer, including explicit
    track/polygon feature settings, copper, drill cutouts, board outline bodies,
-   and the configured red `test_points` highlight
+   artifact-hashed output filenames, NPTH drill rings, pad-shaped plated drill
+   overlays, and the configured red `test_points` pad color rule
 10. `pcbdoc.add-embedded-3d-model` to insert that STEP artifact into the output
    PcbDoc at the configured 8.5 mm Z height, using the DUT outline bounds for
    the body projection

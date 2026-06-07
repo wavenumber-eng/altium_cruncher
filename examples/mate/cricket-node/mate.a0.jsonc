@@ -242,7 +242,8 @@
       "drills": {
         "mode": "overlay",
         "shape": "ring",
-        "ring_width_mm": 0.12
+        "ring_width_mm": 0.12,
+        "plated_ring_shape": "pad"
       },
       "insert_in_output": {
         "enabled": true,
