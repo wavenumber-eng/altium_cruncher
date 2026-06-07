@@ -93,6 +93,28 @@ def _write_annotation_schdoc_with_template_text(path: Path) -> None:
     assert doc.save(path)
 
 
+def _write_review_pcb_project(project_path: Path) -> Path:
+    from altium_monkey import AltiumPcbDoc, PcbLayer
+    from altium_monkey.altium_prjpcb import AltiumPrjPcb
+    from altium_monkey.altium_schdoc import AltiumSchDoc
+
+    pcbdoc_path = project_path.with_suffix(".PcbDoc")
+    schdoc_path = project_path.with_suffix(".SchDoc")
+    AltiumSchDoc().save(schdoc_path)
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 700)
+    pcbdoc.add_track((100, 100), (900, 100), width_mils=10, layer=PcbLayer.TOP)
+    pcbdoc.add_track((100, 250), (900, 250), width_mils=10, layer=PcbLayer.BOTTOM)
+    pcbdoc.save(pcbdoc_path)
+
+    project = AltiumPrjPcb()
+    project.add_document(schdoc_path.name)
+    project.add_document(pcbdoc_path.name)
+    project.save(project_path)
+    return pcbdoc_path
+
+
 def _run_cli(repo_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-m", "altium_cruncher", *args],
@@ -201,3 +223,35 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert notes_payload["input"] == "annotated.SchDoc"
     readme = (output_dir / "README.md").read_text(encoding="utf-8")
     assert "Altium Design Review Bundle" in readme
+
+
+def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:
+    """Verify dr emits cheap copper review layers and no composed assembly views."""
+    repo_root = Path(__file__).resolve().parents[1]
+    project_path = tmp_path / "fixture.PrjPcb"
+    _write_review_pcb_project(project_path)
+    output_dir = tmp_path / "review"
+
+    result = _run_cli(repo_root, "dr", str(project_path), "-o", str(output_dir))
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    manifest = json.loads(
+        (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
+    )
+    assert len(manifest["pcb_svgs"]) == 1
+    pcb_entry = manifest["pcb_svgs"][0]
+    assert pcb_entry["views"] == []
+    layers = {entry["name"]: entry for entry in pcb_entry["layer_outputs"]}
+    assert set(layers) == {"TOP", "BOTTOM"}
+    for entry in layers.values():
+        assert entry["file"].startswith("pcb/copper_layers/")
+        assert "ASSEMBLY_HLR_TOP" not in entry["layers"]
+        assert "ASSEMBLY_HLR_BOTTOM" not in entry["layers"]
+        assert set(entry["layers"]) <= {
+            entry["name"],
+            "BOARD_OUTLINE",
+            "BOARD_CUTOUTS",
+            "DRILLS",
+            "SLOTS",
+        }
+        assert (output_dir / entry["file"]).exists()

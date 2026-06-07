@@ -9,7 +9,8 @@
   launcher, and ProgramData profile diagnostics.
 - Expand `design` into an agent-facing design review bundle, with
   `design-review` and `dr` aliases, serialized SchDoc/PcbDoc JSON, structured
-  notes JSONC, schematic SVGs, PCB layer SVGs, manifest, and README output.
+  notes JSONC, schematic SVGs, copper-layer PCB review SVGs, manifest, and
+  README output.
 - Add a dedicated `notes` command for Altium Note objects, text frames, and
   free schematic text.
 - Write `notes` and design-review note artifacts as sparse JSONC with relative

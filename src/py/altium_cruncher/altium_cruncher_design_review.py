@@ -4,10 +4,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from altium_cruncher.altium_cruncher_json_dump import build_json_dump_payload
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
 from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
+
+if TYPE_CHECKING:
+    from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
+    from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
 DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.a0"
 
@@ -39,7 +44,7 @@ def write_design_review_bundle(
         source_base=source_base,
     )
     notes_path = _write_notes_json(input_file, output_dir)
-    pcb_artifacts = _write_pcb_review_svgs(input_file, output_dir, pcbdoc_paths)
+    pcb_artifacts = _write_pcb_review_svgs(input_file, output_dir, design, pcbdoc_paths)
 
     manifest_path = output_dir / "design_review_manifest.json"
     readme_path = output_dir / "README.md"
@@ -165,28 +170,69 @@ def _write_notes_json(input_file: Path, output_dir: Path) -> Path:
 def _write_pcb_review_svgs(
     input_file: Path,
     output_dir: Path,
+    design: object,
     pcbdoc_paths: list[Path],
 ) -> list[dict[str, object]]:
     if not pcbdoc_paths:
         return []
     from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
-        render_pcb_svg_a0_to_output,
+        _render_a0_board_outputs,
     )
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
+    from altium_cruncher.altium_cruncher_pcb_workflow import CruncherPcbRenderInput
+    from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
     pcb_dir = output_dir / "pcb"
-    config = PcbSvgConfig.default()
-    config.views = []
-    input_key = input_file.resolve()
-    result = render_pcb_svg_a0_to_output(
-        object(),
-        [input_key],
-        pcb_dir,
-        {input_key: config},
-    )
-    if result != 0:
-        raise RuntimeError(f"PCB SVG review rendering failed for {input_file}")
+    project_parameters = _project_parameters(design)
+    for pcbdoc_path in pcbdoc_paths:
+        pcbdoc = AltiumPcbDoc(pcbdoc_path)
+        config = _pcb_review_svg_config(pcbdoc, PcbSvgConfig.default())
+        render_input = CruncherPcbRenderInput(
+            board_key=pcbdoc_path.stem,
+            pcb_path=pcbdoc_path,
+            pcbdoc=pcbdoc,
+            project_parameters=project_parameters,
+        )
+        _render_a0_board_outputs(
+            config,
+            render_input,
+            input_file=pcbdoc_path,
+            output_dir=pcb_dir,
+        )
     return _collect_pcb_svg_manifests(pcb_dir, output_dir)
+
+
+def _pcb_review_svg_config(
+    pcbdoc: "AltiumPcbDoc",
+    config: "PcbSvgConfig",
+) -> "PcbSvgConfig":
+    config.views = []
+    config.layer_outputs["enabled"] = True
+    config.layer_outputs["layers"] = _pcb_review_copper_layer_tokens(pcbdoc, config)
+    config.layer_outputs["include_special_layers"] = [
+        "BOARD_OUTLINE",
+        "BOARD_CUTOUTS",
+        "DRILLS",
+        "SLOTS",
+    ]
+    config.layer_outputs["output_dir"] = "copper_layers"
+    return config
+
+
+def _pcb_review_copper_layer_tokens(
+    pcbdoc: "AltiumPcbDoc",
+    config: "PcbSvgConfig",
+) -> list[str]:
+    from altium_monkey.altium_record_types import PcbLayer
+    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+
+    renderer = PcbSvgA0Renderer(config)
+    tokens = [
+        layer.to_json_name()
+        for layer in renderer._collect_visible_layers(pcbdoc)  # noqa: SLF001
+        if layer.is_copper()
+    ]
+    return tokens or [PcbLayer.TOP.to_json_name(), PcbLayer.BOTTOM.to_json_name()]
 
 
 def _collect_pcb_svg_manifests(
