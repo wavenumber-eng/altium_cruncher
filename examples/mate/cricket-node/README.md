@@ -20,8 +20,11 @@ running the workflow.
   octagonal/chamfered, and rounded-rectangle pads. The config also emits right-side
   board-edge net-label columns with group headers, arranged component
   designators, source board outline graphics, a user union, and the bottom-layer
-  STEP artifact. The PCB net labels and headers are emitted outside the union so
-  they can be manually moved after generation. Its output board outline defaults
+  fixture-alignment STEP artifact. The STEP artifact follows the standalone
+  `pcb-layer-step` fixture defaults by rendering selected `TP*` component pads
+  plus large drill overlays, while omitting general bottom-layer routing copper.
+  The PCB net labels and headers are emitted outside the union so they can be
+  manually moved after generation. Its output board outline defaults
   to the DUT bounds plus `500 mil` on the left, top, and bottom, and `3000 mil`
   on the right. Its generated schematic defaults to an ANSI `D` sheet with
   natural designator order inside each symbol-type group, centered-above

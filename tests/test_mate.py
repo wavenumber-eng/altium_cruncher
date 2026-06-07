@@ -785,19 +785,26 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     assert payload["artifacts"]["pcb_layer_step"]["source_layer"] == "bottom"
     assert payload["artifacts"]["pcb_layer_step"]["z_mm"] == -0.0175
     assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"] == {
-        "enabled": True,
+        "enabled": False,
         "color": "#B87333",
     }
     assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"] == {
-        "enabled": True,
+        "enabled": False,
         "color": "#7A8F2A",
     }
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["component_pads"] == {
+        "mode": "matching_designators",
+        "include_designators": ["TP*"],
+    }
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["free_pads"] is False
     assert payload["artifacts"]["pcb_layer_step"]["drills"] == {
         "mode": "overlay",
+        "minimum_diameter_mm": 0.85,
         "shape": "ring",
         "ring_width_mm": 0.12,
         "plated_ring_shape": "pad",
     }
+    assert payload["artifacts"]["pcb_layer_step"]["fuse_copper"] is False
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert projections["test_points"]["actions"][1]["style"]["mode"] == "outline"
     assert projections["test_points"]["actions"][1]["style"]["outline_count"] == 1
@@ -867,18 +874,25 @@ def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
         {"projection": "test_points", "color": "#FF0000"}
     ]
     assert (
-        payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is True
+        payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is False
     )
     assert (
         payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"]
-        is True
+        is False
     )
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["component_pads"] == {
+        "mode": "matching_designators",
+        "include_designators": ["TP*"],
+    }
+    assert payload["artifacts"]["pcb_layer_step"]["features"]["free_pads"] is False
     assert payload["artifacts"]["pcb_layer_step"]["drills"] == {
         "mode": "overlay",
+        "minimum_diameter_mm": 0.85,
         "shape": "ring",
         "ring_width_mm": 0.12,
         "plated_ring_shape": "pad",
     }
+    assert payload["artifacts"]["pcb_layer_step"]["fuse_copper"] is False
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert payload["projections"][0]["actions"][1] == {
         "kind": "reference_graphics",

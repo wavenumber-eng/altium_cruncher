@@ -225,26 +225,31 @@
       "z_mm": -0.0175,
       "features": {
         "tracks": {
-          "enabled": true,
+          "enabled": false,
           "color": "#B87333"
         },
         "polygons": {
-          "enabled": true,
+          "enabled": false,
           "color": "#7A8F2A"
         },
-        "arcs": true,
-        "fills": true,
-        "regions": true,
-        "vias": true,
-        "component_pads": true,
-        "free_pads": true
+        "arcs": false,
+        "fills": false,
+        "regions": false,
+        "vias": false,
+        "component_pads": {
+          "mode": "matching_designators",
+          "include_designators": ["TP*"]
+        },
+        "free_pads": false
       },
       "drills": {
         "mode": "overlay",
+        "minimum_diameter_mm": 0.85,
         "shape": "ring",
         "ring_width_mm": 0.12,
         "plated_ring_shape": "pad"
       },
+      "fuse_copper": false,
       "insert_in_output": {
         "enabled": true,
         "z_mm": 8.5,

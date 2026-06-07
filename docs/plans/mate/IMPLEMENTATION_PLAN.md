@@ -136,10 +136,10 @@ The Cricket Node example should demonstrate:
   octagonal/chamfered, and rounded-rectangle pads;
 - source board outline and cutout projection;
 - generated board size with configurable margins around the DUT;
-- bottom-layer STEP artifact generation with projection-linked pad color rules,
-  track settings, polygon settings, ring-shaped NPTH drill overlays,
-  pad-shaped plated drill overlays, artifact-hashed filenames, and 3D-body Z
-  placement;
+- bottom-layer fixture-alignment STEP artifact generation with projection-linked
+  pad color rules, selected `TP*` component-pad copper, large ring-shaped NPTH
+  drill overlays, pad-shaped plated drill overlays, artifact-hashed filenames,
+  and 3D-body Z placement;
 - a user union for generated fixture features, excluding loose labels intended
   for manual repositioning.
 
@@ -200,3 +200,7 @@ Full signoff:
 - 2026-06-07: Added artifact hashes to mate-generated `pcb-layer-step` STEP
   filenames so Altium reloads regenerated embedded models instead of using a
   stale embedded-model cache entry with the previous filename.
+- 2026-06-07: Aligned mate-generated `pcb-layer-step` defaults with the
+  standalone fixture-alignment config by limiting Cricket STEP source copper to
+  selected `TP*` component pads and large drill overlays. Full bottom-layer
+  routing copper remains opt-in through the mate config.

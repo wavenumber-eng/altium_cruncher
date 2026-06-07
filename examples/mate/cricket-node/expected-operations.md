@@ -25,8 +25,8 @@ high-level shape after local inputs and the known-parts cache exist:
    cutout when `board_projection.cutouts.actual_cutouts` is enabled
 8. `pcbdoc.arrange-designators` to move generated component-owned designator
    text above each mate component using the configured Arial 40 mil bold style
-9. `pcbdoc.export-layer-step` for the DUT bottom layer, including explicit
-   track/polygon feature settings, copper, drill cutouts, board outline bodies,
+9. `pcbdoc.export-layer-step` for the DUT bottom layer, including selected
+   `TP*` component-pad copper, large drill overlays, board outline bodies,
    artifact-hashed output filenames, NPTH drill rings, pad-shaped plated drill
    overlays, and the configured red `test_points` pad color rule
 10. `pcbdoc.add-embedded-3d-model` to insert that STEP artifact into the output
