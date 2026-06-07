@@ -35,6 +35,7 @@ from altium_cruncher.altium_cruncher_mate_parts import (
     resolve_known_part,
     write_mate_known_parts_manifest,
 )
+from altium_cruncher.altium_cruncher_mate_libraries import scan_mate_libraries
 from altium_cruncher.altium_cruncher_mco import MCO_SCHEMA, load_jsonc_file
 
 
@@ -198,22 +199,29 @@ def _write_mate_source_pcbdoc(
     return path
 
 
-def test_mate_template_builds_initial_mco(tmp_path: Path) -> None:
+def test_mate_template_writes_editable_a0_config(tmp_path: Path) -> None:
     config_path = tmp_path / "mate.jsonc"
-    write_mate_config_template(config_path)
+    write_mate_config_template(config_path, source_board="dut.PrjPcb")
 
-    config = load_mate_config(config_path)
-    payload = build_mate_mco(config)
+    text = config_path.read_text(encoding="utf-8")
+    payload = load_jsonc_file(config_path)
 
-    assert payload["schema"] == MCO_SCHEMA
-    operations = payload["operations"]
-    assert isinstance(operations, list)
-    assert [operation["op"] for operation in operations] == [
-        "project.create-skeleton",
-        "pcbdoc.add-text",
-    ]
-    assert operations[0]["args"]["schematic_sheet_style"] == "D"
-    assert operations[1]["args"]["file"] == "output/mate/mate.PcbDoc"
+    assert text.startswith("/*")
+    assert isinstance(payload, dict)
+    assert payload["schema"] == MATE_CONFIG_SCHEMA
+    assert payload["source"]["board"] == "dut.PrjPcb"
+    assert payload["libraries"] == {"roots": ["mating_parts"], "recursive": True}
+    assert "known_parts" not in payload
+    projections = {
+        projection["id"]: projection for projection in payload["projections"]
+    }
+    assert projections["test_points"]["source"]["designators"] == "TP*"
+    assert projections["test_points"]["actions"][0]["symbol_name"] == (
+        "YZ209315103P-01"
+    )
+    assert projections["test_points"]["actions"][0]["footprint_name"] == (
+        "YZ209315103P-01"
+    )
 
 
 def test_mate_run_creates_project_and_marker(tmp_path: Path) -> None:
@@ -455,6 +463,103 @@ def test_mate_known_parts_manifest_tracks_node_test_array_roles(
     assert loaded["designator_normalization"]["mount"]["M5"] == "M1"
 
 
+def test_mate_library_scan_resolves_symbols_and_footprints(tmp_path: Path) -> None:
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    cache_dir = manifest_path.parent
+
+    result = scan_mate_libraries([cache_dir])
+
+    assert [entry.name for entry in result.symbols] == [
+        "9774080360R",
+        "H2184-05",
+        "YZ209315103P-01",
+    ]
+    assert [entry.name for entry in result.footprints] == [
+        "9774080360R-YIYUAN",
+        "H2184-05",
+        "YZ209315103P-01",
+    ]
+    assert result.warnings == ()
+
+
+def test_mate_mco_places_named_library_parts_from_selection(tmp_path: Path) -> None:
+    source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    config = load_mate_config(
+        _write_json(
+            tmp_path / "mate.a0.jsonc",
+            {
+                "schema": MATE_CONFIG_SCHEMA,
+                "source": {
+                    "board": str(source_path),
+                    "project_context": "none",
+                },
+                "output": {
+                    "backend": "altium",
+                    "output_dir": "generated",
+                    "project_name": "mate",
+                    "overwrite": True,
+                },
+                "libraries": {
+                    "roots": [str(manifest_path.parent)],
+                    "recursive": True,
+                },
+                "projections": [
+                    {
+                        "id": "test_points",
+                        "source": {
+                            "object": "component",
+                            "designators": "TP1",
+                        },
+                        "actions": [
+                            {
+                                "kind": "mate_component",
+                                "symbol_name": "YZ209315103P-01",
+                                "footprint_name": "YZ209315103P-01",
+                                "designator_prefix": "TP",
+                                "signal_pad_designator": "1",
+                            }
+                        ],
+                    }
+                ],
+                "board_projection": {},
+                "artifacts": {},
+            },
+        )
+    )
+
+    operations = build_mate_mco(config)["operations"]
+
+    assert operations[0]["args"]["documents"] == [
+        "libraries/pcblib/YZ209315103P-01.PcbLib",
+        "libraries/schlib/YZ209315103P-01.SchLib",
+    ]
+    copy_ops = [
+        operation for operation in operations if operation["op"] == "file.copy"
+    ]
+    assert [operation["args"]["destination"] for operation in copy_ops] == [
+        "generated/libraries/pcblib/YZ209315103P-01.PcbLib",
+        "generated/libraries/schlib/YZ209315103P-01.SchLib",
+    ]
+    sch_component = next(
+        operation
+        for operation in operations
+        if operation["op"] == "schdoc.add-component"
+    )
+    pcb_component = next(
+        operation
+        for operation in operations
+        if operation["op"] == "pcbdoc.add-component"
+    )
+    assert sch_component["args"]["library"] == (
+        "generated/libraries/schlib/YZ209315103P-01.SchLib"
+    )
+    assert pcb_component["args"]["library"] == (
+        "generated/libraries/pcblib/YZ209315103P-01.PcbLib"
+    )
+    assert pcb_component["args"]["pad_nets"] == {"1": "+VIN"}
+
+
 def test_mate_mco_places_known_parts_from_selection(tmp_path: Path) -> None:
     manifest_path = _write_minimal_known_part_cache(tmp_path)
 
@@ -665,95 +770,77 @@ def test_mate_known_part_operations_use_natural_designator_order(
     ] == [[1200.0, 1200.0], [3600.0, 1200.0]]
 
 
-def test_cricket_node_mate_example_config_is_planable() -> None:
-    example_config = PACKAGE_ROOT / "examples" / "mate" / "cricket-node" / "mate.jsonc"
+def test_cricket_node_mate_example_config_is_planable(tmp_path: Path) -> None:
+    example_dir = PACKAGE_ROOT / "examples" / "mate" / "cricket-node"
+    example_config = PACKAGE_ROOT / "examples" / "mate" / "cricket-node" / "mate.a0.jsonc"
+    if (PACKAGE_ROOT / ".git").exists():
+        tracked_config = subprocess.run(
+            [
+                "git",
+                "ls-files",
+                "--",
+                example_config.relative_to(PACKAGE_ROOT).as_posix(),
+            ],
+            cwd=PACKAGE_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        assert tracked_config.stdout.strip() == ""
+    else:
+        assert not example_config.exists()
+    assert (example_dir / "mating_parts").exists()
+    local_config = tmp_path / "mate.a0.jsonc"
+    write_mate_config_template(
+        local_config,
+        overwrite=True,
+        source_board=example_dir / "11-10028__cricket-node-hw__B.PrjPcb",
+    )
+    payload = load_jsonc_file(local_config)
+    assert isinstance(payload, dict)
+    payload["libraries"]["roots"] = [(example_dir / "mating_parts").as_posix()]
+    payload["output"]["output_dir"] = "output/test-plan"
+    local_config.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
-    payload = build_mate_mco(load_mate_config(example_config))
-    operations = payload["operations"]
+    mco_payload = build_mate_mco(load_mate_config(local_config))
+    operations = mco_payload["operations"]
 
-    assert payload["schema"] == MCO_SCHEMA
-    assert [operation["op"] for operation in operations] == [
-        "project.create-skeleton",
-        "file.copy",
-        "file.copy",
-        "file.copy",
-        "file.copy",
-        "file.copy",
-        "file.copy",
-        "schdoc.add-component",
-        "schdoc.add-wire",
-        "schdoc.add-net-label",
-        "pcbdoc.add-component",
-        "schdoc.add-component",
-        "pcbdoc.add-component",
-        "schdoc.add-component",
-        "schdoc.add-wire",
-        "schdoc.add-net-label",
-        "pcbdoc.add-component",
-        "pcbdoc.create-user-union",
-        "pcbdoc.add-text",
-        "pcbdoc.add-text",
-    ]
+    assert mco_payload["schema"] == MCO_SCHEMA
+    assert operations[0]["op"] == "project.create-skeleton"
     assert operations[0]["args"]["documents"] == [
-        "libraries/pcblib/split/9774080360R-YIYUAN.PcbLib",
-        "libraries/pcblib/split/H2184-05.PcbLib",
-        "libraries/pcblib/split/YZ209315103P-01.PcbLib",
+        "libraries/pcblib/9774080360R-YIYUAN.PcbLib",
+        "libraries/pcblib/H2184-05.PcbLib",
+        "libraries/pcblib/YZ209315103P-01.PcbLib",
         "libraries/schlib/9774080360R.SchLib",
         "libraries/schlib/H2184-05.SchLib",
         "libraries/schlib/YZ209315103P-01.SchLib",
     ]
-    assert [operation["args"].get("designator") for operation in operations] == [
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        "TP1",
-        None,
-        None,
-        "TP1",
-        "M1",
-        "M1",
-        "P1",
-        None,
-        None,
-        "P1",
-        None,
-        None,
-        None,
-    ]
-    assert operations[8]["args"]["points_mils"] == [[1300.0, 1200.0], [1930.0, 1200.0]]
-    assert operations[9]["args"]["location_mils"] == [1460.0, 1200.0]
-    assert operations[9]["args"]["orientation"] == 0
-    assert operations[7]["args"]["designator_style"]["position_mils"] == [
-        1200.0,
-        1380.0,
-    ]
-    assert operations[11]["args"]["position_mils"] == [1200.0, 3000.0]
-    assert operations[13]["args"]["position_mils"] == [1200.0, 4800.0]
-    assert operations[14]["args"]["points_mils"] == [[1200.0, 4680.0], [1200.0, 3725.0]]
-    assert operations[15]["args"]["location_mils"] == [1200.0, 4520.0]
-    assert operations[15]["args"]["orientation"] == 3
-    assert [
-        operation["args"].get("text")
+    assert sum(1 for operation in operations if operation["op"] == "file.copy") == 6
+    assert any(operation["op"] == "pcbdoc.export-layer-step" for operation in operations)
+    assert any(
+        operation["op"] == "pcbdoc.add-embedded-3d-model"
         for operation in operations
-        if operation["op"] in {"schdoc.add-net-label", "pcbdoc.add-text"}
-    ] == ["+VIN", "ALIGN_NET", "+VIN", "ALIGN_NET"]
-    assert operations[-3]["args"]["name"] == "MATE_FEATURES"
+    )
+    assert any(
+        operation["op"] == "pcbdoc.create-user-union"
+        and operation["args"]["name"] == "MATE_FEATURES"
+        for operation in operations
+    )
 
 
-def test_cricket_node_draft_mate_config_is_parseable() -> None:
-    draft_config = PACKAGE_ROOT / "examples" / "mate" / "cricket-node" / "mate.a0.jsonc"
+def test_cricket_node_draft_mate_config_is_parseable(tmp_path: Path) -> None:
+    draft_config = tmp_path / "mate.a0.jsonc"
+    write_mate_config_template(
+        draft_config,
+        overwrite=True,
+        source_board="11-10028__cricket-node-hw__B.PrjPcb",
+    )
 
     payload = load_jsonc_file(draft_config)
 
     assert isinstance(payload, dict)
     assert payload["schema"] == MATE_CONFIG_SCHEMA
-    assert payload["source"]["board"] == (
-        "input/cricket-node/11-10028__cricket-node-hw__B.PrjPcb"
-    )
+    assert payload["source"]["board"] == "11-10028__cricket-node-hw__B.PrjPcb"
     assert payload["output"]["backend"] == "altium"
     assert payload["output"]["board_outline"] == {
         "mode": "source_bounds_with_margin",
@@ -764,6 +851,8 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
             "top": 500,
         },
     }
+    assert payload["libraries"] == {"roots": ["mating_parts"], "recursive": True}
+    assert "known_parts" not in payload
     assert [projection["id"] for projection in payload["projections"]] == [
         "test_points",
         "mounts",
@@ -772,7 +861,7 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     projections = {
         projection["id"]: projection for projection in payload["projections"]
     }
-    assert projections["test_points"]["source"]["designators"] == "TP1-27"
+    assert projections["test_points"]["source"]["designators"] == "TP*"
     assert projections["mounts"]["source"]["designators"] == "M1-4"
     assert "kind" not in projections["alignment_pins"]["source"]
     assert payload["board_projection"]["outline"]["graphics"]["layer"] == "TOP_OVERLAY"
@@ -806,6 +895,10 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     }
     assert payload["artifacts"]["pcb_layer_step"]["fuse_copper"] is False
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
+    assert projections["test_points"]["actions"][0]["symbol_name"] == "YZ209315103P-01"
+    assert projections["mounts"]["actions"][0]["footprint_name"] == (
+        "9774080360R-YIYUAN"
+    )
     assert projections["test_points"]["actions"][1]["style"]["mode"] == "outline"
     assert projections["test_points"]["actions"][1]["style"]["outline_count"] == 1
     test_point_label = projections["test_points"]["actions"][2]
@@ -2119,17 +2212,15 @@ def test_mate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
 
 
 def test_mate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
-    config_path = tmp_path / "mate.jsonc"
+    config_path = tmp_path / "mate.a0.jsonc"
     completed = subprocess.run(
         [
             sys.executable,
             "-m",
             "altium_cruncher",
             "mate",
-            "init",
-            str(config_path),
         ],
-        cwd=PACKAGE_ROOT,
+        cwd=tmp_path,
         check=False,
         capture_output=True,
         text=True,
@@ -2137,6 +2228,32 @@ def test_mate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
 
     assert completed.returncode == 0, completed.stderr
     assert config_path.exists()
+    assert "Created mate config" in completed.stdout
+
+    source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    config_payload = load_jsonc_file(config_path)
+    assert isinstance(config_payload, dict)
+    config_payload["source"]["board"] = str(source_path)
+    config_payload["source"]["project_context"] = "none"
+    config_payload["libraries"]["roots"] = [str(manifest_path.parent)]
+    config_payload["output"]["output_dir"] = "generated"
+    config_payload["projections"] = [
+        {
+            "id": "test_points",
+            "source": {"object": "component", "designators": "TP1"},
+            "actions": [
+                {
+                    "kind": "mate_component",
+                    "symbol_name": "YZ209315103P-01",
+                    "footprint_name": "YZ209315103P-01",
+                    "designator_prefix": "TP",
+                    "signal_pad_designator": "1",
+                }
+            ],
+        }
+    ]
+    config_path.write_text(json.dumps(config_payload, indent=2), encoding="utf-8")
 
     mco_path = tmp_path / "mate.mco.jsonc"
     completed = subprocess.run(
@@ -2146,11 +2263,10 @@ def test_mate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
             "altium_cruncher",
             "mate",
             "plan",
-            str(config_path),
             "--output-mco",
             str(mco_path),
         ],
-        cwd=PACKAGE_ROOT,
+        cwd=tmp_path,
         check=False,
         capture_output=True,
         text=True,
@@ -2159,27 +2275,22 @@ def test_mate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
     assert completed.returncode == 0, completed.stderr
     assert mco_path.exists()
 
-    emitted_mco = tmp_path / "emitted.mco.jsonc"
     completed = subprocess.run(
         [
             sys.executable,
             "-m",
             "altium_cruncher",
             "mate",
-            "run",
-            str(config_path),
             "--dry-run",
-            "--emit-mco",
-            str(emitted_mco),
         ],
-        cwd=PACKAGE_ROOT,
+        cwd=tmp_path,
         check=False,
         capture_output=True,
         text=True,
     )
 
     assert completed.returncode == 0, completed.stderr
-    assert emitted_mco.exists()
+    assert (tmp_path / "mate.a0.mco.jsonc").exists()
     payload = json.loads(completed.stdout)
     assert payload["ok"] is True
     assert payload["dry_run"] is True

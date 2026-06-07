@@ -1,6 +1,6 @@
 # Mate Implementation Plan
 
-Status: active
+Status: active, Cricket public example cleanup verified
 
 This plan tracks the implementation slices for the `mate` mating-board
 workflow in `altium_cruncher`. The stable public contracts live in the design
@@ -35,17 +35,22 @@ remaining work, and release exit criteria.
 
 ## Current State
 
-- `mate plan` can compile a Cricket Node config into an MCO.
-- `mate run` can create a generated Altium project with schematic, PCB,
-  copied libraries, mate components, reference graphics, board cutouts, PCB
-  labels, schematic wires/net labels, designator arrangement, feature union,
-  and STEP artifact operations.
+- `mate` now owns the normal public workflow: with no config it writes an
+  editable `mate.a0.jsonc`; with a config it emits the derived MCO and runs it.
+- `mate plan` emits the derived MCO only, and `mate libs` lists discoverable
+  SchLib symbols and PcbLib footprints from search roots.
+- `mate` can create a generated Altium project with schematic, PCB, copied
+  libraries, mate components, reference graphics, board cutouts, PCB labels,
+  schematic wires/net labels, designator arrangement, feature union, and STEP
+  artifact operations.
 - The Cricket example has been manually inspected in Altium for several output
   slices.
-- Known parts are currently driven by a generated manifest/cache seeded from
-  node-test-array assets.
-- The next design pressure is how users specify and resolve mate symbols and
-  footprints without relying on private library infrastructure.
+- Public Cricket mate parts are now resolved by `symbol_name` and
+  `footprint_name` from config-relative `libraries.roots`; the old generated
+  known-parts manifest remains a tested compatibility path but is no longer
+  part of the public example.
+- The next design pressure is missing-part fallback behavior, graphics-only
+  projections, and simplifying the config further after manual inspection.
 
 ## Terminology
 
@@ -55,68 +60,64 @@ remaining work, and release exit criteria.
 - Plan: resolved source facts and projection decisions.
 - MCO: generated Altium-specific operation script, analogous to compiled
   object code.
-- Known part: a reusable mate symbol/footprint definition selected by a
-  projection action.
+- Mate component: a reusable output symbol/footprint selected by a projection
+  action and resolved from configured public libraries.
 
 ## Implementation Slices
 
 | Slice | Status | Description | Exit Criteria |
 | --- | --- | --- | --- |
 | S0 | done | Create this active implementation tracker. | Plan exists and points to the design contracts. |
-| S1 | pending | Document the known-parts resolver MVP. | Design docs define config fields, search paths, duplicate handling, missing-part policy, and generated MCO expectations. |
-| S2 | pending | Add public-safe Altium library indexing. | `altium_cruncher` can index `.SchLib` symbol names and `.PcbLib` footprint names from configured roots without importing private packages. |
-| S3 | pending | Extend `known_parts` config. | Config accepts inline part definitions, search roots, optional root/path hints, and missing-part policy while preserving the existing manifest/cache path. |
-| S4 | pending | Resolve known parts during planning. | `mate plan` resolves symbol/footprint names to concrete libraries, reports clear errors for zero or multiple matches, and emits concrete MCO paths only in generated output. |
+| S1 | done | Document the library-root resolver MVP. | Design docs define config fields, search paths, duplicate handling, and generated MCO expectations. |
+| S2 | done | Add public-safe Altium library indexing. | `altium_cruncher` can index `.SchLib` symbol names and `.PcbLib` footprint names from configured roots without importing private packages. |
+| S3 | done | Add named mate-component resolution. | Config accepts `libraries.roots` plus `mate_component.symbol_name` and `footprint_name`, while preserving the existing manifest/cache path for compatibility tests. |
+| S4 | done | Resolve mate components during planning. | `mate plan` resolves symbol/footprint names to concrete libraries, reports clear errors for zero or multiple matches, and emits concrete MCO paths only in generated output. |
 | S5 | pending | Keep graphics-only projection valid. | A config can intentionally generate reference graphics, outlines, labels, cutouts, and STEP artifacts without placing mate components. |
-| S6 | pending | Update Cricket example to the new resolver style. | The example can run from its folder using relative search paths and does not require hand-authored absolute library paths. |
-| S7 | pending | Stabilize config and MCO docs. | Design docs, example README, expected operations, and command help match implemented behavior. |
+| S6 | done | Update Cricket example to the new resolver style. | The example can run from its folder using relative search paths and does not require hand-authored absolute library paths. |
+| S7 | done | Stabilize config and MCO docs. | Design docs, example README, expected operations, and command help match implemented behavior. |
 | S8 | pending | Release signoff. | Focused tests, full test suite, lint/type checks, and manual Altium inspection notes are complete. |
 
-## Known-Parts Resolver Direction
+## Library Resolver Direction
 
-The MVP should allow users to specify mate parts by symbol and footprint names,
-plus one or more search roots. Search roots should be config-relative by
-default so examples are portable and command invocation directory does not
-change behavior.
+The MVP allows users to specify mate parts by symbol and footprint names, plus
+one or more search roots. Search roots are config-relative by default so
+examples are portable and command invocation directory does not change behavior.
 
 Recommended authored shape:
 
 ```jsonc
 {
-  "known_parts": {
-    "search_paths": [
-      ".",
-      "known-parts",
-      "local_library"
-    ],
-    "on_missing": "error",
-    "parts": [
-      {
-        "role": "test_point_pogo",
-        "target_kinds": ["test_point"],
-        "designator_prefix": "TP",
-        "signal_pad_designator": "1",
-        "symbol": "YZ209315103P-01",
-        "footprint": "YZ209315103P-01"
-      }
-    ]
-  }
+  "libraries": {
+    "roots": ["mating_parts"],
+    "recursive": true
+  },
+  "projections": [{
+    "id": "test_points",
+    "source": {"object": "component", "designators": "TP*"},
+    "actions": [{
+      "kind": "mate_component",
+      "symbol_name": "YZ209315103P-01",
+      "footprint_name": "YZ209315103P-01",
+      "designator_prefix": "TP",
+      "signal_pad_designator": "1"
+    }]
+  }]
 }
 ```
 
 Resolver behavior:
 
 - exact one symbol and footprint match: use it;
-- zero matches: fail by default, or skip only when the config explicitly allows
-  a graphics-only fallback;
+- zero matches: fail by default; graphics-only fallback remains a deferred
+  explicit policy;
 - multiple matches: fail with candidate paths unless the config provides a
   root, path, or library hint;
 - generated MCO stores concrete resolved paths, not unresolved search roots;
 - authored config should avoid absolute paths unless the user intentionally
   chooses a machine-local setup.
 
-The existing manifest/cache workflow remains useful for generated examples and
-should stay compatible during the transition.
+The existing manifest/cache workflow remains available for compatibility tests
+and older local configs. It is no longer the public Cricket example path.
 
 ## Cricket MVP Target
 
@@ -204,3 +205,9 @@ Full signoff:
   standalone fixture-alignment config by limiting Cricket STEP source copper to
   selected `TP*` component pads and large drill overlays. Full bottom-layer
   routing copper remains opt-in through the mate config.
+- 2026-06-07: Simplified the public `mate` workflow so a bare command creates
+  or runs `mate.a0.jsonc`, added `mate libs` for SchLib/PcbLib discovery,
+  added name-based `mate_component` resolution from `libraries.roots`, removed
+  the checked-in Cricket config and known-parts manifest, and moved the public
+  Cricket example to a README-driven layout with committed DUT files and
+  minimal `mating_parts/` libraries.

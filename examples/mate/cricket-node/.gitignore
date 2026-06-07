@@ -1,6 +1,7 @@
-/input/*
-!/input/README.md
-/output/*
-!/output/README.md
-/known-parts/schlib/
-/known-parts/pcblib/
+/output/
+/mate.a0.jsonc
+/*.mco.jsonc
+/History/
+/Project Logs*/
+/__Previews/
+*.PcbDoc.htm

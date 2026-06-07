@@ -1,41 +1,26 @@
 # Cricket Node Mate Example
 
-This example is a runnable workspace for the first cricket-node mate
-workflow: use a node-test-array known-parts cache, select cricket-node DUT
-features, emit an MCO, then run it to create a new fixture/mate project,
-projected outline graphics, and a bottom-layer STEP alignment artifact inserted
-into the output board.
+This example is a runnable mate workflow for the Cricket Node DUT. It creates a
+new mating-board project with pogo-pin test points, mounting/alignment parts,
+source-board reference graphics, board cutouts, arranged designators, manual
+net-label columns, and an embedded bottom-copper STEP alignment artifact.
 
-The actual Altium source projects and extracted SchLib/PcbLib cache files are
-not committed here. Stage them locally under `input/` and `known-parts/` before
-running the workflow.
+The repo intentionally does not commit a generated `mate.a0.jsonc` config. The
+first command writes that editable JSONC file from the example defaults; read
+the comments in the generated file before running the workflow.
 
-## Inputs
+## Files
 
-- `mate.a0.jsonc` is the primary selector/projection config for
-  this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
-  one-outline `MECHANICAL_1` source-pad reference graphics with `10 mil` stroke
-  and visible edge-to-edge clearance semantics. Source-pad outlines use the
-  effective pad body on the source layer, including round, obround, rectangular,
-  octagonal/chamfered, and rounded-rectangle pads. The config also emits right-side
-  board-edge net-label columns with group headers, arranged component
-  designators, source board outline graphics, a user union, and the bottom-layer
-  fixture-alignment STEP artifact. The STEP artifact follows the standalone
-  `pcb-layer-step` fixture defaults by rendering selected `TP*` component pads
-  plus large drill overlays, while omitting general bottom-layer routing copper.
-  The PCB net labels and headers are emitted outside the union so they can be
-  manually moved after generation. Its output board outline defaults
-  to the DUT bounds plus `500 mil` on the left, top, and bottom, and `3000 mil`
-  on the right. Its generated schematic defaults to an ANSI `D` sheet with
-  natural designator order inside each symbol-type group, centered-above
-  schematic designators, pin-directed wires, and matching-orientation net
-  labels placed on those wires.
-- `mate.jsonc` is the older reviewed config shape kept for comparison.
-- `known-parts/mate-known-parts.json` records the node-test-array cache
-  layout expected by the config.
-- `input/` is the ignored local staging area for cricket-node and
-  node-test-array source projects.
-- `output/` is the ignored generated output area.
+- `11-10028__cricket-node-hw__B.PrjPcb` is the DUT project.
+- `cricket-node-hw__B.PcbDoc` and `cricket-node-hw--top-level_B.SchDoc` are the
+  DUT PCB and schematic inputs.
+- `mating_parts/` contains the minimal SchLib/PcbLib files used by the default
+  mate config:
+  - `YZ209315103P-01` for test-point pogo contacts;
+  - `9774080360R` / `9774080360R-YIYUAN` for M2.5 SMT standoffs;
+  - `H2184-05` for 2 mm alignment pins.
+- `mate.a0.jsonc`, `*.mco.jsonc`, and `output/` are generated locally and
+  ignored by git.
 
 ## Commands
 
@@ -43,63 +28,63 @@ Run commands from this folder. To use the working-tree package instead of an
 installed `altium-cruncher`, prefix commands with
 `uv run python -m altium_cruncher`.
 
-Stage local corpus inputs, if `WN_TEST_CORPUS` points at your real local corpus
-mirror:
+Create the editable config:
 
 ```powershell
-New-Item -ItemType Directory -Force input\cricket-node, input\node-test-array
-Copy-Item "$env:WN_TEST_CORPUS\altium\common\real_world_pcbdoc\cricket-node\input\*" input\cricket-node\ -Recurse -Force
-Copy-Item "$env:WN_TEST_CORPUS\altium\common\real_world_pcbdoc\node_test_array\input\*" input\node-test-array\ -Recurse -Force
+uv run python -m altium_cruncher mate
 ```
 
-Build or refresh the known-parts cache from node-test-array:
+Inspect the discovered mating libraries:
 
 ```powershell
-uv run python -m altium_cruncher mate parts-cache build input\node-test-array\11-10077__node-test-array__B4.PrjPcb `
-  --cache-dir known-parts `
-  --force
+uv run python -m altium_cruncher mate libs mating_parts
 ```
 
-Plan the mate workflow:
+After reviewing `mate.a0.jsonc`, generate the debug MCO without executing it:
 
 ```powershell
-uv run python -m altium_cruncher mate plan mate.a0.jsonc `
-  --output-mco mate.a0.mco.jsonc `
-  --force
+uv run python -m altium_cruncher mate plan
 ```
 
-Run the mate workflow and keep an emitted MCO copy under `output/`:
+Run the workflow:
 
 ```powershell
-uv run python -m altium_cruncher mate run mate.a0.jsonc `
-  --emit-mco output\mate.a0.mco.jsonc `
-  --force
+uv run python -m altium_cruncher mate
 ```
 
-You can also execute the root-level MCO directly:
+Run and open the generated project in Altium:
 
 ```powershell
-uv run python -m altium_cruncher mco run mate.a0.mco.jsonc
+uv run python -m altium_cruncher mate --launch
 ```
 
-Open the generated project in Altium:
-
-```powershell
-output\cricket-node-mate\cricket_node_mate.PrjPcb
-```
-
-Inspect the STEP artifact at:
+The generated project is written to:
 
 ```text
-output\cricket-node-mate\artifacts\pcb-layer-step\cricket_node_hw__b__bottom__*.step
+output\mate.PrjPcb
 ```
 
-The same STEP is also embedded in the generated output PcbDoc at the
-configured `artifacts.pcb_layer_step.insert_in_output.z_mm` height. For this
-example the exported STEP uses `z_mm: -0.0175` with `0.035 mm` copper, so local
-`Z=0` is the copper mid-plane. The inserted 3D body is placed at `8.5 mm` in
-the output PcbDoc, renders NPTH drill overlays as rings while plated holes use
-the pad-shaped plated-ring mode, and keeps its 2D bounds tied to the DUT
-outline rather than the larger output board outline. The STEP filename includes
-a short artifact hash so Altium reloads regenerated embedded models instead of
-reusing a stale model with the same filename.
+The generated STEP artifact is written under:
+
+```text
+output\artifacts\pcb-layer-step\
+```
+
+The same STEP is embedded in the generated output PcbDoc at the configured
+`artifacts.pcb_layer_step.insert_in_output.z_mm` height. The default artifact
+config follows the standalone `pcb-layer-step` fixture defaults: selected `TP*`
+component pads are rendered, large drill overlays are rings, general routing
+copper is omitted, and the STEP filename includes a short content hash so
+Altium reloads regenerated models.
+
+## Default Config Behavior
+
+The generated config selects `TP*`, `M1-4`, and free NPTH alignment holes near
+2 mm. Each `mate_component` action names the desired schematic symbol and PCB
+footprint; `altium-cruncher` resolves those names by scanning `mating_parts/`
+recursively.
+
+Reference graphics trace the actual source pad shapes on `MECHANICAL_1`,
+including round, obround, rectangular, octagonal/chamfered, and rounded-rect
+pads. Net-label columns are generated outside the user union so they can be
+manually moved after project creation.

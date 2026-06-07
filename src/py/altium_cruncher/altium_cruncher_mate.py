@@ -23,6 +23,12 @@ from altium_cruncher.altium_cruncher_mate_parts import (
     manifest_path_for_cache_dir,
     resolve_known_part,
 )
+from altium_cruncher.altium_cruncher_mate_libraries import (
+    MateLibraryScanResult,
+    resolve_mate_footprint,
+    resolve_mate_symbol,
+    scan_mate_libraries,
+)
 from altium_cruncher.altium_cruncher_mate_graphics import (
     board_outline_geometry,
     board_origin_mils,
@@ -111,6 +117,14 @@ class MateKnownPartsConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class MateLibrariesConfig:
+    """Library roots used to resolve mate symbols and footprints by name."""
+
+    roots: tuple[Path, ...]
+    recursive: bool
+
+
+@dataclass(frozen=True, slots=True)
 class MatePlacementConfig:
     """Board-side placement transform for projected DUT coordinates."""
 
@@ -145,6 +159,7 @@ class MateSelectionComponent:
     net_name: str | None
     mate_projection_id: str | None = None
     mate_part_role: str | None = None
+    mate_component: JsonObject | None = None
     mate_pcb_label: JsonObject | None = None
     mate_reference_graphics: JsonObject | None = None
     source_pad_geometries: tuple[JsonObject, ...] = ()
@@ -161,6 +176,7 @@ class MateSelectionPad:
     net_name: str | None
     mate_projection_id: str | None = None
     mate_part_role: str | None = None
+    mate_component: JsonObject | None = None
     mate_pcb_label: JsonObject | None = None
     mate_reference_graphics: JsonObject | None = None
     source_pad_geometries: tuple[JsonObject, ...] = ()
@@ -193,6 +209,7 @@ class MateConfig:
     output: MateOutputConfig
     marker: MateMarkerConfig | None
     known_parts: MateKnownPartsConfig | None
+    libraries: MateLibrariesConfig | None
     placement: MatePlacementConfig
     pcb_labels: MatePcbLabelsConfig
     pcb_designators: MatePcbDesignatorsConfig
@@ -205,6 +222,13 @@ class MateConfig:
 class _KnownPartOperations:
     placement_operations: list[JsonObject]
     pcb_label_operations: list[JsonObject]
+
+
+@dataclass(frozen=True, slots=True)
+class _ResolvedMatePartTarget:
+    target: JsonObject
+    part: JsonObject
+    designator: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -323,6 +347,11 @@ def parse_mate_config(
             _optional_section(root, "known_parts"),
             base_dir=base_dir,
         ),
+        libraries=_parse_libraries_config(
+            _optional_section(root, "libraries"),
+            base_dir=base_dir,
+            default_to_base_dir=False,
+        ),
         placement=_parse_placement_config(_section(root, "placement")),
         pcb_labels=_parse_pcb_labels_config(_optional_section(root, "pcb_labels")),
         pcb_designators=_parse_pcb_designators_config(
@@ -350,6 +379,11 @@ def _parse_mate_config(
         known_parts=_parse_known_parts_config(
             _optional_section(root, "known_parts"),
             base_dir=base_dir,
+        ),
+        libraries=_parse_libraries_config(
+            _optional_section(root, "libraries"),
+            base_dir=base_dir,
+            default_to_base_dir=True,
         ),
         placement=_default_mate_placement_config(),
         pcb_labels=_parse_mate_pcb_labels_config(root),
@@ -392,13 +426,17 @@ def write_mate_config_template(
     path: Path | str,
     *,
     overwrite: bool = False,
+    source_board: Path | str | None = None,
 ) -> Path:
     """Write an editable mate JSONC template."""
     output_path = Path(path)
     if output_path.exists() and not overwrite:
         raise FileExistsError(f"Mate config already exists: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(_mate_template_text(), encoding="utf-8")
+    output_path.write_text(
+        _mate_template_text(source_board=source_board),
+        encoding="utf-8",
+    )
     return output_path.resolve()
 
 
@@ -955,6 +993,39 @@ def _parse_known_parts_config(
     )
 
 
+def _parse_libraries_config(
+    raw: Mapping[str, object] | None,
+    *,
+    base_dir: Path | str | None,
+    default_to_base_dir: bool,
+) -> MateLibrariesConfig | None:
+    base_path = Path(base_dir).resolve() if base_dir is not None else Path.cwd()
+    if raw is None:
+        if not default_to_base_dir:
+            return None
+        return MateLibrariesConfig(roots=(base_path,), recursive=True)
+    recursive = _optional_bool(raw, "recursive", True)
+    root_values = raw.get("roots")
+    if root_values is None:
+        roots = [base_path]
+    elif isinstance(root_values, str):
+        roots = [root_values]
+    elif isinstance(root_values, list):
+        roots = []
+        for root_value in root_values:
+            if not isinstance(root_value, str) or not root_value:
+                raise ValueError(
+                    "Mate libraries.roots must contain non-empty strings"
+                )
+            roots.append(root_value)
+    else:
+        raise ValueError("Mate libraries.roots must be a string or array")
+    return MateLibrariesConfig(
+        roots=tuple(_resolve_config_path(root, base_path) for root in roots),
+        recursive=recursive,
+    )
+
+
 def _parse_placement_config(raw: Mapping[str, object]) -> MatePlacementConfig:
     mount_side = _optional_string(raw, "source_mount_side", "bottom")
     if mount_side not in {"bottom", "top"}:
@@ -1184,15 +1255,24 @@ def _projection_id(projection: Mapping[str, object]) -> str | None:
 
 
 def _projection_mate_part_role(projection: Mapping[str, object]) -> str | None:
+    action = _projection_mate_component_action(projection)
+    if action is None:
+        return None
+    part = action.get("part")
+    if part is None:
+        return None
+    if not isinstance(part, str) or not part:
+        raise ValueError("Mate projection mate_component.part must be a string")
+    return part
+
+
+def _projection_mate_component_action(
+    projection: Mapping[str, object],
+) -> JsonObject | None:
     for action in _list_field(projection, "actions"):
         if not isinstance(action, dict) or action.get("kind") != "mate_component":
             continue
-        part = action.get("part")
-        if part is None:
-            return None
-        if not isinstance(part, str) or not part:
-            raise ValueError("Mate projection mate_component.part must be a string")
-        return part
+        return dict(action)
     return None
 
 
@@ -1261,6 +1341,11 @@ def _selected_mate_components(
                 )
                 _add_optional(
                     selected_component,
+                    "mate_component",
+                    _projection_mate_component_action(projection),
+                )
+                _add_optional(
+                    selected_component,
                     "mate_pcb_label",
                     _projection_pcb_label_config(projection),
                 )
@@ -1301,6 +1386,11 @@ def _selected_mate_free_pads(
                     selected_pad,
                     "mate_part_role",
                     _projection_mate_part_role(projection),
+                )
+                _add_optional(
+                    selected_pad,
+                    "mate_component",
+                    _projection_mate_component_action(projection),
                 )
                 _add_optional(
                     selected_pad,
@@ -1580,6 +1670,7 @@ def _parse_selection_component(
         net_name=_optional_string(raw, "net_name", None),
         mate_projection_id=_optional_string(raw, "mate_projection_id", None),
         mate_part_role=_optional_string(raw, "mate_part_role", None),
+        mate_component=_optional_section(raw, "mate_component"),
         mate_pcb_label=_optional_section(raw, "mate_pcb_label"),
         mate_reference_graphics=_optional_section(raw, "mate_reference_graphics"),
         source_pad_geometries=parse_source_pad_geometries(raw),
@@ -1595,6 +1686,7 @@ def _parse_selection_pad(raw: Mapping[str, object]) -> MateSelectionPad:
         net_name=_optional_string(raw, "net_name", None),
         mate_projection_id=_optional_string(raw, "mate_projection_id", None),
         mate_part_role=_optional_string(raw, "mate_part_role", None),
+        mate_component=_optional_section(raw, "mate_component"),
         mate_pcb_label=_optional_section(raw, "mate_pcb_label"),
         mate_reference_graphics=_optional_section(raw, "mate_reference_graphics"),
         source_pad_geometries=parse_selection_pad_geometries(raw),
@@ -1648,51 +1740,28 @@ def _pcb_marker_operation(
 
 
 def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
-    known_parts = config.known_parts
-    if known_parts is None:
+    resolved_targets = _resolved_mate_targets(config)
+    if not resolved_targets:
         return _KnownPartOperations([], [])
-    targets = _placement_targets(config.selection, config.placement)
-    if not targets:
-        return _KnownPartOperations([], [])
-
-    manifest = load_mate_known_parts_manifest(known_parts.manifest_path)
     operations: list[JsonObject] = []
     pcb_label_requests: list[PcbNetLabelRequest] = []
     board_label_column_indices: dict[str, int] = {}
     board_label_rows: dict[str, int] = {}
-    used_designators: set[str] = set()
-    free_counts: dict[str, int] = {}
     placed_designators: list[str] = []
-    resolved_targets: list[tuple[JsonObject, Mapping[str, object], str]] = []
-    for target in targets:
-        target_kind = str(target.get("kind", "") or "")
-        part = resolve_known_part(
-            manifest,
-            target_kind,
-            role=_target_optional_string(target, "mate_part_role"),
-        )
-        designator = _projected_designator(
-            target,
-            part,
-            manifest,
-            used_designators=used_designators,
-            free_counts=free_counts,
-        )
-        resolved_targets.append((target, part, designator))
-    resolved_targets = _sort_known_part_targets_by_group_and_designator(
-        resolved_targets,
-    )
     channel_offsets = _component_link_channel_offsets(
-        designator for _, _, designator in resolved_targets
+        resolved.designator for resolved in resolved_targets
     )
     schematic_positions = schematic_grouped_positions(
-        [_part_string(part, "symbol_name") for _, part, _ in resolved_targets]
+        [_part_string(resolved.part, "symbol_name") for resolved in resolved_targets]
     )
-    for (target, part, designator), schematic_position in zip(
+    for resolved, schematic_position in zip(
         resolved_targets,
         schematic_positions,
         strict=True,
     ):
+        target = resolved.target
+        part = resolved.part
+        designator = resolved.designator
         operations.append(
             _schematic_part_operation(
                 config.output,
@@ -1705,7 +1774,7 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
         schematic_file = _output_file(config.output.output_dir, _schematic_filename(config.output))
         net_name = _target_optional_string(target, "net_name")
         net_route = schematic_net_route(
-            symbol_library_path=_known_part_file(known_parts, part, "symbol_library"),
+            symbol_library_path=_part_source_file(part, "symbol_library"),
             symbol_name=_part_string(part, "symbol_name"),
             signal_pin_designator=_part_optional_string(part, "signal_pad_designator"),
             component_position_mils=schematic_position,
@@ -1730,7 +1799,6 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
         operations.append(
             _pcb_part_operation(
                 config.output,
-                known_parts,
                 part,
                 target,
                 designator,
@@ -1774,17 +1842,17 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
 
 
 def _sort_known_part_targets_by_group_and_designator(
-    resolved_targets: list[tuple[JsonObject, Mapping[str, object], str]],
-) -> list[tuple[JsonObject, Mapping[str, object], str]]:
+    resolved_targets: list[_ResolvedMatePartTarget],
+) -> list[_ResolvedMatePartTarget]:
     group_order: dict[str, int] = {}
-    for _target, part, _designator in resolved_targets:
-        group_key = _part_string(part, "symbol_name")
+    for resolved in resolved_targets:
+        group_key = _part_string(resolved.part, "symbol_name")
         group_order.setdefault(group_key, len(group_order))
     return sorted(
         resolved_targets,
         key=lambda item: (
-            group_order[_part_string(item[1], "symbol_name")],
-            designator_sort_key(item[2]),
+            group_order[_part_string(item.part, "symbol_name")],
+            designator_sort_key(item.designator),
         ),
     )
 
@@ -1826,29 +1894,175 @@ def _known_part_library_copy_operations(config: MateConfig) -> list[JsonObject]:
 
 
 def _known_part_library_references(config: MateConfig) -> list[dict[str, str]]:
-    known_parts = config.known_parts
-    if known_parts is None:
-        return []
-    targets = _placement_targets(config.selection, config.placement)
-    if not targets:
-        return []
-
-    manifest = load_mate_known_parts_manifest(known_parts.manifest_path)
     references: dict[str, str] = {}
-    for target in targets:
-        target_kind = str(target.get("kind", "") or "")
-        part = resolve_known_part(
-            manifest,
-            target_kind,
-            role=_target_optional_string(target, "mate_part_role"),
-        )
+    for resolved in _resolved_mate_targets(config):
+        part = resolved.part
         for field in ("symbol_library", "footprint_library"):
             project_path = _known_part_project_library_path(part, field)
-            references[project_path] = _known_part_file(known_parts, part, field)
+            references[project_path] = _part_source_file(part, field)
     return [
         {"project_path": project_path, "source": references[project_path]}
         for project_path in sorted(references)
     ]
+
+
+def _resolved_mate_targets(config: MateConfig) -> list[_ResolvedMatePartTarget]:
+    targets = _placement_targets(config.selection, config.placement)
+    if not targets:
+        return []
+    manifest = _loaded_known_parts_manifest(config)
+    library_scan = _loaded_mate_library_scan(config)
+    used_designators: set[str] = set()
+    free_counts: dict[str, int] = {}
+    resolved_targets: list[_ResolvedMatePartTarget] = []
+    for target in targets:
+        part = _resolve_mate_part(
+            config,
+            target,
+            manifest=manifest,
+            library_scan=library_scan,
+        )
+        designator = _projected_designator(
+            target,
+            part,
+            manifest or {},
+            used_designators=used_designators,
+            free_counts=free_counts,
+        )
+        resolved_targets.append(
+            _ResolvedMatePartTarget(
+                target=target,
+                part=part,
+                designator=designator,
+            )
+        )
+    return _sort_known_part_targets_by_group_and_designator(resolved_targets)
+
+
+def _loaded_known_parts_manifest(config: MateConfig) -> JsonObject | None:
+    known_parts = config.known_parts
+    if known_parts is None:
+        return None
+    return load_mate_known_parts_manifest(known_parts.manifest_path)
+
+
+def _loaded_mate_library_scan(config: MateConfig) -> MateLibraryScanResult | None:
+    libraries = config.libraries
+    if libraries is None:
+        return None
+    return scan_mate_libraries(libraries.roots, recursive=libraries.recursive)
+
+
+def _resolve_mate_part(
+    config: MateConfig,
+    target: Mapping[str, object],
+    *,
+    manifest: Mapping[str, object] | None,
+    library_scan: MateLibraryScanResult | None,
+) -> JsonObject:
+    action = _target_mate_component_action(target)
+    if action is not None and _action_uses_named_libraries(action):
+        if library_scan is None:
+            raise ValueError(
+                "Mate config needs libraries.roots when mate_component uses "
+                "symbol_name or footprint_name"
+            )
+        return _resolve_named_mate_part(target, action, library_scan)
+    role = _target_optional_string(target, "mate_part_role")
+    if manifest is not None:
+        if config.known_parts is None:
+            raise ValueError("Internal mate known-parts config is missing")
+        target_kind = str(target.get("kind", "") or "")
+        part = dict(resolve_known_part(manifest, target_kind, role=role))
+        part["symbol_source_library"] = _known_part_file(
+            config.known_parts,
+            part,
+            "symbol_library",
+        )
+        part["footprint_source_library"] = _known_part_file(
+            config.known_parts,
+            part,
+            "footprint_library",
+        )
+        return part
+    raise ValueError(
+        "Mate component action must provide symbol_name and footprint_name, "
+        "or the config must reference a legacy known_parts manifest"
+    )
+
+
+def _target_mate_component_action(target: Mapping[str, object]) -> JsonObject | None:
+    raw = target.get("mate_component")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError("Mate target mate_component must be an object")
+    return dict(raw)
+
+
+def _action_uses_named_libraries(action: Mapping[str, object]) -> bool:
+    return "symbol_name" in action or "footprint_name" in action
+
+
+def _resolve_named_mate_part(
+    target: Mapping[str, object],
+    action: Mapping[str, object],
+    library_scan: MateLibraryScanResult,
+) -> JsonObject:
+    symbol_name = _action_required_string(action, "symbol_name")
+    footprint_name = _action_required_string(action, "footprint_name")
+    symbol = resolve_mate_symbol(library_scan, symbol_name)
+    footprint = resolve_mate_footprint(library_scan, footprint_name)
+    return {
+        "role": _action_optional_string(action, "role")
+        or _action_optional_string(action, "part")
+        or _safe_id(f"{symbol_name}_{footprint_name}"),
+        "description": _action_optional_string(action, "description") or "",
+        "symbol_name": symbol_name,
+        "symbol_library": f"schlib/{symbol.library_path.name}",
+        "symbol_source_library": symbol.library_path.as_posix(),
+        "footprint_name": footprint_name,
+        "footprint_library": f"pcblib/{footprint.library_path.name}",
+        "footprint_source_library": footprint.library_path.as_posix(),
+        "target_kinds": [str(target.get("kind", "") or "")],
+        "designator_prefix": _action_optional_string(action, "designator_prefix")
+        or _default_mate_designator_prefix(target),
+        "signal_pad_designator": _action_optional_string(
+            action,
+            "signal_pad_designator",
+        ),
+    }
+
+
+def _action_required_string(
+    action: Mapping[str, object],
+    name: str,
+) -> str:
+    value = action.get(name)
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"Mate mate_component.{name} must be a non-empty string")
+    return value
+
+
+def _action_optional_string(
+    action: Mapping[str, object],
+    name: str,
+) -> str | None:
+    value = action.get(name)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"Mate mate_component.{name} must be a string")
+    return value or None
+
+
+def _default_mate_designator_prefix(target: Mapping[str, object]) -> str:
+    kind = str(target.get("kind", "") or "").strip().lower()
+    if kind == "free_npth":
+        return "P"
+    source = str(target.get("source_designator", "") or "").strip()
+    prefix, _number = _split_designator_number(source.upper())
+    return prefix or "X"
 
 
 def _placement_targets(
@@ -1874,6 +2088,7 @@ def _placement_targets(
                     "net_name": component.net_name,
                     "mate_projection_id": component.mate_projection_id,
                     "mate_part_role": component.mate_part_role,
+                    "mate_component": component.mate_component,
                     "mate_pcb_label": component.mate_pcb_label,
                     "mate_reference_graphics": component.mate_reference_graphics,
                     "source_pad_geometries": transform_source_pad_geometries(
@@ -1901,6 +2116,7 @@ def _placement_targets(
                     "net_name": pad.net_name,
                     "mate_projection_id": pad.mate_projection_id,
                     "mate_part_role": pad.mate_part_role,
+                    "mate_component": pad.mate_component,
                     "mate_pcb_label": pad.mate_pcb_label,
                     "mate_reference_graphics": pad.mate_reference_graphics,
                     "source_pad_geometries": transform_source_pad_geometries(
@@ -1962,7 +2178,6 @@ def _schematic_part_operation(
 
 def _pcb_part_operation(
     output: MateOutputConfig,
-    known_parts: MateKnownPartsConfig,
     part: Mapping[str, object],
     target: Mapping[str, object],
     designator: str,
@@ -1988,7 +2203,7 @@ def _pcb_part_operation(
         "source_hierarchical_path": output.project_name,
         "source_component_library": symbol_library.name,
         "source_lib_reference": symbol_name,
-        "source_description": _known_part_symbol_description(known_parts, part),
+        "source_description": _mate_part_symbol_description(part),
         "channel_offset": channel_offset,
         "comment_text": "*",
         "component_parameters": _mate_component_parameters(target, part),
@@ -2095,6 +2310,16 @@ def _known_part_file(
     return (known_parts.cache_dir / relative).resolve().as_posix()
 
 
+def _part_source_file(part: Mapping[str, object], field: str) -> str:
+    source_field = {
+        "symbol_library": "symbol_source_library",
+        "footprint_library": "footprint_source_library",
+    }.get(field)
+    if source_field is None:
+        raise ValueError(f"Unsupported mate library field: {field}")
+    return _part_string(part, source_field)
+
+
 def _copied_known_part_file(
     output: MateOutputConfig,
     part: Mapping[str, object],
@@ -2138,22 +2363,21 @@ def _component_link_channel_offsets(designators: Iterable[str]) -> dict[str, int
     return {designator: index for index, designator in enumerate(ordered)}
 
 
-def _known_part_symbol_description(
-    known_parts: MateKnownPartsConfig,
+def _mate_part_symbol_description(
     part: Mapping[str, object],
 ) -> str:
     try:
         from altium_monkey import AltiumSchLib
 
-        schlib = AltiumSchLib(_known_part_file(known_parts, part, "symbol_library"))
+        schlib = AltiumSchLib(_part_source_file(part, "symbol_library"))
         symbol = schlib.get_symbol(_part_string(part, "symbol_name"))
         if symbol is not None:
             description = str(getattr(symbol, "description", "") or "")
             if description:
                 return description
     except Exception:
-        return _part_string(part, "description")
-    return _part_string(part, "description")
+        return _part_optional_string(part, "description") or ""
+    return _part_optional_string(part, "description") or ""
 
 
 def _projected_designator(
@@ -2608,82 +2832,144 @@ def _append_designator_run(
         tokens.append(f"{prefix}{start}-{end}")
 
 
-def _mate_template_text() -> str:
+def _mate_template_text(*, source_board: Path | str | None = None) -> str:
+    payload = _mate_template_payload(source_board=source_board)
     return (
-        "{\n"
-        f'  "schema": "{LEGACY_MATE_CONFIG_SCHEMA}",\n'
-        '  "source": {\n'
-        '    "dut": ""\n'
-        "  },\n"
-        '  "output": {\n'
-        '    "output_dir": "output/mate",\n'
-        '    "project_name": "mate",\n'
-        '    "schematic_sheet_style": "D",\n'
-        '    "overwrite": false,\n'
-        '    "layer_stack_template": "2-layer",\n'
-        '    "board_outline_mils": {\n'
-        '      "left": 0,\n'
-        '      "bottom": 0,\n'
-        '      "right": 3000,\n'
-        '      "top": 2000\n'
-        "    }\n"
-        "  },\n"
-        '  "known_parts": {\n'
-        '    "manifest": ""\n'
-        "  },\n"
-        '  "placement": {\n'
-        '    "source_mount_side": "bottom",\n'
-        '    "offset_mils": [0, 0],\n'
-        '    "mirror_x": false,\n'
-        '    "mirror_y": false,\n'
-        '    "mirror_origin_mils": [0, 0]\n'
-        "  },\n"
-        '  "pcb_labels": {\n'
-        '    "enabled": false,\n'
-        '    "side": "right",\n'
-        '    "offset_mils": [120, 0],\n'
-        '    "box_size_mils": [450, 70],\n'
-        '    "center_box_on_target": true,\n'
-        '    "row_spacing_mils": 90,\n'
-        '    "column_spacing_mils": 80,\n'
-        '    "auto_width_padding_mils": 80,\n'
-        '    "style": {\n'
-        '      "height_mils": 65,\n'
-        '      "layer": "TOP_OVERLAY",\n'
-        '      "font_kind": "truetype",\n'
-        '      "font_name": "Arial",\n'
-        '      "bold": true,\n'
-        '      "stroke_width_mils": 10,\n'
-        '      "is_inverted": true,\n'
-        '      "inverted_margin_mils": 10,\n'
-        '      "use_inverted_rectangle": true,\n'
-        '      "is_frame": true,\n'
-        '      "text_justification": "RIGHT_TOP"\n'
-        "    }\n"
-        "  },\n"
-        '  "pcb_designators": {\n'
-        '    "enabled": false,\n'
-        '    "placement": "above_component",\n'
-        '    "offset_mils": [0, 10],\n'
-        '    "width_factor": 0.6,\n'
-        '    "style": {\n'
-        '      "height_mils": 40,\n'
-        '      "layer": "TOP_OVERLAY",\n'
-        '      "font_kind": "truetype",\n'
-        '      "font_name": "Arial",\n'
-        '      "bold": true,\n'
-        '      "stroke_width_mils": 8\n'
-        "    }\n"
-        "  },\n"
-        '  "marker": {\n'
-        '    "enabled": true,\n'
-        '    "text": "MATE",\n'
-        '    "position_mils": [200, 200],\n'
-        '    "height_mils": 60,\n'
-        '    "layer": "TOP_OVERLAY"\n'
-        "  },\n"
-        '  "selection": {\n'
-        '    "boards": []\n'
-        "  }\n"
-        "}\n"
+        "/*\n"
+        "  altium-cruncher mate config a0\n"
+        "\n"
+        "  Edit source.board to the DUT .PrjPcb or .PcbDoc, place any required\n"
+        "  SchLib/PcbLib files under libraries.roots, and then run:\n"
+        "\n"
+        "      altium-cruncher mate\n"
+        "\n"
+        "  mate_component actions resolve symbol_name and footprint_name by\n"
+        "  scanning the configured library roots. The generated MCO is a derived\n"
+        "  artifact; keep this config as the human-authored source of truth.\n"
+        "*/\n"
+        f"{json.dumps(payload, indent=2)}\n"
     )
+
+
+def _mate_template_payload(*, source_board: Path | str | None) -> JsonObject:
+    source_board_text = (
+        str(source_board).replace("\\", "/")
+        if source_board is not None
+        else "path/to/dut.PrjPcb"
+    )
+    output = _default_mate_output_payload()
+    output.update(
+        {
+            "output_dir": "output",
+            "project_name": "mate",
+            "board_outline": {
+                "mode": "source_bounds_with_margin",
+                "margin_mils": {
+                    "left": 500,
+                    "bottom": 500,
+                    "right": 3000,
+                    "top": 500,
+                },
+            },
+            "overwrite": True,
+        }
+    )
+    board_projection = _default_mate_board_projection_payload()
+    board_projection["cutouts"]["actual_cutouts"] = True
+    return {
+        "schema": MATE_CONFIG_SCHEMA,
+        "source": {
+            "board": source_board_text,
+            "project_context": "auto",
+        },
+        "output": output,
+        "libraries": {
+            "roots": ["mating_parts"],
+            "recursive": True,
+        },
+        "validation": {
+            "source_side": "infer_single_side",
+            "allow_side_agnostic_through_hole": True,
+            "side_agnostic_kinds": ["mount"],
+        },
+        "projections": [
+            _named_test_point_projection(),
+            _named_mount_projection(),
+            _named_alignment_pin_projection(),
+        ],
+        "pcb_designators": _default_mate_designators_payload(),
+        "board_projection": board_projection,
+        "artifacts": _default_mate_artifacts_payload(),
+    }
+
+
+def _named_test_point_projection() -> JsonObject:
+    return {
+        "id": "test_points",
+        "source": {
+            "object": "component",
+            "designators": "TP*",
+        },
+        "actions": [
+            {
+                "kind": "mate_component",
+                "symbol_name": "YZ209315103P-01",
+                "footprint_name": "YZ209315103P-01",
+                "designator_prefix": "TP",
+                "signal_pad_designator": "1",
+            },
+            _default_mate_reference_graphics_payload(),
+            {
+                "kind": "label",
+                "text": "source_net",
+                "placement": _default_mate_label_placement_payload(),
+                "style": _default_mate_label_style_payload(),
+            },
+        ],
+    }
+
+
+def _named_mount_projection() -> JsonObject:
+    return {
+        "id": "mounts",
+        "source": {
+            "object": "component",
+            "designators": "M1-4",
+        },
+        "actions": [
+            {
+                "kind": "mate_component",
+                "symbol_name": "9774080360R",
+                "footprint_name": "9774080360R-YIYUAN",
+                "designator_prefix": "M",
+            },
+            _default_mate_reference_graphics_payload(),
+        ],
+    }
+
+
+def _named_alignment_pin_projection() -> JsonObject:
+    return {
+        "id": "alignment_pins",
+        "source": {
+            "object": "free_pad",
+            "hole_size_mils": {"min": 75, "max": 85},
+            "plated": False,
+        },
+        "actions": [
+            {
+                "kind": "mate_component",
+                "symbol_name": "H2184-05",
+                "footprint_name": "H2184-05",
+                "designator_prefix": "P",
+                "signal_pad_designator": "1",
+            },
+            _default_mate_reference_graphics_payload(),
+            {
+                "kind": "label",
+                "text": "source_net",
+                "placement": _default_mate_label_placement_payload(),
+                "style": _default_mate_label_style_payload(),
+            },
+        ],
+    }

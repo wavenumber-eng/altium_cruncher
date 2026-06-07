@@ -10,13 +10,14 @@
 
   <h2 data-key="mate-config.status">Status</h2>
   <p>
-    This document is a design draft for the next config shape. The implemented
-    command contract remains <a href="mate.html">mate.html</a>,
-    and the generated Altium MCO operation contract remains
-    <a href="mco.html">mco.html</a>. Current draft implementation covers mate
-    config seeding, selector resolution, mate part roles, PCB labels, board
-    outline graphics, STEP artifact insertion, PCB designator arrangement, and
-    source-side validation; remaining projection actions are still draft.
+    This document describes the implemented <code>mate_config.a0</code> shape
+    and the portable design direction. The command contract is
+    <a href="mate.html">mate.html</a>, and the generated Altium MCO operation
+    contract is <a href="mco.html">mco.html</a>. Current implementation covers
+    config initialization, selector resolution, name-based library lookup,
+    mate component placement, PCB labels, board outline/cutout graphics and
+    regions, STEP artifact insertion, PCB designator arrangement, and
+    source-side validation. Some future projection actions remain draft.
   </p>
 
   <h2 data-key="mate-config.goal">Goal</h2>
@@ -68,16 +69,15 @@
     <li>The planner resolves physical and electrical source facts from the source project.</li>
     <li>The config should support both hand editing and future GUI authoring.</li>
     <li>Portable concepts belong in config; backend-specific primitive details belong in generated MCO or backend settings.</li>
-    <li>The first implementation may keep an Altium command and Altium cache, but the conceptual config should not depend on Altium-only object names where a portable term is available.</li>
+    <li>The first implementation may keep an Altium command and Altium library files, but the conceptual config should not depend on Altium-only object names where a portable term is available.</li>
   </ul>
 
   <h2 data-key="mate-config.pipeline">Theory Of Operations</h2>
   <ol>
-    <li><code>inspect</code> loads the source project and classifies source objects that are likely useful for mating.</li>
-    <li><code>seed</code> writes a reviewable config that uses selectors and projection rules rather than fully resolved object records.</li>
+    <li><code>mate</code> writes an editable <code>mate.a0.jsonc</code> when no config exists.</li>
     <li>The user or future GUI edits the config to choose source objects, mate parts, graphics, labels, output paths, and artifacts.</li>
-    <li><code>plan</code> resolves selectors against the source project, validates source-side and geometry rules, and compiles MCO.</li>
-    <li><code>run</code> executes the generated MCO to create the output board and supporting artifacts.</li>
+    <li><code>plan</code> resolves selectors against the source project, resolves symbol and footprint names from <code>libraries.roots</code>, validates source-side and geometry rules, and compiles MCO.</li>
+    <li><code>mate</code> with an existing config executes the generated MCO to create the output board and supporting artifacts.</li>
     <li>The user opens the output project in Altium for visual inspection, then iterates on the config.</li>
   </ol>
 
@@ -130,7 +130,7 @@
     <tbody>
       <tr>
         <td><code>mate_component</code></td>
-        <td>Place a different symbol/footprint that mates to the selected source object, such as a pogo pin for a source test pad.</td>
+        <td>Place a different symbol/footprint that mates to the selected source object, such as a pogo pin for a source test pad. The public A0 form names <code>symbol_name</code> and <code>footprint_name</code>; the planner resolves concrete libraries from <code>libraries.roots</code>.</td>
       </tr>
       <tr>
         <td><code>copy_source_footprint</code></td>
@@ -186,8 +186,8 @@
     <li>Select cricket-node test points by explicit designator, range, or pattern such as <code>TP*</code>.</li>
     <li>Select mount features and allow node-test-array <code>M5-M8</code> normalization to output <code>M1-M4</code> where needed.</li>
     <li>Select free NPTH alignment holes as source free-pad/drill objects; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
-    <li>Project mate components from the current node-test-array cache.</li>
-    <li>Place generated schematic symbols on a roomy sheet, currently ANSI <code>D</code> by default, grouped by symbol type. Route each netted symbol with a wire that leaves the symbol in the known-part signal pin orientation. The schematic net label is placed on that wire, rotated with the wire direction, and the wire is long enough to sit under the estimated full label text.</li>
+    <li>Project mate components from public SchLib/PcbLib files resolved by name from <code>mating_parts/</code>.</li>
+    <li>Place generated schematic symbols on a roomy sheet, currently ANSI <code>D</code> by default, grouped by symbol type. Route each netted symbol with a wire that leaves the symbol in the resolved mate symbol signal pin orientation. The schematic net label is placed on that wire, rotated with the wire direction, and the wire is long enough to sit under the estimated full label text.</li>
     <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>MATE_FEATURES</code> so they can be manually moved after generation.</li>
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
     <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad's effective layer shape for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads.</li>
@@ -199,8 +199,9 @@
 
   <h2 data-key="mate-config.proposed-shape">Proposed Config Shape</h2>
   <p>
-    This is a draft shape for discussion, not an implemented schema. Names may
-    change after review.
+    This is the implemented public A0 shape used by the Cricket Node example.
+    Some optional sections and future projection actions may still evolve after
+    review.
   </p>
   <pre>{
   "schema": "wn.pcb_cruncher.mate_config.a0",
@@ -224,8 +225,9 @@
       }
     }
   },
-  "known_parts": {
-    "manifest": "known-parts/mate-known-parts.json"
+  "libraries": {
+    "roots": ["mating_parts"],
+    "recursive": true
   },
   "validation": {
     "source_side": "infer_single_side",
@@ -239,7 +241,13 @@
         "designators": "TP*"
       },
       "actions": [
-        {"kind": "mate_component", "part": "test_point_pogo"},
+        {
+          "kind": "mate_component",
+          "symbol_name": "YZ209315103P-01",
+          "footprint_name": "YZ209315103P-01",
+          "designator_prefix": "TP",
+          "signal_pad_designator": "1"
+        },
         {
           "kind": "reference_graphics",
           "shape": "source_pad_outline",
@@ -272,7 +280,12 @@
         "designators": "M1-4"
       },
       "actions": [
-        {"kind": "mate_component", "part": "m25_smt_standoff"}
+        {
+          "kind": "mate_component",
+          "symbol_name": "9774080360R",
+          "footprint_name": "9774080360R-YIYUAN",
+          "designator_prefix": "M"
+        }
       ]
     },
     {
@@ -283,7 +296,13 @@
         "plated": false
       },
       "actions": [
-        {"kind": "mate_component", "part": "alignment_pin_2mm_npth"},
+        {
+          "kind": "mate_component",
+          "symbol_name": "H2184-05",
+          "footprint_name": "H2184-05",
+          "designator_prefix": "P",
+          "signal_pad_designator": "1"
+        },
         {"kind": "label", "text": "source_net"}
       ]
     }
@@ -326,15 +345,26 @@
       "thickness_mm": 0.035,
       "z_mm": -0.0175,
       "features": {
-        "tracks": {"enabled": true, "color": "#B87333"},
-        "polygons": {"enabled": true, "color": "#7A8F2A"},
-        "arcs": true,
-        "fills": true,
-        "regions": true,
-        "vias": true,
-        "component_pads": true,
-        "free_pads": true
+        "tracks": {"enabled": false, "color": "#B87333"},
+        "polygons": {"enabled": false, "color": "#7A8F2A"},
+        "arcs": false,
+        "fills": false,
+        "regions": false,
+        "vias": false,
+        "component_pads": {
+          "mode": "matching_designators",
+          "include_designators": ["TP*"]
+        },
+        "free_pads": false
       },
+      "drills": {
+        "mode": "overlay",
+        "minimum_diameter_mm": 0.85,
+        "shape": "ring",
+        "ring_width_mm": 0.12,
+        "plated_ring_shape": "pad"
+      },
+      "fuse_copper": false,
       "insert_in_output": {
         "enabled": true,
         "z_mm": 8.5,
@@ -348,13 +378,13 @@
   }
 }</pre>
 
-  <h2 data-key="mate-config.seed-behavior">Seed And GUI Behavior</h2>
+  <h2 data-key="mate-config.seed-behavior">Init And GUI Behavior</h2>
   <p>
-    Before a GUI exists, <code>seed</code> should produce a commented config
-    with useful selector presets and disabled optional sections. Later, a GUI
-    can render the source board SVG, show grouped source objects such as test
-    points, debug pads, connectors, and mounts, and write the same config
-    format after user selection.
+    Before a GUI exists, bare <code>mate</code> produces a commented config
+    with useful selector presets and optional sections. Later, a GUI can render
+    the source board SVG, show grouped source objects such as test points,
+    debug pads, connectors, and mounts, and write the same config format after
+    user selection.
   </p>
   <p>
     Source selectors are local to each projection group. Component designators
