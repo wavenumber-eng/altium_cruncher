@@ -6,12 +6,12 @@
   <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
   <header><p class="status">CLI command design</p><h1>mco</h1><p class="lede">Executes Monkey Change Order JSONC operation files for generated CAD automation.</p></header>
 
-  <section id="purpose"><h2>Purpose</h2><p><code>mco</code> is the execution substrate for generated workflows such as <code>debug-plate</code>. It keeps automation intent in JSONC while the executor owns CAD document lifecycle: open on first use, keep documents live during the run, and flush dirty documents on exit.</p></section>
+  <section id="purpose"><h2>Purpose</h2><p><code>mco</code> is the execution substrate for generated workflows such as <code>mate</code>. It keeps automation intent in JSONC while the executor owns CAD document lifecycle: open on first use, keep documents live during the run, and flush dirty documents on exit.</p></section>
 
-  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher mco init debug-plate.mco.jsonc --force
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher mco init mate.mco.jsonc --force
 altium-cruncher mco list-ops
-altium-cruncher mco run debug-plate.mco.jsonc --dry-run
-altium-cruncher mco run debug-plate.mco.jsonc</code></pre></section>
+altium-cruncher mco run mate.mco.jsonc --dry-run
+altium-cruncher mco run mate.mco.jsonc</code></pre></section>
 
   <section id="arguments"><h2>Arguments</h2><table><tr><th>Area</th><th>Contract</th></tr>
     <tr><td><code>schema</code></td><td>MCO files use <code>wn.altium_cruncher.mco.v1</code>. JSONC comments, trailing commas, and UTF-8 BOM are accepted.</td></tr>

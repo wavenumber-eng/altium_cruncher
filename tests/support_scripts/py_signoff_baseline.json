@@ -139,7 +139,7 @@
   ],
   "file_bytes_offenders": {},
   "file_lines_offenders": {
-    "src/py/altium_cruncher/altium_cruncher_debug_plate.py": 2722,
+    "src/py/altium_cruncher/altium_cruncher_mate.py": 2722,
     "src/py/altium_cruncher/altium_cruncher_pcb_layer_step.py": 2615
   },
   "max_file_bytes": 100000,

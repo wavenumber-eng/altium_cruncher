@@ -1,4 +1,4 @@
-"""Default debug-plate config payload helpers."""
+"""Default mate config payload helpers."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS = 250.0
 def default_mate_output_payload() -> JsonObject:
     return {
         "backend": "altium",
-        "output_dir": "output/debug-plate",
-        "project_name": "debug_plate",
+        "output_dir": "output/mate",
+        "project_name": "mate",
         "schematic_sheet_style": "D",
         "origin": "preserve_source",
         "board_outline": {
@@ -134,8 +134,8 @@ def default_mate_artifacts_payload() -> JsonObject:
 
 def default_output_config_payload() -> JsonObject:
     return {
-        "output_dir": "output/debug-plate",
-        "project_name": "debug_plate",
+        "output_dir": "output/mate",
+        "project_name": "mate",
         "schematic_sheet_style": "D",
         "overwrite": False,
         "layer_stack_template": "2-layer",
@@ -199,7 +199,7 @@ def default_pcb_designators_payload() -> JsonObject:
 def default_marker_payload() -> JsonObject:
     return {
         "enabled": True,
-        "text": "DEBUG PLATE",
+        "text": "MATE",
         "position_mils": [200, 200],
         "height_mils": 60,
         "layer": "TOP_OVERLAY",

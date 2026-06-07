@@ -30,7 +30,7 @@
 - Clean configured BOM/PnP/JLC output filenames so format-only outputs rely on
   the file extension while semantic stems such as `raw`, `grouped`, and
   `jlc-cpl` remain visible.
-- Continue experimental `mco` and `debug-plate` development toward Cricket
+- Continue experimental `mco` and `mate` development toward Cricket
   Node mating-board automation.
 
 ## 2026.5.28
@@ -53,7 +53,7 @@
   major-interface design/test ownership.
 - Consume pinned `altium-monkey==2026.6.7` and expose explicit PnP position mode
   selection for BOM/PnP/JLC workflows.
-- Add experimental `json-dump`, `mco`, and `debug-plate` commands for
+- Add experimental `json-dump`, `mco`, and `mate` commands for
   reference inspection, generated CAD operation execution, and Cricket Node
   mating-board workflow development.
 - Align BOM/PnP spreadsheet output with `bom_cruncher` by using `openpyxl`;

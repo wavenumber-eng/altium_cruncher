@@ -1,4 +1,4 @@
-"""Debug-plate artifact MCO generation helpers."""
+"""Mate artifact MCO generation helpers."""
 
 from __future__ import annotations
 
@@ -51,11 +51,11 @@ _PCB_LAYER_STEP_OPTION_KEYS = (
 )
 
 
-def build_debug_plate_artifact_operations(config: object) -> list[JsonObject]:
-    """Build artifact MCO operations requested by a debug-plate config."""
+def build_mate_artifact_operations(config: object) -> list[JsonObject]:
+    """Build artifact MCO operations requested by a mate config."""
     artifacts = getattr(config, "artifacts", {})
     if not isinstance(artifacts, dict):
-        raise ValueError("Debug-plate artifacts must be an object")
+        raise ValueError("Mate artifacts must be an object")
     layer_step = artifacts.get("pcb_layer_step")
     if not isinstance(layer_step, dict) or not _optional_bool(
         layer_step,
@@ -184,7 +184,7 @@ def _pcb_layer_step_insert_operation(
     return {
         "id": f"insert_{_safe_id(board_key)}_pcb_layer_step",
         "op": "pcbdoc.add-embedded-3d-model",
-        "message": f"Insert {board_key} PCB layer STEP into debug-plate board",
+        "message": f"Insert {board_key} PCB layer STEP into mate board",
         "args": model_args,
     }
 
@@ -217,12 +217,12 @@ def _highlight_specs(layer_step: Mapping[str, object]) -> list[JsonObject]:
     if value is None:
         return []
     if not isinstance(value, list):
-        raise ValueError("Debug-plate pcb_layer_step.highlights must be an array")
+        raise ValueError("Mate pcb_layer_step.highlights must be an array")
     result: list[JsonObject] = []
     for item in value:
         if not isinstance(item, dict):
             raise ValueError(
-                "Debug-plate pcb_layer_step.highlights items must be objects"
+                "Mate pcb_layer_step.highlights items must be objects"
             )
         result.append(dict(item))
     return result

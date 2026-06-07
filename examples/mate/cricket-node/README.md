@@ -1,8 +1,8 @@
 # Cricket Node Debug-Plate Example
 
-This example is a runnable workspace for the first cricket-node debug-plate
+This example is a runnable workspace for the first cricket-node mate
 workflow: use a node-test-array known-parts cache, select cricket-node DUT
-features, emit an MCO, then run it to create a new fixture/debug-plate project,
+features, emit an MCO, then run it to create a new fixture/mate project,
 projected outline graphics, and a bottom-layer STEP alignment artifact inserted
 into the output board.
 
@@ -12,7 +12,7 @@ running the workflow.
 
 ## Inputs
 
-- `debug-plate.mate.a0.jsonc` is the primary selector/projection config for
+- `mate.a0.jsonc` is the primary selector/projection config for
   this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
   one-outline `MECHANICAL_1` source-pad reference graphics with `10 mil` stroke
   and visible edge-to-edge clearance semantics, right-side
@@ -25,8 +25,8 @@ running the workflow.
   natural designator order inside each symbol-type group, centered-above
   schematic designators, pin-directed wires, and matching-orientation net
   labels placed on those wires.
-- `debug-plate.jsonc` is the older reviewed config shape kept for comparison.
-- `known-parts/debug-plate-known-parts.json` records the node-test-array cache
+- `mate.jsonc` is the older reviewed config shape kept for comparison.
+- `known-parts/mate-known-parts.json` records the node-test-array cache
   layout expected by the config.
 - `input/` is the ignored local staging area for cricket-node and
   node-test-array source projects.
@@ -50,7 +50,7 @@ Copy-Item "$env:WN_TEST_CORPUS\altium\common\real_world_pcbdoc\node_test_array\i
 Build or refresh the known-parts cache from node-test-array:
 
 ```powershell
-uv run python -m altium_cruncher debug-plate parts-cache build input\node-test-array\11-10077__node-test-array__B4.PrjPcb `
+uv run python -m altium_cruncher mate parts-cache build input\node-test-array\11-10077__node-test-array__B4.PrjPcb `
   --cache-dir known-parts `
   --force
 ```
@@ -58,35 +58,35 @@ uv run python -m altium_cruncher debug-plate parts-cache build input\node-test-a
 Plan the mate workflow:
 
 ```powershell
-uv run python -m altium_cruncher debug-plate plan debug-plate.mate.a0.jsonc `
-  --output-mco debug-plate.mate.a0.mco.jsonc `
+uv run python -m altium_cruncher mate plan mate.a0.jsonc `
+  --output-mco mate.a0.mco.jsonc `
   --force
 ```
 
 Run the mate workflow and keep an emitted MCO copy under `output/`:
 
 ```powershell
-uv run python -m altium_cruncher debug-plate run debug-plate.mate.a0.jsonc `
-  --emit-mco output\debug-plate.mate.a0.mco.jsonc `
+uv run python -m altium_cruncher mate run mate.a0.jsonc `
+  --emit-mco output\mate.a0.mco.jsonc `
   --force
 ```
 
 You can also execute the root-level MCO directly:
 
 ```powershell
-uv run python -m altium_cruncher mco run debug-plate.mate.a0.mco.jsonc
+uv run python -m altium_cruncher mco run mate.a0.mco.jsonc
 ```
 
 Open the generated project in Altium:
 
 ```powershell
-output\cricket-node-debug-plate\cricket_node_debug_plate.PrjPcb
+output\cricket-node-mate\cricket_node_mate.PrjPcb
 ```
 
 Inspect the STEP artifact at:
 
 ```text
-output\cricket-node-debug-plate\artifacts\pcb-layer-step\cricket_node_hw__b__bottom.step
+output\cricket-node-mate\artifacts\pcb-layer-step\cricket_node_hw__b__bottom.step
 ```
 
 The same STEP is also embedded in the generated output PcbDoc at the

@@ -1,12 +1,12 @@
 {
-  "schema": "wn.altium_cruncher.debug_plate.v1",
+  "schema": "wn.altium_cruncher.mate.v1",
   "source": {
-    // Replace with the local DUT project or use `debug-plate seed`.
+    // Replace with the local DUT project or use `mate seed`.
     "dut": "path/to/cricket-node.PrjPcb"
   },
   "output": {
-    "output_dir": "output/cricket-node-debug-plate",
-    "project_name": "cricket_node_debug_plate",
+    "output_dir": "output/cricket-node-mate",
+    "project_name": "cricket_node_mate",
     "schematic_sheet_style": "D",
     "overwrite": true,
     "board_outline_mils": {
@@ -17,7 +17,7 @@
     }
   },
   "known_parts": {
-    "manifest": "known-parts/debug-plate-known-parts.json"
+    "manifest": "known-parts/mate-known-parts.json"
   },
   "placement": {
     "source_mount_side": "bottom",

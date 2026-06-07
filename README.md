@@ -96,7 +96,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
 | `outjob` | Run project OutJob files through Altium Designer. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
-| `debug-plate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |
+| `mate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |
 | `clean` | Normalize SchDoc, SchLib, or PcbLib assets using JSON/JSONC config. | Public |
 | `profiles` | Inspect and clean Altium ProgramData profile extension state. | Public |
 | `easyeda-import` | Generate Altium SchLib, PcbLib footprint, and downloaded 3D assets from EasyEDA/LCSC data. | Public |

@@ -63,7 +63,7 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         description=(
             "Run Monkey Change Order (MCO) JSONC operation files. "
             "MCO is the execution substrate for generated workflows such as "
-            "debug-plate."
+            "mate."
         ),
     )
     action_subparsers = parser.add_subparsers(

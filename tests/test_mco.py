@@ -168,7 +168,7 @@ def test_project_create_skeleton_dry_run_reports_outputs_without_writing(
                     "op": "project.create-skeleton",
                     "args": {
                         "output_dir": "generated",
-                        "project_name": "debug_plate",
+                        "project_name": "mate",
                         "board_outline_mils": {
                             "left": 0,
                             "bottom": 0,
@@ -183,7 +183,7 @@ def test_project_create_skeleton_dry_run_reports_outputs_without_writing(
     )
 
     assert result.ok is True
-    assert result.results[0].outputs["project"].endswith("debug_plate.PrjPcb")
+    assert result.results[0].outputs["project"].endswith("mate.PrjPcb")
     assert not (tmp_path / "generated").exists()
 
 
@@ -197,7 +197,7 @@ def test_project_create_skeleton_writes_altium_project_bundle(tmp_path: Path) ->
                     "op": "project.create-skeleton",
                     "args": {
                         "output_dir": "generated",
-                        "project_name": "debug_plate",
+                        "project_name": "mate",
                         "schematic_sheet_style": "D",
                         "overwrite": True,
                         "board_outline_mils": {
@@ -219,28 +219,28 @@ def test_project_create_skeleton_writes_altium_project_bundle(tmp_path: Path) ->
     )
 
     assert result.ok is True
-    assert (tmp_path / "generated" / "debug_plate.PrjPcb").exists()
-    assert (tmp_path / "generated" / "debug_plate.SchDoc").exists()
-    assert (tmp_path / "generated" / "debug_plate.PcbDoc").exists()
+    assert (tmp_path / "generated" / "mate.PrjPcb").exists()
+    assert (tmp_path / "generated" / "mate.SchDoc").exists()
+    assert (tmp_path / "generated" / "mate.PcbDoc").exists()
 
     from altium_monkey import AltiumPcbDoc, AltiumSchDoc
     from altium_monkey.altium_record_sch__sheet import SheetStyle
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
 
-    schdoc = AltiumSchDoc(tmp_path / "generated" / "debug_plate.SchDoc")
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "mate.SchDoc")
     assert schdoc.sheet is not None
     assert schdoc.sheet.sheet_style == SheetStyle.D
 
-    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
     assert pcbdoc.board.origin_x == 1234.0
     assert pcbdoc.board.origin_y == 5678.0
 
-    project = AltiumPrjPcb(tmp_path / "generated" / "debug_plate.PrjPcb")
+    project = AltiumPrjPcb(tmp_path / "generated" / "mate.PrjPcb")
     assert [document["path"] for document in project.documents] == [
         "libraries\\schlib\\contact.SchLib",
         "libraries\\pcblib\\contact.PcbLib",
-        "debug_plate.SchDoc",
-        "debug_plate.PcbDoc",
+        "mate.SchDoc",
+        "mate.PcbDoc",
     ]
 
 
@@ -281,7 +281,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "op": "project.create-skeleton",
                     "args": {
                         "output_dir": "generated",
-                        "project_name": "debug_plate",
+                        "project_name": "mate",
                         "overwrite": True,
                     },
                 },
@@ -289,7 +289,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "wire",
                     "op": "schdoc.add-wire",
                     "args": {
-                        "file": "generated/debug_plate.SchDoc",
+                        "file": "generated/mate.SchDoc",
                         "overwrite": True,
                         "points_mils": [[1000, 1000], [1400, 1000]],
                     },
@@ -298,7 +298,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "net",
                     "op": "schdoc.add-net-label",
                     "args": {
-                        "file": "generated/debug_plate.SchDoc",
+                        "file": "generated/mate.SchDoc",
                         "overwrite": True,
                         "text": "DBG_NET",
                         "location_mils": [1200, 1000],
@@ -309,7 +309,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "text",
                     "op": "pcbdoc.add-text",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "text": "DBG",
                         "position_mils": [200, 200],
@@ -320,7 +320,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "track",
                     "op": "pcbdoc.add-track",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "start_mils": [100, 100],
                         "end_mils": [300, 100],
@@ -332,7 +332,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "arc",
                     "op": "pcbdoc.add-arc",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "center_mils": [400, 400],
                         "radius_mils": 75,
@@ -345,7 +345,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "pad",
                     "op": "pcbdoc.add-pad",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "designator": "NPTH1",
                         "position_mils": [520, 400],
@@ -367,7 +367,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "via",
                     "op": "pcbdoc.add-via",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "position_mils": [620, 400],
                         "diameter_mils": 40,
@@ -378,7 +378,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "fill",
                     "op": "pcbdoc.add-fill",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "corner1_mils": [700, 300],
                         "corner2_mils": [850, 360],
@@ -388,7 +388,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "region",
                     "op": "pcbdoc.add-region",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "outline_points_mils": [
                             [700, 450],
@@ -402,9 +402,9 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                     "id": "union",
                     "op": "pcbdoc.create-user-union",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
-                        "name": "DEBUG_PLATE_FEATURES",
+                        "name": "MATE_FEATURES",
                     },
                 },
             ],
@@ -416,8 +416,8 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
 
     from altium_monkey import AltiumPcbDoc, AltiumSchDoc
 
-    schdoc = AltiumSchDoc(tmp_path / "generated" / "debug_plate.SchDoc")
-    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "mate.SchDoc")
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
     assert len(schdoc.wires) == 1
     assert [label.text for label in schdoc.net_labels] == ["DBG_NET"]
     assert [int(label.orientation) for label in schdoc.net_labels] == [1]
@@ -431,7 +431,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
     assert len(pcbdoc.fills) == 1
     assert len(pcbdoc.regions) == 1
     assert [user_union.name for user_union in pcbdoc.user_unions] == [
-        "DEBUG_PLATE_FEATURES"
+        "MATE_FEATURES"
     ]
     assert pcbdoc.user_unions[0].member_count >= 6
 
@@ -448,7 +448,7 @@ def test_pcbdoc_add_text_exposes_inverted_frame_label_options(
                     "op": "project.create-skeleton",
                     "args": {
                         "output_dir": "generated",
-                        "project_name": "debug_plate",
+                        "project_name": "mate",
                         "overwrite": True,
                     },
                 },
@@ -456,7 +456,7 @@ def test_pcbdoc_add_text_exposes_inverted_frame_label_options(
                     "id": "label",
                     "op": "pcbdoc.add-text",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "text": "I2C0-SDA",
                         "position_mils": [3980, 3165],
@@ -484,7 +484,7 @@ def test_pcbdoc_add_text_exposes_inverted_frame_label_options(
 
     from altium_monkey import AltiumPcbDoc, PcbLayer, PcbTextJustification
 
-    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
     [label] = pcbdoc.texts
     assert label.text_content == "I2C0-SDA"
     assert label.layer == PcbLayer.TOP_OVERLAY
@@ -513,7 +513,7 @@ def test_pcbdoc_add_region_can_create_board_cutout(tmp_path: Path) -> None:
                     "op": "project.create-skeleton",
                     "args": {
                         "output_dir": "generated",
-                        "project_name": "debug_plate",
+                        "project_name": "mate",
                         "overwrite": True,
                     },
                 },
@@ -521,7 +521,7 @@ def test_pcbdoc_add_region_can_create_board_cutout(tmp_path: Path) -> None:
                     "id": "cutout",
                     "op": "pcbdoc.add-region",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "outline_points_mils": [
                             [100, 100],
@@ -542,7 +542,7 @@ def test_pcbdoc_add_region_can_create_board_cutout(tmp_path: Path) -> None:
 
     from altium_monkey import AltiumPcbDoc
 
-    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
     assert len(pcbdoc.regions) == 1
     assert pcbdoc.regions[0].is_board_cutout is True
     assert pcbdoc.regions[0].properties["ISBOARDCUTOUT"] == "TRUE"
@@ -657,7 +657,7 @@ def test_pcbdoc_add_embedded_3d_model_operation_dry_run(tmp_path: Path) -> None:
                     "id": "insert_step",
                     "op": "pcbdoc.add-embedded-3d-model",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "model_file": "generated/bottom.step",
                         "name": "DUT bottom layer",
@@ -713,7 +713,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                     "op": "project.create-skeleton",
                     "args": {
                         "output_dir": "generated",
-                        "project_name": "debug_plate",
+                        "project_name": "mate",
                         "overwrite": True,
                     },
                 },
@@ -721,7 +721,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                     "id": "symbol",
                     "op": "schdoc.add-component",
                     "args": {
-                        "file": "generated/debug_plate.SchDoc",
+                        "file": "generated/mate.SchDoc",
                         "overwrite": True,
                         "library": str(schlib_path),
                         "symbol": "DBG_CONTACT",
@@ -747,7 +747,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                     "id": "footprint",
                     "op": "pcbdoc.add-component",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "library": str(pcblib_path),
                         "footprint": "DBG_CONTACT_FP",
@@ -755,7 +755,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                         "position_mils": [500, 700],
                         "layer": "TOP",
                         "source_unique_id": "ABC12345",
-                        "source_hierarchical_path": "debug_plate",
+                        "source_hierarchical_path": "mate",
                         "source_component_library": "fixture.SchLib",
                         "source_lib_reference": "DBG_CONTACT",
                         "source_description": "Debug contact symbol",
@@ -766,7 +766,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                     "id": "designator",
                     "op": "pcbdoc.arrange-designators",
                     "args": {
-                        "file": "generated/debug_plate.PcbDoc",
+                        "file": "generated/mate.PcbDoc",
                         "overwrite": True,
                         "designators": ["TP1"],
                         "placement": "above_component",
@@ -788,8 +788,8 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
     from altium_monkey import AltiumPcbDoc, AltiumSchDoc, TextJustification
     from altium_monkey.altium_record_sch__designator import AltiumSchDesignator
 
-    schdoc = AltiumSchDoc(tmp_path / "generated" / "debug_plate.SchDoc")
-    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "mate.SchDoc")
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
     schematic_designators = [
         parameter.text
         for component in schdoc.components
@@ -825,7 +825,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
         "DBG_CONTACT_FP"
     ]
     assert pcbdoc.components[0].source_unique_id == "\\ABC12345"
-    assert pcbdoc.components[0].source_hierarchical_path == "debug_plate"
+    assert pcbdoc.components[0].source_hierarchical_path == "mate"
     assert pcbdoc.components[0].source_component_library == "fixture.SchLib"
     assert pcbdoc.components[0].source_lib_reference == "DBG_CONTACT"
     assert pcbdoc.components[0].description == "Debug contact symbol"
@@ -843,7 +843,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
 
 
 def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
-    mco_path = tmp_path / "debug-plate.mco.jsonc"
+    mco_path = tmp_path / "mate.mco.jsonc"
     completed = subprocess.run(
         [sys.executable, "-m", "altium_cruncher", "mco", "init", str(mco_path)],
         cwd=PACKAGE_ROOT,

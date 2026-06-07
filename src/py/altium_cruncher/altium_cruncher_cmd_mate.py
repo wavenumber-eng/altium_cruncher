@@ -1,4 +1,4 @@
-"""debug-plate command for altium_cruncher."""
+"""mate command for altium_cruncher."""
 
 from __future__ import annotations
 
@@ -7,87 +7,87 @@ import json
 import logging
 from pathlib import Path
 
-from altium_cruncher.altium_cruncher_debug_plate import (
-    execute_debug_plate_config,
-    inspect_debug_plate_source,
-    load_debug_plate_config,
-    write_debug_plate_config_template,
-    write_debug_plate_mate_seed_config,
-    write_debug_plate_mco,
-    write_debug_plate_seed_config,
+from altium_cruncher.altium_cruncher_mate import (
+    execute_mate_config,
+    inspect_mate_source,
+    load_mate_config,
+    write_mate_config_template,
+    write_mate_seed_config,
+    write_mate_mco,
+    write_legacy_mate_seed_config,
 )
-from altium_cruncher.altium_cruncher_debug_plate_parts import (
-    build_debug_plate_known_parts_cache,
+from altium_cruncher.altium_cruncher_mate_parts import (
+    build_mate_known_parts_cache,
 )
 
 log = logging.getLogger(__name__)
 
 
-def cmd_debug_plate(args: argparse.Namespace) -> int:
-    """Dispatch debug-plate subcommands."""
-    action = getattr(args, "debug_plate_action", None)
+def cmd_mate(args: argparse.Namespace) -> int:
+    """Dispatch mate subcommands."""
+    action = getattr(args, "mate_action", None)
     if action == "init":
-        return _cmd_debug_plate_init(args)
+        return _cmd_mate_init(args)
     if action == "plan":
-        return _cmd_debug_plate_plan(args)
+        return _cmd_mate_plan(args)
     if action == "inspect":
-        return _cmd_debug_plate_inspect(args)
+        return _cmd_mate_inspect(args)
     if action == "seed":
-        return _cmd_debug_plate_seed(args)
+        return _cmd_mate_seed(args)
     if action == "parts-cache":
-        return _cmd_debug_plate_parts_cache(args)
+        return _cmd_mate_parts_cache(args)
     if action == "run":
-        return _cmd_debug_plate_run(args)
-    log.error("No debug-plate subcommand specified")
+        return _cmd_mate_run(args)
+    log.error("No mate subcommand specified")
     return 1
 
 
-def _cmd_debug_plate_init(args: argparse.Namespace) -> int:
+def _cmd_mate_init(args: argparse.Namespace) -> int:
     try:
-        output_path = write_debug_plate_config_template(
+        output_path = write_mate_config_template(
             args.config,
             overwrite=bool(args.force),
         )
     except Exception as exc:
-        log.error("Failed writing debug-plate config template: %s", exc)
+        log.error("Failed writing mate config template: %s", exc)
         return 1
     print(str(output_path))
     return 0
 
 
-def _cmd_debug_plate_plan(args: argparse.Namespace) -> int:
+def _cmd_mate_plan(args: argparse.Namespace) -> int:
     try:
-        config = load_debug_plate_config(args.config)
-        output_path = write_debug_plate_mco(
+        config = load_mate_config(args.config)
+        output_path = write_mate_mco(
             config,
             _mco_output_path(args),
             overwrite=bool(args.force),
         )
     except Exception as exc:
-        log.error("Failed writing debug-plate MCO: %s", exc)
+        log.error("Failed writing mate MCO: %s", exc)
         return 1
     print(str(output_path))
     return 0
 
 
-def _cmd_debug_plate_inspect(args: argparse.Namespace) -> int:
+def _cmd_mate_inspect(args: argparse.Namespace) -> int:
     try:
-        payload = inspect_debug_plate_source(
+        payload = inspect_mate_source(
             args.file,
             pcbdoc_selector=args.pcbdoc,
             project_context=args.project_context,
         )
     except Exception as exc:
-        log.error("Failed inspecting debug-plate source: %s", exc)
+        log.error("Failed inspecting mate source: %s", exc)
         return 1
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
 
 
-def _cmd_debug_plate_seed(args: argparse.Namespace) -> int:
+def _cmd_mate_seed(args: argparse.Namespace) -> int:
     try:
         if bool(args.mate_config):
-            output_path = write_debug_plate_mate_seed_config(
+            output_path = write_mate_seed_config(
                 args.file,
                 args.config,
                 overwrite=bool(args.force),
@@ -96,7 +96,7 @@ def _cmd_debug_plate_seed(args: argparse.Namespace) -> int:
                 project_context=args.project_context,
             )
         else:
-            output_path = write_debug_plate_seed_config(
+            output_path = write_legacy_mate_seed_config(
                 args.file,
                 args.config,
                 overwrite=bool(args.force),
@@ -104,39 +104,39 @@ def _cmd_debug_plate_seed(args: argparse.Namespace) -> int:
                 project_context=args.project_context,
             )
     except Exception as exc:
-        log.error("Failed seeding debug-plate config: %s", exc)
+        log.error("Failed seeding mate config: %s", exc)
         return 1
     print(str(output_path))
     return 0
 
 
-def _cmd_debug_plate_parts_cache(args: argparse.Namespace) -> int:
+def _cmd_mate_parts_cache(args: argparse.Namespace) -> int:
     subaction = getattr(args, "parts_cache_action", None)
     if subaction != "build":
-        log.error("No debug-plate parts-cache subcommand specified")
+        log.error("No mate parts-cache subcommand specified")
         return 1
     try:
-        output_path = build_debug_plate_known_parts_cache(
+        output_path = build_mate_known_parts_cache(
             args.file,
             args.cache_dir,
             overwrite=bool(args.force),
             verbose=bool(args.debug),
         )
     except Exception as exc:
-        log.error("Failed building debug-plate known-parts cache: %s", exc)
+        log.error("Failed building mate known-parts cache: %s", exc)
         return 1
     print(str(output_path))
     return 0
 
 
-def _cmd_debug_plate_run(args: argparse.Namespace) -> int:
+def _cmd_mate_run(args: argparse.Namespace) -> int:
     try:
-        config = load_debug_plate_config(args.config)
+        config = load_mate_config(args.config)
         if args.emit_mco is not None:
-            write_debug_plate_mco(config, args.emit_mco, overwrite=bool(args.force))
-        result = execute_debug_plate_config(args.config, dry_run=bool(args.dry_run))
+            write_mate_mco(config, args.emit_mco, overwrite=bool(args.force))
+        result = execute_mate_config(args.config, dry_run=bool(args.dry_run))
     except Exception as exc:
-        log.error("Failed running debug-plate workflow: %s", exc)
+        log.error("Failed running mate workflow: %s", exc)
         return 1
     print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
     return 0 if result.ok else 1
@@ -150,43 +150,43 @@ def _mco_output_path(args: argparse.Namespace) -> Path:
 
 def register_parser(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
     parser = subparsers.add_parser(
-        "debug-plate",
-        help="generate a mating/debug fixture project from configuration",
+        "mate",
+        help="generate a mating-board project from configuration",
         description=(
             "Inspect DUT PCB inputs, seed editable JSONC config, build known "
             "fixture-part caches, and generate or run MCO automation for a new "
-            "debug-plate project."
+            "mate project."
         ),
     )
     action_subparsers = parser.add_subparsers(
-        dest="debug_plate_action",
-        help="debug-plate subcommands",
+        dest="mate_action",
+        help="mate subcommands",
     )
 
     init_parser = action_subparsers.add_parser(
         "init",
-        help="write an editable debug-plate JSONC config template",
+        help="write an editable mate JSONC config template",
     )
     init_parser.add_argument("config", type=Path, help="config output path")
     init_parser.add_argument("--force", action="store_true", help="overwrite config")
-    init_parser.set_defaults(handler=cmd_debug_plate)
+    init_parser.set_defaults(handler=cmd_mate)
 
     plan_parser = action_subparsers.add_parser(
         "plan",
-        help="generate an MCO file from a debug-plate config",
+        help="generate an MCO file from a mate config",
     )
-    plan_parser.add_argument("config", type=Path, help="debug-plate JSONC config")
+    plan_parser.add_argument("config", type=Path, help="mate JSONC config")
     plan_parser.add_argument(
         "--output-mco",
         type=Path,
         help="MCO output path (default: config path with .mco.jsonc suffix)",
     )
     plan_parser.add_argument("--force", action="store_true", help="overwrite MCO")
-    plan_parser.set_defaults(handler=cmd_debug_plate)
+    plan_parser.set_defaults(handler=cmd_mate)
 
     inspect_parser = action_subparsers.add_parser(
         "inspect",
-        help="inspect a DUT PCB input for debug-plate candidates",
+        help="inspect a DUT PCB input for mate candidates",
     )
     inspect_parser.add_argument("file", type=Path, help="DUT .PrjPcb or .PcbDoc input")
     inspect_parser.add_argument(
@@ -202,18 +202,18 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         default="auto",
         help="project-context mode for standalone PcbDoc inputs (default: auto)",
     )
-    inspect_parser.set_defaults(handler=cmd_debug_plate)
+    inspect_parser.set_defaults(handler=cmd_mate)
 
     seed_parser = action_subparsers.add_parser(
         "seed",
-        help="seed an editable debug-plate config from a DUT PCB input",
+        help="seed an editable mate config from a DUT PCB input",
     )
     seed_parser.add_argument("file", type=Path, help="DUT .PrjPcb or .PcbDoc input")
     seed_parser.add_argument(
         "--config",
         type=Path,
-        default=Path("debug-plate.jsonc"),
-        help="config output path (default: debug-plate.jsonc)",
+        default=Path("mate.jsonc"),
+        help="config output path (default: mate.jsonc)",
     )
     seed_parser.add_argument(
         "--doc",
@@ -239,11 +239,11 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         help="with --mate-config, set known_parts.manifest in the seeded config",
     )
     seed_parser.add_argument("--force", action="store_true", help="overwrite config")
-    seed_parser.set_defaults(handler=cmd_debug_plate)
+    seed_parser.set_defaults(handler=cmd_mate)
 
     parts_cache_parser = action_subparsers.add_parser(
         "parts-cache",
-        help="build or inspect a debug-plate known-parts cache",
+        help="build or inspect a mate known-parts cache",
     )
     parts_cache_subparsers = parts_cache_parser.add_subparsers(
         dest="parts_cache_action",
@@ -261,10 +261,10 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
     parts_cache_build_parser.add_argument(
         "--cache-dir",
         type=Path,
-        default=Path("debug-plate-known-parts/node-test-array"),
+        default=Path("mate-known-parts/node-test-array"),
         help=(
             "cache output directory "
-            "(default: debug-plate-known-parts/node-test-array)"
+            "(default: mate-known-parts/node-test-array)"
         ),
     )
     parts_cache_build_parser.add_argument(
@@ -277,14 +277,14 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         action="store_true",
         help="enable verbose extraction logging",
     )
-    parts_cache_build_parser.set_defaults(handler=cmd_debug_plate)
-    parts_cache_parser.set_defaults(handler=cmd_debug_plate)
+    parts_cache_build_parser.set_defaults(handler=cmd_mate)
+    parts_cache_parser.set_defaults(handler=cmd_mate)
 
     run_parser = action_subparsers.add_parser(
         "run",
-        help="run a debug-plate config through the MCO executor",
+        help="run a mate config through the MCO executor",
     )
-    run_parser.add_argument("config", type=Path, help="debug-plate JSONC config")
+    run_parser.add_argument("config", type=Path, help="mate JSONC config")
     run_parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -300,7 +300,7 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         action="store_true",
         help="overwrite --emit-mco output when present",
     )
-    run_parser.set_defaults(handler=cmd_debug_plate)
+    run_parser.set_defaults(handler=cmd_mate)
 
-    parser.set_defaults(handler=cmd_debug_plate)
+    parser.set_defaults(handler=cmd_mate)
     return parser

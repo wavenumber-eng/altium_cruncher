@@ -3,7 +3,6 @@
   "commands": [
     {"name": "bom", "status": "public", "requires_extra": null},
     {"name": "clean", "status": "public", "requires_extra": null},
-    {"name": "debug-plate", "status": "experimental", "requires_extra": null},
     {"name": "design", "status": "public", "requires_extra": null},
     {"name": "easyeda-import", "status": "public", "requires_extra": null},
     {"name": "extract", "status": "public", "requires_extra": null},
@@ -11,6 +10,7 @@
     {"name": "jlc", "status": "public", "requires_extra": null},
     {"name": "json-dump", "status": "experimental", "requires_extra": null},
     {"name": "launch", "status": "public", "requires_extra": null},
+    {"name": "mate", "status": "experimental", "requires_extra": null},
     {"name": "mco", "status": "experimental", "requires_extra": null},
     {"name": "megamaid", "status": "public", "requires_extra": null},
     {"name": "merge", "status": "public", "requires_extra": null},

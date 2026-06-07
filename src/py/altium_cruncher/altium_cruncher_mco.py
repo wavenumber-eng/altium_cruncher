@@ -629,7 +629,7 @@ def _parse_project_skeleton_args(
     args: Mapping[str, object],
     context: McoExecutionContext,
 ) -> ProjectSkeletonArgs:
-    project_name = _optional_string(args, "project_name", "debug_plate") or "debug_plate"
+    project_name = _optional_string(args, "project_name", "mate") or "mate"
     layer_stack_template = (
         _optional_string(args, "layer_stack_template", "2-layer") or "2-layer"
     )
@@ -819,12 +819,12 @@ def _mco_template_text() -> str:
         "  // MCO operations execute in order. Use on_fail to jump to another id.\n"
         '  "operations": [\n'
         "    {\n"
-        '      "id": "create_debug_plate_skeleton",\n'
+        '      "id": "create_mate_skeleton",\n'
         '      "op": "project.create-skeleton",\n'
-        '      "message": "Create a blank debug-plate project",\n'
+        '      "message": "Create a blank mate project",\n'
         '      "args": {\n'
-        '        "output_dir": "output/debug-plate",\n'
-        '        "project_name": "debug_plate",\n'
+        '        "output_dir": "output/mate",\n'
+        '        "project_name": "mate",\n'
         '        "schematic_sheet_style": "D",\n'
         '        "overwrite": false,\n'
         '        "board_outline_mils": {\n'

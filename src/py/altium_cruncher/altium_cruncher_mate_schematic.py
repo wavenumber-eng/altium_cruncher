@@ -1,4 +1,4 @@
-"""Schematic operation planning helpers for debug-plate workflows."""
+"""Schematic operation planning helpers for mate workflows."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ _SCHEMATIC_NET_LABEL_TRAILING_MARGIN_MILS = 120.0
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateSchematicNetRoute:
+class MateSchematicNetRoute:
     """Computed schematic wire route for a generated mate part."""
 
     wire_start_mils: tuple[float, float]
@@ -83,7 +83,7 @@ def schematic_net_route(
     signal_pin_designator: str | None,
     component_position_mils: tuple[float, float],
     net_name: str | None,
-) -> DebugPlateSchematicNetRoute | None:
+) -> MateSchematicNetRoute | None:
     if not net_name:
         return None
     component_x, component_y = component_position_mils
@@ -106,7 +106,7 @@ def schematic_net_route(
         wire_start[0] + direction_x * _SCHEMATIC_NET_LABEL_OFFSET_MILS,
         wire_start[1] + direction_y * _SCHEMATIC_NET_LABEL_OFFSET_MILS,
     )
-    return DebugPlateSchematicNetRoute(
+    return MateSchematicNetRoute(
         wire_start_mils=wire_start,
         wire_end_mils=wire_end,
         label_position_mils=label_position,
@@ -119,12 +119,12 @@ def schematic_wire_operation(
     *,
     schematic_file: str,
     designator: str,
-    route: DebugPlateSchematicNetRoute,
+    route: MateSchematicNetRoute,
 ) -> JsonObject:
     return {
         "id": f"wire_{_safe_id(designator)}_net",
         "op": "schdoc.add-wire",
-        "message": f"Add debug-plate schematic wire for {designator}",
+        "message": f"Add mate schematic wire for {designator}",
         "args": {
             "file": schematic_file,
             "overwrite": True,
@@ -141,12 +141,12 @@ def schematic_net_label_operation(
     schematic_file: str,
     designator: str,
     net_name: str,
-    route: DebugPlateSchematicNetRoute,
+    route: MateSchematicNetRoute,
 ) -> JsonObject:
     return {
         "id": f"label_{_safe_id(designator)}_net",
         "op": "schdoc.add-net-label",
-        "message": f"Add debug-plate schematic net label for {designator}",
+        "message": f"Add mate schematic net label for {designator}",
         "args": {
             "file": schematic_file,
             "overwrite": True,

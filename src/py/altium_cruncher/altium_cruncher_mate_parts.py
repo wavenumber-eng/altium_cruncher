@@ -1,4 +1,4 @@
-"""Known fixture-part cache support for debug-plate workflows."""
+"""Known fixture-part cache support for mate workflows."""
 
 from __future__ import annotations
 
@@ -9,13 +9,13 @@ from pathlib import Path
 
 from altium_cruncher.altium_cruncher_mco import JsonObject, load_jsonc_file
 
-DEBUG_PLATE_PARTS_CACHE_SCHEMA = "wn.altium_cruncher.debug_plate.parts_cache.v1"
-DEBUG_PLATE_PARTS_CACHE_FILENAME = "debug-plate-known-parts.json"
+MATE_PARTS_CACHE_SCHEMA = "wn.altium_cruncher.mate.parts_cache.v1"
+MATE_PARTS_CACHE_FILENAME = "mate-known-parts.json"
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateKnownPartTemplate:
-    """One debug-plate fixture part expected in a generated cache."""
+class MateKnownPartTemplate:
+    """One mate fixture part expected in a generated cache."""
 
     role: str
     description: str
@@ -28,8 +28,8 @@ class DebugPlateKnownPartTemplate:
     signal_pad_designator: str | None = None
 
 
-NODE_TEST_ARRAY_PART_TEMPLATES: tuple[DebugPlateKnownPartTemplate, ...] = (
-    DebugPlateKnownPartTemplate(
+NODE_TEST_ARRAY_PART_TEMPLATES: tuple[MateKnownPartTemplate, ...] = (
+    MateKnownPartTemplate(
         role="test_point_pogo",
         description="Pogo fixture contact aligned to cricket-node 2 mm test pads.",
         symbol_name="YZ209315103P-01",
@@ -40,7 +40,7 @@ NODE_TEST_ARRAY_PART_TEMPLATES: tuple[DebugPlateKnownPartTemplate, ...] = (
         designator_prefix="TP",
         signal_pad_designator="1",
     ),
-    DebugPlateKnownPartTemplate(
+    MateKnownPartTemplate(
         role="m25_smt_standoff",
         description=(
             "M2.5 SMT standoff aligned to cricket-node M1-M4 mounting features."
@@ -52,7 +52,7 @@ NODE_TEST_ARRAY_PART_TEMPLATES: tuple[DebugPlateKnownPartTemplate, ...] = (
         target_kinds=("mount",),
         designator_prefix="M",
     ),
-    DebugPlateKnownPartTemplate(
+    MateKnownPartTemplate(
         role="alignment_pin_2mm_npth",
         description="2 mm alignment pin associated with cricket-node free NPTH holes.",
         symbol_name="H2184-05",
@@ -66,23 +66,23 @@ NODE_TEST_ARRAY_PART_TEMPLATES: tuple[DebugPlateKnownPartTemplate, ...] = (
 )
 
 
-def build_debug_plate_known_parts_cache(
+def build_mate_known_parts_cache(
     source_project: Path | str,
     cache_dir: Path | str,
     *,
     overwrite: bool = False,
     verbose: bool = False,
 ) -> Path:
-    """Extract node-test-array libraries and write a debug-plate parts manifest."""
+    """Extract node-test-array libraries and write a mate parts manifest."""
     source_path = Path(source_project).resolve()
     output_dir = Path(cache_dir).resolve()
-    manifest_path = output_dir / DEBUG_PLATE_PARTS_CACHE_FILENAME
+    manifest_path = output_dir / MATE_PARTS_CACHE_FILENAME
     if manifest_path.exists() and not overwrite:
-        raise FileExistsError(f"Debug-plate known-parts cache already exists: {manifest_path}")
+        raise FileExistsError(f"Mate known-parts cache already exists: {manifest_path}")
 
     _extract_project_assets(source_path, output_dir, verbose=verbose)
     payload = build_node_test_array_parts_manifest(source_path, output_dir)
-    write_debug_plate_known_parts_manifest(payload, manifest_path)
+    write_mate_known_parts_manifest(payload, manifest_path)
     return manifest_path
 
 
@@ -90,12 +90,12 @@ def build_node_test_array_parts_manifest(
     source_project: Path | str,
     cache_dir: Path | str,
 ) -> JsonObject:
-    """Build the manifest for node-test-array derived debug-plate fixture parts."""
+    """Build the manifest for node-test-array derived mate fixture parts."""
     source_path = Path(source_project).resolve()
     output_dir = Path(cache_dir).resolve()
     _validate_part_template_outputs(output_dir, NODE_TEST_ARRAY_PART_TEMPLATES)
     return {
-        "schema": DEBUG_PLATE_PARTS_CACHE_SCHEMA,
+        "schema": MATE_PARTS_CACHE_SCHEMA,
         "source": {
             "kind": "node_test_array",
             "project": str(source_path),
@@ -115,27 +115,27 @@ def build_node_test_array_parts_manifest(
     }
 
 
-def write_debug_plate_known_parts_manifest(
+def write_mate_known_parts_manifest(
     payload: Mapping[str, object],
     path: Path | str,
 ) -> Path:
-    """Write a debug-plate known-parts cache manifest."""
+    """Write a mate known-parts cache manifest."""
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return output_path.resolve()
 
 
-def load_debug_plate_known_parts_manifest(path: Path | str) -> JsonObject:
-    """Load and validate a debug-plate known-parts manifest."""
+def load_mate_known_parts_manifest(path: Path | str) -> JsonObject:
+    """Load and validate a mate known-parts manifest."""
     payload = load_jsonc_file(path)
-    root = _json_object(payload, "debug-plate known-parts manifest")
+    root = _json_object(payload, "mate known-parts manifest")
     schema = root.get("schema")
-    if schema != DEBUG_PLATE_PARTS_CACHE_SCHEMA:
-        raise ValueError(f"Unsupported debug-plate parts-cache schema: {schema!r}")
+    if schema != MATE_PARTS_CACHE_SCHEMA:
+        raise ValueError(f"Unsupported mate parts-cache schema: {schema!r}")
     parts = root.get("parts")
     if not isinstance(parts, list):
-        raise ValueError("Debug-plate parts-cache manifest must contain a parts array")
+        raise ValueError("Mate parts-cache manifest must contain a parts array")
     return root
 
 
@@ -155,8 +155,8 @@ def resolve_known_part(
 def _known_part_entries(manifest: Mapping[str, object]) -> list[JsonObject]:
     parts = manifest.get("parts")
     if not isinstance(parts, list):
-        raise ValueError("Debug-plate parts-cache manifest must contain a parts array")
-    return [_json_object(part, "debug-plate known part") for part in parts]
+        raise ValueError("Mate parts-cache manifest must contain a parts array")
+    return [_json_object(part, "mate known part") for part in parts]
 
 
 def _resolve_known_part_by_kind(
@@ -166,7 +166,7 @@ def _resolve_known_part_by_kind(
     for part in parts:
         if _known_part_targets_kind(part, target_kind):
             return part
-    raise ValueError(f"No debug-plate known part matches target kind: {target_kind}")
+    raise ValueError(f"No mate known part matches target kind: {target_kind}")
 
 
 def _resolve_known_part_by_role(
@@ -180,12 +180,12 @@ def _resolve_known_part_by_role(
         if str(part.get("role", "") or "") == role
     ]
     if not role_matches:
-        raise ValueError(f"No debug-plate known part matches role: {role}")
+        raise ValueError(f"No mate known part matches role: {role}")
     for part in role_matches:
         if _known_part_targets_kind(part, target_kind):
             return part
     raise ValueError(
-        f"Debug-plate known part role {role!r} does not target kind: {target_kind}"
+        f"Mate known part role {role!r} does not target kind: {target_kind}"
     )
 
 
@@ -209,7 +209,7 @@ def manifest_path_for_cache_dir(cache_dir: Path | str) -> Path:
     path = Path(cache_dir)
     if path.suffix.lower() == ".json":
         return path
-    return path / DEBUG_PLATE_PARTS_CACHE_FILENAME
+    return path / MATE_PARTS_CACHE_FILENAME
 
 
 def _extract_project_assets(
@@ -219,7 +219,7 @@ def _extract_project_assets(
     verbose: bool,
 ) -> None:
     if source_project.suffix.lower() != ".prjpcb":
-        raise ValueError("Debug-plate known-parts cache builds require a .PrjPcb input")
+        raise ValueError("Mate known-parts cache builds require a .PrjPcb input")
 
     from altium_cruncher.altium_cruncher_cmd_extract import (
         _extract_pcbdocs_to_output,
@@ -261,7 +261,7 @@ def _extract_project_assets(
         raise RuntimeError(f"PcbLib extraction failed for {failed} board(s)")
 
 
-def _part_template_payload(template: DebugPlateKnownPartTemplate) -> JsonObject:
+def _part_template_payload(template: MateKnownPartTemplate) -> JsonObject:
     return {
         "role": template.role,
         "description": template.description,
@@ -277,7 +277,7 @@ def _part_template_payload(template: DebugPlateKnownPartTemplate) -> JsonObject:
 
 def _validate_part_template_outputs(
     output_dir: Path,
-    templates: Sequence[DebugPlateKnownPartTemplate],
+    templates: Sequence[MateKnownPartTemplate],
 ) -> None:
     missing: list[Path] = []
     for template in templates:
@@ -287,7 +287,7 @@ def _validate_part_template_outputs(
                 missing.append(candidate)
     if missing:
         missing_text = ", ".join(str(path) for path in missing)
-        raise FileNotFoundError(f"Missing extracted debug-plate known-part files: {missing_text}")
+        raise FileNotFoundError(f"Missing extracted mate known-part files: {missing_text}")
 
 
 def _json_object(value: object, label: str) -> JsonObject:

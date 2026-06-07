@@ -8,31 +8,31 @@ from types import SimpleNamespace
 
 import pytest
 
-from altium_cruncher.altium_cruncher_debug_plate import (
-    DEBUG_PLATE_CONFIG_SCHEMA,
+from altium_cruncher.altium_cruncher_mate import (
+    LEGACY_MATE_CONFIG_SCHEMA,
     MATE_CONFIG_SCHEMA,
-    build_debug_plate_mco,
-    build_debug_plate_mate_seed_config,
-    execute_debug_plate_config,
-    inspect_debug_plate_source,
-    inspect_pcbdoc_for_debug_plate,
-    load_debug_plate_config,
-    write_debug_plate_config_template,
+    build_mate_mco,
+    build_mate_seed_config,
+    execute_mate_config,
+    inspect_mate_source,
+    inspect_pcbdoc_for_mate,
+    load_mate_config,
+    write_mate_config_template,
 )
-from altium_cruncher.altium_cruncher_debug_plate_graphics import (
+from altium_cruncher.altium_cruncher_mate_graphics import (
     build_pcb_board_projection_operations,
     build_pcb_reference_graphics_operations,
 )
-from altium_cruncher.altium_cruncher_debug_plate_schematic import (
+from altium_cruncher.altium_cruncher_mate_schematic import (
     schematic_grouped_positions,
 )
-from altium_cruncher.altium_cruncher_debug_plate_parts import (
-    DEBUG_PLATE_PARTS_CACHE_FILENAME,
+from altium_cruncher.altium_cruncher_mate_parts import (
+    MATE_PARTS_CACHE_FILENAME,
     build_node_test_array_parts_manifest,
-    load_debug_plate_known_parts_manifest,
+    load_mate_known_parts_manifest,
     manifest_path_for_cache_dir,
     resolve_known_part,
-    write_debug_plate_known_parts_manifest,
+    write_mate_known_parts_manifest,
 )
 from altium_cruncher.altium_cruncher_mco import MCO_SCHEMA, load_jsonc_file
 
@@ -92,12 +92,12 @@ def _write_minimal_known_part_cache(tmp_path: Path) -> Path:
         )
         pcblib.save(pcblib_path)
 
-    return write_debug_plate_known_parts_manifest(
+    return write_mate_known_parts_manifest(
         build_node_test_array_parts_manifest(
             tmp_path / "node-test-array.PrjPcb",
             cache_dir,
         ),
-        cache_dir / DEBUG_PLATE_PARTS_CACHE_FILENAME,
+        cache_dir / MATE_PARTS_CACHE_FILENAME,
     )
 
 
@@ -197,12 +197,12 @@ def _write_mate_source_pcbdoc(
     return path
 
 
-def test_debug_plate_template_builds_initial_mco(tmp_path: Path) -> None:
-    config_path = tmp_path / "debug-plate.jsonc"
-    write_debug_plate_config_template(config_path)
+def test_mate_template_builds_initial_mco(tmp_path: Path) -> None:
+    config_path = tmp_path / "mate.jsonc"
+    write_mate_config_template(config_path)
 
-    config = load_debug_plate_config(config_path)
-    payload = build_debug_plate_mco(config)
+    config = load_mate_config(config_path)
+    payload = build_mate_mco(config)
 
     assert payload["schema"] == MCO_SCHEMA
     operations = payload["operations"]
@@ -212,18 +212,18 @@ def test_debug_plate_template_builds_initial_mco(tmp_path: Path) -> None:
         "pcbdoc.add-text",
     ]
     assert operations[0]["args"]["schematic_sheet_style"] == "D"
-    assert operations[1]["args"]["file"] == "output/debug-plate/debug_plate.PcbDoc"
+    assert operations[1]["args"]["file"] == "output/mate/mate.PcbDoc"
 
 
-def test_debug_plate_run_creates_project_and_marker(tmp_path: Path) -> None:
-    config_path = tmp_path / "debug-plate.jsonc"
+def test_mate_run_creates_project_and_marker(tmp_path: Path) -> None:
+    config_path = tmp_path / "mate.jsonc"
     config_path.write_text(
         json.dumps(
             {
-                "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+                "schema": LEGACY_MATE_CONFIG_SCHEMA,
                 "output": {
                     "output_dir": "generated",
-                    "project_name": "debug_plate",
+                    "project_name": "mate",
                     "overwrite": True,
                 },
                 "marker": {
@@ -236,19 +236,19 @@ def test_debug_plate_run_creates_project_and_marker(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    result = execute_debug_plate_config(config_path)
+    result = execute_mate_config(config_path)
 
     assert result.ok is True
-    assert (tmp_path / "generated" / "debug_plate.PrjPcb").exists()
-    assert (tmp_path / "generated" / "debug_plate.SchDoc").exists()
+    assert (tmp_path / "generated" / "mate.PrjPcb").exists()
+    assert (tmp_path / "generated" / "mate.SchDoc").exists()
 
     from altium_monkey import AltiumPcbDoc
 
-    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
     assert [text.text_content for text in pcbdoc.texts] == ["CRICKET DEBUG"]
 
 
-def test_debug_plate_inspection_classifies_components_and_free_pads() -> None:
+def test_mate_inspection_classifies_components_and_free_pads() -> None:
     from altium_monkey import AltiumPcbDoc, PadShape, PcbLayer
     from altium_monkey.altium_pcb_component import AltiumPcbComponent
 
@@ -304,7 +304,7 @@ def test_debug_plate_inspection_classifies_components_and_free_pads() -> None:
         )
     )
 
-    inspection = inspect_pcbdoc_for_debug_plate("fixture", pcbdoc, "fixture.PcbDoc")
+    inspection = inspect_pcbdoc_for_mate("fixture", pcbdoc, "fixture.PcbDoc")
     payload = inspection.to_dict()
 
     assert [item["designator"] for item in payload["components"]] == ["TP1", "MH1"]
@@ -336,7 +336,7 @@ def test_debug_plate_inspection_classifies_components_and_free_pads() -> None:
     assert payload["free_pads"][0]["net_name"] == "ALIGN_NET"
 
 
-def test_debug_plate_inspection_preserves_board_cutout_geometry() -> None:
+def test_mate_inspection_preserves_board_cutout_geometry() -> None:
     from altium_monkey import AltiumPcbDoc
 
     source_path = (
@@ -350,7 +350,7 @@ def test_debug_plate_inspection_preserves_board_cutout_geometry() -> None:
     )
     pcbdoc = AltiumPcbDoc.from_file(source_path)
 
-    inspection = inspect_pcbdoc_for_debug_plate("cricket", pcbdoc, source_path)
+    inspection = inspect_pcbdoc_for_mate("cricket", pcbdoc, source_path)
     payload = inspection.to_dict()
     cutouts = payload["board_outline"]["cutouts"]
 
@@ -359,7 +359,7 @@ def test_debug_plate_inspection_preserves_board_cutout_geometry() -> None:
     assert any(vertex["segment"] == "arc" for vertex in cutouts[0]["vertices"])
 
 
-def test_debug_plate_known_parts_manifest_tracks_node_test_array_roles(
+def test_mate_known_parts_manifest_tracks_node_test_array_roles(
     tmp_path: Path,
 ) -> None:
     cache_dir = tmp_path / "cache"
@@ -379,12 +379,12 @@ def test_debug_plate_known_parts_manifest_tracks_node_test_array_roles(
         tmp_path / "node-test-array.PrjPcb",
         cache_dir,
     )
-    manifest_path = write_debug_plate_known_parts_manifest(
+    manifest_path = write_mate_known_parts_manifest(
         payload,
-        cache_dir / DEBUG_PLATE_PARTS_CACHE_FILENAME,
+        cache_dir / MATE_PARTS_CACHE_FILENAME,
     )
 
-    loaded = load_debug_plate_known_parts_manifest(manifest_path)
+    loaded = load_mate_known_parts_manifest(manifest_path)
     assert manifest_path_for_cache_dir(cache_dir) == manifest_path
     assert [part["role"] for part in loaded["parts"]] == [
         "test_point_pogo",
@@ -406,17 +406,17 @@ def test_debug_plate_known_parts_manifest_tracks_node_test_array_roles(
     assert loaded["designator_normalization"]["mount"]["M5"] == "M1"
 
 
-def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> None:
+def test_mate_mco_places_known_parts_from_selection(tmp_path: Path) -> None:
     manifest_path = _write_minimal_known_part_cache(tmp_path)
 
-    config = load_debug_plate_config(
+    config = load_mate_config(
         _write_json(
-            tmp_path / "debug-plate.jsonc",
+            tmp_path / "mate.jsonc",
             {
-                "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+                "schema": LEGACY_MATE_CONFIG_SCHEMA,
                 "output": {
                     "output_dir": "generated",
-                    "project_name": "debug_plate",
+                    "project_name": "mate",
                     "overwrite": True,
                 },
                 "known_parts": {
@@ -467,7 +467,7 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
         )
     )
 
-    payload = build_debug_plate_mco(config)
+    payload = build_mate_mco(config)
     operations = payload["operations"]
 
     assert [operation["op"] for operation in operations[:5]] == [
@@ -512,7 +512,7 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     )
     assert operations[6]["args"]["position_mils"] == [1910.0, 220.0]
     assert operations[7]["args"]["designator"] == "P1"
-    assert operations[7]["args"]["parameters"]["DebugPlateSourceNet"] == "ALIGN_NET"
+    assert operations[7]["args"]["parameters"]["MateSourceNet"] == "ALIGN_NET"
     assert operations[7]["args"]["position_mils"] == [1200.0, 3000.0]
     assert operations[7]["args"]["designator_style"]["position_mils"] == [
         1200.0,
@@ -525,7 +525,7 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[10]["args"]["footprint"] == "H2184-05"
     assert operations[10]["args"]["position_mils"] == [1710.0, 420.0]
     assert operations[10]["args"]["pad_nets"] == {"1": "ALIGN_NET"}
-    assert operations[11]["args"]["name"] == "DEBUG_PLATE_FEATURES"
+    assert operations[11]["args"]["name"] == "MATE_FEATURES"
     assert operations[12]["args"]["text"] == "ALIGN_NET"
     assert operations[12]["args"]["position_mils"] == [1830.0, 385.0]
     assert operations[12]["args"]["height_mils"] == 65.0
@@ -539,7 +539,7 @@ def test_debug_plate_mco_places_known_parts_from_selection(tmp_path: Path) -> No
     assert operations[12]["args"]["text_justification"] == "RIGHT_TOP"
 
 
-def test_debug_plate_schematic_grid_groups_and_buffers_columns() -> None:
+def test_mate_schematic_grid_groups_and_buffers_columns() -> None:
     positions = schematic_grouped_positions(["tp"] * 5 + ["mount"] + ["align"])
 
     assert positions == [
@@ -553,18 +553,18 @@ def test_debug_plate_schematic_grid_groups_and_buffers_columns() -> None:
     ]
 
 
-def test_debug_plate_known_part_operations_use_natural_designator_order(
+def test_mate_known_part_operations_use_natural_designator_order(
     tmp_path: Path,
 ) -> None:
     manifest_path = _write_minimal_known_part_cache(tmp_path)
-    config = load_debug_plate_config(
+    config = load_mate_config(
         _write_json(
-            tmp_path / "debug-plate.jsonc",
+            tmp_path / "mate.jsonc",
             {
-                "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+                "schema": LEGACY_MATE_CONFIG_SCHEMA,
                 "output": {
                     "output_dir": "generated",
-                    "project_name": "debug_plate",
+                    "project_name": "mate",
                     "overwrite": True,
                 },
                 "known_parts": {
@@ -600,7 +600,7 @@ def test_debug_plate_known_part_operations_use_natural_designator_order(
         )
     )
 
-    operations = build_debug_plate_mco(config)["operations"]
+    operations = build_mate_mco(config)["operations"]
     schematic_components = [
         operation
         for operation in operations
@@ -616,16 +616,16 @@ def test_debug_plate_known_part_operations_use_natural_designator_order(
     ] == [[1200.0, 1200.0], [3600.0, 1200.0]]
 
 
-def test_cricket_node_debug_plate_example_config_is_planable() -> None:
+def test_cricket_node_mate_example_config_is_planable() -> None:
     example_config = (
         PACKAGE_ROOT
         / "examples"
-        / "debug-plate"
+        / "mate"
         / "cricket-node"
-        / "debug-plate.jsonc"
+        / "mate.jsonc"
     )
 
-    payload = build_debug_plate_mco(load_debug_plate_config(example_config))
+    payload = build_mate_mco(load_mate_config(example_config))
     operations = payload["operations"]
 
     assert payload["schema"] == MCO_SCHEMA
@@ -698,16 +698,16 @@ def test_cricket_node_debug_plate_example_config_is_planable() -> None:
         for operation in operations
         if operation["op"] in {"schdoc.add-net-label", "pcbdoc.add-text"}
     ] == ["+VIN", "ALIGN_NET", "+VIN", "ALIGN_NET"]
-    assert operations[-3]["args"]["name"] == "DEBUG_PLATE_FEATURES"
+    assert operations[-3]["args"]["name"] == "MATE_FEATURES"
 
 
 def test_cricket_node_draft_mate_config_is_parseable() -> None:
     draft_config = (
         PACKAGE_ROOT
         / "examples"
-        / "debug-plate"
+        / "mate"
         / "cricket-node"
-        / "debug-plate.mate.a0.jsonc"
+        / "mate.a0.jsonc"
     )
 
     payload = load_jsonc_file(draft_config)
@@ -764,11 +764,11 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
     assert payload["pcb_designators"]["style"]["font_name"] == "Arial"
 
 
-def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
+def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
-    manifest_path = tmp_path / "known-parts" / "debug-plate-known-parts.json"
+    manifest_path = tmp_path / "known-parts" / "mate-known-parts.json"
 
-    payload = build_debug_plate_mate_seed_config(
+    payload = build_mate_seed_config(
         source_path,
         known_parts_manifest=manifest_path,
         project_context="none",
@@ -839,10 +839,10 @@ def test_debug_plate_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     assert payload["pcb_designators"]["style"]["height_mils"] == 40
 
 
-def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
+def test_mate_reference_graphics_trace_pad_shape() -> None:
     circle_ops = build_pcb_reference_graphics_operations(
         output_dir="generated",
-        board_filename="debug_plate.PcbDoc",
+        board_filename="mate.PcbDoc",
         designator="TP1",
         target={
             "mate_reference_graphics": {
@@ -869,7 +869,7 @@ def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
 
     touching_ops = build_pcb_reference_graphics_operations(
         output_dir="generated",
-        board_filename="debug_plate.PcbDoc",
+        board_filename="mate.PcbDoc",
         designator="TP2",
         target={
             "mate_reference_graphics": {
@@ -892,7 +892,7 @@ def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
 
     rectangle_ops = build_pcb_reference_graphics_operations(
         output_dir="generated",
-        board_filename="debug_plate.PcbDoc",
+        board_filename="mate.PcbDoc",
         designator="U1",
         target={
             "mate_reference_graphics": {
@@ -926,7 +926,7 @@ def test_debug_plate_reference_graphics_trace_pad_shape() -> None:
     assert {operation["args"]["width_mils"] for operation in rectangle_ops} == {3.0}
 
 
-def test_debug_plate_board_projection_projects_cutout_graphics_and_regions() -> None:
+def test_mate_board_projection_projects_cutout_graphics_and_regions() -> None:
     selection = SimpleNamespace(
         boards=(
             SimpleNamespace(
@@ -955,7 +955,7 @@ def test_debug_plate_board_projection_projects_cutout_graphics_and_regions() -> 
 
     operations = build_pcb_board_projection_operations(
         output_dir="generated",
-        board_filename="debug_plate.PcbDoc",
+        board_filename="mate.PcbDoc",
         board_projection={
             "cutouts": {
                 "graphics": {
@@ -991,20 +991,20 @@ def test_debug_plate_board_projection_projects_cutout_graphics_and_regions() -> 
     ]
 
 
-def test_debug_plate_mate_output_board_outline_modes(tmp_path: Path) -> None:
+def test_mate_output_board_outline_modes(tmp_path: Path) -> None:
     source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
 
     def first_outline(output: object) -> object:
         config_path = _write_json(
-            tmp_path / "debug-plate.mate.a0.jsonc",
+            tmp_path / "mate.a0.jsonc",
             {
                 "schema": MATE_CONFIG_SCHEMA,
                 "source": {"board": str(source_path), "project_context": "none"},
                 "output": output,
             },
         )
-        config = load_debug_plate_config(config_path)
-        return build_debug_plate_mco(config)["operations"][0]["args"].get(
+        config = load_mate_config(config_path)
+        return build_mate_mco(config)["operations"][0]["args"].get(
             "board_outline_mils"
         )
 
@@ -1047,7 +1047,7 @@ def test_debug_plate_mate_output_board_outline_modes(tmp_path: Path) -> None:
         )
 
 
-def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
+def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     source_path = _write_mate_source_pcbdoc(
         tmp_path / "dut.PcbDoc",
         origin_mils=(1000.0, 2000.0),
@@ -1069,7 +1069,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     )
     _write_json(manifest_path, manifest_payload)
     config_path = _write_json(
-        tmp_path / "debug-plate.mate.a0.jsonc",
+        tmp_path / "mate.a0.jsonc",
         {
             "schema": MATE_CONFIG_SCHEMA,
             "source": {
@@ -1079,7 +1079,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
             "output": {
                 "backend": "altium",
                 "output_dir": "generated",
-                "project_name": "debug_plate",
+                "project_name": "mate",
                 "overwrite": True,
             },
             "known_parts": {
@@ -1196,7 +1196,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         },
     )
 
-    config = load_debug_plate_config(config_path)
+    config = load_mate_config(config_path)
     board = config.selection.boards[0]
 
     assert [component.designator for component in board.components] == [
@@ -1229,7 +1229,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     assert len(board.board_outline["vertices"]) == 4
     assert config.pcb_labels.enabled is False
 
-    payload = build_debug_plate_mco(config)
+    payload = build_mate_mco(config)
     operations = payload["operations"]
     assert operations[0]["args"]["board_outline_mils"] == {
         "left": -250.0,
@@ -1338,7 +1338,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         if operation["op"] == "pcbdoc.create-user-union"
     )
     assert user_union["op"] == "pcbdoc.create-user-union"
-    assert user_union["args"]["name"] == "DEBUG_PLATE_FEATURES"
+    assert user_union["args"]["name"] == "MATE_FEATURES"
     step_op = [
         operation
         for operation in operations
@@ -1372,7 +1372,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
         if operation["op"] == "pcbdoc.add-embedded-3d-model"
     )
     assert insert_step_op["op"] == "pcbdoc.add-embedded-3d-model"
-    assert insert_step_op["args"]["file"] == "generated/debug_plate.PcbDoc"
+    assert insert_step_op["args"]["file"] == "generated/mate.PcbDoc"
     assert insert_step_op["args"]["model_file"] == (
         "generated/artifacts/pcb-layer-step/dut__bottom.step"
     )
@@ -1386,7 +1386,7 @@ def test_debug_plate_mate_config_resolves_source_selectors(tmp_path: Path) -> No
     }
 
 
-def test_debug_plate_mate_config_keeps_duplicate_free_pad_designators(
+def test_mate_config_keeps_duplicate_free_pad_designators(
     tmp_path: Path,
 ) -> None:
     source_path = _write_mate_source_pcbdoc(
@@ -1395,7 +1395,7 @@ def test_debug_plate_mate_config_keeps_duplicate_free_pad_designators(
     )
     manifest_path = _write_minimal_known_part_cache(tmp_path)
     config_path = _write_json(
-        tmp_path / "debug-plate.mate.a0.jsonc",
+        tmp_path / "mate.a0.jsonc",
         {
             "schema": MATE_CONFIG_SCHEMA,
             "source": {
@@ -1405,7 +1405,7 @@ def test_debug_plate_mate_config_keeps_duplicate_free_pad_designators(
             "output": {
                 "backend": "altium",
                 "output_dir": "generated",
-                "project_name": "debug_plate",
+                "project_name": "mate",
                 "overwrite": True,
             },
             "known_parts": {
@@ -1431,11 +1431,11 @@ def test_debug_plate_mate_config_keeps_duplicate_free_pad_designators(
         },
     )
 
-    config = load_debug_plate_config(config_path)
+    config = load_mate_config(config_path)
     board = config.selection.boards[0]
 
     assert [pad.designator for pad in board.free_pads] == ["A1", "A1"]
-    payload = build_debug_plate_mco(config)
+    payload = build_mate_mco(config)
     pcb_components = [
         operation
         for operation in payload["operations"]
@@ -1451,7 +1451,7 @@ def test_debug_plate_mate_config_keeps_duplicate_free_pad_designators(
     ]
 
 
-def test_debug_plate_mate_config_rejects_mixed_component_sides(
+def test_mate_config_rejects_mixed_component_sides(
     tmp_path: Path,
 ) -> None:
     source_path = _write_mate_source_pcbdoc(
@@ -1459,7 +1459,7 @@ def test_debug_plate_mate_config_rejects_mixed_component_sides(
         tp2_layer="TOP",
     )
     config_path = _write_json(
-        tmp_path / "debug-plate.mate.a0.jsonc",
+        tmp_path / "mate.a0.jsonc",
         {
             "schema": MATE_CONFIG_SCHEMA,
             "source": {
@@ -1469,7 +1469,7 @@ def test_debug_plate_mate_config_rejects_mixed_component_sides(
             "output": {
                 "backend": "altium",
                 "output_dir": "generated",
-                "project_name": "debug_plate",
+                "project_name": "mate",
                 "overwrite": True,
             },
             "validation": {
@@ -1494,20 +1494,20 @@ def test_debug_plate_mate_config_rejects_mixed_component_sides(
     )
 
     with pytest.raises(ValueError, match="mixes top and bottom"):
-        load_debug_plate_config(config_path)
+        load_mate_config(config_path)
 
 
-def test_debug_plate_seed_cli_can_write_mate_config(tmp_path: Path) -> None:
+def test_mate_seed_cli_can_write_mate_config(tmp_path: Path) -> None:
     source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
-    seed_path = tmp_path / "debug-plate.mate.a0.jsonc"
-    manifest_path = tmp_path / "known-parts" / "debug-plate-known-parts.json"
+    seed_path = tmp_path / "mate.a0.jsonc"
+    manifest_path = tmp_path / "known-parts" / "mate-known-parts.json"
 
     completed = subprocess.run(
         [
             sys.executable,
             "-m",
             "altium_cruncher",
-            "debug-plate",
+            "mate",
             "seed",
             str(source_path),
             "--project-context",
@@ -1535,15 +1535,15 @@ def test_debug_plate_seed_cli_can_write_mate_config(tmp_path: Path) -> None:
     ]
 
 
-def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None:
+def test_mate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None:
     manifest_path = _write_minimal_known_part_cache(tmp_path)
     config_path = _write_json(
-        tmp_path / "debug-plate.jsonc",
+        tmp_path / "mate.jsonc",
         {
-            "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+            "schema": LEGACY_MATE_CONFIG_SCHEMA,
             "output": {
                 "output_dir": "generated",
-                "project_name": "debug_plate",
+                "project_name": "mate",
                 "overwrite": True,
             },
             "known_parts": {
@@ -1606,7 +1606,7 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
         },
     )
 
-    result = execute_debug_plate_config(config_path)
+    result = execute_mate_config(config_path)
 
     assert result.ok is True
 
@@ -1619,8 +1619,8 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
     from altium_monkey.altium_record_sch__sheet import SheetStyle
     from altium_monkey.altium_record_sch__designator import AltiumSchDesignator
 
-    schdoc = AltiumSchDoc(tmp_path / "generated" / "debug_plate.SchDoc")
-    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "debug_plate.PcbDoc")
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "mate.SchDoc")
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
     assert schdoc.sheet is not None
     assert schdoc.sheet.sheet_style == SheetStyle.D
     schematic_designators = [
@@ -1669,7 +1669,7 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
     assert pcb_components_by_designator["TP1"].source_unique_id == (
         f"\\{sch_ids_by_designator['TP1']}"
     )
-    assert pcb_components_by_designator["TP1"].source_hierarchical_path == "debug_plate"
+    assert pcb_components_by_designator["TP1"].source_hierarchical_path == "mate"
     assert pcb_components_by_designator["TP1"].source_component_library == (
         "YZ209315103P-01.SchLib"
     )
@@ -1698,22 +1698,22 @@ def test_debug_plate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None
         assert label.textbox_rect_justification == PcbTextJustification.RIGHT_TOP
         assert label.union_index == 0xFFFFFFFF
     assert [user_union.name for user_union in pcbdoc.user_unions] == [
-        "DEBUG_PLATE_FEATURES"
+        "MATE_FEATURES"
     ]
 
 
-def test_debug_plate_left_side_pcb_labels_default_left_justified(
+def test_mate_left_side_pcb_labels_default_left_justified(
     tmp_path: Path,
 ) -> None:
     manifest_path = _write_minimal_known_part_cache(tmp_path)
-    config = load_debug_plate_config(
+    config = load_mate_config(
         _write_json(
-            tmp_path / "debug-plate.jsonc",
+            tmp_path / "mate.jsonc",
             {
-                "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+                "schema": LEGACY_MATE_CONFIG_SCHEMA,
                 "output": {
                     "output_dir": "generated",
-                    "project_name": "debug_plate",
+                    "project_name": "mate",
                     "overwrite": True,
                 },
                 "known_parts": {
@@ -1754,7 +1754,7 @@ def test_debug_plate_left_side_pcb_labels_default_left_justified(
         )
     )
 
-    payload = build_debug_plate_mco(config)
+    payload = build_mate_mco(config)
     label_op = next(
         operation
         for operation in payload["operations"]
@@ -1766,18 +1766,18 @@ def test_debug_plate_left_side_pcb_labels_default_left_justified(
     assert label_op["args"]["text_justification"] == "LEFT_TOP"
 
 
-def test_debug_plate_board_edge_pcb_labels_stack_in_column(
+def test_mate_board_edge_pcb_labels_stack_in_column(
     tmp_path: Path,
 ) -> None:
     manifest_path = _write_minimal_known_part_cache(tmp_path)
-    config = load_debug_plate_config(
+    config = load_mate_config(
         _write_json(
-            tmp_path / "debug-plate.jsonc",
+            tmp_path / "mate.jsonc",
             {
-                "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+                "schema": LEGACY_MATE_CONFIG_SCHEMA,
                 "output": {
                     "output_dir": "generated",
-                    "project_name": "debug_plate",
+                    "project_name": "mate",
                     "overwrite": True,
                     "board_outline_mils": {
                         "left": 0,
@@ -1842,7 +1842,7 @@ def test_debug_plate_board_edge_pcb_labels_stack_in_column(
         )
     )
 
-    payload = build_debug_plate_mco(config)
+    payload = build_mate_mco(config)
     label_ops = [
         operation
         for operation in payload["operations"]
@@ -1873,7 +1873,7 @@ def test_debug_plate_board_edge_pcb_labels_stack_in_column(
     }
 
 
-def test_debug_plate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
+def test_mate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
     from altium_monkey import AltiumPcbDoc, PadShape, PcbLayer
 
     pcb_path = tmp_path / "dut.PcbDoc"
@@ -1891,7 +1891,7 @@ def test_debug_plate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
     )
     pcbdoc.save(pcb_path)
 
-    payload = inspect_debug_plate_source(pcb_path, project_context="none")
+    payload = inspect_mate_source(pcb_path, project_context="none")
 
     assert payload["schema"].endswith(".inspect.v1")
     board = payload["boards"][0]
@@ -1903,7 +1903,7 @@ def test_debug_plate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
             sys.executable,
             "-m",
             "altium_cruncher",
-            "debug-plate",
+            "mate",
             "inspect",
             str(pcb_path),
             "--project-context",
@@ -1919,13 +1919,13 @@ def test_debug_plate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
     cli_payload = json.loads(completed.stdout)
     assert cli_payload["boards"][0]["free_pads"][0]["hole_size_mils"] == 40.0
 
-    seed_path = tmp_path / "debug-plate.seed.jsonc"
+    seed_path = tmp_path / "mate.seed.jsonc"
     completed = subprocess.run(
         [
             sys.executable,
             "-m",
             "altium_cruncher",
-            "debug-plate",
+            "mate",
             "seed",
             str(pcb_path),
             "--project-context",
@@ -1946,14 +1946,14 @@ def test_debug_plate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
     assert seeded_board["free_pads"][0]["kind"] == "free_npth"
 
 
-def test_debug_plate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
-    config_path = tmp_path / "debug-plate.jsonc"
+def test_mate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
+    config_path = tmp_path / "mate.jsonc"
     completed = subprocess.run(
         [
             sys.executable,
             "-m",
             "altium_cruncher",
-            "debug-plate",
+            "mate",
             "init",
             str(config_path),
         ],
@@ -1966,13 +1966,13 @@ def test_debug_plate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
     assert completed.returncode == 0, completed.stderr
     assert config_path.exists()
 
-    mco_path = tmp_path / "debug-plate.mco.jsonc"
+    mco_path = tmp_path / "mate.mco.jsonc"
     completed = subprocess.run(
         [
             sys.executable,
             "-m",
             "altium_cruncher",
-            "debug-plate",
+            "mate",
             "plan",
             str(config_path),
             "--output-mco",
@@ -1993,7 +1993,7 @@ def test_debug_plate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
             sys.executable,
             "-m",
             "altium_cruncher",
-            "debug-plate",
+            "mate",
             "run",
             str(config_path),
             "--dry-run",

@@ -14,8 +14,8 @@
   "output": {
     // The first backend is Altium. The config concepts should remain portable.
     "backend": "altium",
-    "output_dir": "output/cricket-node-debug-plate",
-    "project_name": "cricket_node_debug_plate",
+    "output_dir": "output/cricket-node-mate",
+    "project_name": "cricket_node_mate",
     "schematic_sheet_style": "D",
     // Keep source and output board origins aligned for projected geometry and
     // bottom-layer STEP alignment artifacts.
@@ -39,7 +39,7 @@
   "known_parts": {
     // For now this is the node-test-array cache. Longer term this likely points
     // at ALX CAD part-library-backed metadata.
-    "manifest": "known-parts/debug-plate-known-parts.json"
+    "manifest": "known-parts/mate-known-parts.json"
   },
 
   "validation": {

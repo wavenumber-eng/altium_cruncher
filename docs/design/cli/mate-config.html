@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>debug-plate portable mate config design</title>
+  <title>mate portable config design</title>
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body data-doc-status="accepted">
-  <h1 data-key="debug-plate-mate-config.title"><span class="knockout">debug-plate</span> portable mate config design</h1>
+  <h1 data-key="mate-config.title"><span class="knockout">mate</span> portable config design</h1>
 
-  <h2 data-key="debug-plate-mate-config.status">Status</h2>
+  <h2 data-key="mate-config.status">Status</h2>
   <p>
     This document is a design draft for the next config shape. The implemented
-    command contract remains <a href="debug-plate.html">debug-plate.html</a>,
+    command contract remains <a href="mate.html">mate.html</a>,
     and the generated Altium MCO operation contract remains
     <a href="mco.html">mco.html</a>. Current draft implementation covers mate
     config seeding, selector resolution, mate part roles, PCB labels, board
@@ -19,9 +19,9 @@
     source-side validation; remaining projection actions are still draft.
   </p>
 
-  <h2 data-key="debug-plate-mate-config.goal">Goal</h2>
+  <h2 data-key="mate-config.goal">Goal</h2>
   <p>
-    The current command name is <code>debug-plate</code>, but the domain model
+    The current command name is <code>mate</code>, but the domain model
     is broader: create an output board that mates to an input board. The first
     feature-complete use case is cricket-node mated to node-test-array derived
     fixture parts. The config model should remain portable enough to map later
@@ -29,7 +29,7 @@
     current MCO backend remains Altium-specific.
   </p>
 
-  <h2 data-key="debug-plate-mate-config.vocabulary">Vocabulary</h2>
+  <h2 data-key="mate-config.vocabulary">Vocabulary</h2>
   <table>
     <thead>
       <tr>
@@ -61,7 +61,7 @@
     </tbody>
   </table>
 
-  <h2 data-key="debug-plate-mate-config.principles">Config Principles</h2>
+  <h2 data-key="mate-config.principles">Config Principles</h2>
   <ul>
     <li>The config is source code; MCO is compiled output.</li>
     <li>The config should name what to select and what to project, not manually repeat coordinates, net names, or source side in normal use.</li>
@@ -71,7 +71,7 @@
     <li>The first implementation may keep an Altium command and Altium cache, but the conceptual config should not depend on Altium-only object names where a portable term is available.</li>
   </ul>
 
-  <h2 data-key="debug-plate-mate-config.pipeline">Theory Of Operations</h2>
+  <h2 data-key="mate-config.pipeline">Theory Of Operations</h2>
   <ol>
     <li><code>inspect</code> loads the source project and classifies source objects that are likely useful for mating.</li>
     <li><code>seed</code> writes a reviewable config that uses selectors and projection rules rather than fully resolved object records.</li>
@@ -81,7 +81,7 @@
     <li>The user opens the output project in Altium for visual inspection, then iterates on the config.</li>
   </ol>
 
-  <h2 data-key="debug-plate-mate-config.source-objects">Source Object Classes</h2>
+  <h2 data-key="mate-config.source-objects">Source Object Classes</h2>
   <p>
     The cricket-node use case needs these source object classes to be explicit
     in the planner, even when the first config uses presets or designator
@@ -119,7 +119,7 @@
     </tbody>
   </table>
 
-  <h2 data-key="debug-plate-mate-config.projections">Projection Actions</h2>
+  <h2 data-key="mate-config.projections">Projection Actions</h2>
   <table>
     <thead>
       <tr>
@@ -163,7 +163,7 @@
     </tbody>
   </table>
 
-  <h2 data-key="debug-plate-mate-config.side-origin-rules">Side And Origin Rules</h2>
+  <h2 data-key="mate-config.side-origin-rules">Side And Origin Rules</h2>
   <ul>
     <li>The planner should infer selected source object side from the source board.</li>
     <li>The user should not normally specify <code>source_mount_side</code>; it is a resolved fact or optional validation expectation.</li>
@@ -175,7 +175,7 @@
     <li>The current Altium project skeleton supports rectangular output board outlines. <code>output.board_outline.mode</code> may use <code>source_bounds</code> for the DUT bounds or <code>source_bounds_with_margin</code> for a larger rectangle. <code>margin_mils</code> may be one number or an object with <code>left</code>, <code>bottom</code>, <code>right</code>, and <code>top</code>. Exact <code>match_shape</code> output is deferred until the skeleton supports arbitrary outline geometry.</li>
   </ul>
 
-  <h2 data-key="debug-plate-mate-config.cricket-node-target">Cricket-Node Feature-Complete Target</h2>
+  <h2 data-key="mate-config.cricket-node-target">Cricket-Node Feature-Complete Target</h2>
   <p>
     The first complete workflow should support cricket-node without requiring
     users to type resolved coordinates or net names. The config should select
@@ -188,16 +188,16 @@
     <li>Select free NPTH alignment holes as source free-pad/drill objects; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
     <li>Project mate components from the current node-test-array cache.</li>
     <li>Place generated schematic symbols on a roomy sheet, currently ANSI <code>D</code> by default, grouped by symbol type. Route each netted symbol with a wire that leaves the symbol in the known-part signal pin orientation. The schematic net label is placed on that wire, rotated with the wire direction, and the wire is long enough to sit under the estimated full label text.</li>
-    <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>DEBUG_PLATE_FEATURES</code> so they can be manually moved after generation.</li>
+    <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>MATE_FEATURES</code> so they can be manually moved after generation.</li>
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
     <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad shape where the writer can express it.</li>
     <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
     <li>Detect and project internal board cutouts as Mechanical 1 graphics, actual output board-cutout regions, or both.</li>
     <li>Generate a bottom-layer <code>pcb-layer-step</code> artifact for visual/mechanical alignment and optionally insert the generated STEP into the output PcbDoc at a configurable Z height.</li>
-    <li>Group generated PCB-side features into <code>DEBUG_PLATE_FEATURES</code>, excluding movable PCB net-label text.</li>
+    <li>Group generated PCB-side features into <code>MATE_FEATURES</code>, excluding movable PCB net-label text.</li>
   </ul>
 
-  <h2 data-key="debug-plate-mate-config.proposed-shape">Proposed Config Shape</h2>
+  <h2 data-key="mate-config.proposed-shape">Proposed Config Shape</h2>
   <p>
     This is a draft shape for discussion, not an implemented schema. Names may
     change after review.
@@ -225,7 +225,7 @@
     }
   },
   "known_parts": {
-    "manifest": "known-parts/debug-plate-known-parts.json"
+    "manifest": "known-parts/mate-known-parts.json"
   },
   "validation": {
     "source_side": "infer_single_side",
@@ -348,7 +348,7 @@
   }
 }</pre>
 
-  <h2 data-key="debug-plate-mate-config.seed-behavior">Seed And GUI Behavior</h2>
+  <h2 data-key="mate-config.seed-behavior">Seed And GUI Behavior</h2>
   <p>
     Before a GUI exists, <code>seed</code> should produce a commented config
     with useful selector presets and disabled optional sections. Later, a GUI
@@ -378,7 +378,7 @@
     <code>auto_width_padding_mils</code> is added to the longest rendered label
     estimate so every board-edge label box uses the same width. Board-edge
     labels and their headers are emitted after the generated feature union and
-    are therefore not part of <code>DEBUG_PLATE_FEATURES</code>.
+    are therefore not part of <code>MATE_FEATURES</code>.
   </p>
   <p>
     Generated schematic placement is intentionally simple but collision-aware:
@@ -412,7 +412,7 @@
     makes track and polygon visibility/color choices explicit.
   </p>
 
-  <h2 data-key="debug-plate-mate-config.deferred">Deferred Topics</h2>
+  <h2 data-key="mate-config.deferred">Deferred Topics</h2>
   <ul>
     <li>ALX CAD part-library-backed metadata for durable mate part associations.</li>
     <li>Full Saleae-style breakout connector automation.</li>

@@ -1,4 +1,4 @@
-"""Debug-plate workflow configuration and MCO generation."""
+"""Mate workflow configuration and MCO generation."""
 
 from __future__ import annotations
 
@@ -18,12 +18,12 @@ from altium_cruncher.altium_cruncher_mco import (
     load_jsonc_file,
 )
 from altium_cruncher.bom_pnp_model import designator_sort_key
-from altium_cruncher.altium_cruncher_debug_plate_parts import (
-    load_debug_plate_known_parts_manifest,
+from altium_cruncher.altium_cruncher_mate_parts import (
+    load_mate_known_parts_manifest,
     manifest_path_for_cache_dir,
     resolve_known_part,
 )
-from altium_cruncher.altium_cruncher_debug_plate_graphics import (
+from altium_cruncher.altium_cruncher_mate_graphics import (
     board_outline_geometry,
     board_origin_mils,
     board_outline_bounds_mils,
@@ -38,23 +38,23 @@ from altium_cruncher.altium_cruncher_debug_plate_graphics import (
     single_inspection_board_outline,
     transform_source_pad_geometries,
 )
-from altium_cruncher.altium_cruncher_debug_plate_schematic import (
+from altium_cruncher.altium_cruncher_mate_schematic import (
     schematic_designator_style,
     schematic_grouped_positions,
     schematic_net_label_operation,
     schematic_net_route,
     schematic_wire_operation,
 )
-from altium_cruncher.altium_cruncher_debug_plate_artifacts import (
-    build_debug_plate_artifact_operations,
+from altium_cruncher.altium_cruncher_mate_artifacts import (
+    build_mate_artifact_operations,
 )
-from altium_cruncher.altium_cruncher_debug_plate_labels import (
-    DebugPlatePcbLabelsConfig,
+from altium_cruncher.altium_cruncher_mate_labels import (
+    MatePcbLabelsConfig,
     PcbNetLabelRequest,
     pcb_net_label_operations,
     pcb_net_label_request,
 )
-from altium_cruncher.altium_cruncher_debug_plate_defaults import (
+from altium_cruncher.altium_cruncher_mate_defaults import (
     DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS,
     default_known_parts_payload as _default_known_parts_payload,
     default_marker_payload as _default_marker_payload,
@@ -71,14 +71,14 @@ from altium_cruncher.altium_cruncher_debug_plate_defaults import (
     mate_known_parts_payload as _mate_known_parts_payload,
 )
 
-DEBUG_PLATE_CONFIG_SCHEMA = "wn.altium_cruncher.debug_plate.v1"
+LEGACY_MATE_CONFIG_SCHEMA = "wn.altium_cruncher.mate.v1"
 MATE_CONFIG_SCHEMA = "wn.pcb_cruncher.mate_config.a0"
-DEBUG_PLATE_INSPECTION_SCHEMA = "wn.altium_cruncher.debug_plate.inspect.v1"
+MATE_INSPECTION_SCHEMA = "wn.altium_cruncher.mate.inspect.v1"
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateOutputConfig:
-    """Output project settings for a generated debug plate."""
+class MateOutputConfig:
+    """Output project settings for a generated mate."""
 
     output_dir: str
     project_name: str
@@ -93,8 +93,8 @@ class DebugPlateOutputConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateMarkerConfig:
-    """Initial marker text used by the first debug-plate orchestration slice."""
+class MateMarkerConfig:
+    """Initial marker text used by the first mate orchestration slice."""
 
     text: str
     position_mils: tuple[float, float]
@@ -103,15 +103,15 @@ class DebugPlateMarkerConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateKnownPartsConfig:
-    """Known fixture-part cache referenced by a debug-plate config."""
+class MateKnownPartsConfig:
+    """Known fixture-part cache referenced by a mate config."""
 
     manifest_path: Path
     cache_dir: Path
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlatePlacementConfig:
+class MatePlacementConfig:
     """Board-side placement transform for projected DUT coordinates."""
 
     source_mount_side: str
@@ -122,7 +122,7 @@ class DebugPlatePlacementConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlatePcbDesignatorsConfig:
+class MatePcbDesignatorsConfig:
     """PCB-side component designator normalization settings."""
 
     enabled: bool
@@ -133,8 +133,8 @@ class DebugPlatePcbDesignatorsConfig:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateSelectionComponent:
-    """Selected DUT component to project into the debug plate."""
+class MateSelectionComponent:
+    """Selected DUT component to project into the mate."""
 
     designator: str
     kind: str
@@ -151,8 +151,8 @@ class DebugPlateSelectionComponent:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateSelectionPad:
-    """Selected DUT free pad/NPTH to project into the debug plate."""
+class MateSelectionPad:
+    """Selected DUT free pad/NPTH to project into the mate."""
 
     designator: str
     kind: str
@@ -167,36 +167,36 @@ class DebugPlateSelectionPad:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateSelectionBoard:
-    """Selected DUT board items to project into the debug plate."""
+class MateSelectionBoard:
+    """Selected DUT board items to project into the mate."""
 
     board_key: str
     pcb_path: str
-    components: tuple[DebugPlateSelectionComponent, ...]
-    free_pads: tuple[DebugPlateSelectionPad, ...]
+    components: tuple[MateSelectionComponent, ...]
+    free_pads: tuple[MateSelectionPad, ...]
     board_outline_mils: JsonObject | None = None
     board_outline: JsonObject | None = None
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateSelectionConfig:
-    """Selected DUT items to project into the debug plate."""
+class MateSelectionConfig:
+    """Selected DUT items to project into the mate."""
 
-    boards: tuple[DebugPlateSelectionBoard, ...]
+    boards: tuple[MateSelectionBoard, ...]
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateConfig:
-    """Parsed debug-plate configuration."""
+class MateConfig:
+    """Parsed mate configuration."""
 
     source_dut: str | None
-    output: DebugPlateOutputConfig
-    marker: DebugPlateMarkerConfig | None
-    known_parts: DebugPlateKnownPartsConfig | None
-    placement: DebugPlatePlacementConfig
-    pcb_labels: DebugPlatePcbLabelsConfig
-    pcb_designators: DebugPlatePcbDesignatorsConfig
-    selection: DebugPlateSelectionConfig
+    output: MateOutputConfig
+    marker: MateMarkerConfig | None
+    known_parts: MateKnownPartsConfig | None
+    placement: MatePlacementConfig
+    pcb_labels: MatePcbLabelsConfig
+    pcb_designators: MatePcbDesignatorsConfig
+    selection: MateSelectionConfig
     board_projection: JsonObject
     artifacts: JsonObject
 
@@ -208,8 +208,8 @@ class _KnownPartOperations:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateComponentCandidate:
-    """DUT component candidate for debug-plate projection."""
+class MateComponentCandidate:
+    """DUT component candidate for mate projection."""
 
     designator: str
     kind: str
@@ -238,8 +238,8 @@ class DebugPlateComponentCandidate:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlatePadCandidate:
-    """Free pad or NPTH candidate for debug-plate projection."""
+class MatePadCandidate:
+    """Free pad or NPTH candidate for mate projection."""
 
     designator: str
     kind: str
@@ -271,16 +271,16 @@ class DebugPlatePadCandidate:
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlateBoardInspection:
-    """Debug-plate source inspection for one PCB document."""
+class MateBoardInspection:
+    """Mate source inspection for one PCB document."""
 
     board_key: str
     pcb_path: str
     board_outline_mils: JsonObject | None
     board_outline: JsonObject | None
     board_origin_mils: JsonObject | None
-    components: tuple[DebugPlateComponentCandidate, ...]
-    free_pads: tuple[DebugPlatePadCandidate, ...]
+    components: tuple[MateComponentCandidate, ...]
+    free_pads: tuple[MatePadCandidate, ...]
 
     def to_dict(self) -> JsonObject:
         payload: JsonObject = {
@@ -295,27 +295,27 @@ class DebugPlateBoardInspection:
         return payload
 
 
-def load_debug_plate_config(path: Path | str) -> DebugPlateConfig:
-    """Load a debug-plate JSONC config file."""
+def load_mate_config(path: Path | str) -> MateConfig:
+    """Load a mate JSONC config file."""
     input_path = Path(path).resolve()
     payload = load_jsonc_file(input_path)
-    return parse_debug_plate_config(payload, base_dir=input_path.parent)
+    return parse_mate_config(payload, base_dir=input_path.parent)
 
 
-def parse_debug_plate_config(
+def parse_mate_config(
     payload: object,
     *,
     base_dir: Path | str | None = None,
-) -> DebugPlateConfig:
-    """Parse a debug-plate config payload."""
-    root = _json_object(payload, "debug-plate config root")
+) -> MateConfig:
+    """Parse a mate config payload."""
+    root = _json_object(payload, "mate config root")
     schema = root.get("schema")
     if schema == MATE_CONFIG_SCHEMA:
         return _parse_mate_config(root, base_dir=base_dir)
-    if schema not in {None, DEBUG_PLATE_CONFIG_SCHEMA}:
-        raise ValueError(f"Unsupported debug-plate config schema: {schema!r}")
+    if schema not in {None, LEGACY_MATE_CONFIG_SCHEMA, MATE_CONFIG_SCHEMA}:
+        raise ValueError(f"Unsupported mate config schema: {schema!r}")
     source = _section(root, "source")
-    return DebugPlateConfig(
+    return MateConfig(
         source_dut=_optional_string(source, "dut", None),
         output=_parse_output_config(_section(root, "output")),
         marker=_parse_marker_config(_section(root, "marker")),
@@ -339,11 +339,11 @@ def _parse_mate_config(
     root: Mapping[str, object],
     *,
     base_dir: Path | str | None,
-) -> DebugPlateConfig:
+) -> MateConfig:
     source = _section(root, "source")
     source_board = _optional_string(source, "board", None)
     inspection = _mate_source_inspection(root, base_dir=base_dir)
-    return DebugPlateConfig(
+    return MateConfig(
         source_dut=source_board,
         output=_parse_mate_output_config(_section(root, "output"), inspection),
         marker=None,
@@ -363,8 +363,8 @@ def _parse_mate_config(
     )
 
 
-def build_debug_plate_mco(config: DebugPlateConfig) -> JsonObject:
-    """Build the executable MCO payload for a debug-plate config."""
+def build_mate_mco(config: MateConfig) -> JsonObject:
+    """Build the executable MCO payload for a mate config."""
     operations: list[JsonObject] = [
         _project_create_operation(
             config.output,
@@ -378,44 +378,44 @@ def build_debug_plate_mco(config: DebugPlateConfig) -> JsonObject:
     known_part_operations = _known_part_operations(config)
     placement_operations = known_part_operations.placement_operations
     board_projection_operations = _board_projection_operations(config)
-    artifact_operations = build_debug_plate_artifact_operations(config)
+    artifact_operations = build_mate_artifact_operations(config)
     operations.extend(placement_operations)
     operations.extend(board_projection_operations)
     operations.extend(artifact_operations)
     if placement_operations or board_projection_operations or artifact_operations:
-        operations.append(_debug_plate_user_union_operation(config.output))
+        operations.append(_mate_user_union_operation(config.output))
     operations.extend(known_part_operations.pcb_label_operations)
     return {"schema": MCO_SCHEMA, "operations": operations}
 
 
-def write_debug_plate_config_template(
+def write_mate_config_template(
     path: Path | str,
     *,
     overwrite: bool = False,
 ) -> Path:
-    """Write an editable debug-plate JSONC template."""
+    """Write an editable mate JSONC template."""
     output_path = Path(path)
     if output_path.exists() and not overwrite:
-        raise FileExistsError(f"Debug-plate config already exists: {output_path}")
+        raise FileExistsError(f"Mate config already exists: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(_debug_plate_template_text(), encoding="utf-8")
+    output_path.write_text(_mate_template_text(), encoding="utf-8")
     return output_path.resolve()
 
 
-def build_debug_plate_seed_config(
+def build_legacy_mate_seed_config(
     input_file: Path | str,
     *,
     pcbdoc_selector: Path | str | None = None,
     project_context: str | None = "auto",
 ) -> JsonObject:
-    """Build an editable debug-plate config seeded from DUT inspection."""
-    inspection = inspect_debug_plate_source(
+    """Build an editable mate config seeded from DUT inspection."""
+    inspection = inspect_mate_source(
         input_file,
         pcbdoc_selector=pcbdoc_selector,
         project_context=project_context,
     )
     return {
-        "schema": DEBUG_PLATE_CONFIG_SCHEMA,
+        "schema": LEGACY_MATE_CONFIG_SCHEMA,
         "source": {"dut": str(Path(input_file).resolve())},
         "output": _default_output_config_payload(),
         "known_parts": _default_known_parts_payload(),
@@ -427,7 +427,7 @@ def build_debug_plate_seed_config(
     }
 
 
-def build_debug_plate_mate_seed_config(
+def build_mate_seed_config(
     input_file: Path | str,
     *,
     known_parts_manifest: Path | str | None = None,
@@ -435,7 +435,7 @@ def build_debug_plate_mate_seed_config(
     project_context: str | None = "auto",
 ) -> JsonObject:
     """Build a draft mate config seeded from DUT inspection."""
-    inspection = inspect_debug_plate_source(
+    inspection = inspect_mate_source(
         input_file,
         pcbdoc_selector=pcbdoc_selector,
         project_context=project_context,
@@ -462,7 +462,7 @@ def build_debug_plate_mate_seed_config(
     }
 
 
-def write_debug_plate_seed_config(
+def write_legacy_mate_seed_config(
     input_file: Path | str,
     path: Path | str,
     *,
@@ -470,11 +470,11 @@ def write_debug_plate_seed_config(
     pcbdoc_selector: Path | str | None = None,
     project_context: str | None = "auto",
 ) -> Path:
-    """Write an editable debug-plate config seeded from a DUT PCB input."""
+    """Write an editable mate config seeded from a DUT PCB input."""
     output_path = Path(path)
     if output_path.exists() and not overwrite:
-        raise FileExistsError(f"Debug-plate config already exists: {output_path}")
-    payload = build_debug_plate_seed_config(
+        raise FileExistsError(f"Mate config already exists: {output_path}")
+    payload = build_legacy_mate_seed_config(
         input_file,
         pcbdoc_selector=pcbdoc_selector,
         project_context=project_context,
@@ -487,7 +487,7 @@ def write_debug_plate_seed_config(
     return output_path.resolve()
 
 
-def write_debug_plate_mate_seed_config(
+def write_mate_seed_config(
     input_file: Path | str,
     path: Path | str,
     *,
@@ -499,8 +499,8 @@ def write_debug_plate_mate_seed_config(
     """Write a draft mate config seeded from a DUT PCB input."""
     output_path = Path(path)
     if output_path.exists() and not overwrite:
-        raise FileExistsError(f"Debug-plate mate config already exists: {output_path}")
-    payload = build_debug_plate_mate_seed_config(
+        raise FileExistsError(f"Mate config already exists: {output_path}")
+    payload = build_mate_seed_config(
         input_file,
         known_parts_manifest=known_parts_manifest,
         pcbdoc_selector=pcbdoc_selector,
@@ -514,43 +514,43 @@ def write_debug_plate_mate_seed_config(
     return output_path.resolve()
 
 
-def write_debug_plate_mco(
-    config: DebugPlateConfig,
+def write_mate_mco(
+    config: MateConfig,
     path: Path | str,
     *,
     overwrite: bool = False,
 ) -> Path:
-    """Write the generated debug-plate MCO payload."""
+    """Write the generated mate MCO payload."""
     output_path = Path(path)
     if output_path.exists() and not overwrite:
-        raise FileExistsError(f"Debug-plate MCO already exists: {output_path}")
+        raise FileExistsError(f"Mate MCO already exists: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps(build_debug_plate_mco(config), indent=2, sort_keys=True) + "\n",
+        json.dumps(build_mate_mco(config), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     return output_path.resolve()
 
 
-def execute_debug_plate_config(
+def execute_mate_config(
     path: Path | str,
     *,
     dry_run: bool = False,
 ) -> McoExecutionResult:
-    """Execute a debug-plate config through the MCO engine."""
+    """Execute a mate config through the MCO engine."""
     config_path = Path(path).resolve()
-    config = load_debug_plate_config(config_path)
+    config = load_mate_config(config_path)
     context = McoExecutionContext(work_dir=config_path.parent, dry_run=dry_run)
-    return execute_mco(build_debug_plate_mco(config), context)
+    return execute_mco(build_mate_mco(config), context)
 
 
-def inspect_debug_plate_source(
+def inspect_mate_source(
     input_file: Path | str,
     *,
     pcbdoc_selector: Path | str | None = None,
     project_context: str | None = "auto",
 ) -> JsonObject:
-    """Inspect a DUT PCB input and report debug-plate projection candidates."""
+    """Inspect a DUT PCB input and report mate projection candidates."""
     from altium_cruncher.altium_cruncher_pcb_workflow import (
         iter_pcb_render_inputs,
         load_design_for_pcb_input,
@@ -562,7 +562,7 @@ def inspect_debug_plate_source(
         project_context=project_context,
     )
     boards = [
-        inspect_pcbdoc_for_debug_plate(
+        inspect_pcbdoc_for_mate(
             render_input.board_key,
             render_input.pcbdoc,
             render_input.pcb_path,
@@ -573,20 +573,20 @@ def inspect_debug_plate_source(
         )
     ]
     return {
-        "schema": DEBUG_PLATE_INSPECTION_SCHEMA,
+        "schema": MATE_INSPECTION_SCHEMA,
         "source": str(input_path),
         "source_tag": source_tag,
         "boards": [board.to_dict() for board in boards],
     }
 
 
-def inspect_pcbdoc_for_debug_plate(
+def inspect_pcbdoc_for_mate(
     board_key: str,
     pcbdoc: object,
     pcb_path: Path | str,
-) -> DebugPlateBoardInspection:
-    """Inspect one loaded PcbDoc object for likely debug-plate candidates."""
-    return DebugPlateBoardInspection(
+) -> MateBoardInspection:
+    """Inspect one loaded PcbDoc object for likely mate candidates."""
+    return MateBoardInspection(
         board_key=board_key,
         pcb_path=str(Path(pcb_path)),
         board_outline_mils=board_outline_bounds_mils(pcbdoc),
@@ -597,13 +597,13 @@ def inspect_pcbdoc_for_debug_plate(
     )
 
 
-def _parse_output_config(raw: Mapping[str, object]) -> DebugPlateOutputConfig:
-    output_dir = _optional_string(raw, "output_dir", "output/debug-plate")
-    project_name = _optional_string(raw, "project_name", "debug_plate")
+def _parse_output_config(raw: Mapping[str, object]) -> MateOutputConfig:
+    output_dir = _optional_string(raw, "output_dir", "output/mate")
+    project_name = _optional_string(raw, "project_name", "mate")
     layer_stack_template = _optional_string(raw, "layer_stack_template", "2-layer")
-    return DebugPlateOutputConfig(
-        output_dir=output_dir or "output/debug-plate",
-        project_name=project_name or "debug_plate",
+    return MateOutputConfig(
+        output_dir=output_dir or "output/mate",
+        project_name=project_name or "mate",
         schematic_filename=_optional_string(raw, "schematic_filename", None),
         schematic_sheet_style=_optional_string(raw, "schematic_sheet_style", "D"),
         board_filename=_optional_string(raw, "board_filename", None),
@@ -626,7 +626,7 @@ def _parse_output_config(raw: Mapping[str, object]) -> DebugPlateOutputConfig:
 def _parse_mate_output_config(
     raw: Mapping[str, object],
     inspection: Mapping[str, object],
-) -> DebugPlateOutputConfig:
+) -> MateOutputConfig:
     output = _parse_output_config(raw)
     origin = _optional_string(raw, "origin", "preserve_source")
     source_outline = single_inspection_board_outline(inspection)
@@ -669,12 +669,12 @@ def _resolve_mate_output_board_outline(
         )
     if mode in {"match_shape", "source_shape"}:
         raise ValueError(
-            "Debug-plate output.board_outline.mode='match_shape' needs an "
+            "Mate output.board_outline.mode='match_shape' needs an "
             "arbitrary-outline project skeleton; use 'source_bounds' or "
             "'source_bounds_with_margin' for the current rectangular skeleton"
         )
     raise ValueError(
-        "Debug-plate output.board_outline.mode must be 'source_bounds' or "
+        "Mate output.board_outline.mode must be 'source_bounds' or "
         "'source_bounds_with_margin'"
     )
 
@@ -687,7 +687,7 @@ def _board_outline_margin_mils(
         margin = float(value)
         if margin < 0.0:
             raise ValueError(
-                "Debug-plate output.board_outline.margin_mils must be non-negative"
+                "Mate output.board_outline.margin_mils must be non-negative"
             )
         return (margin, margin, margin, margin)
     if isinstance(value, dict):
@@ -699,12 +699,12 @@ def _board_outline_margin_mils(
         )
         if any(side < 0.0 for side in margin):
             raise ValueError(
-                "Debug-plate output.board_outline.margin_mils sides must be "
+                "Mate output.board_outline.margin_mils sides must be "
                 "non-negative"
             )
         return margin
     raise ValueError(
-        "Debug-plate output.board_outline.margin_mils must be a number or an object"
+        "Mate output.board_outline.margin_mils must be a number or an object"
     )
 
 
@@ -712,7 +712,7 @@ def _optional_margin_side_mils(raw: Mapping[str, object], name: str) -> float:
     value = raw.get(name, 0.0)
     if not isinstance(value, int | float) or isinstance(value, bool):
         raise ValueError(
-            f"Debug-plate output.board_outline.margin_mils.{name} must be numeric"
+            f"Mate output.board_outline.margin_mils.{name} must be numeric"
         )
     return float(value)
 
@@ -786,8 +786,8 @@ def _list_field(payload: Mapping[str, object], name: str) -> list[object]:
     return list(value) if isinstance(value, list) else []
 
 
-def _component_candidates(pcbdoc: object) -> list[DebugPlateComponentCandidate]:
-    candidates: list[DebugPlateComponentCandidate] = []
+def _component_candidates(pcbdoc: object) -> list[MateComponentCandidate]:
+    candidates: list[MateComponentCandidate] = []
     components = list(getattr(pcbdoc, "components", []) or [])
     for index, component in enumerate(components):
         designator = str(getattr(component, "designator", "") or "")
@@ -796,7 +796,7 @@ def _component_candidates(pcbdoc: object) -> list[DebugPlateComponentCandidate]:
             continue
         x_mils, y_mils = _component_position_mils(pcbdoc, index, component)
         candidates.append(
-            DebugPlateComponentCandidate(
+            MateComponentCandidate(
                 designator=designator,
                 kind=kind,
                 layer=str(getattr(component, "layer", "") or ""),
@@ -810,8 +810,8 @@ def _component_candidates(pcbdoc: object) -> list[DebugPlateComponentCandidate]:
     return candidates
 
 
-def _free_pad_candidates(pcbdoc: object) -> list[DebugPlatePadCandidate]:
-    candidates: list[DebugPlatePadCandidate] = []
+def _free_pad_candidates(pcbdoc: object) -> list[MatePadCandidate]:
+    candidates: list[MatePadCandidate] = []
     for pad in list(getattr(pcbdoc, "pads", []) or []):
         if not _is_free_pad(pad):
             continue
@@ -848,10 +848,10 @@ def _is_free_pad(pad: object) -> bool:
     return component_index is None or int(component_index) == 0xFFFF
 
 
-def _pad_candidate(pcbdoc: object, pad: object) -> DebugPlatePadCandidate:
+def _pad_candidate(pcbdoc: object, pad: object) -> MatePadCandidate:
     hole_size = _float_attr(pad, "hole_size_mils")
     plated = _bool_attr(pad, "is_plated")
-    return DebugPlatePadCandidate(
+    return MatePadCandidate(
         designator=_str_attr(pad, "designator"),
         kind="free_npth" if hole_size > 0.0 and not plated else "free_pad",
         layer=_int_attr(pad, "layer"),
@@ -914,14 +914,14 @@ def _bool_attr(obj: object, name: str) -> bool:
     return False if value is None else bool(value)
 
 
-def _parse_marker_config(raw: Mapping[str, object]) -> DebugPlateMarkerConfig | None:
+def _parse_marker_config(raw: Mapping[str, object]) -> MateMarkerConfig | None:
     enabled = _optional_bool(raw, "enabled", True)
     if not enabled:
         return None
-    marker_text = _optional_string(raw, "text", "DEBUG PLATE")
+    marker_text = _optional_string(raw, "text", "MATE")
     marker_layer = _optional_string(raw, "layer", "TOP_OVERLAY")
-    return DebugPlateMarkerConfig(
-        text=marker_text or "DEBUG PLATE",
+    return MateMarkerConfig(
+        text=marker_text or "MATE",
         position_mils=_required_point(raw, "position_mils", default=(200.0, 200.0)),
         height_mils=_optional_float(raw, "height_mils", 60.0),
         layer=marker_layer or "TOP_OVERLAY",
@@ -932,7 +932,7 @@ def _parse_known_parts_config(
     raw: Mapping[str, object] | None,
     *,
     base_dir: Path | str | None,
-) -> DebugPlateKnownPartsConfig | None:
+) -> MateKnownPartsConfig | None:
     if raw is None:
         return None
     manifest = _optional_string(raw, "manifest", None)
@@ -949,17 +949,17 @@ def _parse_known_parts_config(
         if manifest
         else manifest_path_for_cache_dir(resolved_cache_dir or base_path)
     )
-    return DebugPlateKnownPartsConfig(
+    return MateKnownPartsConfig(
         manifest_path=manifest_path,
         cache_dir=resolved_cache_dir or manifest_path.parent,
     )
 
 
-def _parse_placement_config(raw: Mapping[str, object]) -> DebugPlatePlacementConfig:
+def _parse_placement_config(raw: Mapping[str, object]) -> MatePlacementConfig:
     mount_side = _optional_string(raw, "source_mount_side", "bottom")
     if mount_side not in {"bottom", "top"}:
-        raise ValueError("Debug-plate placement.source_mount_side must be bottom or top")
-    return DebugPlatePlacementConfig(
+        raise ValueError("Mate placement.source_mount_side must be bottom or top")
+    return MatePlacementConfig(
         source_mount_side=mount_side,
         offset_mils=_required_point(raw, "offset_mils", default=(0.0, 0.0)),
         mirror_x=_optional_bool(raw, "mirror_x", False),
@@ -974,16 +974,16 @@ def _parse_placement_config(raw: Mapping[str, object]) -> DebugPlatePlacementCon
 
 def _parse_pcb_labels_config(
     raw: Mapping[str, object] | None,
-) -> DebugPlatePcbLabelsConfig:
+) -> MatePcbLabelsConfig:
     if raw is None:
         raw = {}
     enabled = _optional_bool(raw, "enabled", False)
     side = _optional_string(raw, "side", "right")
     if side not in {"left", "right", "board_left", "board_right"}:
         raise ValueError(
-            "Debug-plate pcb_labels.side must be left, right, board_left, or board_right"
+            "Mate pcb_labels.side must be left, right, board_left, or board_right"
         )
-    return DebugPlatePcbLabelsConfig(
+    return MatePcbLabelsConfig(
         enabled=enabled,
         side=side,
         offset_mils=_required_point(raw, "offset_mils", default=(120.0, 0.0)),
@@ -1003,16 +1003,16 @@ def _parse_pcb_designators_config(
     raw: Mapping[str, object] | None,
     *,
     default_enabled: bool,
-) -> DebugPlatePcbDesignatorsConfig:
+) -> MatePcbDesignatorsConfig:
     if raw is None:
         raw = {}
     enabled = _optional_bool(raw, "enabled", default_enabled)
     placement = _optional_string(raw, "placement", "above_component")
     if placement != "above_component":
         raise ValueError(
-            "Debug-plate pcb_designators.placement must be above_component"
+            "Mate pcb_designators.placement must be above_component"
         )
-    return DebugPlatePcbDesignatorsConfig(
+    return MatePcbDesignatorsConfig(
         enabled=enabled,
         placement=placement,
         offset_mils=_required_point(raw, "offset_mils", default=(0.0, 10.0)),
@@ -1021,8 +1021,8 @@ def _parse_pcb_designators_config(
     )
 
 
-def _default_mate_placement_config() -> DebugPlatePlacementConfig:
-    return DebugPlatePlacementConfig(
+def _default_mate_placement_config() -> MatePlacementConfig:
+    return MatePlacementConfig(
         source_mount_side="bottom",
         offset_mils=(0.0, 0.0),
         mirror_x=False,
@@ -1033,7 +1033,7 @@ def _default_mate_placement_config() -> DebugPlatePlacementConfig:
 
 def _parse_mate_pcb_labels_config(
     _root: Mapping[str, object],
-) -> DebugPlatePcbLabelsConfig:
+) -> MatePcbLabelsConfig:
     return _parse_pcb_labels_config({"enabled": False})
 
 
@@ -1048,7 +1048,7 @@ def _mate_source_inspection(
         raise ValueError("Mate config source.board must be a non-empty string")
     base_path = Path(base_dir).resolve() if base_dir is not None else Path.cwd()
     input_file = _resolve_config_path(source_board, base_path)
-    return inspect_debug_plate_source(
+    return inspect_mate_source(
         input_file,
         pcbdoc_selector=_optional_string(source, "pcbdoc", None),
         project_context=_optional_string(source, "project_context", "auto"),
@@ -1058,7 +1058,7 @@ def _mate_source_inspection(
 def _selection_from_mate_inspection(
     root: Mapping[str, object],
     inspection: Mapping[str, object],
-) -> DebugPlateSelectionConfig:
+) -> MateSelectionConfig:
     projection_items = [
         projection
         for projection in _mate_projection_items(root)
@@ -1531,11 +1531,11 @@ def _split_selector_string(value: str, name: str) -> list[str]:
     return result
 
 
-def _parse_selection_config(raw: Mapping[str, object]) -> DebugPlateSelectionConfig:
+def _parse_selection_config(raw: Mapping[str, object]) -> MateSelectionConfig:
     boards = raw.get("boards", [])
     if not isinstance(boards, list):
-        raise ValueError("Debug-plate selection.boards must be an array")
-    return DebugPlateSelectionConfig(
+        raise ValueError("Mate selection.boards must be an array")
+    return MateSelectionConfig(
         boards=tuple(
             _parse_selection_board(board)
             for board in boards
@@ -1544,8 +1544,8 @@ def _parse_selection_config(raw: Mapping[str, object]) -> DebugPlateSelectionCon
     )
 
 
-def _parse_selection_board(raw: Mapping[str, object]) -> DebugPlateSelectionBoard:
-    return DebugPlateSelectionBoard(
+def _parse_selection_board(raw: Mapping[str, object]) -> MateSelectionBoard:
+    return MateSelectionBoard(
         board_key=str(raw.get("board_key", "") or ""),
         pcb_path=str(raw.get("pcb_path", "") or ""),
         components=tuple(
@@ -1569,8 +1569,8 @@ def _parse_selection_board(raw: Mapping[str, object]) -> DebugPlateSelectionBoar
 
 def _parse_selection_component(
     raw: Mapping[str, object],
-) -> DebugPlateSelectionComponent:
-    return DebugPlateSelectionComponent(
+) -> MateSelectionComponent:
+    return MateSelectionComponent(
         designator=str(raw.get("designator", "") or ""),
         kind=str(raw.get("kind", "") or ""),
         layer=str(raw.get("layer", "") or ""),
@@ -1586,8 +1586,8 @@ def _parse_selection_component(
     )
 
 
-def _parse_selection_pad(raw: Mapping[str, object]) -> DebugPlateSelectionPad:
-    return DebugPlateSelectionPad(
+def _parse_selection_pad(raw: Mapping[str, object]) -> MateSelectionPad:
+    return MateSelectionPad(
         designator=str(raw.get("designator", "") or ""),
         kind=str(raw.get("kind", "") or ""),
         x_mils=_number_like(raw, "x_mils"),
@@ -1602,7 +1602,7 @@ def _parse_selection_pad(raw: Mapping[str, object]) -> DebugPlateSelectionPad:
 
 
 def _project_create_operation(
-    output: DebugPlateOutputConfig,
+    output: MateOutputConfig,
     *,
     documents: list[str] | None = None,
 ) -> JsonObject:
@@ -1621,21 +1621,21 @@ def _project_create_operation(
     if documents:
         args["documents"] = documents
     return {
-        "id": "create_debug_plate_project",
+        "id": "create_mate_project",
         "op": "project.create-skeleton",
-        "message": "Create debug-plate project skeleton",
+        "message": "Create mate project skeleton",
         "args": args,
     }
 
 
 def _pcb_marker_operation(
-    output: DebugPlateOutputConfig,
-    marker: DebugPlateMarkerConfig,
+    output: MateOutputConfig,
+    marker: MateMarkerConfig,
 ) -> JsonObject:
     return {
-        "id": "add_debug_plate_marker",
+        "id": "add_mate_marker",
         "op": "pcbdoc.add-text",
-        "message": "Add debug-plate PCB marker text",
+        "message": "Add mate PCB marker text",
         "args": {
             "file": _output_file(output.output_dir, _board_filename(output)),
             "overwrite": True,
@@ -1647,7 +1647,7 @@ def _pcb_marker_operation(
     }
 
 
-def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
+def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
     known_parts = config.known_parts
     if known_parts is None:
         return _KnownPartOperations([], [])
@@ -1655,7 +1655,7 @@ def _known_part_operations(config: DebugPlateConfig) -> _KnownPartOperations:
     if not targets:
         return _KnownPartOperations([], [])
 
-    manifest = load_debug_plate_known_parts_manifest(known_parts.manifest_path)
+    manifest = load_mate_known_parts_manifest(known_parts.manifest_path)
     operations: list[JsonObject] = []
     pcb_label_requests: list[PcbNetLabelRequest] = []
     board_label_column_indices: dict[str, int] = {}
@@ -1789,7 +1789,7 @@ def _sort_known_part_targets_by_group_and_designator(
     )
 
 
-def _board_projection_operations(config: DebugPlateConfig) -> list[JsonObject]:
+def _board_projection_operations(config: MateConfig) -> list[JsonObject]:
     return build_pcb_board_projection_operations(
         output_dir=config.output.output_dir,
         board_filename=_board_filename(config.output),
@@ -1798,14 +1798,14 @@ def _board_projection_operations(config: DebugPlateConfig) -> list[JsonObject]:
     )
 
 
-def _known_part_project_documents(config: DebugPlateConfig) -> list[str]:
+def _known_part_project_documents(config: MateConfig) -> list[str]:
     return [
         reference["project_path"]
         for reference in _known_part_library_references(config)
     ]
 
 
-def _known_part_library_copy_operations(config: DebugPlateConfig) -> list[JsonObject]:
+def _known_part_library_copy_operations(config: MateConfig) -> list[JsonObject]:
     operations: list[JsonObject] = []
     for reference in _known_part_library_references(config):
         project_path = reference["project_path"]
@@ -1814,7 +1814,7 @@ def _known_part_library_copy_operations(config: DebugPlateConfig) -> list[JsonOb
             {
                 "id": f"copy_{_safe_id(project_path)}",
                 "op": "file.copy",
-                "message": f"Copy debug-plate library {Path(project_path).name}",
+                "message": f"Copy mate library {Path(project_path).name}",
                 "args": {
                     "source": source,
                     "destination": _output_file(config.output.output_dir, project_path),
@@ -1825,7 +1825,7 @@ def _known_part_library_copy_operations(config: DebugPlateConfig) -> list[JsonOb
     return operations
 
 
-def _known_part_library_references(config: DebugPlateConfig) -> list[dict[str, str]]:
+def _known_part_library_references(config: MateConfig) -> list[dict[str, str]]:
     known_parts = config.known_parts
     if known_parts is None:
         return []
@@ -1833,7 +1833,7 @@ def _known_part_library_references(config: DebugPlateConfig) -> list[dict[str, s
     if not targets:
         return []
 
-    manifest = load_debug_plate_known_parts_manifest(known_parts.manifest_path)
+    manifest = load_mate_known_parts_manifest(known_parts.manifest_path)
     references: dict[str, str] = {}
     for target in targets:
         target_kind = str(target.get("kind", "") or "")
@@ -1852,8 +1852,8 @@ def _known_part_library_references(config: DebugPlateConfig) -> list[dict[str, s
 
 
 def _placement_targets(
-    selection: DebugPlateSelectionConfig,
-    placement: DebugPlatePlacementConfig | None = None,
+    selection: MateSelectionConfig,
+    placement: MatePlacementConfig | None = None,
 ) -> list[JsonObject]:
     targets: list[JsonObject] = []
     for board in selection.boards:
@@ -1916,7 +1916,7 @@ def _placement_targets(
 def _transform_placement(
     x_mils: float,
     y_mils: float,
-    placement: DebugPlatePlacementConfig | None,
+    placement: MatePlacementConfig | None,
 ) -> tuple[float, float]:
     if placement is None:
         return (x_mils, y_mils)
@@ -1928,7 +1928,7 @@ def _transform_placement(
 
 
 def _schematic_part_operation(
-    output: DebugPlateOutputConfig,
+    output: MateOutputConfig,
     part: Mapping[str, object],
     target: Mapping[str, object],
     designator: str,
@@ -1939,7 +1939,7 @@ def _schematic_part_operation(
     return {
         "id": f"add_{_safe_id(designator)}_symbol",
         "op": "schdoc.add-component",
-        "message": f"Add debug-plate schematic component {designator}",
+        "message": f"Add mate schematic component {designator}",
         "args": {
             "file": _output_file(output.output_dir, _schematic_filename(output)),
             "overwrite": True,
@@ -1951,7 +1951,7 @@ def _schematic_part_operation(
             "design_item_id": symbol_name,
             "footprint_model": footprint_name,
             "footprint_library": footprint_name,
-            "parameters": _debug_plate_component_parameters(target, part),
+            "parameters": _mate_component_parameters(target, part),
             "designator_style": schematic_designator_style(
                 designator,
                 position_mils,
@@ -1961,8 +1961,8 @@ def _schematic_part_operation(
 
 
 def _pcb_part_operation(
-    output: DebugPlateOutputConfig,
-    known_parts: DebugPlateKnownPartsConfig,
+    output: MateOutputConfig,
+    known_parts: MateKnownPartsConfig,
     part: Mapping[str, object],
     target: Mapping[str, object],
     designator: str,
@@ -1991,23 +1991,23 @@ def _pcb_part_operation(
         "source_description": _known_part_symbol_description(known_parts, part),
         "channel_offset": channel_offset,
         "comment_text": "*",
-        "component_parameters": _debug_plate_component_parameters(target, part),
+        "component_parameters": _mate_component_parameters(target, part),
     }
-    pad_nets = _debug_plate_pad_nets(target, part)
+    pad_nets = _mate_pad_nets(target, part)
     if pad_nets:
         args["pad_nets"] = pad_nets
     return {
         "id": f"add_{_safe_id(designator)}_footprint",
         "op": "pcbdoc.add-component",
-        "message": f"Add debug-plate PCB component {designator}",
+        "message": f"Add mate PCB component {designator}",
         "args": args,
     }
 
 
 def _target_pcb_labels_config(
-    default_labels: DebugPlatePcbLabelsConfig,
+    default_labels: MatePcbLabelsConfig,
     target: Mapping[str, object],
-) -> DebugPlatePcbLabelsConfig:
+) -> MatePcbLabelsConfig:
     raw = target.get("mate_pcb_label")
     if isinstance(raw, dict):
         return _parse_pcb_labels_config(raw)
@@ -2015,8 +2015,8 @@ def _target_pcb_labels_config(
 
 
 def _pcb_designator_arrangement_operation(
-    output: DebugPlateOutputConfig,
-    designators: DebugPlatePcbDesignatorsConfig,
+    output: MateOutputConfig,
+    designators: MatePcbDesignatorsConfig,
     placed_designators: list[str],
 ) -> JsonObject | None:
     if not designators.enabled or not placed_designators:
@@ -2040,42 +2040,42 @@ def _pcb_designator_arrangement_operation(
     return {
         "id": "arrange_pcb_designators",
         "op": "pcbdoc.arrange-designators",
-        "message": "Arrange debug-plate PCB designators",
+        "message": "Arrange mate PCB designators",
         "args": args,
     }
 
 
-def _debug_plate_user_union_operation(output: DebugPlateOutputConfig) -> JsonObject:
+def _mate_user_union_operation(output: MateOutputConfig) -> JsonObject:
     return {
-        "id": "group_debug_plate_features",
+        "id": "group_mate_features",
         "op": "pcbdoc.create-user-union",
-        "message": "Group generated debug-plate PCB features",
+        "message": "Group generated mate PCB features",
         "args": {
             "file": _output_file(output.output_dir, _board_filename(output)),
             "overwrite": True,
-            "name": "DEBUG_PLATE_FEATURES",
+            "name": "MATE_FEATURES",
         },
     }
 
 
-def _debug_plate_component_parameters(
+def _mate_component_parameters(
     target: Mapping[str, object],
     part: Mapping[str, object],
 ) -> dict[str, str]:
     parameters = {
-        "DebugPlateRole": _part_string(part, "role"),
-        "DebugPlateSourceBoard": str(target.get("board_key", "") or ""),
-        "DebugPlateSourceDesignator": str(target.get("source_designator", "") or ""),
-        "DebugPlateSourceKind": str(target.get("kind", "") or ""),
-        "DebugPlateSourceFootprint": str(target.get("source_footprint", "") or ""),
+        "MateRole": _part_string(part, "role"),
+        "MateSourceBoard": str(target.get("board_key", "") or ""),
+        "MateSourceDesignator": str(target.get("source_designator", "") or ""),
+        "MateSourceKind": str(target.get("kind", "") or ""),
+        "MateSourceFootprint": str(target.get("source_footprint", "") or ""),
     }
     net_name = _target_optional_string(target, "net_name")
     if net_name:
-        parameters["DebugPlateSourceNet"] = net_name
+        parameters["MateSourceNet"] = net_name
     return parameters
 
 
-def _debug_plate_pad_nets(
+def _mate_pad_nets(
     target: Mapping[str, object],
     part: Mapping[str, object],
 ) -> dict[str, str] | None:
@@ -2087,7 +2087,7 @@ def _debug_plate_pad_nets(
 
 
 def _known_part_file(
-    known_parts: DebugPlateKnownPartsConfig,
+    known_parts: MateKnownPartsConfig,
     part: Mapping[str, object],
     field: str,
 ) -> str:
@@ -2096,7 +2096,7 @@ def _known_part_file(
 
 
 def _copied_known_part_file(
-    output: DebugPlateOutputConfig,
+    output: MateOutputConfig,
     part: Mapping[str, object],
     field: str,
 ) -> str:
@@ -2114,7 +2114,7 @@ def _known_part_project_library_path(
 
 
 def _component_link_unique_id(
-    output: DebugPlateOutputConfig,
+    output: MateOutputConfig,
     target: Mapping[str, object],
     designator: str,
 ) -> str:
@@ -2139,7 +2139,7 @@ def _component_link_channel_offsets(designators: Iterable[str]) -> dict[str, int
 
 
 def _known_part_symbol_description(
-    known_parts: DebugPlateKnownPartsConfig,
+    known_parts: MateKnownPartsConfig,
     part: Mapping[str, object],
 ) -> str:
     try:
@@ -2210,11 +2210,11 @@ def _next_prefixed_designator(prefix: str, counters: dict[str, int]) -> str:
     return f"{prefix}{current}"
 
 
-def _schematic_filename(output: DebugPlateOutputConfig) -> str:
+def _schematic_filename(output: MateOutputConfig) -> str:
     return output.schematic_filename or f"{output.project_name}.SchDoc"
 
 
-def _board_filename(output: DebugPlateOutputConfig) -> str:
+def _board_filename(output: MateOutputConfig) -> str:
     return output.board_filename or f"{output.project_name}.PcbDoc"
 
 
@@ -2235,14 +2235,14 @@ def _optional_section(
     if value is None:
         return None
     if not isinstance(value, dict):
-        raise ValueError(f"Debug-plate config field {name!r} must be an object")
+        raise ValueError(f"Mate config field {name!r} must be an object")
     return dict(value)
 
 
 def _section(root: Mapping[str, object], name: str) -> JsonObject:
     value = root.get(name, {})
     if not isinstance(value, dict):
-        raise ValueError(f"Debug-plate config field {name!r} must be an object")
+        raise ValueError(f"Mate config field {name!r} must be an object")
     return dict(value)
 
 
@@ -2608,16 +2608,16 @@ def _append_designator_run(
         tokens.append(f"{prefix}{start}-{end}")
 
 
-def _debug_plate_template_text() -> str:
+def _mate_template_text() -> str:
     return (
         "{\n"
-        f'  "schema": "{DEBUG_PLATE_CONFIG_SCHEMA}",\n'
+        f'  "schema": "{LEGACY_MATE_CONFIG_SCHEMA}",\n'
         '  "source": {\n'
         '    "dut": ""\n'
         "  },\n"
         '  "output": {\n'
-        '    "output_dir": "output/debug-plate",\n'
-        '    "project_name": "debug_plate",\n'
+        '    "output_dir": "output/mate",\n'
+        '    "project_name": "mate",\n'
         '    "schematic_sheet_style": "D",\n'
         '    "overwrite": false,\n'
         '    "layer_stack_template": "2-layer",\n'
@@ -2677,7 +2677,7 @@ def _debug_plate_template_text() -> str:
         "  },\n"
         '  "marker": {\n'
         '    "enabled": true,\n'
-        '    "text": "DEBUG PLATE",\n'
+        '    "text": "MATE",\n'
         '    "position_mils": [200, 200],\n'
         '    "height_mils": 60,\n'
         '    "layer": "TOP_OVERLAY"\n'

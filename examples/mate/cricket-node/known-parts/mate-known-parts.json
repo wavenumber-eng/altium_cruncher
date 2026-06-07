@@ -48,7 +48,7 @@
       ]
     }
   ],
-  "schema": "wn.altium_cruncher.debug_plate.parts_cache.v1",
+  "schema": "wn.altium_cruncher.mate.parts_cache.v1",
   "source": {
     "kind": "node_test_array",
     "project": "path/to/node-test-array.PrjPcb"

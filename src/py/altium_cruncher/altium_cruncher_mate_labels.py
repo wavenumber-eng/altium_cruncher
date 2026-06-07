@@ -1,4 +1,4 @@
-"""PCB label layout helpers for debug-plate generated boards."""
+"""PCB label layout helpers for mate generated boards."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ _PCB_LABEL_STYLE_PASSTHROUGH_KEYS = (
 
 
 @dataclass(frozen=True, slots=True)
-class DebugPlatePcbLabelsConfig:
+class MatePcbLabelsConfig:
     """PCB-side net-label generation settings for projected DUT targets."""
 
     enabled: bool
@@ -41,7 +41,7 @@ class DebugPlatePcbLabelsConfig:
 
 @dataclass(frozen=True, slots=True)
 class PcbNetLabelRequest:
-    labels: DebugPlatePcbLabelsConfig
+    labels: MatePcbLabelsConfig
     target: Mapping[str, object]
     designator: str
     board_label_row: int = 0
@@ -50,7 +50,7 @@ class PcbNetLabelRequest:
 
 
 def pcb_net_label_request(
-    labels: DebugPlatePcbLabelsConfig,
+    labels: MatePcbLabelsConfig,
     target: Mapping[str, object],
     designator: str,
     *,
@@ -138,7 +138,7 @@ def _uniform_board_edge_label_width_mils(
 
 
 def _pcb_label_required_width_mils(
-    labels: DebugPlatePcbLabelsConfig,
+    labels: MatePcbLabelsConfig,
     text: str,
 ) -> float:
     configured_width = labels.box_size_mils[0] if labels.box_size_mils else 0.0
@@ -158,11 +158,11 @@ def _pcb_net_label_operation(
 ) -> JsonObject:
     net_name = _target_optional_string(request.target, "net_name")
     if not net_name:
-        raise ValueError("Debug-plate PCB net label target must have a net name")
+        raise ValueError("Mate PCB net label target must have a net name")
     return {
         "id": f"label_{_safe_id(request.designator)}_pcb_net",
         "op": "pcbdoc.add-text",
-        "message": f"Add debug-plate PCB net label for {request.designator}",
+        "message": f"Add mate PCB net label for {request.designator}",
         "args": {
             "file": board_file,
             "overwrite": True,
@@ -195,7 +195,7 @@ def _pcb_label_column_header_operation(
     return {
         "id": f"label_column_{_safe_id(request.board_label_column_title)}_header",
         "op": "pcbdoc.add-text",
-        "message": f"Add debug-plate PCB label column header {request.board_label_column_title}",
+        "message": f"Add mate PCB label column header {request.board_label_column_title}",
         "args": {
             "file": board_file,
             "overwrite": True,
@@ -243,7 +243,7 @@ def _pcb_net_label_position(
 
 def _pcb_board_edge_label_position(
     board_outline_mils: JsonObject | None,
-    labels: DebugPlatePcbLabelsConfig,
+    labels: MatePcbLabelsConfig,
     row: int,
     *,
     board_label_column: int,
@@ -253,7 +253,7 @@ def _pcb_board_edge_label_position(
     outline = board_outline_mils
     if not isinstance(outline, dict):
         raise ValueError(
-            "Debug-plate board-edge PCB labels require output board_outline_mils"
+            "Mate board-edge PCB labels require output board_outline_mils"
         )
     offset_x, offset_y = labels.offset_mils
     box_size = _pcb_label_box_size(labels, board_label_width_mils)
@@ -273,12 +273,12 @@ def _pcb_board_edge_label_position(
     return (x_mils, y_mils + box_height + 10.0) if header else (x_mils, y_mils)
 
 
-def _row_spacing(labels: DebugPlatePcbLabelsConfig, box_height: float) -> float:
+def _row_spacing(labels: MatePcbLabelsConfig, box_height: float) -> float:
     return labels.row_spacing_mils if labels.row_spacing_mils is not None else box_height + 20.0
 
 
 def _pcb_label_box_size(
-    labels: DebugPlatePcbLabelsConfig,
+    labels: MatePcbLabelsConfig,
     width_mils: float | None,
 ) -> tuple[float, float] | None:
     if width_mils is None:
@@ -288,7 +288,7 @@ def _pcb_label_box_size(
 
 
 def _pcb_net_label_style_args(
-    labels: DebugPlatePcbLabelsConfig,
+    labels: MatePcbLabelsConfig,
     *,
     box_size_mils: tuple[float, float] | None = None,
 ) -> JsonObject:
@@ -323,7 +323,7 @@ def _pcb_net_label_style_args(
     return args
 
 
-def _pcb_label_header_style_args(labels: DebugPlatePcbLabelsConfig) -> JsonObject:
+def _pcb_label_header_style_args(labels: MatePcbLabelsConfig) -> JsonObject:
     style = dict(labels.style)
     return {
         "height_mils": _style_float(style, "header_height_mils", 50.0),
@@ -351,7 +351,7 @@ def _target_optional_string(target: Mapping[str, object], name: str) -> str | No
 def _target_float(target: Mapping[str, object], name: str) -> float:
     value = target.get(name)
     if not isinstance(value, int | float) or isinstance(value, bool):
-        raise ValueError(f"Debug-plate target field {name!r} must be numeric")
+        raise ValueError(f"Mate target field {name!r} must be numeric")
     return float(value)
 
 

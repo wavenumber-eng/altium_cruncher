@@ -1,4 +1,4 @@
-"""Debug-plate PCB reference graphics helpers."""
+"""Mate PCB reference graphics helpers."""
 
 from __future__ import annotations
 
@@ -148,7 +148,7 @@ def _outline_count(style: Mapping[str, object], mode: str) -> int:
     }:
         return 1
     raise ValueError(
-        "Debug-plate reference_graphics style.mode must be outline or double_outline"
+        "Mate reference_graphics style.mode must be outline or double_outline"
     )
 
 
@@ -418,11 +418,11 @@ def parse_source_pad_geometries(
     if value is None:
         return ()
     if not isinstance(value, list):
-        raise ValueError("Debug-plate source_pad_geometries must be an array")
+        raise ValueError("Mate source_pad_geometries must be an array")
     result: list[JsonObject] = []
     for item in value:
         if not isinstance(item, dict):
-            raise ValueError("Debug-plate source_pad_geometries items must be objects")
+            raise ValueError("Mate source_pad_geometries items must be objects")
         result.append(dict(item))
     return tuple(result)
 
@@ -442,7 +442,7 @@ def transform_source_pad_geometries(
     geometries: tuple[JsonObject, ...],
     placement: object | None,
 ) -> list[JsonObject]:
-    """Apply a debug-plate placement transform to source-pad geometry."""
+    """Apply a mate placement transform to source-pad geometry."""
     transformed: list[JsonObject] = []
     for geometry in geometries:
         x_mils, y_mils = _transform_placement(
@@ -626,7 +626,7 @@ def _board_cutout_region_operation(
 def _outline_vertices(outline: Mapping[str, object]) -> list[JsonObject]:
     value = outline.get("vertices", [])
     if not isinstance(value, list):
-        raise ValueError("Debug-plate board_outline.vertices must be an array")
+        raise ValueError("Mate board_outline.vertices must be an array")
     return [dict(item) for item in value if isinstance(item, dict)]
 
 
@@ -635,7 +635,7 @@ def _outline_cutouts(outline: Mapping[str, object]) -> list[JsonObject]:
     if value is None:
         return []
     if not isinstance(value, list):
-        raise ValueError("Debug-plate board_outline.cutouts must be an array")
+        raise ValueError("Mate board_outline.cutouts must be an array")
     cutouts: list[JsonObject] = []
     for item in value:
         if isinstance(item, dict):
@@ -1066,7 +1066,7 @@ def _pad_outline_track_operation(
             f"_outline_{outline_index}_segment_{segment_index}"
         ),
         "op": "pcbdoc.add-track",
-        "message": f"Add debug-plate reference outline for {designator}",
+        "message": f"Add mate reference outline for {designator}",
         "args": {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
@@ -1093,7 +1093,7 @@ def _pad_ring_operation(
     return {
         "id": f"reference_{_safe_id(designator)}_pad_{pad_index}_ring_{ring_index}",
         "op": "pcbdoc.add-arc",
-        "message": f"Add debug-plate reference outline for {designator}",
+        "message": f"Add mate reference outline for {designator}",
         "args": {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
@@ -1127,7 +1127,7 @@ def _list_field(payload: Mapping[str, object], name: str) -> list[object]:
 def _section(root: Mapping[str, object], name: str) -> JsonObject:
     value = root.get(name, {})
     if not isinstance(value, dict):
-        raise ValueError(f"Debug-plate graphics field {name!r} must be an object")
+        raise ValueError(f"Mate graphics field {name!r} must be an object")
     return dict(value)
 
 

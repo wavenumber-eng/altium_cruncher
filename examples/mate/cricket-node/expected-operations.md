@@ -1,6 +1,6 @@
 # Expected Operation Sequence
 
-`debug-plate plan debug-plate.mate.a0.jsonc` should emit an MCO with this
+`mate plan mate.a0.jsonc` should emit an MCO with this
 high-level shape after local inputs and the known-parts cache exist:
 
 1. `project.create-skeleton`, with a rectangular board outline expanded from
@@ -30,7 +30,7 @@ high-level shape after local inputs and the known-parts cache exist:
 10. `pcbdoc.add-embedded-3d-model` to insert that STEP artifact into the output
    PcbDoc at the configured 8.5 mm Z height, using the DUT outline bounds for
    the body projection
-11. `pcbdoc.create-user-union` named `DEBUG_PLATE_FEATURES` after PCB-side
+11. `pcbdoc.create-user-union` named `MATE_FEATURES` after PCB-side
     generation completes, so the group reflects the final generated board state
 12. Board-edge PCB net-label column headers and labels after the user union.
     These labels are grouped into one column per source projection/input type,
