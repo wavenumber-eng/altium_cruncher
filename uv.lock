@@ -41,7 +41,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "altium-monkey", specifier = "==2026.5.29" },
+    { name = "altium-monkey", specifier = "==2026.6.7" },
     { name = "build", marker = "extra == 'test'", specifier = ">=1.2.0" },
     { name = "colorama", specifier = ">=0.4.6" },
     { name = "easyeda-monkey", marker = "extra == 'easyeda'", specifier = ">=2026.5.26" },
@@ -70,7 +70,7 @@ dev = [
 
 [[package]]
 name = "altium-monkey"
-version = "2026.5.29"
+version = "2026.6.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "freetype-py" },
@@ -80,9 +80,9 @@ dependencies = [
     { name = "uharfbuzz" },
     { name = "wn-geometer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/f4/8e695fae59de37759ee275364de617476483d9f318af1119511e3c130298/altium_monkey-2026.5.29.tar.gz", hash = "sha256:955f50972425606bf651b82f49f65e5983eb748694ac1556445f96db027a7386", size = 1044460, upload-time = "2026-05-30T01:41:57.401Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/48/7b/87305aa9cf4fdce2a49953977a4f112466fe8d4072db292a94ddad01ed13/altium_monkey-2026.6.7.tar.gz", hash = "sha256:9d2c69edda2e46b70617f25950ca56589b266bdd750c8310b2f32c3284ad390d", size = 1122069, upload-time = "2026-06-07T14:00:41.09Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e7/9b/2d1b06c8ce8dd216bb56b5a1cf5a607958166ca331ed3fe79c2224e19ff1/altium_monkey-2026.5.29-py3-none-any.whl", hash = "sha256:d4cfcff3e169b05dfb90b874d95d678347b0a8b1af073931e1f4dcf6db33b1d9", size = 1135151, upload-time = "2026-05-30T01:41:55.481Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/d5/92158b31c65fd8d8f5a17f05ea7578ff2c9aa30d8ee3923e0d5d15243070/altium_monkey-2026.6.7-py3-none-any.whl", hash = "sha256:3b7ec9b73960962fba943587a57c1e4b9d818ac53378c8e8bded6e83f50e071d", size = 1211432, upload-time = "2026-06-07T14:00:39.195Z" },
 ]
 
 [[package]]

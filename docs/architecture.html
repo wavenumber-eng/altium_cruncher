@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Altium Cruncher Architecture</title>
+</head>
+<body data-doc="architecture" data-package="altium_cruncher">
+  <h1>Architecture</h1>
+  <p>
+    <code>altium-cruncher</code> is a public command-line package that composes
+    reusable Altium file APIs from <code>altium-monkey</code> into repeatable
+    project workflows.
+  </p>
+
+  <h2>Boundaries</h2>
+  <ul>
+    <li data-boundary="cli-entrypoint">
+      <code>altium_cruncher._cli</code> owns argument parsing and command
+      dispatch.
+    </li>
+    <li data-boundary="command-files">
+      Public command implementations live in focused
+      <code>altium_cruncher_cmd_*.py</code> modules.
+    </li>
+    <li data-boundary="contracts">
+      <code>docs/contracts</code> owns machine-readable command and config
+      contracts.
+    </li>
+    <li data-boundary="design-docs">
+      <code>docs/design</code> owns public CLI, API, and workflow design
+      documentation.
+    </li>
+    <li data-boundary="tests">
+      Rack strata under <code>tests</code> own public behavior, contract, and
+      release signoff coverage.
+    </li>
+  </ul>
+
+  <h2>Dependency Policy</h2>
+  <p>
+    Controlled runtime dependencies such as <code>altium-monkey</code> and
+    <code>wn-geometer</code> are pinned to audited public releases. L99 signoff
+    checks keep those pins synchronized with the CLI version report.
+  </p>
+</body>
+</html>

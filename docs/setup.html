@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Altium Cruncher Setup</title>
+</head>
+<body data-doc="setup" data-profile="python-package">
+  <h1>Setup</h1>
+  <p>
+    <code>altium-cruncher</code> is a pure Python CLI package managed with
+    <code>uv</code>. The package depends on released public CAD libraries and
+    keeps its lockfile committed for repeatable local, CI, and release checks.
+  </p>
+
+  <h2>Required Tools</h2>
+  <ul>
+    <li>Python 3.12</li>
+    <li>uv</li>
+    <li>Git</li>
+  </ul>
+
+  <h2>Development Commands</h2>
+  <pre><code>uv sync --all-extras
+uv run --extra test rack run --all
+uv run --extra test python -m build
+uv run --extra test twine check dist/*
+uv run --extra test python tests/support_scripts/install_test.py</code></pre>
+
+  <h2>Lockfile Policy</h2>
+  <p>
+    Commit <code>uv.lock</code>. Do not hand-edit it. Update dependency pins in
+    <code>pyproject.toml</code>, then regenerate the lockfile with
+    <code>uv lock</code>.
+  </p>
+
+  <h2>Distribution</h2>
+  <p>
+    Public releases are published from GitHub Releases through PyPI Trusted
+    Publishing. The release workflow validates the tag, release notes, Rack
+    suite, built artifacts, and installed console entry point before publishing.
+  </p>
+</body>
+</html>

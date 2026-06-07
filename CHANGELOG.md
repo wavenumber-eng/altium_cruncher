@@ -18,7 +18,7 @@
   EasyEDA workflows through `easyeda-monkey`.
 - Add ADR-0005 and L99 checks for CLI design docs plus public dataclass and
   major-interface design/test ownership.
-- Consume pinned `altium-monkey==2026.5.29` and expose explicit PnP position mode
+- Consume pinned `altium-monkey==2026.6.7` and expose explicit PnP position mode
   selection for BOM/PnP/JLC workflows.
 - Add experimental `json-dump`, `mco`, and `debug-plate` commands for
   reference inspection, generated CAD operation execution, and Cricket Node
