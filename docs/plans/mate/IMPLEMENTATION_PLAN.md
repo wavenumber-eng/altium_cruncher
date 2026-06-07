@@ -131,7 +131,9 @@ The Cricket Node example should demonstrate:
 - configurable PCB designator text style and placement;
 - loose board-edge net-label columns with group headers and shared label
   widths;
-- source-pad reference outlines on a configurable mechanical layer;
+- source-pad reference outlines on a configurable mechanical layer, using
+  effective layer pad bodies for circular, obround, rectangular/square,
+  octagonal/chamfered, and rounded-rectangle pads;
 - source board outline and cutout projection;
 - generated board size with configurable margins around the DUT;
 - bottom-layer STEP artifact generation with explicit pad highlights, track
@@ -172,10 +174,14 @@ Full signoff:
 - Alexandria/library-facet integration outside the public package boundary.
 - Generic `pcb_cruncher` and KiCad backend mapping.
 - Update-in-place behavior for an existing mate board.
+- Filled source-pad reference graphics using the same effective pad-shape model.
 
 ## Slice Log
 
 - S0: Created active implementation plan and linked it to the current design
   contract docs.
 - 2026-06-07: Renamed the public workflow, CLI command, examples, design docs,
-  command manifest, tests, and plan folder from `debug-plate` to `mate`.
+  command manifest, tests, and plan folder to `mate`.
+- 2026-06-07: Updated source-pad reference graphics to read effective
+  source-layer pad geometry and emit shape-specific outlines for circular,
+  obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads.

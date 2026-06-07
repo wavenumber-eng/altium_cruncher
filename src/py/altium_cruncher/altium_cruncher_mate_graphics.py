@@ -10,7 +10,9 @@ from pathlib import Path
 from altium_cruncher.altium_cruncher_mco import JsonObject
 
 _PAD_SHAPE_CIRCLE = 1
+_PAD_SHAPE_RECTANGLE = 2
 _PAD_SHAPE_OCTAGONAL = 3
+_PAD_SHAPE_ROUNDED_RECTANGLE = 4
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,18 +51,30 @@ def pad_geometry(pad: object) -> JsonObject | None:
     height_mils = pad_height_mils(pad)
     if width_mils <= 0.0 or height_mils <= 0.0:
         return None
-    return {
+    layer = _int_attr(pad, "layer")
+    shape = _pad_shape(pad)
+    geometry: JsonObject = {
         "x_mils": _float_attr(pad, "x_mils"),
         "y_mils": _float_attr(pad, "y_mils"),
         "width_mils": width_mils,
         "height_mils": height_mils,
-        "shape": _int_attr(pad, "shape"),
-        "layer": _int_attr(pad, "layer"),
+        "shape": shape,
+        "layer": layer,
         "rotation_degrees": _float_attr(pad, "rotation"),
     }
+    if shape == _PAD_SHAPE_ROUNDED_RECTANGLE:
+        geometry["corner_radius_mils"] = _pad_corner_radius_mils(
+            pad,
+            width_mils,
+            height_mils,
+        )
+    return geometry
 
 
 def pad_width_mils(pad: object) -> float:
+    layer_size = _pad_layer_size_mils(pad)
+    if layer_size is not None and layer_size[0] > 0.0:
+        return layer_size[0]
     width = _float_attr(pad, "width_mils")
     if width > 0.0:
         return width
@@ -72,6 +86,9 @@ def pad_width_mils(pad: object) -> float:
 
 
 def pad_height_mils(pad: object) -> float:
+    layer_size = _pad_layer_size_mils(pad)
+    if layer_size is not None and layer_size[1] > 0.0:
+        return layer_size[1]
     height = _float_attr(pad, "height_mils")
     if height > 0.0:
         return height
@@ -105,10 +122,14 @@ def build_pcb_reference_graphics_operations(
         "outline_spacing_mils",
         clearance_mils,
     )
-    outline_count = _outline_count(style, str(style.get("mode", "outline") or "outline"))
+    outline_count = _outline_count(
+        style, str(style.get("mode", "outline") or "outline")
+    )
 
     operations: list[JsonObject] = []
-    for pad_index, geometry in enumerate(_target_source_pad_geometries(target), start=1):
+    for pad_index, geometry in enumerate(
+        _target_source_pad_geometries(target), start=1
+    ):
         operations.extend(
             _pad_outline_operations(
                 output_dir=output_dir,
@@ -196,8 +217,7 @@ def _board_projection_options(
         ),
         cutout_graphics_enabled=_optional_bool(cutout_graphics, "enabled", False),
         cutout_layer=(
-            _optional_string(cutout_graphics, "layer", "MECHANICAL_1")
-            or "MECHANICAL_1"
+            _optional_string(cutout_graphics, "layer", "MECHANICAL_1") or "MECHANICAL_1"
         ),
         cutout_width_mils=_mapping_number(cutout_graphics, "stroke_width_mils", 8.0),
         actual_cutouts_enabled=_optional_bool(cutouts, "actual_cutouts", False),
@@ -482,8 +502,12 @@ def _transform_placement(
     if placement is None:
         return (x_mils, y_mils)
     mirror_origin_x, mirror_origin_y = getattr(placement, "mirror_origin_mils")
-    transformed_x = 2.0 * mirror_origin_x - x_mils if getattr(placement, "mirror_x") else x_mils
-    transformed_y = 2.0 * mirror_origin_y - y_mils if getattr(placement, "mirror_y") else y_mils
+    transformed_x = (
+        2.0 * mirror_origin_x - x_mils if getattr(placement, "mirror_x") else x_mils
+    )
+    transformed_y = (
+        2.0 * mirror_origin_y - y_mils if getattr(placement, "mirror_y") else y_mils
+    )
     offset_x, offset_y = getattr(placement, "offset_mils")
     return (transformed_x + offset_x, transformed_y + offset_y)
 
@@ -685,18 +709,24 @@ def _sample_outline_arc_points(
         return [_outline_point(current), _outline_point(next_vertex)]
     center_x = _number_from_value(center[0], "center_mils.x")
     center_y = _number_from_value(center[1], "center_mils.y")
-    start_angle = math.degrees(
-        math.atan2(
-            _mapping_number(current, "y_mils", 0.0) - center_y,
-            _mapping_number(current, "x_mils", 0.0) - center_x,
+    start_angle = (
+        math.degrees(
+            math.atan2(
+                _mapping_number(current, "y_mils", 0.0) - center_y,
+                _mapping_number(current, "x_mils", 0.0) - center_x,
+            )
         )
-    ) % 360.0
-    end_angle = math.degrees(
-        math.atan2(
-            _mapping_number(next_vertex, "y_mils", 0.0) - center_y,
-            _mapping_number(next_vertex, "x_mils", 0.0) - center_x,
+        % 360.0
+    )
+    end_angle = (
+        math.degrees(
+            math.atan2(
+                _mapping_number(next_vertex, "y_mils", 0.0) - center_y,
+                _mapping_number(next_vertex, "x_mils", 0.0) - center_x,
+            )
         )
-    ) % 360.0
+        % 360.0
+    )
     clockwise, sweep = _outline_arc_direction(current, next_vertex)
     segments = max(2, int(math.ceil(abs(sweep) / 15.0)))
     points: list[list[float]] = []
@@ -728,18 +758,24 @@ def _outline_arc_direction(
         return (False, 0.0)
     center_x = _number_from_value(center[0], "center_mils.x")
     center_y = _number_from_value(center[1], "center_mils.y")
-    current_angle = math.degrees(
-        math.atan2(
-            _mapping_number(current, "y_mils", 0.0) - center_y,
-            _mapping_number(current, "x_mils", 0.0) - center_x,
+    current_angle = (
+        math.degrees(
+            math.atan2(
+                _mapping_number(current, "y_mils", 0.0) - center_y,
+                _mapping_number(current, "x_mils", 0.0) - center_x,
+            )
         )
-    ) % 360.0
-    next_angle = math.degrees(
-        math.atan2(
-            _mapping_number(next_vertex, "y_mils", 0.0) - center_y,
-            _mapping_number(next_vertex, "x_mils", 0.0) - center_x,
+        % 360.0
+    )
+    next_angle = (
+        math.degrees(
+            math.atan2(
+                _mapping_number(next_vertex, "y_mils", 0.0) - center_y,
+                _mapping_number(next_vertex, "x_mils", 0.0) - center_x,
+            )
         )
-    ) % 360.0
+        % 360.0
+    )
     start_angle = _mapping_number(current, "start_angle_degrees", current_angle)
     end_angle = _mapping_number(current, "end_angle_degrees", next_angle)
     span = (end_angle - start_angle) % 360.0
@@ -870,6 +906,18 @@ def _pad_single_outline_operations(
             width_mils=width_mils,
             expansion_mils=expansion_mils,
         )
+    if shape == _PAD_SHAPE_ROUNDED_RECTANGLE:
+        return _pad_rounded_rect_outline_operations(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            designator=designator,
+            pad_index=pad_index,
+            outline_index=outline_index,
+            geometry=geometry,
+            layer=layer,
+            width_mils=width_mils,
+            expansion_mils=expansion_mils,
+        )
     if shape == _PAD_SHAPE_OCTAGONAL:
         return _pad_polygon_outline_operations(
             output_dir=output_dir,
@@ -921,16 +969,230 @@ def _pad_circular_outline_operations(
                 width_mils=width_mils,
             )
         ]
-    return _pad_polygon_outline_operations(
+    return _pad_obround_outline_operations(
         output_dir=output_dir,
         board_filename=board_filename,
         designator=designator,
         pad_index=pad_index,
         outline_index=outline_index,
-        points=_pad_ellipse_points(geometry, expansion_mils),
+        geometry=geometry,
+        layer=layer,
+        width_mils=width_mils,
+        expansion_mils=expansion_mils,
+    )
+
+
+def _pad_obround_outline_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    geometry: Mapping[str, object],
+    layer: str,
+    width_mils: float,
+    expansion_mils: float,
+) -> list[JsonObject]:
+    pad_width = _mapping_number(geometry, "width_mils", 0.0)
+    pad_height = _mapping_number(geometry, "height_mils", 0.0)
+    rotation = _mapping_number(geometry, "rotation_degrees", 0.0)
+    radius = (min(pad_width, pad_height) / 2.0) + expansion_mils
+    straight_half = abs(pad_width - pad_height) / 2.0
+    if math.isclose(straight_half, 0.0, abs_tol=1e-9):
+        return [
+            _pad_ring_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                ring_index=outline_index,
+                geometry=geometry,
+                radius_mils=radius,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        ]
+
+    operations: list[JsonObject] = []
+    if pad_width >= pad_height:
+        operations.extend(
+            _pad_local_track_operations(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                outline_index=outline_index,
+                start_segment_index=1,
+                geometry=geometry,
+                local_segments=[
+                    ((-straight_half, radius), (straight_half, radius)),
+                    ((-straight_half, -radius), (straight_half, -radius)),
+                ],
+                layer=layer,
+                width_mils=width_mils,
+            )
+        )
+        operations.append(
+            _pad_local_arc_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                outline_index=outline_index,
+                arc_index=1,
+                geometry=geometry,
+                center_local=(straight_half, 0.0),
+                radius_mils=radius,
+                start_angle_degrees=-90.0 + rotation,
+                end_angle_degrees=90.0 + rotation,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        )
+        operations.append(
+            _pad_local_arc_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                outline_index=outline_index,
+                arc_index=2,
+                geometry=geometry,
+                center_local=(-straight_half, 0.0),
+                radius_mils=radius,
+                start_angle_degrees=90.0 + rotation,
+                end_angle_degrees=270.0 + rotation,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        )
+        return operations
+
+    operations.extend(
+        _pad_local_track_operations(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            designator=designator,
+            pad_index=pad_index,
+            outline_index=outline_index,
+            start_segment_index=1,
+            geometry=geometry,
+            local_segments=[
+                ((radius, -straight_half), (radius, straight_half)),
+                ((-radius, -straight_half), (-radius, straight_half)),
+            ],
+            layer=layer,
+            width_mils=width_mils,
+        )
+    )
+    operations.append(
+        _pad_local_arc_operation(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            designator=designator,
+            pad_index=pad_index,
+            outline_index=outline_index,
+            arc_index=1,
+            geometry=geometry,
+            center_local=(0.0, straight_half),
+            radius_mils=radius,
+            start_angle_degrees=0.0 + rotation,
+            end_angle_degrees=180.0 + rotation,
+            layer=layer,
+            width_mils=width_mils,
+        )
+    )
+    operations.append(
+        _pad_local_arc_operation(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            designator=designator,
+            pad_index=pad_index,
+            outline_index=outline_index,
+            arc_index=2,
+            geometry=geometry,
+            center_local=(0.0, -straight_half),
+            radius_mils=radius,
+            start_angle_degrees=180.0 + rotation,
+            end_angle_degrees=360.0 + rotation,
+            layer=layer,
+            width_mils=width_mils,
+        )
+    )
+    return operations
+
+
+def _pad_rounded_rect_outline_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    geometry: Mapping[str, object],
+    layer: str,
+    width_mils: float,
+    expansion_mils: float,
+) -> list[JsonObject]:
+    rotation = _mapping_number(geometry, "rotation_degrees", 0.0)
+    half_w = (_mapping_number(geometry, "width_mils", 0.0) / 2.0) + expansion_mils
+    half_h = (_mapping_number(geometry, "height_mils", 0.0) / 2.0) + expansion_mils
+    base_radius = _mapping_number(geometry, "corner_radius_mils", 0.0)
+    radius = min(base_radius + expansion_mils, half_w, half_h)
+    if radius <= 0.0:
+        return _pad_polygon_outline_operations(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            designator=designator,
+            pad_index=pad_index,
+            outline_index=outline_index,
+            points=_pad_rectangle_points(geometry, expansion_mils),
+            layer=layer,
+            width_mils=width_mils,
+        )
+
+    operations = _pad_local_track_operations(
+        output_dir=output_dir,
+        board_filename=board_filename,
+        designator=designator,
+        pad_index=pad_index,
+        outline_index=outline_index,
+        start_segment_index=1,
+        geometry=geometry,
+        local_segments=[
+            ((-half_w + radius, -half_h), (half_w - radius, -half_h)),
+            ((half_w, -half_h + radius), (half_w, half_h - radius)),
+            ((half_w - radius, half_h), (-half_w + radius, half_h)),
+            ((-half_w, half_h - radius), (-half_w, -half_h + radius)),
+        ],
         layer=layer,
         width_mils=width_mils,
     )
+    for arc_index, center, start_angle, end_angle in [
+        (1, (half_w - radius, -half_h + radius), -90.0, 0.0),
+        (2, (half_w - radius, half_h - radius), 0.0, 90.0),
+        (3, (-half_w + radius, half_h - radius), 90.0, 180.0),
+        (4, (-half_w + radius, -half_h + radius), 180.0, 270.0),
+    ]:
+        operations.append(
+            _pad_local_arc_operation(
+                output_dir=output_dir,
+                board_filename=board_filename,
+                designator=designator,
+                pad_index=pad_index,
+                outline_index=outline_index,
+                arc_index=arc_index,
+                geometry=geometry,
+                center_local=center,
+                radius_mils=radius,
+                start_angle_degrees=start_angle + rotation,
+                end_angle_degrees=end_angle + rotation,
+                layer=layer,
+                width_mils=width_mils,
+            )
+        )
+    return operations
 
 
 def _pad_polygon_outline_operations(
@@ -966,6 +1228,41 @@ def _pad_polygon_outline_operations(
     return operations
 
 
+def _pad_local_track_operations(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    start_segment_index: int,
+    geometry: Mapping[str, object],
+    local_segments: list[tuple[tuple[float, float], tuple[float, float]]],
+    layer: str,
+    width_mils: float,
+) -> list[JsonObject]:
+    rotation = _mapping_number(geometry, "rotation_degrees", 0.0)
+    center = (
+        _mapping_number(geometry, "x_mils", 0.0),
+        _mapping_number(geometry, "y_mils", 0.0),
+    )
+    return [
+        _pad_outline_track_operation(
+            output_dir=output_dir,
+            board_filename=board_filename,
+            designator=designator,
+            pad_index=pad_index,
+            outline_index=outline_index,
+            segment_index=start_segment_index + index,
+            start=_transform_local_point(start, center, rotation),
+            end=_transform_local_point(end, center, rotation),
+            layer=layer,
+            width_mils=width_mils,
+        )
+        for index, (start, end) in enumerate(local_segments)
+    ]
+
+
 def _pad_rectangle_points(
     geometry: Mapping[str, object],
     expansion_mils: float,
@@ -980,7 +1277,9 @@ def _pad_rectangle_points(
         (cx + half_w, cy + half_h),
         (cx - half_w, cy + half_h),
     ]
-    return _rotate_points(points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0))
+    return _rotate_points(
+        points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0)
+    )
 
 
 def _pad_octagon_points(
@@ -1002,25 +1301,9 @@ def _pad_octagon_points(
         (cx - (half_w - chamfer), cy - half_h),
         (cx + half_w - chamfer, cy - half_h),
     ]
-    return _rotate_points(points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0))
-
-
-def _pad_ellipse_points(
-    geometry: Mapping[str, object],
-    expansion_mils: float,
-) -> list[tuple[float, float]]:
-    cx = _mapping_number(geometry, "x_mils", 0.0)
-    cy = _mapping_number(geometry, "y_mils", 0.0)
-    radius_x = (_mapping_number(geometry, "width_mils", 0.0) / 2.0) + expansion_mils
-    radius_y = (_mapping_number(geometry, "height_mils", 0.0) / 2.0) + expansion_mils
-    points = [
-        (
-            cx + (math.cos((2.0 * math.pi * index) / 32.0) * radius_x),
-            cy + (math.sin((2.0 * math.pi * index) / 32.0) * radius_y),
-        )
-        for index in range(32)
-    ]
-    return _rotate_points(points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0))
+    return _rotate_points(
+        points, (cx, cy), _mapping_number(geometry, "rotation_degrees", 0.0)
+    )
 
 
 def _rotate_points(
@@ -1045,6 +1328,17 @@ def _rotate_points(
             )
         )
     return rotated
+
+
+def _transform_local_point(
+    point: tuple[float, float],
+    center: tuple[float, float],
+    rotation_degrees: float,
+) -> tuple[float, float]:
+    cx, cy = center
+    x = cx + point[0]
+    y = cy + point[1]
+    return _rotate_points([(x, y)], center, rotation_degrees)[0]
 
 
 def _pad_outline_track_operation(
@@ -1072,6 +1366,48 @@ def _pad_outline_track_operation(
             "overwrite": True,
             "start_mils": [start[0], start[1]],
             "end_mils": [end[0], end[1]],
+            "width_mils": width_mils,
+            "layer": layer,
+        },
+    }
+
+
+def _pad_local_arc_operation(
+    *,
+    output_dir: str,
+    board_filename: str,
+    designator: str,
+    pad_index: int,
+    outline_index: int,
+    arc_index: int,
+    geometry: Mapping[str, object],
+    center_local: tuple[float, float],
+    radius_mils: float,
+    start_angle_degrees: float,
+    end_angle_degrees: float,
+    layer: str,
+    width_mils: float,
+) -> JsonObject:
+    center = (
+        _mapping_number(geometry, "x_mils", 0.0),
+        _mapping_number(geometry, "y_mils", 0.0),
+    )
+    rotation = _mapping_number(geometry, "rotation_degrees", 0.0)
+    arc_center = _transform_local_point(center_local, center, rotation)
+    return {
+        "id": (
+            f"reference_{_safe_id(designator)}_pad_{pad_index}"
+            f"_outline_{outline_index}_arc_{arc_index}"
+        ),
+        "op": "pcbdoc.add-arc",
+        "message": f"Add mate reference outline for {designator}",
+        "args": {
+            "file": (Path(output_dir) / board_filename).as_posix(),
+            "overwrite": True,
+            "center_mils": [arc_center[0], arc_center[1]],
+            "radius_mils": radius_mils,
+            "start_angle_degrees": start_angle_degrees,
+            "end_angle_degrees": end_angle_degrees,
             "width_mils": width_mils,
             "layer": layer,
         },
@@ -1172,6 +1508,59 @@ def _float_attr(obj: object, name: str) -> float:
 def _int_attr(obj: object, name: str) -> int:
     value = getattr(obj, name, 0)
     return 0 if value is None else int(value)
+
+
+def _pad_layer_size_mils(pad: object) -> tuple[float, float] | None:
+    layer = _pad_layer(pad)
+    layer_size = getattr(pad, "_layer_size", None)
+    if layer is None or not callable(layer_size):
+        return None
+    try:
+        width_iu, height_iu = layer_size(layer)
+    except Exception:
+        return None
+    return (float(width_iu) / 10000.0, float(height_iu) / 10000.0)
+
+
+def _pad_shape(pad: object) -> int:
+    layer = _pad_layer(pad)
+    layer_shape = getattr(pad, "_layer_shape", None)
+    if layer is not None and callable(layer_shape):
+        try:
+            return int(layer_shape(layer))
+        except Exception:
+            pass
+    return _int_attr(pad, "shape")
+
+
+def _pad_corner_radius_mils(
+    pad: object,
+    width_mils: float,
+    height_mils: float,
+) -> float:
+    layer = _pad_layer(pad)
+    layer_radius = getattr(pad, "_layer_corner_radius_mils", None)
+    if layer is not None and callable(layer_radius):
+        try:
+            return float(layer_radius(layer, width_mils, height_mils))
+        except Exception:
+            pass
+    corner_pct = getattr(pad, "corner_radius_percentage", 0) or 0
+    return (float(corner_pct) / 100.0) * min(width_mils, height_mils) / 2.0
+
+
+def _pad_layer(pad: object) -> object | None:
+    try:
+        from altium_monkey import PcbLayer
+    except Exception:
+        return None
+    value = getattr(pad, "layer", None)
+    if isinstance(value, PcbLayer):
+        return value
+    try:
+        return PcbLayer(int(value))
+    except Exception:
+        return None
 
 
 def _safe_id(value: str) -> str:

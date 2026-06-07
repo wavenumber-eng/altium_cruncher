@@ -1,4 +1,4 @@
-# Cricket Node Debug-Plate Example
+# Cricket Node Mate Example
 
 This example is a runnable workspace for the first cricket-node mate
 workflow: use a node-test-array known-parts cache, select cricket-node DUT
@@ -15,7 +15,9 @@ running the workflow.
 - `mate.a0.jsonc` is the primary selector/projection config for
   this example. It selects `TP1-27`, `M1-4`, matching free NPTH alignment pads,
   one-outline `MECHANICAL_1` source-pad reference graphics with `10 mil` stroke
-  and visible edge-to-edge clearance semantics, right-side
+  and visible edge-to-edge clearance semantics. Source-pad outlines use the
+  effective pad body on the source layer, including round, obround, rectangular,
+  octagonal/chamfered, and rounded-rectangle pads. The config also emits right-side
   board-edge net-label columns with group headers, arranged component
   designators, source board outline graphics, a user union, and the bottom-layer
   STEP artifact. The PCB net labels and headers are emitted outside the union so

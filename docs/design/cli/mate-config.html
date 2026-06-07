@@ -142,7 +142,7 @@
       </tr>
       <tr>
         <td><code>reference_graphics</code></td>
-        <td>Add mechanical or silkscreen reference geometry, such as source-pad outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports <code>source_pad_outline</code> from inspected source pad geometry, with one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>. <code>clearance_mils</code> is the visible gap from the source pad edge to the inside edge of the outline stroke, so zero clearance makes the outline touch the pad edge.</td>
+        <td>Add mechanical or silkscreen reference geometry, such as source-pad outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports <code>source_pad_outline</code> from inspected source pad geometry, with one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>. The outline follows the effective source-layer pad body for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads. <code>clearance_mils</code> is the visible gap from the source pad edge to the inside edge of the outline stroke, so zero clearance makes the outline touch the pad edge. Filled source-pad graphics are a planned reference mode but are not part of this subset.</td>
       </tr>
       <tr>
         <td><code>label</code></td>
@@ -190,7 +190,7 @@
     <li>Place generated schematic symbols on a roomy sheet, currently ANSI <code>D</code> by default, grouped by symbol type. Route each netted symbol with a wire that leaves the symbol in the known-part signal pin orientation. The schematic net label is placed on that wire, rotated with the wire direction, and the wire is long enough to sit under the estimated full label text.</li>
     <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>MATE_FEATURES</code> so they can be manually moved after generation.</li>
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
-    <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad shape where the writer can express it.</li>
+    <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad's effective layer shape for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads.</li>
     <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
     <li>Detect and project internal board cutouts as Mechanical 1 graphics, actual output board-cutout regions, or both.</li>
     <li>Generate a bottom-layer <code>pcb-layer-step</code> artifact for visual/mechanical alignment and optionally insert the generated STEP into the output PcbDoc at a configurable Z height.</li>
@@ -418,8 +418,8 @@
     <li>Full Saleae-style breakout connector automation.</li>
     <li>Multi-pin connector mate pin mapping and mirrored pin-order policies.</li>
     <li>Exact source-shape output board outlines once the project skeleton can set arbitrary board outline geometry.</li>
+    <li>Filled source-pad reference graphics using the same shape model as outline graphics.</li>
     <li>Generic update-in-place behavior for existing mate boards.</li>
-    <li>Final naming if the command eventually becomes <code>mate</code> or moves under a generic PCB package.</li>
   </ul>
 </body>
 </html>

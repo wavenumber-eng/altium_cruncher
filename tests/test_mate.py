@@ -336,6 +336,51 @@ def test_mate_inspection_classifies_components_and_free_pads() -> None:
     assert payload["free_pads"][0]["net_name"] == "ALIGN_NET"
 
 
+def test_mate_inspection_uses_effective_layer_pad_shape() -> None:
+    from altium_monkey import AltiumPcbDoc, PadShape, PcbLayer
+    from altium_monkey.altium_pcb_component import AltiumPcbComponent
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 700)
+    pcbdoc.components.append(
+        AltiumPcbComponent(
+            designator="TP2",
+            footprint="LOCAL_STACK_PAD",
+            layer="BOTTOM",
+            x="200mil",
+            y="300mil",
+        )
+    )
+    pad = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(200, 300),
+        width_mils=1,
+        height_mils=1,
+        layer=PcbLayer.BOTTOM,
+        shape=PadShape.CIRCLE,
+        bottom_shape=PadShape.ROUNDED_RECTANGLE,
+        bottom_width_mils=75,
+        bottom_height_mils=75,
+        corner_radius_percent=50,
+        net="TP_NET",
+    )
+    pad.component_index = 0
+
+    inspection = inspect_pcbdoc_for_mate("fixture", pcbdoc, "fixture.PcbDoc")
+    geometry = inspection.to_dict()["components"][0]["source_pad_geometries"][0]
+
+    assert geometry == {
+        "x_mils": 200.0,
+        "y_mils": 300.0,
+        "width_mils": 75.0,
+        "height_mils": 75.0,
+        "shape": 4,
+        "layer": 32,
+        "rotation_degrees": 0.0,
+        "corner_radius_mils": 18.75,
+    }
+
+
 def test_mate_inspection_preserves_board_cutout_geometry() -> None:
     from altium_monkey import AltiumPcbDoc
 
@@ -394,11 +439,14 @@ def test_mate_known_parts_manifest_tracks_node_test_array_roles(
     assert resolve_known_part(loaded, "test_point")["footprint_name"] == (
         "YZ209315103P-01"
     )
-    assert resolve_known_part(
-        loaded,
-        "TEST_POINT",
-        role="test_point_pogo",
-    )["footprint_name"] == "YZ209315103P-01"
+    assert (
+        resolve_known_part(
+            loaded,
+            "TEST_POINT",
+            role="test_point_pogo",
+        )["footprint_name"]
+        == "YZ209315103P-01"
+    )
     assert resolve_known_part(loaded, "test_point")["signal_pad_designator"] == "1"
     assert resolve_known_part(loaded, "mount")["symbol_name"] == "9774080360R"
     assert resolve_known_part(loaded, "mount")["signal_pad_designator"] is None
@@ -617,13 +665,7 @@ def test_mate_known_part_operations_use_natural_designator_order(
 
 
 def test_cricket_node_mate_example_config_is_planable() -> None:
-    example_config = (
-        PACKAGE_ROOT
-        / "examples"
-        / "mate"
-        / "cricket-node"
-        / "mate.jsonc"
-    )
+    example_config = PACKAGE_ROOT / "examples" / "mate" / "cricket-node" / "mate.jsonc"
 
     payload = build_mate_mco(load_mate_config(example_config))
     operations = payload["operations"]
@@ -702,13 +744,7 @@ def test_cricket_node_mate_example_config_is_planable() -> None:
 
 
 def test_cricket_node_draft_mate_config_is_parseable() -> None:
-    draft_config = (
-        PACKAGE_ROOT
-        / "examples"
-        / "mate"
-        / "cricket-node"
-        / "mate.a0.jsonc"
-    )
+    draft_config = PACKAGE_ROOT / "examples" / "mate" / "cricket-node" / "mate.a0.jsonc"
 
     payload = load_jsonc_file(draft_config)
 
@@ -732,7 +768,9 @@ def test_cricket_node_draft_mate_config_is_parseable() -> None:
         "mounts",
         "alignment_pins",
     ]
-    projections = {projection["id"]: projection for projection in payload["projections"]}
+    projections = {
+        projection["id"]: projection for projection in payload["projections"]
+    }
     assert projections["test_points"]["source"]["designators"] == "TP1-27"
     assert projections["mounts"]["source"]["designators"] == "M1-4"
     assert "kind" not in projections["alignment_pins"]["source"]
@@ -783,7 +821,9 @@ def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
         "margin_mils": 250.0,
     }
     assert payload["known_parts"]["manifest"] == str(manifest_path)
-    projections = {projection["id"]: projection for projection in payload["projections"]}
+    projections = {
+        projection["id"]: projection for projection in payload["projections"]
+    }
     assert projections["test_points"]["source"] == {
         "object": "component",
         "designators": "TP1-2",
@@ -819,8 +859,13 @@ def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     assert payload["artifacts"]["pcb_layer_step"]["highlights"] == [
         {"projection": "test_points", "color": "#FF0000"}
     ]
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is True
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"] is True
+    assert (
+        payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is True
+    )
+    assert (
+        payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"]
+        is True
+    )
     assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert payload["projections"][0]["actions"][1] == {
         "kind": "reference_graphics",
@@ -925,6 +970,106 @@ def test_mate_reference_graphics_trace_pad_shape() -> None:
     assert rectangle_ops[4]["args"]["end_mils"] == [156.5, 163.5]
     assert {operation["args"]["width_mils"] for operation in rectangle_ops} == {3.0}
 
+    obround_ops = build_pcb_reference_graphics_operations(
+        output_dir="generated",
+        board_filename="mate.PcbDoc",
+        designator="TP3",
+        target={
+            "mate_reference_graphics": {
+                "shape": "source_pad_outline",
+                "layer": "MECHANICAL_1",
+                "style": {"clearance_mils": 5, "stroke_width_mils": 4},
+            },
+            "source_pad_geometries": [
+                {
+                    "x_mils": 100,
+                    "y_mils": 200,
+                    "width_mils": 120,
+                    "height_mils": 60,
+                    "shape": 1,
+                    "rotation_degrees": 0,
+                }
+            ],
+        },
+    )
+
+    assert [operation["op"] for operation in obround_ops] == [
+        "pcbdoc.add-track",
+        "pcbdoc.add-track",
+        "pcbdoc.add-arc",
+        "pcbdoc.add-arc",
+    ]
+    assert obround_ops[0]["args"]["start_mils"] == [70.0, 237.0]
+    assert obround_ops[0]["args"]["end_mils"] == [130.0, 237.0]
+    assert obround_ops[2]["args"]["center_mils"] == [130.0, 200.0]
+    assert obround_ops[2]["args"]["radius_mils"] == 37.0
+
+    rounded_ops = build_pcb_reference_graphics_operations(
+        output_dir="generated",
+        board_filename="mate.PcbDoc",
+        designator="TP4",
+        target={
+            "mate_reference_graphics": {
+                "shape": "source_pad_outline",
+                "layer": "MECHANICAL_1",
+                "style": {"clearance_mils": 5, "stroke_width_mils": 4},
+            },
+            "source_pad_geometries": [
+                {
+                    "x_mils": 100,
+                    "y_mils": 200,
+                    "width_mils": 100,
+                    "height_mils": 60,
+                    "shape": 4,
+                    "corner_radius_mils": 10,
+                    "rotation_degrees": 0,
+                }
+            ],
+        },
+    )
+
+    assert [operation["op"] for operation in rounded_ops] == [
+        "pcbdoc.add-track",
+        "pcbdoc.add-track",
+        "pcbdoc.add-track",
+        "pcbdoc.add-track",
+        "pcbdoc.add-arc",
+        "pcbdoc.add-arc",
+        "pcbdoc.add-arc",
+        "pcbdoc.add-arc",
+    ]
+    assert rounded_ops[0]["args"]["start_mils"] == [60.0, 163.0]
+    assert rounded_ops[0]["args"]["end_mils"] == [140.0, 163.0]
+    assert rounded_ops[4]["args"]["center_mils"] == [140.0, 180.0]
+    assert rounded_ops[4]["args"]["radius_mils"] == 17.0
+
+    octagon_ops = build_pcb_reference_graphics_operations(
+        output_dir="generated",
+        board_filename="mate.PcbDoc",
+        designator="TP5",
+        target={
+            "mate_reference_graphics": {
+                "shape": "source_pad_outline",
+                "layer": "MECHANICAL_1",
+                "style": {"clearance_mils": 5, "stroke_width_mils": 4},
+            },
+            "source_pad_geometries": [
+                {
+                    "x_mils": 100,
+                    "y_mils": 200,
+                    "width_mils": 80,
+                    "height_mils": 40,
+                    "shape": 3,
+                    "rotation_degrees": 0,
+                }
+            ],
+        },
+    )
+
+    assert [operation["op"] for operation in octagon_ops] == ["pcbdoc.add-track"] * 8
+    assert octagon_ops[0]["args"]["start_mils"] == [147.0, 186.5]
+    assert octagon_ops[0]["args"]["end_mils"] == [147.0, 213.5]
+
 
 def test_mate_board_projection_projects_cutout_graphics_and_regions() -> None:
     selection = SimpleNamespace(
@@ -1004,9 +1149,7 @@ def test_mate_output_board_outline_modes(tmp_path: Path) -> None:
             },
         )
         config = load_mate_config(config_path)
-        return build_mate_mco(config)["operations"][0]["args"].get(
-            "board_outline_mils"
-        )
+        return build_mate_mco(config)["operations"][0]["args"].get("board_outline_mils")
 
     assert first_outline(
         {
@@ -1247,9 +1390,7 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
         if operation["op"] == "pcbdoc.add-component"
     ]
     pcb_labels = [
-        operation
-        for operation in operations
-        if operation["op"] == "pcbdoc.add-text"
+        operation for operation in operations if operation["op"] == "pcbdoc.add-text"
     ]
 
     assert [operation["args"]["designator"] for operation in pcb_components] == [
@@ -1285,9 +1426,7 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     assert arrange_designators[0]["args"]["height_mils"] == 40.0
     assert arrange_designators[0]["args"]["font_name"] == "Arial"
     pcb_reference_arcs = [
-        operation
-        for operation in operations
-        if operation["op"] == "pcbdoc.add-arc"
+        operation for operation in operations if operation["op"] == "pcbdoc.add-arc"
     ]
     assert [operation["args"]["center_mils"] for operation in pcb_reference_arcs] == [
         [200.0, 300.0],
@@ -1697,9 +1836,7 @@ def test_mate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None:
         assert label.textbox_rect_height_mils == 60.0
         assert label.textbox_rect_justification == PcbTextJustification.RIGHT_TOP
         assert label.union_index == 0xFFFFFFFF
-    assert [user_union.name for user_union in pcbdoc.user_unions] == [
-        "MATE_FEATURES"
-    ]
+    assert [user_union.name for user_union in pcbdoc.user_unions] == ["MATE_FEATURES"]
 
 
 def test_mate_left_side_pcb_labels_default_left_justified(

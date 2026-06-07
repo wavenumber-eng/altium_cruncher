@@ -1,4 +1,4 @@
-# Debug-Plate Examples
+# Mate Examples
 
 Mate examples are arranged as runnable workspaces. Open an example
 folder, stage the local Altium inputs described by its README, then run the
