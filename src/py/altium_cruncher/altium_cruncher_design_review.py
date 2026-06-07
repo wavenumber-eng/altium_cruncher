@@ -688,9 +688,10 @@ visual schematic and PCB context.
   `json-dump`. These are parsed-document dumps, not the high-level netlist
   summary: use them when you need exact SchDoc/PcbDoc object records, raw
   Altium fields, primitive properties, board data, or information that has not
-  been promoted into the design JSON yet. SchDoc/SchLib dumps use the
-  Altium Monkey interop JSON shapes; PcbDoc payloads use the
-  `altium_monkey.pcbdoc.structural.v1` document format.
+  been promoted into the design JSON yet. SchDoc and SchLib dumps use the
+  `altium_monkey.schdoc.interop.a0` and `altium_monkey.schlib.interop.a0`
+  interop formats; PcbDoc payloads use the
+  `altium_monkey.pcbdoc.structural.a0` document format.
 - `sch/`: schematic SVGs. Each SVG root has
   `data-enrichment-schema="altium_monkey.schematic.svg.enrichment.a0"` and a
   `<metadata id="schematic-enrichment-a0">` JSON payload.
@@ -703,12 +704,31 @@ The design JSON is produced by `altium-monkey` and is the best starting point
 for reasoning about the circuit. Important top-level areas:
 
 - `components`: component rows with designator, value, footprint, library ref,
-  hierarchy, classification, parameters, and `svg_id` where available.
+  hierarchy, classification, parameters, and `svg_id` where available. This is
+  effectively the BOM-like part of the netlist; use it for designator, value,
+  footprint, library, classification, and parameter review without needing a
+  separate BOM export.
 - `nets`: net rows with endpoint/component relationships.
 - `indexes.svg_to_component`: maps schematic SVG group ids to component
   designators.
 - `indexes.component_to_nets`: maps component designators to connected nets.
 - `indexes.net_to_components`: maps a net name back to the components on it.
+
+## Power-Tree Review Hint
+
+For supply and power-tree analysis, it is often useful to build a derived graph
+that follows nets through selected two-pin series components while still
+recording the component in the explanation. Useful candidates include zero-ohm
+resistors or jumpers, current-sense resistors, ferrite beads, inductors, fuses,
+and other intentional power-path or ERC-link parts. This can reveal related
+power nets that are separated by measurement, filtering, or configuration
+elements.
+
+Do not blindly merge every two-pin device: capacitors, LEDs, TVS parts, loads,
+and protection parts have different meaning. Use component classification,
+designator prefix, value text, footprint, and parameters from `components` plus
+`indexes.component_to_nets` to decide which two-pin parts should be followed in
+a derived power-tree view.
 
 ## Schematic SVG Links
 

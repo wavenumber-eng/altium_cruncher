@@ -16,8 +16,10 @@ from altium_cruncher.altium_cruncher_common import (
 
 JSON_DUMP_SCHEMA = "altium_cruncher.json_dump.a0"
 JSON_DUMP_MANIFEST_SCHEMA = "altium_cruncher.json_dump.manifest.a0"
-PCB_DOC_STRUCTURAL_FORMAT = "altium_monkey.pcbdoc.structural.v1"
-PCB_LIB_STRUCTURAL_FORMAT = "altium_monkey.pcblib.structural.v1"
+SCH_DOC_INTEROP_FORMAT = "altium_monkey.schdoc.interop.a0"
+SCH_LIB_INTEROP_FORMAT = "altium_monkey.schlib.interop.a0"
+PCB_DOC_STRUCTURAL_FORMAT = "altium_monkey.pcbdoc.structural.a0"
+PCB_LIB_STRUCTURAL_FORMAT = "altium_monkey.pcblib.structural.a0"
 
 DOCUMENT_JSON_ROOT = "json"
 
@@ -202,11 +204,17 @@ def _load_document_payload(
     if kind == "SchDoc":
         from altium_monkey.altium_schdoc import AltiumSchDoc
 
-        return AltiumSchDoc(source_path).to_json()
+        return _with_document_format(
+            AltiumSchDoc(source_path).to_json(),
+            SCH_DOC_INTEROP_FORMAT,
+        )
     if kind == "SchLib":
         from altium_monkey.altium_schlib import AltiumSchLib
 
-        return AltiumSchLib(source_path).to_json()
+        return _with_document_format(
+            AltiumSchLib(source_path).to_json(),
+            SCH_LIB_INTEROP_FORMAT,
+        )
     if kind == "PcbDoc":
         from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
@@ -216,6 +224,14 @@ def _load_document_payload(
 
         return _pcblib_to_json(AltiumPcbLib.from_file(source_path))
     raise ValueError(f"Unsupported json-dump document kind: {kind}")
+
+
+def _with_document_format(
+    payload: dict[str, object],
+    document_format: str,
+) -> dict[str, object]:
+    """Return a document payload with an explicit Altium Monkey format tag."""
+    return {"format": document_format, **payload}
 
 
 def _pcbdoc_to_json(pcbdoc: object) -> dict[str, object]:

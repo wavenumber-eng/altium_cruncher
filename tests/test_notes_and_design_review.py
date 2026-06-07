@@ -240,6 +240,11 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert "Altium Design Review Bundle" in readme
     assert "https://github.com/wavenumber-eng/altium_monkey" in readme
     assert "parsed-document dumps" in readme
+    assert "altium_monkey.schdoc.interop.a0" in readme
+    assert "BOM-like part of the netlist" in readme
+    assert "Power-Tree Review Hint" in readme
+    assert "zero-ohm" in readme
+    assert "current-sense resistors" in readme
     assert "indexes.component_to_nets" in readme
 
 

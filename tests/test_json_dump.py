@@ -10,6 +10,8 @@ from altium_cruncher.altium_cruncher_json_dump import (
     JSON_DUMP_SCHEMA,
     PCB_DOC_STRUCTURAL_FORMAT,
     PCB_LIB_STRUCTURAL_FORMAT,
+    SCH_DOC_INTEROP_FORMAT,
+    SCH_LIB_INTEROP_FORMAT,
     build_json_dump_payload,
     write_json_dumps,
 )
@@ -70,7 +72,28 @@ def test_json_dump_schlib_writes_minimal_a0_envelope(tmp_path: Path) -> None:
     assert payload["schema"] == JSON_DUMP_SCHEMA
     assert payload["kind"] == "SchLib"
     assert set(payload) == {"schema", "kind", "document"}
-    assert isinstance(payload["document"], dict)
+    document = payload["document"]
+    assert isinstance(document, dict)
+    assert document["format"] == SCH_LIB_INTEROP_FORMAT
+    assert "Symbols" in document
+
+
+def test_json_dump_schdoc_uses_altium_monkey_interop_format(
+    tmp_path: Path,
+) -> None:
+    from altium_monkey import AltiumSchDoc
+
+    schdoc_path = tmp_path / "fixture.SchDoc"
+    AltiumSchDoc().save(schdoc_path)
+
+    payload = build_json_dump_payload(schdoc_path)
+
+    assert payload["schema"] == JSON_DUMP_SCHEMA
+    assert payload["kind"] == "SchDoc"
+    document = payload["document"]
+    assert isinstance(document, dict)
+    assert document["format"] == SCH_DOC_INTEROP_FORMAT
+    assert "Objects" in document
 
 
 def test_json_dump_pcblib_uses_altium_monkey_document_format(tmp_path: Path) -> None:
