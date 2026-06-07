@@ -92,7 +92,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `launch` | Launch Altium Designer, optionally opening a file. | Public |
 | `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
-| `megamaid` | Decompose a PrjPcb into libraries, BOM, netlist, `json/<kind>/` document/library dumps, notes JSONC, and embedded assets. | Public |
+| `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |
 | `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
 | `debug-plate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |

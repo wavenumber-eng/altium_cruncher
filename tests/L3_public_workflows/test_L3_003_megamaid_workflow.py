@@ -131,11 +131,60 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
     library_jsons = manifest["library_jsons"]
     assert library_jsons["schlib"]
     assert library_jsons["pcblib"]
+    assert {entry["scope"] for entry in library_jsons["schlib"]} == {
+        "combined",
+        "split",
+    }
+    assert {entry["scope"] for entry in library_jsons["pcblib"]} == {
+        "combined",
+        "split",
+    }
     for entry in [*library_jsons["schlib"], *library_jsons["pcblib"]]:
         assert str(entry["json"]).startswith(f"json/{str(entry['kind']).lower()}/")
         payload = _read_manifest_json(output_dir, str(entry["json"]))
         assert payload["schema"] == "altium_cruncher.json_dump.a0"
         assert payload["kind"] == entry["kind"]
+
+    schlib_entries = manifest["schlib"]
+    assert len(schlib_entries) == 1
+    assert schlib_entries[0]["combined_schlib"] == "schlib/combined/Hydroscope.SchLib"
+    assert schlib_entries[0]["split_dir"] == "schlib/split"
+    assert schlib_entries[0]["split_file_count"] == len(
+        schlib_entries[0]["split_files"]
+    )
+    assert all(
+        str(path).startswith("schlib/split/") for path in schlib_entries[0]["split_files"]
+    )
+    assert not any((output_dir / "schlib" / "split").glob("*/*.SchLib"))
+
+    bom_manifest = manifest["bom"]
+    assert bom_manifest["output_kinds"] == ["raw-json", "grouped-xlsx"]
+    bom_artifacts = [
+        artifact
+        for output in bom_manifest["outputs"]
+        for artifact in output["artifacts"]
+    ]
+    assert any(str(path).endswith("_raw-json.json") for path in bom_artifacts)
+    assert any(str(path).endswith("_grouped-xlsx.xlsx") for path in bom_artifacts)
+    assert not any("grouped-json" in str(path) for path in bom_artifacts)
+    flat_bom_json = next(
+        path for path in bom_artifacts if str(path).endswith("_raw-json.json")
+    )
+    flat_bom_payload = json.loads((output_dir / flat_bom_json).read_text())
+    assert isinstance(flat_bom_payload, list)
+
+    pnp_manifest = manifest["pnp"]
+    assert pnp_manifest["output_kinds"] == ["json", "csv"]
+    pnp_artifacts = [
+        artifact
+        for output in pnp_manifest["outputs"]
+        for artifact in output["artifacts"]
+    ]
+    assert any(str(path).endswith("_json.json") for path in pnp_artifacts)
+    assert any(str(path).endswith("_csv.csv") for path in pnp_artifacts)
+    pnp_json = next(path for path in pnp_artifacts if str(path).endswith("_json.json"))
+    pnp_payload = json.loads((output_dir / pnp_json).read_text())
+    assert pnp_payload["schema"] == "wn.altium_cruncher.pnp.v1"
 
     assert manifest["embedded_assets"]["model_file_count"] == 29
     assert manifest["sch_images"]["image_file_count"] == 7

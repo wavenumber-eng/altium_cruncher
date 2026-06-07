@@ -24,7 +24,7 @@ This inventory records the command set migrated from the private
 | `launch` | public | unit/CLI/install smoke | Launches the selected Altium Designer install, optionally opening a file. The `ad` console script is a shortcut for this command. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
-| `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
+| `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM/PnP, netlist, manifest, document/library JSON, notes, and embedded assets. |
 | `notes` | public | unit/CLI | Extracts dedicated schematic notes, text frames, and free text strings to structured JSON for agent review workflows. |
 | `mco` | experimental | unit/CLI | Executes Monkey Change Order JSONC operation files used by generated workflows. |
 | `debug-plate` | experimental | unit/CLI/example | Generates Cricket Node fixture mating-board plans and runnable MCO files from DUT selections. |
@@ -239,13 +239,16 @@ Megamaid notes:
 
 - `megamaid` stays in the first public command set as a showcase command;
 - tests should run the public CLI against a representative project fixture;
-- required output coverage includes `schlib/`, `pcblib/`, `bom/`, `netlist/`,
-  `json/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
+- required output coverage includes `schlib/`, `pcblib/`, `bom/`, `pnp/`,
+  `netlist/`, `json/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
   `sch_images/`, and `megamaid_manifest.json`;
-- generated combined libraries should reparse, combined-library JSON dumps
-  should exist under `json/schlib/` and `json/pcblib/`, BOM CSV, netlist JSON,
-  SchDoc/PcbDoc JSON under `json/schdoc/` and `json/pcbdoc/`, and notes JSONC
-  should exist, and manifest counts/paths should be validated;
+- generated combined libraries should reparse, split libraries should be flat
+  project-wide for SchLib and per board for PcbLib, combined and split library
+  JSON dumps should exist under `json/schlib/` and `json/pcblib/`, flat BOM
+  JSON and default BOM XLSX should use the shared BOM command path, PnP JSON/CSV
+  should use the shared PnP command path, netlist JSON, SchDoc/PcbDoc JSON under
+  `json/schdoc/` and `json/pcbdoc/`, and notes JSONC should exist, and manifest
+  counts/paths should be validated;
 - rerun behavior should clear megamaid-owned stale artifacts while preserving
   unrelated files under the output root.
 
