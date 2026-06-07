@@ -49,7 +49,9 @@ def test_version_contract_matches_date_based_release() -> None:
     assert version.release_date == EXPECTED_RELEASE_DATE
     assert version.release_date <= date.today()
     assert pyproject["project"]["scripts"] == {
-        "altium-cruncher": "altium_cruncher._cli:main"
+        "acr": "altium_cruncher._cli:main",
+        "ad": "altium_cruncher.altium_cruncher_cmd_launch:main_ad",
+        "altium-cruncher": "altium_cruncher._cli:main",
     }
 
 

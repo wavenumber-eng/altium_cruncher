@@ -30,11 +30,7 @@ To reinstall or update the tool:
 powershell -ExecutionPolicy Bypass -File .\scripts\install-altium-cruncher.ps1 -Force
 ```
 
-To include the optional experimental EasyEDA workflow:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-altium-cruncher.ps1 -IncludeEasyeda -Force
-```
+The EasyEDA import workflow is installed by default with the package.
 
 ### Manual Install
 
@@ -66,26 +62,13 @@ uv run altium-cruncher --help
 uv run python -m altium_cruncher version
 ```
 
-The EasyEDA import command is optional and experimental. It generates SchLib,
-PcbLib footprint, and downloaded 3D model assets by default, but 3D model
-placement into the generated PcbLib is not implemented. Install the `easyeda`
-extra when that workflow is needed:
+The EasyEDA import command generates SchLib, PcbLib footprint, and downloaded
+3D model assets by default, but 3D model placement into the generated PcbLib is
+not implemented. During local EasyEDA development:
 
 ```powershell
-uv tool install --force "altium-cruncher[easyeda]"
-```
-
-The equivalent explicit form is:
-
-```powershell
-uv tool install --force --with easyeda-monkey altium-cruncher
-```
-
-During local EasyEDA development:
-
-```powershell
-uv sync --extra test --extra easyeda
-uv run --extra easyeda altium-cruncher easyeda-import --help
+uv sync --extra test
+uv run altium-cruncher easyeda-import --help
 ```
 
 ## Commands
@@ -105,13 +88,16 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `design` | Generate design JSON with nets, components, and SVG IDs. | Public |
 | `json-dump` | Dump parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to JSON for inspection. | Experimental |
 | `extract` | Extract symbols, footprints, or IntLib sources from Altium design documents. | Public |
+| `installs` | List discovered Altium Designer install paths. | Public |
+| `launch` | Launch Altium Designer, optionally opening a file. | Public |
 | `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
 | `megamaid` | Decompose a PrjPcb into libraries, BOM, netlist, and embedded assets. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
 | `debug-plate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |
 | `clean` | Normalize SchDoc, SchLib, or PcbLib assets using JSON/JSONC config. | Public |
-| `easyeda-import` | Generate Altium SchLib, PcbLib footprint, and downloaded 3D assets from EasyEDA/LCSC data. | Optional experimental |
+| `profiles` | Inspect and clean Altium ProgramData profile extension state. | Public |
+| `easyeda-import` | Generate Altium SchLib, PcbLib footprint, and downloaded 3D assets from EasyEDA/LCSC data. | Public |
 
 `pcb-svg` includes normal layer SVG output, top/bottom assembly SVG views with
 geometer-backed HLR projection of embedded STEP models, and an optional
@@ -123,9 +109,6 @@ User-editable config files may use JSONC comments and trailing commas.
 The `pcb-svg` HLR and pin-oriented views are beta quality. Hidden-line
 rendering, embedded STEP projection, pin visibility, and related details are
 expected to improve, and current output may contain errors or omissions.
-
-`easyeda-import` is experimental. Expect command behavior, generated artifacts,
-config, and dependency details to change while this workflow matures.
 
 Compact JSON output is a core direction for machine-consumable Altium design
 data, but the first standalone milestone prioritizes command parity and

@@ -87,18 +87,15 @@ Required migration:
 
 Current state:
 
-- `easyeda-import` imports `easyeda_monkey` when the optional package is
-  installed and is marked experimental;
-- standalone `altium-cruncher` treats EasyEDA commands as placeholders when
-  `easyeda-monkey` is missing.
-- `easyeda-monkey==2026.5.26` is now public on PyPI and linked through the
-  `altium-cruncher[easyeda]` optional extra.
+- `easyeda-import` imports `easyeda_monkey` directly and is a first-class
+  public command;
+- `easyeda-monkey>=2026.5.26` is a normal runtime dependency, so the old
+  `altium-cruncher[easyeda]` extra is retained only as a compatibility no-op;
 - `easyeda-review` and `easyeda-footprint-review` are internal test/review
   helpers only, not public CLI commands.
 
 Required migration:
 
-- add an EasyEDA-extra test lane that installs `altium-cruncher[easyeda]` and
-  runs fixture-backed EasyEDA workflows;
-- keep base-install placeholder behavior tested when the optional dependency is
-  absent.
+- keep fixture-backed EasyEDA import coverage in the normal public test lanes;
+- add separate optional or network-marked tests only for live EasyEDA API/cache
+  behavior.

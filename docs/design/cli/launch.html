@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>launch command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="launch" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>launch</h1><p class="lede">Launch Altium Designer from the CLI, optionally opening a project or document.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher launch
+altium-cruncher launch board.PcbDoc --ad-version AD26
+ad board.PcbDoc --ad-version 26</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> is an optional Altium document or project. <code>--ad-version</code> and <code>--series</code> select a major series such as <code>AD25</code> or <code>26</code>. <code>--altium-path</code> accepts an explicit <code>X2.exe</code> path or install root. <code>--dry-run</code> reports the selected command without launching, and <code>--json</code> emits <code>altium_cruncher.launch.a0</code>.</p></section>
+<section id="behavior"><h2>Behavior</h2><p>Without an explicit version, the command selects the newest discovered install from the same discovery helper used by <code>installs</code>. File launches are routed through the public <code>altium-monkey</code> launcher class with the selected executable path. The standalone <code>ad</code> console script is a shortcut for this launcher command.</p></section>
+<section id="output"><h2>Output</h2><p>Normal output reports the selected install and launch action. JSON output has schema <code>altium_cruncher.launch.a0</code>, the selected install record, optional file path, resolved command array, and dry-run state.</p></section>
+<section id="tests"><h2>Tests</h2><p>L0 verifies command registration and help. Installed-wheel smoke tests verify that the <code>ad</code> console script exists and reports the package version. Discovery and selection are covered by the install-helper unit tests.</p></section>
+</main>
+</body>
+</html>

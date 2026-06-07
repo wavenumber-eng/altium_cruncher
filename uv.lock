@@ -9,15 +9,13 @@ source = { editable = "." }
 dependencies = [
     { name = "altium-monkey" },
     { name = "colorama" },
+    { name = "easyeda-monkey" },
     { name = "json-with-comments" },
     { name = "openpyxl" },
     { name = "wn-geometer" },
 ]
 
 [package.optional-dependencies]
-easyeda = [
-    { name = "easyeda-monkey" },
-]
 test = [
     { name = "build" },
     { name = "jsonschema" },
@@ -44,7 +42,7 @@ requires-dist = [
     { name = "altium-monkey", specifier = "==2026.6.7" },
     { name = "build", marker = "extra == 'test'", specifier = ">=1.2.0" },
     { name = "colorama", specifier = ">=0.4.6" },
-    { name = "easyeda-monkey", marker = "extra == 'easyeda'", specifier = ">=2026.5.26" },
+    { name = "easyeda-monkey", specifier = ">=2026.5.26" },
     { name = "json-with-comments", specifier = ">=1.2.10" },
     { name = "jsonschema", marker = "extra == 'test'", specifier = ">=4.0.0" },
     { name = "openpyxl", specifier = ">=3.1.0" },

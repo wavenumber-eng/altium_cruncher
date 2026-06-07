@@ -1,7 +1,7 @@
 # Command Inventory
 
 Status: initial migration inventory
-Last updated: 2026-05-28
+Last updated: 2026-06-07
 
 This inventory records the command set migrated from the private
 `toolz/altium_cruncher` package into the standalone public repo.
@@ -19,13 +19,16 @@ This inventory records the command set migrated from the private
 | `design` | public | `L3_public_workflows` | Key command. Exports AltiumDesign JSON for schematic/project documents, including netlist data, components, hierarchy, SVG IDs, and lookup indexes. |
 | `json-dump` | experimental | unit/CLI | Dumps parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to compact JSON for reference inspection. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
-| `easyeda-import` | optional-experimental | optional fixture lane | Experimental. Requires `altium-cruncher[easyeda]` or side-installed `easyeda-monkey`; default output includes SchLib, PcbLib footprint, and downloaded 3D assets when available. 3D model placement into PcbLib is not implemented. |
+| `easyeda-import` | public | fixture lane | First-class command backed by the normal `easyeda-monkey` runtime dependency; default output includes SchLib, PcbLib footprint, and downloaded 3D assets when available. 3D model placement into PcbLib is not implemented. |
+| `installs` | public | unit/CLI | Lists discovered Altium Designer `X2.exe` paths from Program Files, environment overrides, and registry rows. |
+| `launch` | public | unit/CLI/install smoke | Launches the selected Altium Designer install, optionally opening a file. The `ad` console script is a shortcut for this command. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM, netlist, manifest, and embedded assets. |
 | `mco` | experimental | unit/CLI | Executes Monkey Change Order JSONC operation files used by generated workflows. |
 | `debug-plate` | experimental | unit/CLI/example | Generates Cricket Node fixture mating-board plans and runnable MCO files from DUT selections. |
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
+| `profiles` | public | unit/CLI | Lists Altium ProgramData profiles and can clean selected extension module state with explicit targeting and dry-run support. |
 
 The command manifest lives at `docs/contracts/command_manifest.v0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
@@ -178,23 +181,23 @@ Extract notes:
 
 EasyEDA command notes:
 
-- `easyeda-import` is an optional experimental command until release ownership
-  is complete;
+- `easyeda-import` is a first-class public command and no longer requires a
+  separate install extra;
 - `easyeda-import` currently generates `SchLib` and `PcbLib` footprint output
   by default;
 - `easyeda-import` downloads EasyEDA OBJ/STEP 3D model assets when a 3D model
   reference exists and network fetches are enabled, but does not attach/place
   those models into the generated Altium `PcbLib`;
-- optional tests cover saved JSON input, generated `SchLib`, generated
+- tests cover saved JSON input, generated `SchLib`, generated
   default `PcbLib`, reports, preview artifacts, mocked 3D model downloads, and
   fixture-wide review HTML/SVG output;
 - live API/cache behavior still needs separate optional or network-marked
-  coverage before removing the experimental label;
+  coverage;
 - `easyeda-review` and `easyeda-footprint-review` are not public CLI commands;
   their implementation remains available only for tests and internal review
   tooling;
-- no EasyEDA command should be release-owned until the `easyeda-monkey` optional
-  extra lane runs fixture-backed command tests.
+- `easyeda-monkey` stays a normal runtime dependency because `_cli` imports the
+  EasyEDA command directly.
 
 Split notes:
 

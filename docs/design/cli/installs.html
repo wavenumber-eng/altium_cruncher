@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>installs command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="installs" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>installs</h1><p class="lede">Discover local Altium Designer installs for diagnostics, launcher selection, and installer tooling.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher installs
+altium-cruncher installs --json
+altium-cruncher installs --install-root C:\Program Files\Altium</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>--install-root</code> adds a parent directory to scan for child install roots containing <code>X2.exe</code>. <code>--json</code> emits <code>altium_cruncher.installs.a0</code> with install labels, major versions, roots, executable paths, runtime target framework, registry version, unique id, and discovery source.</p></section>
+<section id="behavior"><h2>Behavior</h2><p>The command scans Program Files Altium roots, <code>ALTIUM_AD*_ROOT</code> environment overrides, and Windows Altium build registry rows when available. Results are deduplicated by resolved <code>X2.exe</code> path and sorted newest major version first.</p></section>
+<section id="output"><h2>Output</h2><p>Human output is one line per discovered install. JSON output has schema <code>altium_cruncher.installs.a0</code> and an <code>installs</code> array with path, version, registry, and source fields.</p></section>
+<section id="tests"><h2>Tests</h2><p>Unit tests create temporary AD25/AD26 roots with fake <code>X2.exe</code> files and verify deterministic sorting and version selection independent of machine-local installs.</p></section>
+</main>
+</body>
+</html>

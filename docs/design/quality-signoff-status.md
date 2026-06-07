@@ -1,7 +1,7 @@
 # Quality Signoff Status
 
 Status: initial bootstrap audit
-Last updated: 2026-05-28
+Last updated: 2026-06-07
 
 ## Passing Gates
 
@@ -39,8 +39,8 @@ The current local run reports 169 errors and 2 warnings. The main categories
 are:
 
 - dynamic baseline parsing in `tests/support_scripts/py_signoff.py`;
-- optional `easyeda_monkey` imports behind the `altium-cruncher[easyeda]`
-  extra;
+- direct `easyeda_monkey` imports from the now first-class `easyeda-import`
+  command surface;
 - broad `object`/union typing in `altium_cruncher_cmd_megamaid.py`;
 - broad renderer option unions in PCB assembly/SVG helpers;
 - a small set of optional-value narrowing issues in EasyEDA and PCB geometry
@@ -49,7 +49,6 @@ are:
 Before making pyright a CI hard gate, decide whether to:
 
 - add a pyright baseline/waiver file and ratchet it down;
-- move optional EasyEDA implementation behind a public optional dependency;
 - narrow PCB/megamaid config and manifest dataclasses;
 - exclude migration scripts from strict package typing and keep them covered by
   `py_signoff`.

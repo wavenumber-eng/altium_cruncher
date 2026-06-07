@@ -41,14 +41,23 @@ from altium_cruncher.altium_cruncher_cmd_debug_plate import (
 from altium_cruncher.altium_cruncher_cmd_design import (
     register_parser as register_design_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_easyeda_import import (
+    register_parser as register_easyeda_import_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_extract import (
     register_parser as register_extract_parser,
+)
+from altium_cruncher.altium_cruncher_cmd_installs import (
+    register_parser as register_installs_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_jlc import (
     register_parser as register_jlc_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_json_dump import (
     register_parser as register_json_dump_parser,
+)
+from altium_cruncher.altium_cruncher_cmd_launch import (
+    register_parser as register_launch_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_merge import (
     register_parser as register_merge_parser,
@@ -67,6 +76,9 @@ from altium_cruncher.altium_cruncher_cmd_pcb_layer_step import (
 )
 from altium_cruncher.altium_cruncher_cmd_pnp import (
     register_parser as register_pnp_parser,
+)
+from altium_cruncher.altium_cruncher_cmd_profiles import (
+    register_parser as register_profiles_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_sch_svg import (
     register_parser as register_sch_svg_parser,
@@ -190,46 +202,6 @@ def _cli_log_level(args: argparse.Namespace) -> int:
     return logging.INFO
 
 
-def _cmd_missing_easyeda(_args: argparse.Namespace) -> int:
-    """Report that an EasyEDA command needs the optional dependency extra."""
-    print(
-        "EasyEDA commands require the optional easyeda dependency: "
-        "install altium-cruncher[easyeda] or install easyeda-monkey "
-        "alongside altium-cruncher.",
-        file=sys.stderr,
-    )
-    return 2
-
-
-def _register_missing_easyeda_parser(
-    subparsers: argparse._SubParsersAction,
-    command: str,
-    help_text: str,
-) -> None:
-    """Register an EasyEDA command placeholder when the optional extra is absent."""
-    parser = subparsers.add_parser(command, help=help_text, description=help_text)
-    parser.set_defaults(handler=_cmd_missing_easyeda)
-
-
-def _register_easyeda_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register EasyEDA commands when their optional runtime dependency is installed."""
-    try:
-        from altium_cruncher.altium_cruncher_cmd_easyeda_import import (
-            register_parser as register_easyeda_import_parser,
-        )
-    except ModuleNotFoundError as exc:
-        if exc.name is None or not exc.name.startswith("easyeda_monkey"):
-            raise
-        _register_missing_easyeda_parser(
-            subparsers,
-            "easyeda-import",
-            "EXPERIMENTAL: import EasyEDA symbols/footprints (requires easyeda-monkey)",
-        )
-        return
-
-    register_easyeda_import_parser(subparsers)
-
-
 def main() -> None:
     """Main entry point for the altium-cruncher CLI tool."""
     parser = CruncherArgumentParser(
@@ -274,16 +246,19 @@ def main() -> None:
     register_clean_parser(command_subparsers)
     register_debug_plate_parser(command_subparsers)
     register_design_parser(command_subparsers)
-    _register_easyeda_parsers(command_subparsers)
+    register_easyeda_import_parser(command_subparsers)
     register_extract_parser(command_subparsers)
+    register_installs_parser(command_subparsers)
     register_jlc_parser(command_subparsers)
     register_json_dump_parser(command_subparsers)
+    register_launch_parser(command_subparsers)
     register_mco_parser(command_subparsers)
     register_megamaid_parser(command_subparsers)
     register_merge_parser(command_subparsers)
     register_pcb_layer_step_parser(command_subparsers)
     register_pcb_svg_parser(command_subparsers)
     register_pnp_parser(command_subparsers)
+    register_profiles_parser(command_subparsers)
     register_sch_svg_parser(command_subparsers)
     register_split_parser(command_subparsers)
     register_svg_parser(command_subparsers)

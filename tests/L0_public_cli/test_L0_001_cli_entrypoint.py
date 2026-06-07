@@ -86,17 +86,17 @@ def test_design_help_describes_design_json_contents() -> None:
     assert "SVG IDs" in result.stdout
 
 
-def test_easyeda_help_marks_commands_experimental() -> None:
-    """Verify EasyEDA command help is explicit about experimental status."""
+def test_easyeda_import_is_first_class_public_command() -> None:
+    """Verify EasyEDA import no longer requires an optional CLI extra."""
     root_result = _run_cli("--help")
 
     assert root_result.returncode == 0, root_result.stderr
     assert "easyeda-import" in root_result.stdout
-    assert "EXPERIMENTAL" in root_result.stdout
 
     command_result = _run_cli("easyeda-import", "--help")
     assert command_result.returncode == 0, command_result.stderr
-    assert "EXPERIMENTAL" in command_result.stdout
+    assert "Generate Altium schematic-library" in command_result.stdout
+    assert "EXPERIMENTAL" not in command_result.stdout
 
 
 def test_easyeda_review_commands_are_not_public_cli_commands() -> None:
