@@ -233,10 +233,11 @@ Megamaid notes:
 - `megamaid` stays in the first public command set as a showcase command;
 - tests should run the public CLI against a representative project fixture;
 - required output coverage includes `schlib/`, `pcblib/`, `bom/`, `netlist/`,
-  `embedded_models/`, `embedded_fonts/`, `sch_images/`, and
-  `megamaid_manifest.json`;
-- generated combined libraries should reparse, BOM CSV and netlist JSON should
-  exist, and manifest counts/paths should be validated;
+  `documents/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
+  `sch_images/`, and `megamaid_manifest.json`;
+- generated combined libraries should reparse, combined-library JSON dumps
+  should exist, BOM CSV, netlist JSON, SchDoc/PcbDoc JSON, and notes JSON
+  should exist, and manifest counts/paths should be validated;
 - rerun behavior should clear megamaid-owned stale artifacts while preserving
   unrelated files under the output root.
 

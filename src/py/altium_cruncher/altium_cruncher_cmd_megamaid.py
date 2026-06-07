@@ -16,6 +16,8 @@ from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
 )
+from altium_cruncher.altium_cruncher_json_dump import build_json_dump_payload
+from altium_cruncher.altium_cruncher_notes import build_notes_payload
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +39,8 @@ def _prepare_megamaid_output_root(output_dir: Path) -> None:
         output_dir / "embedded_models",
         output_dir / "embedded_fonts",
         output_dir / "sch_images",
+        output_dir / "documents",
+        output_dir / "notes",
     ]
     owned_files = [
         output_dir / "megamaid_manifest.json",
@@ -241,6 +245,116 @@ def _extract_project_embedded_assets(
     }
 
 
+def _write_json_payload(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _write_json_dump_artifact(
+    *,
+    source_path: Path,
+    output_path: Path,
+    output_root: Path,
+) -> dict[str, object]:
+    payload = build_json_dump_payload(source_path)
+    _write_json_payload(output_path, payload)
+    return {
+        "source": str(source_path),
+        "kind": str(payload["kind"]),
+        "json": _relative_to_root(output_path, output_root),
+    }
+
+
+def _write_project_document_jsons(
+    *,
+    schdoc_paths: list[Path],
+    pcbdoc_paths: list[Path],
+    output_root: Path,
+) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
+    for source_path in [*schdoc_paths, *pcbdoc_paths]:
+        kind = "SchDoc" if source_path.suffix.lower() == ".schdoc" else "PcbDoc"
+        entries.append(
+            _write_json_dump_artifact(
+                source_path=source_path,
+                output_path=output_root
+                / "documents"
+                / kind.lower()
+                / f"{source_path.stem}.{kind}.json",
+                output_root=output_root,
+            )
+        )
+    return entries
+
+
+def _write_notes_json(
+    *,
+    input_project: Path,
+    output_root: Path,
+) -> dict[str, object]:
+    payload = build_notes_payload(input_project)
+    output_path = output_root / "notes" / f"{input_project.stem}_notes.json"
+    _write_json_payload(output_path, payload)
+    return {
+        "notes_json": _relative_to_root(output_path, output_root),
+        "counts": payload.get("counts", {}),
+    }
+
+
+def _write_combined_library_jsons(
+    *,
+    sch_manifest: list[dict[str, object]],
+    pcb_manifest: list[dict[str, object]],
+    output_root: Path,
+) -> dict[str, list[dict[str, object]]]:
+    return {
+        "schlib": _write_combined_schlib_jsons(sch_manifest, output_root),
+        "pcblib": _write_combined_pcblib_jsons(pcb_manifest, output_root),
+    }
+
+
+def _write_combined_schlib_jsons(
+    sch_manifest: list[dict[str, object]],
+    output_root: Path,
+) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
+    for index, entry in enumerate(sch_manifest, start=1):
+        source_path = Path(str(entry["combined_schlib"]))
+        entries.append(
+            _write_json_dump_artifact(
+                source_path=source_path,
+                output_path=output_root
+                / "schlib"
+                / "json"
+                / "combined"
+                / f"{index:02d}__{source_path.stem}.SchLib.json",
+                output_root=output_root,
+            )
+        )
+    return entries
+
+
+def _write_combined_pcblib_jsons(
+    pcb_manifest: list[dict[str, object]],
+    output_root: Path,
+) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
+    for index, entry in enumerate(pcb_manifest, start=1):
+        source_path = Path(str(entry["combined_pcblib"]))
+        entries.append(
+            _write_json_dump_artifact(
+                source_path=source_path,
+                output_path=output_root
+                / "pcblib"
+                / "json"
+                / "combined"
+                / f"{index:02d}__{source_path.stem}.PcbLib.json",
+                output_root=output_root,
+            )
+        )
+    return entries
+
+
 def _extract_project_schematic_images(
     *,
     schdoc_paths: list[Path],
@@ -325,7 +439,7 @@ def _extract_schlibs_for_project(
     schdoc_paths: list[Path],
     output_root: Path,
     debug: bool,
-) -> list[dict]:
+) -> list[dict[str, object]]:
     from altium_monkey.altium_schdoc import AltiumSchDoc
     from altium_monkey.altium_schlib import AltiumSchLib
     from altium_monkey.altium_schlib_merger import merge_directory
@@ -335,7 +449,7 @@ def _extract_schlibs_for_project(
     combined_root.mkdir(parents=True, exist_ok=True)
     split_root.mkdir(parents=True, exist_ok=True)
 
-    manifest_entries: list[dict] = []
+    manifest_entries: list[dict[str, object]] = []
     multi_schematic = len(schdoc_paths) > 1
     for schdoc_path in schdoc_paths:
         schdoc = AltiumSchDoc(schdoc_path)
@@ -382,7 +496,7 @@ def _extract_pcblibs_for_project(
     pcbdoc_paths: list[Path],
     output_root: Path,
     debug: bool,
-) -> list[dict]:
+) -> list[dict[str, object]]:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
     combined_root = output_root / "combined"
@@ -390,7 +504,7 @@ def _extract_pcblibs_for_project(
     combined_root.mkdir(parents=True, exist_ok=True)
     split_root.mkdir(parents=True, exist_ok=True)
 
-    manifest_entries: list[dict] = []
+    manifest_entries: list[dict[str, object]] = []
     multi_board = len(pcbdoc_paths) > 1
     for pcbdoc_path in pcbdoc_paths:
         pcbdoc = AltiumPcbDoc.from_file(pcbdoc_path)
@@ -469,6 +583,20 @@ def cmd_megamaid(args) -> int:
             output_root=output_dir,
             debug=debug,
         )
+        document_jsons = _write_project_document_jsons(
+            schdoc_paths=schdoc_paths,
+            pcbdoc_paths=pcbdoc_paths,
+            output_root=output_dir,
+        )
+        library_jsons = _write_combined_library_jsons(
+            sch_manifest=sch_manifest,
+            pcb_manifest=pcb_manifest,
+            output_root=output_dir,
+        )
+        notes_manifest = _write_notes_json(
+            input_project=input_file,
+            output_root=output_dir,
+        )
 
         base_bom = design.to_bom()
         bom_path = output_dir / "bom" / f"{input_file.stem}_bom.csv"
@@ -495,6 +623,9 @@ def cmd_megamaid(args) -> int:
                 "component_count": len(netlist_payload.get("components", [])),
                 "net_count": len(netlist_payload.get("nets", [])),
             },
+            "document_jsons": document_jsons,
+            "library_jsons": library_jsons,
+            "notes": notes_manifest,
             "schlib": [
                 {
                     **entry,
@@ -591,7 +722,8 @@ def register_parser(subparsers):
             "Output tree:\n"
             "  schlib/combined, schlib/split\n"
             "  pcblib/combined, pcblib/split\n"
-            "  bom, netlist\n"
+            "  bom, netlist, documents, notes\n"
+            "  schlib/json/combined, pcblib/json/combined\n"
             "  embedded_models, embedded_fonts\n"
             "  sch_images\n"
         ),
