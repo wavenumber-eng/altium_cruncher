@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026.6.7
+
+- Consume pinned `altium-monkey==2026.6.7`.
+- Add `acr` and `ad` executable aliases for local workflows.
+- Promote `easyeda-import` to a first-class public command dependency.
+- Add `installs`, `launch`, and `profiles` commands for Altium install,
+  launcher, and ProgramData profile diagnostics.
+- Expand `design` into an agent-facing design review bundle, with
+  `design-review` and `dr` aliases, serialized SchDoc/PcbDoc JSON, structured
+  notes JSON, schematic SVGs, PCB layer SVGs, manifest, and README output.
+- Add a dedicated `notes` command for Altium Note objects, text frames, and
+  free schematic text.
+- Extend `megamaid` output with serialized document JSON, combined extracted
+  library JSON, and notes JSON artifacts.
+- Continue experimental `mco` and `debug-plate` development toward Cricket
+  Node mating-board automation.
+
 ## 2026.5.28
 
 - Bootstrap standalone `altium-cruncher` public package from the prior private
