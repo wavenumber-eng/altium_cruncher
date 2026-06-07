@@ -11,22 +11,23 @@
   <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher json-dump [files-or-directories...] -o output/json-dump
 altium-cruncher json-dump board.PcbDoc --stdout
 altium-cruncher json-dump project.PrjPcb
-altium-cruncher json-dump . --recursive</code></pre></section>
+altium-cruncher json-dump . --recursive --layout flat</code></pre></section>
 
   <section id="arguments"><h2>Arguments</h2><table><tr><th>Argument</th><th>Contract</th></tr>
     <tr><td><code>paths</code></td><td>Optional files or directories. With no paths, the command looks for one project in the current directory, otherwise dumps supported files in the current directory.</td></tr>
     <tr><td><code>--recursive</code></td><td>When a directory is supplied, include supported files under descendants.</td></tr>
     <tr><td><code>-o</code>, <code>--output</code></td><td>Output directory. Defaults to <code>output/json-dump</code>.</td></tr>
+    <tr><td><code>--layout</code></td><td>Batch output layout. <code>by-kind</code> is the default and writes domain folders such as <code>schdoc/</code> and <code>pcbdoc/</code> directly under the output directory. <code>flat</code> writes all dump files directly under the output directory.</td></tr>
     <tr><td><code>--stdout</code></td><td>Write the single resolved document payload to stdout. This is invalid when more than one document is resolved.</td></tr>
   </table></section>
 
-  <section id="output"><h2>Output</h2><p>Each dump file uses an <code>altium_cruncher.json_dump.a0</code> envelope with only <code>schema</code>, <code>kind</code>, and <code>document</code>. The nested <code>document</code> value is the parsed Altium document payload and follows the owning <code>altium-monkey</code> document shape. Batch runs write document payloads under <code>json/schdoc/</code>, <code>json/schlib/</code>, <code>json/pcbdoc/</code>, or <code>json/pcblib/</code> based on document kind, and also write <code>manifest.json</code> with schema <code>altium_cruncher.json_dump.manifest.a0</code> to map source paths to output files.</p><pre><code>{
+  <section id="output"><h2>Output</h2><p>Each dump file uses an <code>altium_cruncher.json_dump.a0</code> envelope with only <code>schema</code>, <code>kind</code>, and <code>document</code>. The nested <code>document</code> value is the parsed Altium document payload and follows the owning <code>altium-monkey</code> document shape. Batch runs with the default <code>by-kind</code> layout write document payloads under <code>schdoc/</code>, <code>schlib/</code>, <code>pcbdoc/</code>, or <code>pcblib/</code> based on document kind. <code>--layout flat</code> writes every dump file directly under the output directory. Batch runs also write <code>manifest.json</code> with schema <code>altium_cruncher.json_dump.manifest.a0</code> to map source paths to output files.</p><pre><code>{
   "schema": "altium_cruncher.json_dump.a0",
   "kind": "PcbDoc",
   "document": {}
 }</code></pre></section>
 
-  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_json_dump.py</code>. It verifies PcbDoc structural dumping, SchLib dumping, project expansion, manifest shape, stdout behavior, and CLI registration.</p></section>
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_json_dump.py</code>. It verifies PcbDoc structural dumping, SchLib dumping, project expansion, manifest shape, stdout behavior, default by-kind output, flat output, and CLI registration.</p></section>
 </main>
 </body>
 </html>

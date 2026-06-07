@@ -403,6 +403,7 @@ def _write_document_jsons(
             output_dir,
             kind,
             used_names,
+            root_subdir="json",
         )
         _write_json(output_path, payload)
         log.info("Document JSON: %s", _relpath(output_path, output_dir))

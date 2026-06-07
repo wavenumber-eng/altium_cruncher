@@ -31,6 +31,7 @@ def cmd_json_dump(args: argparse.Namespace) -> int:
             inputs,
             output=args.output,
             recursive=bool(args.recursive),
+            layout=args.layout,
         )
     except Exception as exc:
         log.error("Failed dumping Altium JSON: %s", exc)
@@ -54,7 +55,7 @@ def register_parser(
             "Examples:\n"
             "  altium_cruncher json-dump board.PcbDoc\n"
             "  altium_cruncher json-dump project.PrjPcb -o output/json-dump\n"
-            "  altium_cruncher json-dump . --recursive\n"
+            "  altium_cruncher json-dump . --recursive --layout flat\n"
             "  altium_cruncher json-dump board.PcbDoc --stdout"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -78,6 +79,16 @@ def register_parser(
         "--recursive",
         action="store_true",
         help="recurse through directory inputs",
+    )
+    parser.add_argument(
+        "--layout",
+        choices=("by-kind", "flat"),
+        default="by-kind",
+        help=(
+            "file layout for batch output: by-kind writes schdoc/pcbdoc/etc. "
+            "folders, flat writes all JSON files directly under the output "
+            "directory (default: by-kind)"
+        ),
     )
     parser.add_argument(
         "--stdout",

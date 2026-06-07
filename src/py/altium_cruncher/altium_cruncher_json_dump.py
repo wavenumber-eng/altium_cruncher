@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Literal
 
 from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
@@ -21,7 +22,7 @@ SCH_LIB_INTEROP_FORMAT = "altium_monkey.schlib.interop.a0"
 PCB_DOC_STRUCTURAL_FORMAT = "altium_monkey.pcbdoc.structural.a0"
 PCB_LIB_STRUCTURAL_FORMAT = "altium_monkey.pcblib.structural.a0"
 
-DOCUMENT_JSON_ROOT = "json"
+JsonDumpLayout = Literal["by-kind", "flat"]
 
 _SUPPORTED_SUFFIX_TO_KIND = {
     ".schdoc": "SchDoc",
@@ -152,6 +153,7 @@ def write_json_dumps(
     *,
     output: Path | None = None,
     recursive: bool = False,
+    layout: JsonDumpLayout = "by-kind",
 ) -> JsonDumpResult:
     """Write JSON dump files and a manifest for the resolved input set."""
     sources = resolve_json_dump_sources(inputs, recursive=recursive)
@@ -164,7 +166,13 @@ def write_json_dumps(
     for source in sources:
         payload = build_json_dump_payload(source)
         kind = str(payload["kind"])
-        output_path = document_json_output_path(source, output_dir, kind, used_names)
+        output_path = document_json_output_path(
+            source,
+            output_dir,
+            kind,
+            used_names,
+            layout=layout,
+        )
         _write_json(output_path, payload)
         outputs.append(
             JsonDumpOutput(
@@ -521,17 +529,35 @@ def document_json_output_path(
     output_dir: Path,
     kind: str,
     used_names: set[str],
+    *,
+    layout: JsonDumpLayout = "by-kind",
+    root_subdir: str | None = None,
 ) -> Path:
-    """Return the standard json/<kind> output path for a dumped document."""
+    """Return the standard output path for a dumped document."""
     kind_dir = kind.lower()
     name = f"{source.stem}.{kind}.json"
-    key = f"{kind_dir}/{name}".lower()
+    if layout == "by-kind":
+        relative_path = Path(kind_dir) / name
+    elif layout == "flat":
+        relative_path = Path(name)
+    else:
+        raise ValueError(f"Unsupported json-dump layout: {layout}")
+    if root_subdir:
+        relative_path = Path(root_subdir) / relative_path
+
+    key = relative_path.as_posix().lower()
     if key in used_names:
         digest = hashlib.sha1(source.resolve().as_posix().encode("utf-8")).hexdigest()
         name = f"{source.stem}__{digest[:8]}.{kind}.json"
-        key = f"{kind_dir}/{name}".lower()
+        if layout == "by-kind":
+            relative_path = Path(kind_dir) / name
+        else:
+            relative_path = Path(name)
+        if root_subdir:
+            relative_path = Path(root_subdir) / relative_path
+        key = relative_path.as_posix().lower()
     used_names.add(key)
-    return output_dir / DOCUMENT_JSON_ROOT / kind_dir / name
+    return output_dir / relative_path
 
 
 def _write_json(path: Path, payload: object) -> None:

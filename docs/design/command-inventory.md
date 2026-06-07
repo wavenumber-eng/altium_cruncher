@@ -17,7 +17,7 @@ This inventory records the command set migrated from the private
 | `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL CSV/XLSX, units, variant/no-BOM filtering, and configurable sorting. |
 | `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
 | `design` | public | `L3_public_workflows` | Key command. Generates the design-review bundle and keeps root AltiumDesign JSON for schematic/project documents, including netlist data, components, hierarchy, SVG IDs, and lookup indexes. Aliases are `design-review` and `dr`. |
-| `json-dump` | experimental | unit/CLI | Dumps parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to compact JSON for reference inspection. |
+| `json-dump` | experimental | unit/CLI | Dumps parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to compact JSON for reference inspection, with by-kind or flat output layouts. |
 | `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
 | `easyeda-import` | public | fixture lane | First-class command backed by the normal `easyeda-monkey` runtime dependency; default output includes SchLib, PcbLib footprint, and downloaded 3D assets when available. 3D model placement into PcbLib is not implemented. |
 | `installs` | public | unit/CLI | Lists discovered Altium Designer `X2.exe` paths from Program Files, environment overrides, and registry rows. |

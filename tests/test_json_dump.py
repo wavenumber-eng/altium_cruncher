@@ -129,7 +129,7 @@ def test_json_dump_expands_project_and_writes_manifest(tmp_path: Path) -> None:
     assert len(result.outputs) == 1
     assert result.outputs[0].source_path == pcbdoc_path.resolve()
     assert result.outputs[0].output_path == (
-        tmp_path / "dump" / "json" / "pcbdoc" / "fixture.PcbDoc.json"
+        tmp_path / "dump" / "pcbdoc" / "fixture.PcbDoc.json"
     )
     output_payload = json.loads(
         result.outputs[0].output_path.read_text(encoding="utf-8")
@@ -140,6 +140,33 @@ def test_json_dump_expands_project_and_writes_manifest(tmp_path: Path) -> None:
     assert manifest["schema"] == JSON_DUMP_MANIFEST_SCHEMA
     assert set(manifest) == {"schema", "outputs"}
     assert manifest["outputs"][0]["kind"] == "PcbDoc"
+
+
+def test_json_dump_flat_layout_writes_documents_directly_under_output(
+    tmp_path: Path,
+) -> None:
+    from altium_monkey import AltiumSchDoc
+
+    pcbdoc_path = _write_text_pcbdoc(tmp_path / "fixture.PcbDoc")
+    schdoc_path = tmp_path / "fixture.SchDoc"
+    AltiumSchDoc().save(schdoc_path)
+
+    result = write_json_dumps(
+        [pcbdoc_path, schdoc_path],
+        output=tmp_path / "dump",
+        layout="flat",
+    )
+
+    output_paths = {output.output_path for output in result.outputs}
+    assert output_paths == {
+        tmp_path / "dump" / "fixture.PcbDoc.json",
+        tmp_path / "dump" / "fixture.SchDoc.json",
+    }
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert {Path(row["output_path"]).name for row in manifest["outputs"]} == {
+        "fixture.PcbDoc.json",
+        "fixture.SchDoc.json",
+    }
 
 
 def test_json_dump_cli_stdout_writes_single_document_json(tmp_path: Path) -> None:
@@ -164,3 +191,30 @@ def test_json_dump_cli_stdout_writes_single_document_json(tmp_path: Path) -> Non
     payload = json.loads(completed.stdout)
     assert payload["schema"] == JSON_DUMP_SCHEMA
     assert payload["kind"] == "PcbDoc"
+
+
+def test_json_dump_cli_flat_layout_writes_single_folder(tmp_path: Path) -> None:
+    pcbdoc_path = _write_text_pcbdoc(tmp_path / "flat.PcbDoc")
+    output_dir = tmp_path / "json-dump"
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "json-dump",
+            str(pcbdoc_path),
+            "-o",
+            str(output_dir),
+            "--layout",
+            "flat",
+        ],
+        cwd=PACKAGE_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert (output_dir / "flat.PcbDoc.json").exists()
+    assert not (output_dir / "json").exists()

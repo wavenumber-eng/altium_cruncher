@@ -267,6 +267,7 @@ def _write_project_document_jsons(
                     output_root,
                     kind,
                     used_names,
+                    root_subdir="json",
                 ),
                 output_root=output_root,
             )

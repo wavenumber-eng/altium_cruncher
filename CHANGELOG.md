@@ -24,6 +24,9 @@
   folder convention.
 - Add `outjob run` for executing project-referenced or explicit `.OutJob`
   files through the public `altium-monkey` runner.
+- Change standalone `json-dump` batch output to write `schdoc/`, `pcbdoc/`,
+  and related domain folders directly under `output/json-dump`, with
+  `--layout flat` for single-folder dumps.
 - Clean configured BOM/PnP/JLC output filenames so format-only outputs rely on
   the file extension while semantic stems such as `raw`, `grouped`, and
   `jlc-cpl` remain visible.
