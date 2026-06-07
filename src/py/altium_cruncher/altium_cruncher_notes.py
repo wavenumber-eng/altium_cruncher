@@ -103,23 +103,19 @@ def _schdoc_notes_page(
 
     schdoc = AltiumSchDoc(schdoc_path)
     notes = _filtered_entries(
-        "note",
         schdoc.notes,
         include_sheet_template_text=include_sheet_template_text,
     )
     text_frames = _filtered_entries(
-        "text_frame",
         schdoc.text_frames,
         include_sheet_template_text=include_sheet_template_text,
     )
     free_text = _filtered_entries(
-        "free_text",
         schdoc.text_strings,
         include_sheet_template_text=include_sheet_template_text,
     )
     page: dict[str, object] = {
         "file": _portable_path(schdoc_path.resolve(), path_base),
-        "page_name": schdoc_path.stem,
     }
     _append_entries(page, "notes", notes)
     _append_entries(page, "text_frames", text_frames)
@@ -128,7 +124,6 @@ def _schdoc_notes_page(
 
 
 def _filtered_entries(
-    kind: str,
     objects: object,
     *,
     include_sheet_template_text: bool,
@@ -140,7 +135,7 @@ def _filtered_entries(
             and _source_scope(_owner_index(obj)) == "sheet_template"
         ):
             continue
-        entries.append(_object_entry(kind, obj))
+        entries.append(_object_entry(obj))
     return entries
 
 
@@ -157,10 +152,8 @@ def _page_has_annotations(page: dict[str, object]) -> bool:
     return any(name in page for name in ("notes", "text_frames", "free_text"))
 
 
-def _object_entry(kind: str, obj: object) -> dict[str, object]:
+def _object_entry(obj: object) -> dict[str, object]:
     entry: dict[str, object] = {
-        "kind": kind,
-        "object_type": type(obj).__name__,
         "text": str(getattr(obj, "text", "") or ""),
         "position_mils": _point_to_json(getattr(obj, "location", None)),
     }
@@ -169,7 +162,6 @@ def _object_entry(kind: str, obj: object) -> dict[str, object]:
     if bounds is not None:
         entry["bounds_mils"] = bounds
     _append_optional(entry, "author", getattr(obj, "author", None))
-    _append_optional(entry, "collapsed", getattr(obj, "collapsed", None))
     return entry
 
 

@@ -29,6 +29,10 @@ _LOW_LEVEL_NOTE_KEYS = {
     "alignment",
     "page_number",
     "page_count",
+    "page_name",
+    "object_type",
+    "collapsed",
+    "kind",
 }
 
 
