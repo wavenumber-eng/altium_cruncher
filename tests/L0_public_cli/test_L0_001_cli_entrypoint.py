@@ -84,6 +84,7 @@ def test_design_help_describes_design_json_contents() -> None:
     assert "design review bundle" in result.stdout
     assert "serialized SchDoc/PcbDoc JSON" in result.stdout
     assert "structured notes" in result.stdout
+    assert "output/design_review" in result.stdout
 
 
 def test_design_review_alias_help_starts() -> None:

@@ -16,6 +16,8 @@ from altium_cruncher.altium_cruncher_common import (
 
 JSON_DUMP_SCHEMA = "altium_cruncher.json_dump.a0"
 JSON_DUMP_MANIFEST_SCHEMA = "altium_cruncher.json_dump.manifest.a0"
+PCB_DOC_STRUCTURAL_FORMAT = "altium_monkey.pcbdoc.structural.v1"
+PCB_LIB_STRUCTURAL_FORMAT = "altium_monkey.pcblib.structural.v1"
 
 DOCUMENT_JSON_ROOT = "json"
 
@@ -218,7 +220,7 @@ def _load_document_payload(
 
 def _pcbdoc_to_json(pcbdoc: object) -> dict[str, object]:
     payload: dict[str, object] = {
-        "format": "altium_cruncher.pcbdoc.structural.v1",
+        "format": PCB_DOC_STRUCTURAL_FORMAT,
         "counts": _collection_counts(pcbdoc, _PCB_DOC_COLLECTIONS),
         "raw_streams": _raw_stream_inventory(getattr(pcbdoc, "_raw_streams", {})),
         "board": _jsonable(getattr(pcbdoc, "board", None), set()),
@@ -245,7 +247,7 @@ def _pcblib_to_json(pcblib: object) -> dict[str, object]:
             entry[collection] = _jsonable(getattr(footprint, collection, ()), set())
         footprints.append(entry)
     return {
-        "format": "altium_cruncher.pcblib.structural.v1",
+        "format": PCB_LIB_STRUCTURAL_FORMAT,
         "footprint_count": len(footprints),
         "footprints": footprints,
         "models_3d": _jsonable(getattr(pcblib, "models_3d", {}), set()),

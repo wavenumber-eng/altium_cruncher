@@ -45,7 +45,7 @@ def cmd_design(args: argparse.Namespace) -> int:
         log.info("Supported types: .SchDoc, .PrjPcb")
         return 1
 
-    output_dir = _resolve_output_dir(args.output, "design")
+    output_dir = _resolve_output_dir(args.output, "design_review")
     include_indexes = not getattr(args, 'no_indexes', False)
 
     try:
@@ -74,7 +74,7 @@ def register_parser(
         help="generate Altium design review artifacts",
         description=(
             "Generate an Altium design review bundle from SchDoc or PrjPcb "
-            "files. The bundle includes AltiumDesign JSON, serialized SchDoc/"
+            "files. The bundle includes AltiumDesign netlist JSON, serialized SchDoc/"
             "PcbDoc JSON, schematic SVGs, PCB layer SVGs, structured notes "
             "JSON, a manifest, and an agent-facing README."
         ),
@@ -86,7 +86,7 @@ def register_parser(
             "  altium-cruncher design schematic.SchDoc\n"
             "  altium-cruncher design                    # Auto-detect PrjPcb in CWD\n"
             "  altium-cruncher design project.PrjPcb --no-indexes  # Without lookup indexes\n"
-            "  altium-cruncher design project.PrjPcb -o output_dir/"
+            "  altium-cruncher design project.PrjPcb -o output/design_review"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -99,7 +99,7 @@ def register_parser(
         "-o",
         "--output",
         type=Path,
-        help="output directory (default: ./output/design)",
+        help="output directory (default: ./output/design_review)",
     )
     design_parser.add_argument(
         "--no-indexes",

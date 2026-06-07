@@ -8,6 +8,8 @@ from pathlib import Path
 from altium_cruncher.altium_cruncher_json_dump import (
     JSON_DUMP_MANIFEST_SCHEMA,
     JSON_DUMP_SCHEMA,
+    PCB_DOC_STRUCTURAL_FORMAT,
+    PCB_LIB_STRUCTURAL_FORMAT,
     build_json_dump_payload,
     write_json_dumps,
 )
@@ -44,6 +46,7 @@ def test_json_dump_pcbdoc_writes_minimal_a0_envelope(tmp_path: Path) -> None:
     assert set(payload) == {"schema", "kind", "document"}
     document = payload["document"]
     assert isinstance(document, dict)
+    assert document["format"] == PCB_DOC_STRUCTURAL_FORMAT
     assert document["counts"]["texts"] == 1
     text_entry = document["texts"][0]
     assert text_entry["fields"]["text_content"] == "DBG_LABEL"
@@ -68,6 +71,24 @@ def test_json_dump_schlib_writes_minimal_a0_envelope(tmp_path: Path) -> None:
     assert payload["kind"] == "SchLib"
     assert set(payload) == {"schema", "kind", "document"}
     assert isinstance(payload["document"], dict)
+
+
+def test_json_dump_pcblib_uses_altium_monkey_document_format(tmp_path: Path) -> None:
+    from altium_monkey import AltiumPcbLib
+
+    pcblib_path = tmp_path / "fixture.PcbLib"
+    pcblib = AltiumPcbLib()
+    pcblib.add_footprint("DBG_FOOTPRINT")
+    pcblib.save(pcblib_path)
+
+    payload = build_json_dump_payload(pcblib_path)
+
+    assert payload["schema"] == JSON_DUMP_SCHEMA
+    assert payload["kind"] == "PcbLib"
+    document = payload["document"]
+    assert isinstance(document, dict)
+    assert document["format"] == PCB_LIB_STRUCTURAL_FORMAT
+    assert document["footprint_count"] == 1
 
 
 def test_json_dump_expands_project_and_writes_manifest(tmp_path: Path) -> None:

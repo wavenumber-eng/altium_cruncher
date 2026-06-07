@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -18,6 +19,7 @@ from altium_monkey.altium_sch_object_factory import (
 from altium_monkey.altium_schdoc import AltiumSchDoc
 
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
+from altium_cruncher.altium_cruncher_design_review import _enrich_schematic_svg
 
 
 _LOW_LEVEL_NOTE_KEYS = {
@@ -208,6 +210,7 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     )
     assert manifest["schema"] == "altium_cruncher.design_review_manifest.a0"
     assert manifest["input"] == "annotated.SchDoc"
+    assert str(manifest["design_json"]).startswith("design/")
     assert (output_dir / manifest["design_json"]).exists()
     assert (output_dir / manifest["notes_json"]).exists()
     assert (output_dir / manifest["readme"]).exists()
@@ -218,9 +221,16 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert manifest["document_jsons"][0]["file"].startswith("json/schdoc/")
     assert len(manifest["schematic_svgs"]) == 1
     assert manifest["schematic_svgs"][0]["source"] == "annotated.SchDoc"
+    assert manifest["schematic_svgs"][0]["file"].startswith("sch/")
     assert manifest["pcb_svgs"] == []
     assert "Document JSON: json/schdoc/annotated.SchDoc.json" in result.stdout
-    assert "Schematic SVG: schematics/annotated.svg" in result.stdout
+    assert "Schematic SVG: sch/annotated.svg" in result.stdout
+    schematic_svg = (output_dir / manifest["schematic_svgs"][0]["file"]).read_text(
+        encoding="utf-8",
+    )
+    assert "altium_monkey.schematic.svg.enrichment.a0" in schematic_svg
+    assert 'data-review-theme="altium_cruncher.design_review.schematic_svg.a0"' in schematic_svg
+    assert 'id="schematic-enrichment-a0"' in schematic_svg
     notes_text = (output_dir / manifest["notes_json"]).read_text(encoding="utf-8")
     assert notes_text.startswith("/*\naltium-cruncher notes artifact")
     notes_payload = jsonc.loads(notes_text)
@@ -228,6 +238,77 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert notes_payload["input"] == "annotated.SchDoc"
     readme = (output_dir / "README.md").read_text(encoding="utf-8")
     assert "Altium Design Review Bundle" in readme
+    assert "https://github.com/wavenumber-eng/altium_monkey" in readme
+    assert "parsed-document dumps" in readme
+    assert "indexes.component_to_nets" in readme
+
+
+def test_design_review_uses_design_review_default_output_dir(tmp_path: Path) -> None:
+    """Default design-review output should be output/design_review."""
+    repo_root = Path(__file__).resolve().parents[1]
+    schdoc_path = tmp_path / "annotated.SchDoc"
+    _write_annotation_schdoc(schdoc_path)
+    env = os.environ.copy()
+    src_path = str(repo_root / "src" / "py")
+    env["PYTHONPATH"] = (
+        src_path
+        if not env.get("PYTHONPATH")
+        else src_path + os.pathsep + env["PYTHONPATH"]
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-m", "altium_cruncher", "dr", str(schdoc_path)],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert (
+        tmp_path / "output" / "design_review" / "design_review_manifest.json"
+    ).exists()
+
+
+def test_design_review_schematic_svg_enrichment_embeds_component_lookup(
+    tmp_path: Path,
+) -> None:
+    """Embed schematic review metadata and component attrs into DR SVGs."""
+    schdoc_path = tmp_path / "Sheet1.SchDoc"
+    svg = '<svg xmlns="http://www.w3.org/2000/svg"><g id = "ABC123" ></g></svg>'
+    design_payload: dict[str, object] = {
+        "schema": "altium_monkey.design.a0",
+        "components": [
+            {
+                "designator": "R1",
+                "svg_id": "ABC123",
+                "value": "10k",
+                "footprint": "RES_0603",
+                "library_ref": "RES",
+                "hierarchy": {"sheet": "Sheet1.SchDoc"},
+                "classification": {"type": "resistor"},
+            }
+        ],
+        "indexes": {"component_to_nets": {"R1": ["NET_A"]}},
+    }
+
+    enriched = _enrich_schematic_svg(
+        svg,
+        design_payload=design_payload,
+        schdoc_path=schdoc_path,
+        source_base=tmp_path,
+    )
+
+    assert 'data-enrichment-schema="altium_monkey.schematic.svg.enrichment.a0"' in enriched
+    assert 'data-review-theme="altium_cruncher.design_review.schematic_svg.a0"' in enriched
+    assert 'id="schematic-enrichment-a0"' in enriched
+    assert 'data-component="R1"' in enriched
+    assert 'data-designator="R1"' in enriched
+    assert 'data-symbol-library-ref="RES"' in enriched
+    assert 'data-footprint="RES_0603"' in enriched
+    assert '"svg_to_component": {' in enriched
+    assert '"ABC123": "R1"' in enriched
 
 
 def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:

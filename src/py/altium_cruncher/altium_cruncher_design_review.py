@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import html
 import json
 import logging
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -21,6 +23,9 @@ if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
 DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.a0"
+SCHEMATIC_SVG_ENRICHMENT_SCHEMA = "altium_monkey.schematic.svg.enrichment.a0"
+SCHEMATIC_SVG_ENRICHMENT_METADATA_ID = "schematic-enrichment-a0"
+SCHEMATIC_REVIEW_THEME = "altium_cruncher.design_review.schematic_svg.a0"
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +39,7 @@ def write_design_review_bundle(
     """Write the full design-review bundle for a SchDoc or PrjPcb."""
     design = _load_design(input_file)
     design_payload = design.to_json(include_indexes=include_indexes)
-    design_json_path = output_dir / f"{input_file.stem}_design.json"
+    design_json_path = output_dir / "design" / f"{input_file.stem}_design.json"
     _write_json(design_json_path, design_payload)
     log.info("Design JSON: %s", _relpath(design_json_path, output_dir))
 
@@ -45,6 +50,7 @@ def write_design_review_bundle(
         schdoc_paths,
         output_dir,
         design,
+        design_payload=design_payload,
         source_base=source_base,
     )
     doc_jsons = _write_document_jsons(
@@ -119,11 +125,12 @@ def _write_schematic_svgs(
     output_dir: Path,
     design: object,
     *,
+    design_payload: dict[str, object],
     source_base: Path,
 ) -> list[dict[str, object]]:
     from altium_monkey.altium_schdoc import AltiumSchDoc
 
-    schematic_dir = output_dir / "schematics"
+    schematic_dir = output_dir / "sch"
     schematic_dir.mkdir(parents=True, exist_ok=True)
     project_parameters = _project_parameters(design)
     artifacts: list[dict[str, object]] = []
@@ -132,6 +139,12 @@ def _write_schematic_svgs(
         svg = AltiumSchDoc(schdoc_path).to_svg(
             project_parameters=project_parameters,
             wrap_components=True,
+        )
+        svg = _enrich_schematic_svg(
+            svg,
+            design_payload=design_payload,
+            schdoc_path=schdoc_path,
+            source_base=source_base,
         )
         output_path.write_text(svg, encoding="utf-8")
         log.info("Schematic SVG: %s", _relpath(output_path, output_dir))
@@ -144,6 +157,234 @@ def _write_schematic_svgs(
             }
         )
     return artifacts
+
+
+def _enrich_schematic_svg(
+    svg: str,
+    *,
+    design_payload: dict[str, object],
+    schdoc_path: Path,
+    source_base: Path,
+) -> str:
+    """Embed design-review schematic SVG metadata and component lookup attrs."""
+    rel_source = _source_path(schdoc_path, source_base)
+    payload = _schematic_svg_enrichment_payload(
+        design_payload,
+        schdoc_path=schdoc_path,
+        rel_source=rel_source,
+    )
+    root_attrs = {
+        "data-enrichment-schema": SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+        "data-view-kind": "schematic_sheet",
+        "data-profile": "design_review",
+        "data-source": rel_source,
+        "data-sheet-name": schdoc_path.stem,
+        "data-review-theme": SCHEMATIC_REVIEW_THEME,
+    }
+    svg = _inject_svg_root_attrs_and_metadata(
+        svg,
+        root_attrs=root_attrs,
+        metadata_element=_schematic_svg_enrichment_metadata_element(payload),
+    )
+    return _annotate_schematic_component_groups(
+        svg,
+        design_payload=design_payload,
+        schdoc_path=schdoc_path,
+    )
+
+
+def _schematic_svg_enrichment_payload(
+    design_payload: dict[str, object],
+    *,
+    schdoc_path: Path,
+    rel_source: str,
+) -> dict[str, object]:
+    return {
+        "schema": SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+        "source": {
+            "altium_schdoc_file": rel_source,
+        },
+        "view": {
+            "kind": "schematic_sheet",
+            "profile": "design_review",
+            "sheet_name": schdoc_path.stem,
+            "sheet_file": schdoc_path.name,
+        },
+        "view_indexes": _schematic_svg_view_indexes(
+            design_payload,
+            schdoc_path=schdoc_path,
+        ),
+        "design": design_payload,
+    }
+
+
+def _schematic_svg_view_indexes(
+    design_payload: dict[str, object],
+    *,
+    schdoc_path: Path,
+) -> dict[str, object]:
+    components = _schematic_components_for_sheet(design_payload, schdoc_path)
+    svg_to_component = {
+        str(component["svg_id"]): str(component["designator"])
+        for component in components
+        if component.get("svg_id") and component.get("designator")
+    }
+    component_to_svg = {
+        designator: svg_id for svg_id, designator in svg_to_component.items()
+    }
+    component_to_nets = _filtered_component_to_nets(design_payload, component_to_svg)
+    return {
+        "svg_to_component": svg_to_component,
+        "component_to_svg": component_to_svg,
+        "component_to_nets": component_to_nets,
+    }
+
+
+def _schematic_components_for_sheet(
+    design_payload: dict[str, object],
+    schdoc_path: Path,
+) -> list[dict[str, object]]:
+    raw_components = design_payload.get("components", [])
+    if not isinstance(raw_components, list):
+        return []
+    components = [
+        component
+        for component in raw_components
+        if isinstance(component, dict)
+    ]
+    sheet_name = schdoc_path.name.lower()
+    sheet_components = [
+        component
+        for component in components
+        if _component_sheet_name(component).lower() == sheet_name
+    ]
+    return sheet_components or components
+
+
+def _component_sheet_name(component: dict[str, object]) -> str:
+    hierarchy = component.get("hierarchy")
+    if isinstance(hierarchy, dict):
+        return str(hierarchy.get("sheet") or "")
+    return ""
+
+
+def _filtered_component_to_nets(
+    design_payload: dict[str, object],
+    component_to_svg: dict[str, str],
+) -> dict[str, object]:
+    indexes = design_payload.get("indexes", {})
+    if not isinstance(indexes, dict):
+        return {}
+    raw_component_to_nets = indexes.get("component_to_nets", {})
+    if not isinstance(raw_component_to_nets, dict):
+        return {}
+    return {
+        component: raw_component_to_nets.get(component, [])
+        for component in sorted(component_to_svg)
+        if component in raw_component_to_nets
+    }
+
+
+def _inject_svg_root_attrs_and_metadata(
+    svg: str,
+    *,
+    root_attrs: dict[str, object],
+    metadata_element: str,
+) -> str:
+    root_match = re.search(r"<svg\b[^>]*>", svg)
+    if root_match is None:
+        return svg
+    root_tag = root_match.group(0)
+    updated_root = root_tag
+    for key, value in root_attrs.items():
+        if re.search(rf"\b{re.escape(key)}\s*=", updated_root):
+            continue
+        updated_root = updated_root[:-1] + f' {key}="{_escape_attr(value)}">'
+    enriched = svg[: root_match.start()] + updated_root + svg[root_match.end() :]
+    if f'id="{SCHEMATIC_SVG_ENRICHMENT_METADATA_ID}"' in enriched:
+        return enriched
+    insert_at = root_match.start() + len(updated_root)
+    return enriched[:insert_at] + "\n" + metadata_element + enriched[insert_at:]
+
+
+def _schematic_svg_enrichment_metadata_element(payload: dict[str, object]) -> str:
+    body = html.escape(json.dumps(payload, indent=2, sort_keys=True), quote=False)
+    return (
+        f'<metadata id="{SCHEMATIC_SVG_ENRICHMENT_METADATA_ID}" '
+        f'data-schema="{SCHEMATIC_SVG_ENRICHMENT_SCHEMA}">\n'
+        f"{body}\n"
+        "</metadata>"
+    )
+
+
+def _annotate_schematic_component_groups(
+    svg: str,
+    *,
+    design_payload: dict[str, object],
+    schdoc_path: Path,
+) -> str:
+    for component in _schematic_components_for_sheet(design_payload, schdoc_path):
+        svg_id = str(component.get("svg_id") or "").strip()
+        if not svg_id:
+            continue
+        attrs = _schematic_component_group_attrs(component, svg_id)
+        svg = _annotate_svg_group_by_id(svg, svg_id, attrs)
+    return svg
+
+
+def _schematic_component_group_attrs(
+    component: dict[str, object],
+    svg_id: str,
+) -> dict[str, object]:
+    attrs: dict[str, object] = {
+        "data-primitive": "component",
+        "data-source-kind": "schematic",
+        "data-element-key": svg_id,
+        "data-component-uid": svg_id,
+    }
+    designator = str(component.get("designator") or "").strip()
+    if designator:
+        attrs["data-component"] = designator
+        attrs["data-designator"] = designator
+    for source_key, attr_key in (
+        ("library_ref", "data-symbol-library-ref"),
+        ("footprint", "data-footprint"),
+        ("value", "data-value"),
+    ):
+        value = str(component.get(source_key) or "").strip()
+        if value:
+            attrs[attr_key] = value
+    classification = component.get("classification")
+    if isinstance(classification, dict):
+        component_type = str(classification.get("type") or "").strip()
+        if component_type:
+            attrs["data-component-type"] = component_type
+    return attrs
+
+
+def _annotate_svg_group_by_id(
+    svg: str,
+    group_id: str,
+    attrs: dict[str, object],
+) -> str:
+    pattern = re.compile(
+        rf"(<g\b(?=[^>]*\bid\s*=\s*(['\"]){re.escape(group_id)}\2)([^>]*)>)"
+    )
+
+    def replace(match: re.Match[str]) -> str:
+        tag = match.group(1)
+        updated = tag
+        for key, value in attrs.items():
+            if re.search(rf"\b{re.escape(key)}\s*=", updated):
+                continue
+            updated = updated[:-1] + f' {key}="{_escape_attr(value)}">'
+        return updated
+
+    return pattern.sub(replace, svg, count=1)
+
+
+def _escape_attr(value: object) -> str:
+    return html.escape(str(value), quote=True)
 
 
 def _write_document_jsons(
@@ -423,21 +664,89 @@ This folder is generated by `altium-cruncher design`, `design-review`, or `dr`.
 It is intended for review agents that need a machine-readable design model plus
 visual schematic and PCB context.
 
-## Files
+## Start Here
 
-- `{manifest['design_json']}`: Altium design JSON from `altium-monkey`.
+1. Read `design_review_manifest.json`; all paths in it are relative to this
+   folder.
+2. Read `{manifest['design_json']}` for the project-level design model.
+3. Open `sch/*.svg` and `pcb/layers/*.svg` for visual context. The SVGs carry
+   in-band metadata that links drawn objects back to the JSON model.
+4. Use `json/schdoc/` and `json/pcbdoc/` only when you need raw Altium document
+   details that are not summarized in the design JSON or SVG metadata.
+
+## Artifact Map
+
+- `{manifest['design_json']}`: Altium Monkey design/netlist JSON. This is the
+  primary semantic model for components, nets, hierarchy, variants, PnP, and
+  lookup indexes. For deeper model/API context, see the public
+  [altium_monkey](https://github.com/wavenumber-eng/altium_monkey) project.
 - `design_review_manifest.json`: artifact index for this bundle.
-- `{manifest['notes_json']}`: JSONC dedicated notes, schematic-owned text frames, and schematic-owned free text by sheet. Sheet-template/title-block text is suppressed by default.
-- `json/schdoc/` and `json/pcbdoc/`: serialized document JSON snapshots from `json-dump`.
-- `schematics/`: schematic SVGs with component wrapping where available.
-- `pcb/layers/`: PCB copper-layer SVGs with board outline, cutouts, drills, and slots.
+- `{manifest['notes_json']}`: JSONC dedicated notes, schematic-owned text
+  frames, and schematic-owned free text by sheet. Sheet-template/title-block
+  text is suppressed by default.
+- `json/schdoc/` and `json/pcbdoc/`: serialized document JSON snapshots from
+  `json-dump`. These are parsed-document dumps, not the high-level netlist
+  summary: use them when you need exact SchDoc/PcbDoc object records, raw
+  Altium fields, primitive properties, board data, or information that has not
+  been promoted into the design JSON yet. SchDoc/SchLib dumps use the
+  Altium Monkey interop JSON shapes; PcbDoc payloads use the
+  `altium_monkey.pcbdoc.structural.v1` document format.
+- `sch/`: schematic SVGs. Each SVG root has
+  `data-enrichment-schema="altium_monkey.schematic.svg.enrichment.a0"` and a
+  `<metadata id="schematic-enrichment-a0">` JSON payload.
+- `pcb/layers/`: PCB copper-layer SVGs with board outline, cutouts, drills, and
+  slots. These use the `altium_monkey.pcb.svg.enrichment.a0` SVG contract.
+
+## Design JSON
+
+The design JSON is produced by `altium-monkey` and is the best starting point
+for reasoning about the circuit. Important top-level areas:
+
+- `components`: component rows with designator, value, footprint, library ref,
+  hierarchy, classification, parameters, and `svg_id` where available.
+- `nets`: net rows with endpoint/component relationships.
+- `indexes.svg_to_component`: maps schematic SVG group ids to component
+  designators.
+- `indexes.component_to_nets`: maps component designators to connected nets.
+- `indexes.net_to_components`: maps a net name back to the components on it.
+
+## Schematic SVG Links
+
+Schematic SVG component groups are annotated when a component `svg_id` is known.
+Look for attributes such as `data-component`, `data-designator`,
+`data-element-key`, `data-symbol-library-ref`, `data-footprint`, and
+`data-value`. To resolve a drawn component to nets:
+
+1. Read the SVG group's `data-component` or `data-element-key`.
+2. If using `data-element-key`, resolve it through
+   `indexes.svg_to_component` in the design JSON or through the SVG metadata
+   `view_indexes.svg_to_component`.
+3. Resolve the designator through `indexes.component_to_nets`.
+
+The embedded `schematic-enrichment-a0` metadata repeats the relevant view
+indexes so a single SVG can be inspected without first loading every other
+artifact.
+
+## PCB SVG Links
+
+PCB layer SVGs are generated from the same A0 renderer used by `pcb-svg`. The
+root metadata includes board, canvas, layer, component, and net maps. Individual
+drawn primitives include attributes such as `data-primitive`,
+`data-layer-name`, `data-layer-role`, `data-net`, `data-net-index`,
+`data-net-uid`, `data-component`, and `data-element-key` when known.
+
+For a PCB review, start with the copper layer that matters, then use the
+primitive `data-net`/`data-component` attributes to join graphical geometry back
+to the design JSON. Use `json/pcbdoc/` if you need raw Altium fields for a
+specific primitive or document-level board data.
 
 ## Counts
 
 - Schematic SVGs: {schematic_count}
 - PCB layer SVGs: {pcb_count}
 
-Generated artifact paths in `design_review_manifest.json` are relative to this bundle. Source paths are relative to the input project or document directory.
+Generated artifact paths in `design_review_manifest.json` are relative to this
+bundle. Source paths are relative to the input project or document directory.
 """
 
 

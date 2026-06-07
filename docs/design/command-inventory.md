@@ -153,13 +153,14 @@ Design review notes:
 
 - `design` replaces the earlier `netlist` public command name in the first
   public command set and now mirrors KiCad Cruncher's review-bundle shape;
-- preserve current root `AltiumDesign.to_json()` model output from `.SchDoc`
-  and `.PrjPcb` inputs;
+- preserve current `AltiumDesign.to_json()` model output from `.SchDoc`
+  and `.PrjPcb` inputs under the bundle `design/` folder;
 - `design-review` and `dr` are aliases for the same bundle contract;
-- output includes `README.md`, `design_review_manifest.json`, root design JSON,
-  structured notes JSONC, serialized SchDoc/PcbDoc JSON from `json-dump` under
-  `json/schdoc/` and `json/pcbdoc/`, schematic SVGs, and PCB layer SVGs where a
-  board exists;
+- output includes `README.md`, `design_review_manifest.json`, semantic
+  design/netlist JSON under `design/`, structured notes JSONC, serialized
+  SchDoc/PcbDoc JSON from `json-dump` under `json/schdoc/` and `json/pcbdoc/`,
+  enriched schematic SVGs under `sch/`, and PCB layer SVGs where a board
+  exists;
 - PCB layer SVGs use the default `pcb-svg` layer-output shape under
   `pcb/layers/`, but limit physical layer outputs to copper layers, including
   used inner copper layers;
