@@ -16,8 +16,8 @@ Intent: review-focused schematic annotations for agents and humans.
 Path policy: input and page file values are relative to the input SchDoc or PrjPcb
 directory, not absolute machine-local paths.
 Filtering: dedicated Note objects and schematic-owned text are included by
-default. Sheet-template/title-block owned text is suppressed by default. Use
---include-sheet-template-text for raw diagnostic output. Empty annotation
+default. Text owned by sheet templates or title blocks is suppressed by default.
+Use --include-sheet-template-text for raw diagnostic output. Empty annotation
 categories and pages without included annotations are omitted.
 */
 """
@@ -36,8 +36,6 @@ def build_notes_payload(
     for index, schdoc_path in enumerate(schdoc_paths):
         page = _schdoc_notes_page(
             schdoc_path,
-            page_number=index + 1,
-            page_count=len(schdoc_paths),
             include_sheet_template_text=include_sheet_template_text,
             path_base=path_base,
         )
@@ -98,8 +96,6 @@ def _resolve_schdoc_paths(source: Path) -> list[Path]:
 def _schdoc_notes_page(
     schdoc_path: Path,
     *,
-    page_number: int,
-    page_count: int,
     include_sheet_template_text: bool,
     path_base: Path,
 ) -> dict[str, object]:
@@ -123,8 +119,6 @@ def _schdoc_notes_page(
     )
     page: dict[str, object] = {
         "file": _portable_path(schdoc_path.resolve(), path_base),
-        "page_number": page_number,
-        "page_count": page_count,
         "page_name": schdoc_path.stem,
     }
     _append_entries(page, "notes", notes)
@@ -141,13 +135,12 @@ def _filtered_entries(
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     for obj in objects:
-        entry = _object_entry(kind, obj)
         if (
             not include_sheet_template_text
-            and entry["source_scope"] == "sheet_template"
+            and _source_scope(_owner_index(obj)) == "sheet_template"
         ):
             continue
-        entries.append(entry)
+        entries.append(_object_entry(kind, obj))
     return entries
 
 
@@ -165,25 +158,18 @@ def _page_has_annotations(page: dict[str, object]) -> bool:
 
 
 def _object_entry(kind: str, obj: object) -> dict[str, object]:
-    owner_index = _owner_index(obj)
     entry: dict[str, object] = {
         "kind": kind,
         "object_type": type(obj).__name__,
         "text": str(getattr(obj, "text", "") or ""),
         "position_mils": _point_to_json(getattr(obj, "location", None)),
-        "is_hidden": bool(getattr(obj, "is_hidden", False)),
-        "owner_index": owner_index,
-        "source_scope": _source_scope(owner_index),
-        "unique_id": str(getattr(obj, "unique_id", "") or ""),
     }
+    _append_optional_text(entry, "unique_id", getattr(obj, "unique_id", None))
     bounds = _bounds_to_json(obj)
     if bounds is not None:
         entry["bounds_mils"] = bounds
     _append_optional(entry, "author", getattr(obj, "author", None))
     _append_optional(entry, "collapsed", getattr(obj, "collapsed", None))
-    _append_optional(entry, "alignment", getattr(obj, "alignment", None))
-    _append_enum_or_value(entry, "orientation", getattr(obj, "orientation", None))
-    _append_enum_or_value(entry, "justification", getattr(obj, "justification", None))
     return entry
 
 
@@ -212,18 +198,14 @@ def _append_optional(
         entry[name] = _jsonable_value(value)
 
 
-def _append_enum_or_value(
+def _append_optional_text(
     entry: dict[str, object],
     name: str,
     value: object,
 ) -> None:
-    if value is None:
-        return
-    enum_name = getattr(value, "name", None)
-    if enum_name:
-        entry[name] = str(enum_name)
-    else:
-        entry[name] = _jsonable_value(value)
+    text = str(value or "").strip()
+    if text:
+        entry[name] = text
 
 
 def _jsonable_value(value: object) -> object:
