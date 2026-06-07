@@ -84,6 +84,9 @@ def test_json_dump_expands_project_and_writes_manifest(tmp_path: Path) -> None:
 
     assert len(result.outputs) == 1
     assert result.outputs[0].source_path == pcbdoc_path.resolve()
+    assert result.outputs[0].output_path == (
+        tmp_path / "dump" / "json" / "pcbdoc" / "fixture.PcbDoc.json"
+    )
     output_payload = json.loads(
         result.outputs[0].output_path.read_text(encoding="utf-8")
     )

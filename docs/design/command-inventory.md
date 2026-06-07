@@ -157,8 +157,14 @@ Design review notes:
   and `.PrjPcb` inputs;
 - `design-review` and `dr` are aliases for the same bundle contract;
 - output includes `README.md`, `design_review_manifest.json`, root design JSON,
-  structured notes JSONC, serialized SchDoc/PcbDoc JSON from `json-dump`,
-  schematic SVGs, and PCB layer SVGs where a board exists;
+  structured notes JSONC, serialized SchDoc/PcbDoc JSON from `json-dump` under
+  `json/schdoc/` and `json/pcbdoc/`, schematic SVGs, and PCB layer SVGs where a
+  board exists;
+- PCB layer SVGs use the default `pcb-svg` layer-output shape under
+  `pcb/layers/`, but limit physical layer outputs to copper layers, including
+  used inner copper layers;
+- normal command progress should log each generated SVG and JSON artifact as it
+  is written;
 - the help text must explain that this is a design review bundle with design
   JSON, serialized document JSON, structured notes, and SVG artifacts;
 - keep `--no-indexes`;
@@ -233,10 +239,11 @@ Megamaid notes:
 - `megamaid` stays in the first public command set as a showcase command;
 - tests should run the public CLI against a representative project fixture;
 - required output coverage includes `schlib/`, `pcblib/`, `bom/`, `netlist/`,
-  `documents/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
+  `json/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
   `sch_images/`, and `megamaid_manifest.json`;
 - generated combined libraries should reparse, combined-library JSON dumps
-  should exist, BOM CSV, netlist JSON, SchDoc/PcbDoc JSON, and notes JSONC
+  should exist under `json/schlib/` and `json/pcblib/`, BOM CSV, netlist JSON,
+  SchDoc/PcbDoc JSON under `json/schdoc/` and `json/pcbdoc/`, and notes JSONC
   should exist, and manifest counts/paths should be validated;
 - rerun behavior should clear megamaid-owned stale artifacts while preserving
   unrelated files under the output root.

@@ -17,6 +17,8 @@ from altium_cruncher.altium_cruncher_common import (
 JSON_DUMP_SCHEMA = "altium_cruncher.json_dump.a0"
 JSON_DUMP_MANIFEST_SCHEMA = "altium_cruncher.json_dump.manifest.a0"
 
+DOCUMENT_JSON_ROOT = "json"
+
 _SUPPORTED_SUFFIX_TO_KIND = {
     ".schdoc": "SchDoc",
     ".schlib": "SchLib",
@@ -157,13 +159,14 @@ def write_json_dumps(
     outputs: list[JsonDumpOutput] = []
     for source in sources:
         payload = build_json_dump_payload(source)
-        output_path = _output_path_for_source(source, output_dir, used_names)
+        kind = str(payload["kind"])
+        output_path = document_json_output_path(source, output_dir, kind, used_names)
         _write_json(output_path, payload)
         outputs.append(
             JsonDumpOutput(
                 source_path=source,
                 output_path=output_path,
-                kind=str(payload["kind"]),
+                kind=kind,
             )
         )
 
@@ -495,19 +498,22 @@ def _deduplicate_paths(paths: list[Path]) -> list[Path]:
     return result
 
 
-def _output_path_for_source(
+def document_json_output_path(
     source: Path,
     output_dir: Path,
+    kind: str,
     used_names: set[str],
 ) -> Path:
-    name = f"{source.name}.json"
-    key = name.lower()
+    """Return the standard json/<kind> output path for a dumped document."""
+    kind_dir = kind.lower()
+    name = f"{source.stem}.{kind}.json"
+    key = f"{kind_dir}/{name}".lower()
     if key in used_names:
         digest = hashlib.sha1(source.resolve().as_posix().encode("utf-8")).hexdigest()
-        name = f"{source.stem}__{digest[:8]}{source.suffix}.json"
-        key = name.lower()
+        name = f"{source.stem}__{digest[:8]}.{kind}.json"
+        key = f"{kind_dir}/{name}".lower()
     used_names.add(key)
-    return output_dir / name
+    return output_dir / DOCUMENT_JSON_ROOT / kind_dir / name
 
 
 def _write_json(path: Path, payload: object) -> None:

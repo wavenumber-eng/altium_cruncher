@@ -115,6 +115,7 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
     document_kinds = {entry["kind"] for entry in document_jsons}
     assert {"SchDoc", "PcbDoc"}.issubset(document_kinds)
     for entry in document_jsons:
+        assert str(entry["json"]).startswith(f"json/{str(entry['kind']).lower()}/")
         payload = _read_manifest_json(output_dir, str(entry["json"]))
         assert payload["schema"] == "altium_cruncher.json_dump.a0"
         assert payload["kind"] == entry["kind"]
@@ -131,6 +132,7 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
     assert library_jsons["schlib"]
     assert library_jsons["pcblib"]
     for entry in [*library_jsons["schlib"], *library_jsons["pcblib"]]:
+        assert str(entry["json"]).startswith(f"json/{str(entry['kind']).lower()}/")
         payload = _read_manifest_json(output_dir, str(entry["json"]))
         assert payload["schema"] == "altium_cruncher.json_dump.a0"
         assert payload["kind"] == entry["kind"]

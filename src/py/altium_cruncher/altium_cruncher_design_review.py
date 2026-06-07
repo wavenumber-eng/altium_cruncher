@@ -3,18 +3,26 @@
 from __future__ import annotations
 
 import json
+import logging
+from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from altium_cruncher.altium_cruncher_json_dump import build_json_dump_payload
+from altium_cruncher.altium_cruncher_json_dump import (
+    build_json_dump_payload,
+    document_json_output_path,
+)
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
 from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
 
 if TYPE_CHECKING:
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
+    from altium_monkey.altium_record_types import PcbLayer
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
 DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.a0"
+
+log = logging.getLogger(__name__)
 
 
 def write_design_review_bundle(
@@ -28,6 +36,7 @@ def write_design_review_bundle(
     design_payload = design.to_json(include_indexes=include_indexes)
     design_json_path = output_dir / f"{input_file.stem}_design.json"
     _write_json(design_json_path, design_payload)
+    log.info("Design JSON: %s", _relpath(design_json_path, output_dir))
 
     schdoc_paths = _schdoc_paths(input_file, design)
     pcbdoc_paths = _pcbdoc_paths(input_file, design)
@@ -63,6 +72,8 @@ def write_design_review_bundle(
         _readme_text(input_file, output_dir, manifest),
         encoding="utf-8",
     )
+    log.info("Design review README: %s", _relpath(readme_path, output_dir))
+    log.info("Design review manifest: %s", _relpath(manifest_path, output_dir))
     return manifest
 
 
@@ -123,6 +134,7 @@ def _write_schematic_svgs(
             wrap_components=True,
         )
         output_path.write_text(svg, encoding="utf-8")
+        log.info("Schematic SVG: %s", _relpath(output_path, output_dir))
         artifacts.append(
             {
                 "file": _relpath(output_path, output_dir),
@@ -141,12 +153,18 @@ def _write_document_jsons(
     source_base: Path,
 ) -> list[dict[str, object]]:
     artifacts: list[dict[str, object]] = []
+    used_names: set[str] = set()
     for source_path in source_paths:
         payload = build_json_dump_payload(source_path)
         kind = str(payload["kind"])
-        kind_dir = output_dir / "documents" / kind.lower()
-        output_path = kind_dir / f"{source_path.stem}.{kind}.json"
+        output_path = document_json_output_path(
+            source_path,
+            output_dir,
+            kind,
+            used_names,
+        )
         _write_json(output_path, payload)
+        log.info("Document JSON: %s", _relpath(output_path, output_dir))
         artifacts.append(
             {
                 "file": _relpath(output_path, output_dir),
@@ -164,6 +182,7 @@ def _write_notes_json(input_file: Path, output_dir: Path) -> Path:
         render_notes_jsonc(build_notes_payload(input_file)),
         encoding="utf-8",
     )
+    log.info("Notes JSON: %s", _relpath(output_path, output_dir))
     return output_path
 
 
@@ -185,7 +204,7 @@ def _write_pcb_review_svgs(
     pcb_dir = output_dir / "pcb"
     project_parameters = _project_parameters(design)
     for pcbdoc_path in pcbdoc_paths:
-        pcbdoc = AltiumPcbDoc(pcbdoc_path)
+        pcbdoc = AltiumPcbDoc.from_file(pcbdoc_path)
         config = _pcb_review_svg_config(pcbdoc, PcbSvgConfig.default())
         render_input = CruncherPcbRenderInput(
             board_key=pcbdoc_path.stem,
@@ -199,6 +218,11 @@ def _write_pcb_review_svgs(
             input_file=pcbdoc_path,
             output_dir=pcb_dir,
         )
+        _log_pcb_svg_manifest_outputs(
+            pcb_dir / f"{pcbdoc_path.stem}__views.json",
+            pcb_dir=pcb_dir,
+            output_dir=output_dir,
+        )
     return _collect_pcb_svg_manifests(pcb_dir, output_dir)
 
 
@@ -209,13 +233,6 @@ def _pcb_review_svg_config(
     config.views = []
     config.layer_outputs["enabled"] = True
     config.layer_outputs["layers"] = _pcb_review_copper_layer_tokens(pcbdoc, config)
-    config.layer_outputs["include_special_layers"] = [
-        "BOARD_OUTLINE",
-        "BOARD_CUTOUTS",
-        "DRILLS",
-        "SLOTS",
-    ]
-    config.layer_outputs["output_dir"] = "copper_layers"
     return config
 
 
@@ -227,12 +244,93 @@ def _pcb_review_copper_layer_tokens(
     from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
 
     renderer = PcbSvgA0Renderer(config)
-    tokens = [
-        layer.to_json_name()
+    layers = {
+        layer
         for layer in renderer._collect_visible_layers(pcbdoc)  # noqa: SLF001
         if layer.is_copper()
-    ]
+    }
+    layers.update(_pcb_review_primitive_copper_layers(pcbdoc))
+    tokens = [layer.to_json_name() for layer in sorted(layers, key=int)]
     return tokens or [PcbLayer.TOP.to_json_name(), PcbLayer.BOTTOM.to_json_name()]
+
+
+def _pcb_review_primitive_copper_layers(pcbdoc: "AltiumPcbDoc") -> set["PcbLayer"]:
+    from altium_monkey.altium_record_types import PcbLayer
+
+    layers: set[PcbLayer] = set()
+    saw_multilayer = False
+    for layer_value in _iter_pcb_review_layer_values(pcbdoc):
+        layer = _pcb_layer_from_value(layer_value)
+        if layer is None:
+            continue
+        if layer == PcbLayer.MULTI_LAYER:
+            saw_multilayer = True
+            continue
+        if layer.is_copper():
+            layers.add(layer)
+    if saw_multilayer and not layers:
+        layers.update({PcbLayer.TOP, PcbLayer.BOTTOM})
+    return layers
+
+
+def _iter_pcb_review_layer_values(pcbdoc: "AltiumPcbDoc") -> Iterator[object]:
+    for collection_name in (
+        "tracks",
+        "arcs",
+        "fills",
+        "regions",
+        "shapebased_regions",
+        "polygons",
+        "pads",
+        "vias",
+        "texts",
+    ):
+        for primitive in getattr(pcbdoc, collection_name, ()):
+            yield getattr(primitive, "layer", None)
+            if collection_name == "vias":
+                yield getattr(primitive, "layer_start", None)
+                yield getattr(primitive, "layer_end", None)
+
+
+def _pcb_layer_from_value(value: object) -> "PcbLayer | None":
+    from altium_monkey.altium_record_types import PcbLayer
+
+    if value is None:
+        return None
+    if isinstance(value, PcbLayer):
+        return value
+    if isinstance(value, str):
+        try:
+            return PcbLayer.from_json_name(value)
+        except ValueError:
+            try:
+                return PcbLayer[value]
+            except KeyError:
+                return None
+    try:
+        return PcbLayer(int(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _log_pcb_svg_manifest_outputs(
+    manifest_path: Path,
+    *,
+    pcb_dir: Path,
+    output_dir: Path,
+) -> None:
+    if not manifest_path.exists():
+        return
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    raw_layer_outputs = payload.get("layer_outputs", {})
+    if not isinstance(raw_layer_outputs, dict):
+        return
+    for entry in raw_layer_outputs.values():
+        if not isinstance(entry, dict):
+            continue
+        file_value = str(entry.get("file") or "")
+        if file_value:
+            log.info("PCB SVG: %s", _relpath(pcb_dir / file_value, output_dir))
 
 
 def _collect_pcb_svg_manifests(
@@ -330,9 +428,9 @@ visual schematic and PCB context.
 - `{manifest['design_json']}`: Altium design JSON from `altium-monkey`.
 - `design_review_manifest.json`: artifact index for this bundle.
 - `{manifest['notes_json']}`: JSONC dedicated notes, schematic-owned text frames, and schematic-owned free text by sheet. Sheet-template/title-block text is suppressed by default.
-- `documents/`: serialized SchDoc/PcbDoc JSON snapshots from `json-dump`.
+- `json/schdoc/` and `json/pcbdoc/`: serialized document JSON snapshots from `json-dump`.
 - `schematics/`: schematic SVGs with component wrapping where available.
-- `pcb/layers/`: PCB layer SVGs with board outline, cutouts, drills, and slots.
+- `pcb/layers/`: PCB copper-layer SVGs with board outline, cutouts, drills, and slots.
 
 ## Counts
 

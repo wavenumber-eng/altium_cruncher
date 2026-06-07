@@ -104,7 +104,9 @@ def _write_review_pcb_project(project_path: Path) -> Path:
 
     pcbdoc = AltiumPcbDoc()
     pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 700)
+    pcbdoc.set_layer_stack_template("4-layer")
     pcbdoc.add_track((100, 100), (900, 100), width_mils=10, layer=PcbLayer.TOP)
+    pcbdoc.add_track((100, 175), (900, 175), width_mils=10, layer=PcbLayer.MID1)
     pcbdoc.add_track((100, 250), (900, 250), width_mils=10, layer=PcbLayer.BOTTOM)
     pcbdoc.save(pcbdoc_path)
 
@@ -213,9 +215,12 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert len(manifest["document_jsons"]) == 1
     assert manifest["document_jsons"][0]["kind"] == "SchDoc"
     assert manifest["document_jsons"][0]["source"] == "annotated.SchDoc"
+    assert manifest["document_jsons"][0]["file"].startswith("json/schdoc/")
     assert len(manifest["schematic_svgs"]) == 1
     assert manifest["schematic_svgs"][0]["source"] == "annotated.SchDoc"
     assert manifest["pcb_svgs"] == []
+    assert "Document JSON: json/schdoc/annotated.SchDoc.json" in result.stdout
+    assert "Schematic SVG: schematics/annotated.svg" in result.stdout
     notes_text = (output_dir / manifest["notes_json"]).read_text(encoding="utf-8")
     assert notes_text.startswith("/*\naltium-cruncher notes artifact")
     notes_payload = jsonc.loads(notes_text)
@@ -242,9 +247,10 @@ def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:
     pcb_entry = manifest["pcb_svgs"][0]
     assert pcb_entry["views"] == []
     layers = {entry["name"]: entry for entry in pcb_entry["layer_outputs"]}
-    assert set(layers) == {"TOP", "BOTTOM"}
+    assert set(layers) == {"TOP", "MID1", "BOTTOM"}
+    assert "PCB SVG: pcb/layers/fixture__MID1.svg" in result.stdout
     for entry in layers.values():
-        assert entry["file"].startswith("pcb/copper_layers/")
+        assert entry["file"].startswith("pcb/layers/")
         assert "ASSEMBLY_HLR_TOP" not in entry["layers"]
         assert "ASSEMBLY_HLR_BOTTOM" not in entry["layers"]
         assert set(entry["layers"]) <= {

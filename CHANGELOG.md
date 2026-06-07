@@ -11,13 +11,17 @@
   `design-review` and `dr` aliases, serialized SchDoc/PcbDoc JSON, structured
   notes JSONC, schematic SVGs, copper-layer PCB review SVGs, manifest, and
   README output.
+- Align design-review PCB SVG output with the default `pcb-svg` layer-output
+  folder shape under `pcb/layers/`, limited to copper layers including inner
+  copper layers, and log generated review artifacts progressively.
 - Add a dedicated `notes` command for Altium Note objects, text frames, and
   free schematic text.
 - Write `notes` and design-review note artifacts as sparse JSONC with relative
   paths and Altium unique ids; sheet-template/title-block owned text is
   suppressed by default, with an opt-in raw text flag for diagnostics.
 - Extend `megamaid` output with serialized document JSON, combined extracted
-  library JSON, and notes JSONC artifacts.
+  library JSON, and notes JSONC artifacts under the shared `json/<kind>/`
+  folder convention.
 - Continue experimental `mco` and `debug-plate` development toward Cricket
   Node mating-board automation.
 

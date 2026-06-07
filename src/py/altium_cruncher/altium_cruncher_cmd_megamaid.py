@@ -16,7 +16,10 @@ from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
 )
-from altium_cruncher.altium_cruncher_json_dump import build_json_dump_payload
+from altium_cruncher.altium_cruncher_json_dump import (
+    build_json_dump_payload,
+    document_json_output_path,
+)
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
 from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
 
@@ -25,9 +28,9 @@ log = logging.getLogger(__name__)
 
 def _relative_to_root(path: Path, root: Path) -> str:
     try:
-        return str(path.resolve().relative_to(root.resolve()))
+        return path.resolve().relative_to(root.resolve()).as_posix()
     except Exception:
-        return str(path)
+        return str(path).replace("\\", "/")
 
 
 def _prepare_megamaid_output_root(output_dir: Path) -> None:
@@ -41,6 +44,7 @@ def _prepare_megamaid_output_root(output_dir: Path) -> None:
         output_dir / "embedded_fonts",
         output_dir / "sch_images",
         output_dir / "documents",
+        output_dir / "json",
         output_dir / "notes",
     ]
     owned_files = [
@@ -273,15 +277,18 @@ def _write_project_document_jsons(
     output_root: Path,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
+    used_names: set[str] = set()
     for source_path in [*schdoc_paths, *pcbdoc_paths]:
         kind = "SchDoc" if source_path.suffix.lower() == ".schdoc" else "PcbDoc"
         entries.append(
             _write_json_dump_artifact(
                 source_path=source_path,
-                output_path=output_root
-                / "documents"
-                / kind.lower()
-                / f"{source_path.stem}.{kind}.json",
+                output_path=document_json_output_path(
+                    source_path,
+                    output_root,
+                    kind,
+                    used_names,
+                ),
                 output_root=output_root,
             )
         )
@@ -325,9 +332,8 @@ def _write_combined_schlib_jsons(
             _write_json_dump_artifact(
                 source_path=source_path,
                 output_path=output_root
-                / "schlib"
                 / "json"
-                / "combined"
+                / "schlib"
                 / f"{index:02d}__{source_path.stem}.SchLib.json",
                 output_root=output_root,
             )
@@ -346,9 +352,8 @@ def _write_combined_pcblib_jsons(
             _write_json_dump_artifact(
                 source_path=source_path,
                 output_path=output_root
-                / "pcblib"
                 / "json"
-                / "combined"
+                / "pcblib"
                 / f"{index:02d}__{source_path.stem}.PcbLib.json",
                 output_root=output_root,
             )
@@ -723,8 +728,8 @@ def register_parser(subparsers):
             "Output tree:\n"
             "  schlib/combined, schlib/split\n"
             "  pcblib/combined, pcblib/split\n"
-            "  bom, netlist, documents, notes\n"
-            "  schlib/json/combined, pcblib/json/combined\n"
+            "  bom, netlist, notes\n"
+            "  json/schdoc, json/pcbdoc, json/schlib, json/pcblib\n"
             "  embedded_models, embedded_fonts\n"
             "  sch_images\n"
         ),
