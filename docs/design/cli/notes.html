@@ -7,10 +7,11 @@
 <header><p class="status">CLI command design</p><h1>notes</h1><p class="lede">Extract schematic review notes, text frames, and free text into structured JSON.</p></header>
 <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher notes project.PrjPcb
 altium-cruncher notes schematic.SchDoc --stdout
-altium-cruncher notes project.PrjPcb -o output/notes</code></pre></section>
-<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection in the current directory. <code>-o</code> selects the output directory. <code>--stdout</code> writes the payload to standard output instead of a file.</p></section>
-<section id="output"><h2>Output</h2><p>The command writes <code>&lt;input&gt;_notes.json</code> with schema <code>altium_cruncher.notes.a0</code>. Each schematic page contains separate <code>notes</code>, <code>text_frames</code>, and <code>free_text</code> arrays plus counts. Entries include text, source object type, hidden state, position in schematic mils, optional bounds, and note-specific fields such as author and collapsed state.</p></section>
-<section id="tests"><h2>Tests</h2><p>Unit tests synthesize a SchDoc containing a dedicated note, a text frame, and a free text string, then verify the three separated arrays, counts, text, author, and mil-position fields.</p></section>
+altium-cruncher notes project.PrjPcb -o output/notes
+altium-cruncher notes project.PrjPcb --include-sheet-template-text</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection in the current directory. <code>-o</code> selects the output directory. <code>--stdout</code> writes the payload to standard output instead of a file. <code>--include-sheet-template-text</code> includes title-block and sheet-template owned text that is suppressed by default.</p></section>
+<section id="output"><h2>Output</h2><p>The command writes <code>&lt;input&gt;_notes.json</code> with schema <code>altium_cruncher.notes.a0</code>. Each schematic page contains separate <code>notes</code>, <code>text_frames</code>, and <code>free_text</code> arrays plus counts. Entries include text, source object type, source scope, owner index, hidden state, position in schematic mils, optional bounds, and note-specific fields such as author and collapsed state. Default output suppresses sheet-template/title-block owned text and reports the suppressed totals in <code>suppressed_counts</code>.</p></section>
+<section id="tests"><h2>Tests</h2><p>Unit tests synthesize a SchDoc containing a dedicated note, a text frame, free text, and sheet-template owned text, then verify separated arrays, counts, suppression counts, raw opt-in behavior, text, author, source scope, owner index, and mil-position fields.</p></section>
 </main>
 </body>
 </html>

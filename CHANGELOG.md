@@ -12,6 +12,8 @@
   notes JSON, schematic SVGs, PCB layer SVGs, manifest, and README output.
 - Add a dedicated `notes` command for Altium Note objects, text frames, and
   free schematic text.
+- Suppress sheet-template/title-block owned text in `notes` and design-review
+  notes output by default, with an opt-in raw text flag for diagnostics.
 - Extend `megamaid` output with serialized document JSON, combined extracted
   library JSON, and notes JSON artifacts.
 - Continue experimental `mco` and `debug-plate` development toward Cricket

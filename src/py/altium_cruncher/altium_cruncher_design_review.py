@@ -264,7 +264,7 @@ visual schematic and PCB context.
 
 - `{manifest['design_json']}`: Altium design JSON from `altium-monkey`.
 - `design_review_manifest.json`: artifact index for this bundle.
-- `{manifest['notes_json']}`: dedicated notes, text frames, and free text by sheet.
+- `{manifest['notes_json']}`: dedicated notes, schematic-owned text frames, and schematic-owned free text by sheet. Sheet-template/title-block text is suppressed by default and counted in `suppressed_counts`.
 - `documents/`: serialized SchDoc/PcbDoc JSON snapshots from `json-dump`.
 - `schematics/`: schematic SVGs with component wrapping where available.
 - `pcb/layers/`: PCB layer SVGs with board outline, cutouts, drills, and slots.

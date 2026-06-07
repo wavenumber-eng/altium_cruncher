@@ -42,6 +42,35 @@ def _write_annotation_schdoc(path: Path) -> None:
     assert doc.save(path)
 
 
+def _write_annotation_schdoc_with_template_text(path: Path) -> None:
+    doc = AltiumSchDoc()
+    doc.add_object(
+        make_sch_text_frame(
+            bounds_mils=SchRectMils(100, 200, 500, 420),
+            text="User frame note",
+        )
+    )
+    doc.add_object(
+        make_sch_text_string(
+            location_mils=SchPointMils(700, 240),
+            text="User free text",
+        )
+    )
+    template_frame = make_sch_text_frame(
+        bounds_mils=SchRectMils(1000, 200, 1400, 420),
+        text="=TITLE_BLOCK_FIELD",
+    )
+    template_frame._owner_index = 1
+    doc.add_object(template_frame)
+    template_text = make_sch_text_string(
+        location_mils=SchPointMils(1500, 240),
+        text="Sheet Number",
+    )
+    template_text._owner_index = 1
+    doc.add_object(template_text)
+    assert doc.save(path)
+
+
 def _run_cli(repo_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-m", "altium_cruncher", *args],
@@ -70,8 +99,44 @@ def test_notes_payload_separates_note_text_frame_and_free_text(tmp_path: Path) -
     assert page["notes"][0]["text"] == "Dedicated note\nsecond line"
     assert page["notes"][0]["author"] == "Reviewer"
     assert page["text_frames"][0]["text"] == "Frame note"
+    assert page["text_frames"][0]["source_scope"] == "schematic"
     assert page["free_text"][0]["text"] == "Free text"
     assert page["free_text"][0]["position_mils"] == {"x": 1300.0, "y": 240.0}
+    assert payload["suppressed_counts"]["all_text_annotations"] == 0
+
+
+def test_notes_payload_suppresses_sheet_template_text_by_default(
+    tmp_path: Path,
+) -> None:
+    """Suppress sheet-template/title-block text while keeping authored annotations."""
+    schdoc_path = tmp_path / "annotated.SchDoc"
+    _write_annotation_schdoc_with_template_text(schdoc_path)
+
+    payload = build_notes_payload(schdoc_path)
+    raw_payload = build_notes_payload(
+        schdoc_path,
+        include_sheet_template_text=True,
+    )
+
+    page = payload["schdocs"][0]
+    assert payload["counts"] == {
+        "notes": 0,
+        "text_frames": 1,
+        "free_text": 1,
+        "all_text_annotations": 2,
+    }
+    assert payload["suppressed_counts"] == {
+        "notes": 0,
+        "text_frames": 1,
+        "free_text": 1,
+        "all_text_annotations": 2,
+    }
+    assert page["text_frames"][0]["text"] == "User frame note"
+    assert page["free_text"][0]["text"] == "User free text"
+    assert raw_payload["counts"]["all_text_annotations"] == 4
+    raw_page = raw_payload["schdocs"][0]
+    assert raw_page["text_frames"][1]["source_scope"] == "sheet_template"
+    assert raw_page["free_text"][1]["owner_index"] == 1
 
 
 def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
