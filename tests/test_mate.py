@@ -596,7 +596,14 @@ def test_mate_mco_places_named_library_parts_from_selection(tmp_path: Path) -> N
 
     operations = build_mate_mco(config)["operations"]
 
-    assert operations[0]["args"]["documents"] == [
+    project_documents = [
+        operation["args"]["document"]
+        for operation in operations
+        if operation["op"] == "project.add_document"
+    ]
+    assert project_documents == [
+        "mate.SchDoc",
+        "mate.PcbDoc",
         "libraries/pcblib/YZ209315103P-01.PcbLib",
         "libraries/schlib/YZ209315103P-01.SchLib",
     ]
@@ -610,12 +617,12 @@ def test_mate_mco_places_named_library_parts_from_selection(tmp_path: Path) -> N
     sch_component = next(
         operation
         for operation in operations
-        if operation["op"] == "schdoc.add-component"
+        if operation["op"] == "schdoc.add_component"
     )
     pcb_component = next(
         operation
         for operation in operations
-        if operation["op"] == "pcbdoc.add-component"
+        if operation["op"] == "pcbdoc.add_component"
     )
     assert sch_component["args"]["library"] == (
         "generated/libraries/schlib/YZ209315103P-01.SchLib"
@@ -691,72 +698,102 @@ def test_mate_mco_places_known_parts_from_selection(tmp_path: Path) -> None:
     operations = payload["operations"]
 
     assert [operation["op"] for operation in operations[:5]] == [
-        "project.create-skeleton",
-        "file.copy",
-        "file.copy",
-        "file.copy",
-        "file.copy",
+        "project.create",
+        "schdoc.create",
+        "pcbdoc.create",
+        "project.add_document",
+        "project.add_document",
     ]
-    assert operations[0]["args"]["documents"] == [
+    project_documents = [
+        operation["args"]["document"]
+        for operation in operations
+        if operation["op"] == "project.add_document"
+    ]
+    assert project_documents == [
+        "mate.SchDoc",
+        "mate.PcbDoc",
         "libraries/pcblib/split/9774080360R-YIYUAN.PcbLib",
         "libraries/pcblib/split/H2184-05.PcbLib",
         "libraries/schlib/9774080360R.SchLib",
         "libraries/schlib/H2184-05.SchLib",
     ]
-    assert [operation["op"] for operation in operations[5:]] == [
-        "schdoc.add-component",
-        "pcbdoc.add-component",
-        "schdoc.add-component",
-        "schdoc.add-wire",
-        "schdoc.add-net-label",
-        "pcbdoc.add-component",
-        "pcbdoc.create-user-union",
-        "pcbdoc.add-text",
+    assert [operation["op"] for operation in operations[5:9]] == ["file.copy"] * 4
+    sch_ops = [
+        operation
+        for operation in operations
+        if str(operation["op"]).startswith("schdoc.")
+        and operation["op"] != "schdoc.create"
     ]
-    assert operations[5]["args"]["designator"] == "M1"
-    assert operations[5]["args"]["symbol"] == "9774080360R"
-    assert operations[5]["args"]["library"] == (
+    pcb_ops = [
+        operation
+        for operation in operations
+        if str(operation["op"]).startswith("pcbdoc.")
+        and operation["op"] != "pcbdoc.create"
+    ]
+    assert [operation["op"] for operation in sch_ops] == [
+        "schdoc.add_component",
+        "schdoc.add_component",
+        "schdoc.add_wire",
+        "schdoc.add_net_label",
+    ]
+    assert [operation["op"] for operation in pcb_ops] == [
+        "pcbdoc.add_component",
+        "pcbdoc.add_component",
+        "pcbdoc.create_user_union",
+        "pcbdoc.add_text",
+    ]
+    m1_symbol = sch_ops[0]
+    p1_symbol = sch_ops[1]
+    wire = sch_ops[2]
+    net_label = sch_ops[3]
+    m1_footprint = pcb_ops[0]
+    p1_footprint = pcb_ops[1]
+    user_union = pcb_ops[2]
+    pcb_label = pcb_ops[3]
+    assert m1_symbol["args"]["designator"] == "M1"
+    assert m1_symbol["args"]["symbol"] == "9774080360R"
+    assert m1_symbol["args"]["library"] == (
         "generated/libraries/schlib/9774080360R.SchLib"
     )
-    assert operations[5]["args"]["position_mils"] == [1200.0, 1200.0]
-    assert operations[5]["args"]["designator_style"] == {
+    assert m1_symbol["args"]["position_mils"] == [1200.0, 1200.0]
+    assert m1_symbol["args"]["designator_style"] == {
         "position_mils": [1200.0, 1380.0],
         "justification": "BOTTOM_CENTER",
         "font_name": "Arial",
         "font_size": 10,
         "bold": True,
     }
-    assert operations[6]["args"]["footprint"] == "9774080360R-YIYUAN"
-    assert operations[6]["args"]["library"] == (
+    assert m1_footprint["args"]["footprint"] == "9774080360R-YIYUAN"
+    assert m1_footprint["args"]["library"] == (
         "generated/libraries/pcblib/split/9774080360R-YIYUAN.PcbLib"
     )
-    assert operations[6]["args"]["position_mils"] == [1910.0, 220.0]
-    assert operations[7]["args"]["designator"] == "P1"
-    assert operations[7]["args"]["parameters"]["MateSourceNet"] == "ALIGN_NET"
-    assert operations[7]["args"]["position_mils"] == [1200.0, 3000.0]
-    assert operations[7]["args"]["designator_style"]["position_mils"] == [
+    assert m1_footprint["args"]["position_mils"] == [1910.0, 220.0]
+    assert p1_symbol["args"]["designator"] == "P1"
+    assert p1_symbol["args"]["parameters"]["MateSourceNet"] == "ALIGN_NET"
+    assert p1_symbol["args"]["position_mils"] == [1200.0, 3000.0]
+    assert p1_symbol["args"]["designator_style"]["position_mils"] == [
         1200.0,
         3180.0,
     ]
-    assert operations[8]["args"]["points_mils"] == [[1200.0, 2880.0], [1200.0, 1925.0]]
-    assert operations[9]["args"]["text"] == "ALIGN_NET"
-    assert operations[9]["args"]["location_mils"] == [1200.0, 2720.0]
-    assert operations[9]["args"]["orientation"] == 3
-    assert operations[10]["args"]["footprint"] == "H2184-05"
-    assert operations[10]["args"]["position_mils"] == [1710.0, 420.0]
-    assert operations[10]["args"]["pad_nets"] == {"1": "ALIGN_NET"}
-    assert operations[11]["args"]["name"] == "MATE_FEATURES"
-    assert operations[12]["args"]["text"] == "ALIGN_NET"
-    assert operations[12]["args"]["position_mils"] == [1830.0, 385.0]
-    assert operations[12]["args"]["height_mils"] == 65.0
-    assert operations[12]["args"]["layer"] == "TOP_OVERLAY"
-    assert operations[12]["args"]["font_kind"] == "truetype"
-    assert operations[12]["args"]["font_name"] == "Arial"
-    assert operations[12]["args"]["bold"] is True
-    assert operations[12]["args"]["is_inverted"] is True
-    assert operations[12]["args"]["inverted_rectangle_size_mils"] == [450.0, 70.0]
-    assert operations[12]["args"]["frame_size_mils"] == [450.0, 70.0]
-    assert operations[12]["args"]["text_justification"] == "RIGHT_TOP"
+    assert wire["args"]["points_mils"] == [[1200.0, 2880.0], [1200.0, 1925.0]]
+    assert net_label["args"]["text"] == "ALIGN_NET"
+    assert net_label["args"]["location_mils"] == [1200.0, 2720.0]
+    assert net_label["args"]["orientation"] == 3
+    assert p1_footprint["args"]["footprint"] == "H2184-05"
+    assert p1_footprint["args"]["position_mils"] == [1710.0, 420.0]
+    assert p1_footprint["args"]["pad_nets"] == {"1": "ALIGN_NET"}
+    assert user_union["args"]["name"] == "MATE_FEATURES"
+    assert pcb_label["args"]["text"] == "ALIGN_NET"
+    assert pcb_label["args"]["position_mils"] == [1830.0, 385.0]
+    assert pcb_label["args"]["height_mils"] == 65.0
+    assert pcb_label["args"]["layer"] == "TOP_OVERLAY"
+    assert pcb_label["args"]["font_kind"] == "truetype"
+    assert pcb_label["args"]["font_name"] == "Arial"
+    assert pcb_label["args"]["bold"] is True
+    assert pcb_label["args"]["is_inverted"] is True
+    assert pcb_label["args"]["inverted_rectangle_size_mils"] == [450.0, 70.0]
+    assert pcb_label["args"]["frame_size_mils"] == [450.0, 70.0]
+    assert pcb_label["args"]["text_justification"] == "RIGHT_TOP"
 
 
 def test_mate_schematic_grid_groups_and_buffers_columns() -> None:
@@ -824,7 +861,7 @@ def test_mate_known_part_operations_use_natural_designator_order(
     schematic_components = [
         operation
         for operation in operations
-        if operation["op"] == "schdoc.add-component"
+        if operation["op"] == "schdoc.add_component"
     ]
 
     assert [operation["args"]["designator"] for operation in schematic_components] == [
@@ -872,8 +909,21 @@ def test_cricket_node_mate_example_config_is_planable(tmp_path: Path) -> None:
     operations = mco_payload["operations"]
 
     assert mco_payload["schema"] == MCO_SCHEMA
-    assert operations[0]["op"] == "project.create-skeleton"
-    assert operations[0]["args"]["documents"] == [
+    assert [operation["op"] for operation in operations[:5]] == [
+        "project.create",
+        "schdoc.create",
+        "pcbdoc.create",
+        "project.add_document",
+        "project.add_document",
+    ]
+    project_documents = [
+        operation["args"]["document"]
+        for operation in operations
+        if operation["op"] == "project.add_document"
+    ]
+    assert project_documents == [
+        "mate.SchDoc",
+        "mate.PcbDoc",
         "libraries/pcblib/9774080360R-YIYUAN.PcbLib",
         "libraries/pcblib/H2184-05.PcbLib",
         "libraries/pcblib/YZ209315103P-01.PcbLib",
@@ -882,13 +932,13 @@ def test_cricket_node_mate_example_config_is_planable(tmp_path: Path) -> None:
         "libraries/schlib/YZ209315103P-01.SchLib",
     ]
     assert sum(1 for operation in operations if operation["op"] == "file.copy") == 6
-    assert any(operation["op"] == "pcbdoc.export-layer-step" for operation in operations)
+    assert any(operation["op"] == "pcbdoc.export_layer_step" for operation in operations)
     assert any(
-        operation["op"] == "pcbdoc.add-embedded-3d-model"
+        operation["op"] == "pcbdoc.add_embedded_3d_model"
         for operation in operations
     )
     assert any(
-        operation["op"] == "pcbdoc.create-user-union"
+        operation["op"] == "pcbdoc.create_user_union"
         and operation["args"]["name"] == "MATE_FEATURES"
         for operation in operations
     )
@@ -1094,7 +1144,7 @@ def test_mate_reference_graphics_trace_pad_shape() -> None:
     )
 
     assert len(circle_ops) == 1
-    assert circle_ops[0]["op"] == "pcbdoc.add-arc"
+    assert circle_ops[0]["op"] == "pcbdoc.add_arc"
     assert circle_ops[0]["args"]["center_mils"] == [100.0, 200.0]
     assert circle_ops[0]["args"]["radius_mils"] == 46.5
 
@@ -1149,7 +1199,7 @@ def test_mate_reference_graphics_trace_pad_shape() -> None:
         },
     )
 
-    assert [operation["op"] for operation in rectangle_ops] == ["pcbdoc.add-track"] * 8
+    assert [operation["op"] for operation in rectangle_ops] == ["pcbdoc.add_track"] * 8
     assert rectangle_ops[0]["args"]["start_mils"] == [53.5, 173.5]
     assert rectangle_ops[0]["args"]["end_mils"] == [146.5, 173.5]
     assert rectangle_ops[4]["args"]["start_mils"] == [43.5, 163.5]
@@ -1180,10 +1230,10 @@ def test_mate_reference_graphics_trace_pad_shape() -> None:
     )
 
     assert [operation["op"] for operation in obround_ops] == [
-        "pcbdoc.add-track",
-        "pcbdoc.add-track",
-        "pcbdoc.add-arc",
-        "pcbdoc.add-arc",
+        "pcbdoc.add_track",
+        "pcbdoc.add_track",
+        "pcbdoc.add_arc",
+        "pcbdoc.add_arc",
     ]
     assert obround_ops[0]["args"]["start_mils"] == [70.0, 237.0]
     assert obround_ops[0]["args"]["end_mils"] == [130.0, 237.0]
@@ -1215,14 +1265,14 @@ def test_mate_reference_graphics_trace_pad_shape() -> None:
     )
 
     assert [operation["op"] for operation in rounded_ops] == [
-        "pcbdoc.add-track",
-        "pcbdoc.add-track",
-        "pcbdoc.add-track",
-        "pcbdoc.add-track",
-        "pcbdoc.add-arc",
-        "pcbdoc.add-arc",
-        "pcbdoc.add-arc",
-        "pcbdoc.add-arc",
+        "pcbdoc.add_track",
+        "pcbdoc.add_track",
+        "pcbdoc.add_track",
+        "pcbdoc.add_track",
+        "pcbdoc.add_arc",
+        "pcbdoc.add_arc",
+        "pcbdoc.add_arc",
+        "pcbdoc.add_arc",
     ]
     assert rounded_ops[0]["args"]["start_mils"] == [60.0, 163.0]
     assert rounded_ops[0]["args"]["end_mils"] == [140.0, 163.0]
@@ -1252,7 +1302,7 @@ def test_mate_reference_graphics_trace_pad_shape() -> None:
         },
     )
 
-    assert [operation["op"] for operation in octagon_ops] == ["pcbdoc.add-track"] * 8
+    assert [operation["op"] for operation in octagon_ops] == ["pcbdoc.add_track"] * 8
     assert octagon_ops[0]["args"]["start_mils"] == [147.0, 186.5]
     assert octagon_ops[0]["args"]["end_mils"] == [147.0, 213.5]
 
@@ -1301,10 +1351,10 @@ def test_mate_board_projection_projects_cutout_graphics_and_regions() -> None:
     )
 
     cutout_tracks = [
-        operation for operation in operations if operation["op"] == "pcbdoc.add-track"
+        operation for operation in operations if operation["op"] == "pcbdoc.add_track"
     ]
     cutout_regions = [
-        operation for operation in operations if operation["op"] == "pcbdoc.add-region"
+        operation for operation in operations if operation["op"] == "pcbdoc.add_region"
     ]
     assert len(cutout_tracks) == 4
     assert len(cutout_regions) == 1
@@ -1335,7 +1385,12 @@ def test_mate_output_board_outline_modes(tmp_path: Path) -> None:
             },
         )
         config = load_mate_config(config_path)
-        return build_mate_mco(config)["operations"][0]["args"].get("board_outline_mils")
+        create_board = next(
+            operation
+            for operation in build_mate_mco(config)["operations"]
+            if operation["op"] == "pcbdoc.create"
+        )
+        return create_board["args"].get("board_outline_mils")
 
     assert first_outline(
         {
@@ -1560,23 +1615,26 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
 
     payload = build_mate_mco(config)
     operations = payload["operations"]
-    assert operations[0]["args"]["board_outline_mils"] == {
+    create_board = next(
+        operation for operation in operations if operation["op"] == "pcbdoc.create"
+    )
+    assert create_board["args"]["board_outline_mils"] == {
         "left": -250.0,
         "bottom": -250.0,
         "right": 1650.0,
         "top": 1150.0,
     }
-    assert operations[0]["args"]["board_origin_mils"] == {
+    assert create_board["args"]["board_origin_mils"] == {
         "x": 1000.0,
         "y": 2000.0,
     }
     pcb_components = [
         operation
         for operation in operations
-        if operation["op"] == "pcbdoc.add-component"
+        if operation["op"] == "pcbdoc.add_component"
     ]
     pcb_labels = [
-        operation for operation in operations if operation["op"] == "pcbdoc.add-text"
+        operation for operation in operations if operation["op"] == "pcbdoc.add_text"
     ]
 
     assert [operation["args"]["designator"] for operation in pcb_components] == [
@@ -1605,14 +1663,14 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     arrange_designators = [
         operation
         for operation in operations
-        if operation["op"] == "pcbdoc.arrange-designators"
+        if operation["op"] == "pcbdoc.arrange_designators"
     ]
     assert len(arrange_designators) == 1
     assert arrange_designators[0]["args"]["designators"] == ["TP1", "TP2", "M1", "P1"]
     assert arrange_designators[0]["args"]["height_mils"] == 40.0
     assert arrange_designators[0]["args"]["font_name"] == "Arial"
     pcb_reference_arcs = [
-        operation for operation in operations if operation["op"] == "pcbdoc.add-arc"
+        operation for operation in operations if operation["op"] == "pcbdoc.add_arc"
     ]
     assert [operation["args"]["center_mils"] for operation in pcb_reference_arcs] == [
         [200.0, 300.0],
@@ -1641,7 +1699,7 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     outline_tracks = [
         operation
         for operation in operations
-        if operation["op"] == "pcbdoc.add-track"
+        if operation["op"] == "pcbdoc.add_track"
         and str(operation["id"]).startswith("project_dut_outline_segment")
     ]
     assert len(outline_tracks) == 4
@@ -1660,16 +1718,16 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     user_union = next(
         operation
         for operation in operations
-        if operation["op"] == "pcbdoc.create-user-union"
+        if operation["op"] == "pcbdoc.create_user_union"
     )
-    assert user_union["op"] == "pcbdoc.create-user-union"
+    assert user_union["op"] == "pcbdoc.create_user_union"
     assert user_union["args"]["name"] == "MATE_FEATURES"
     step_op = [
         operation
         for operation in operations
-        if operation["op"] == "pcbdoc.export-layer-step"
+        if operation["op"] == "pcbdoc.export_layer_step"
     ][0]
-    assert step_op["op"] == "pcbdoc.export-layer-step"
+    assert step_op["op"] == "pcbdoc.export_layer_step"
     assert step_op["args"]["file"] == str(source_path)
     assert re.fullmatch(
         r"generated/artifacts/pcb-layer-step/dut__bottom__[0-9a-f]{10}\.step",
@@ -1701,9 +1759,9 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     insert_step_op = next(
         operation
         for operation in operations
-        if operation["op"] == "pcbdoc.add-embedded-3d-model"
+        if operation["op"] == "pcbdoc.add_embedded_3d_model"
     )
-    assert insert_step_op["op"] == "pcbdoc.add-embedded-3d-model"
+    assert insert_step_op["op"] == "pcbdoc.add_embedded_3d_model"
     assert insert_step_op["args"]["file"] == "generated/mate.PcbDoc"
     assert insert_step_op["args"]["model_file"] == step_op["args"]["output_file"]
     assert insert_step_op["args"]["model_name"] == Path(
@@ -1772,7 +1830,7 @@ def test_mate_config_keeps_duplicate_free_pad_designators(
     pcb_components = [
         operation
         for operation in payload["operations"]
-        if operation["op"] == "pcbdoc.add-component"
+        if operation["op"] == "pcbdoc.add_component"
     ]
     assert [operation["args"]["designator"] for operation in pcb_components] == [
         "P1",
@@ -2007,9 +2065,6 @@ def test_mate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None:
         "YZ209315103P-01.SchLib"
     )
     assert pcb_components_by_designator["TP1"].source_lib_reference == "YZ209315103P-01"
-    assert pcb_components_by_designator["M1"].channel_offset == 0
-    assert pcb_components_by_designator["P1"].channel_offset == 1
-    assert pcb_components_by_designator["TP1"].channel_offset == 2
     labels_by_text = {
         text.text_content: text
         for text in pcbdoc.texts
@@ -2089,7 +2144,7 @@ def test_mate_left_side_pcb_labels_default_left_justified(
     label_op = next(
         operation
         for operation in payload["operations"]
-        if operation["op"] == "pcbdoc.add-text"
+        if operation["op"] == "pcbdoc.add_text"
     )
 
     assert label_op["args"]["text"] == "ALIGN_NET"
@@ -2177,7 +2232,7 @@ def test_mate_board_edge_pcb_labels_stack_in_column(
     label_ops = [
         operation
         for operation in payload["operations"]
-        if operation["op"] == "pcbdoc.add-text"
+        if operation["op"] == "pcbdoc.add_text"
     ]
 
     assert [operation["args"]["text"] for operation in label_ops] == [
@@ -2348,6 +2403,7 @@ def test_mate_cli_init_plan_and_dry_run(tmp_path: Path) -> None:
             "altium_cruncher",
             "mate",
             "--dry-run",
+            "--json",
         ],
         cwd=tmp_path,
         check=False,

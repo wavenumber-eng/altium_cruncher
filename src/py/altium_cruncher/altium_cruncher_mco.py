@@ -130,6 +130,10 @@ class McoExecutionContext:
         """Flush all dirty run-scoped documents."""
         self.document_session.flush_all()
 
+    def flush_document(self, kind: str, output_file: Path) -> None:
+        """Flush one dirty run-scoped document, if it is open."""
+        self.document_session.flush_path(kind, output_file)
+
     def invalidate_documents(self, paths: Sequence[Path]) -> None:
         """Forget cached documents after an operation rewrites them directly."""
         self.document_session.invalidate_paths(paths)
@@ -197,8 +201,8 @@ class McoOperationResult:
 
     def to_dict(self) -> JsonObject:
         payload: JsonObject = {
-            "id": self.operation_id,
             "op": self.op,
+            "id": self.operation_id,
             "status": self.status,
             "message": self.message,
             "outputs": dict(self.outputs),
@@ -232,21 +236,48 @@ McoOperationHandler = Callable[
 
 
 @dataclass(frozen=True, slots=True)
-class ProjectSkeletonArgs:
-    """Validated arguments for project.create-skeleton."""
+class McoOperationInfo:
+    """Public metadata for one supported MCO operation."""
 
-    output_dir: Path
-    project_name: str
-    schematic_filename: str | None
-    schematic_sheet_style: str | None
-    board_filename: str | None
-    project_filename: str | None
-    layer_stack_template: str
-    overwrite: bool
-    board_outline_mils: tuple[float, ...] | None
-    board_origin_mils: tuple[float, ...] | None
-    sheet_frame_mils: tuple[float, ...] | None
-    documents: tuple[str, ...]
+    name: str
+    handler: McoOperationHandler
+    group: str
+    summary: str
+    required_args: tuple[str, ...] = ()
+    optional_args: tuple[str, ...] = ()
+    aliases: tuple[str, ...] = ()
+
+    def to_dict(self) -> JsonObject:
+        payload: JsonObject = {
+            "op": self.name,
+            "group": self.group,
+            "summary": self.summary,
+            "required_args": list(self.required_args),
+            "optional_args": list(self.optional_args),
+        }
+        if self.aliases:
+            payload["aliases"] = list(self.aliases)
+        return payload
+
+
+def mco_operation(
+    op: str,
+    operation_id: str,
+    message: str,
+    args: Mapping[str, object] | None = None,
+    *,
+    on_fail: str | None = None,
+) -> JsonObject:
+    """Build an MCO operation object using the canonical field order."""
+    payload: JsonObject = {
+        "op": op,
+        "id": operation_id,
+        "message": message,
+        "args": dict(args or {}),
+    }
+    if on_fail is not None:
+        payload["on_fail"] = on_fail
+    return payload
 
 
 def strip_jsonc_comments(text: str) -> str:
@@ -352,7 +383,17 @@ def execute_mco(
 
 def available_mco_operations() -> list[str]:
     """Return the registered public MCO operation names."""
-    return sorted(DEFAULT_MCO_OPERATIONS)
+    return [info.name for info in mco_operation_catalog()]
+
+
+def mco_operation_catalog() -> tuple[McoOperationInfo, ...]:
+    """Return public MCO operations with metadata."""
+    return tuple(
+        sorted(
+            DEFAULT_MCO_OPERATION_INFO.values(),
+            key=lambda info: (info.group, info.name),
+        )
+    )
 
 
 def write_mco_template(path: Path | str, *, overwrite: bool = False) -> Path:
@@ -538,70 +579,243 @@ def _op_fail(
     return McoOperationResult.failed(spec, text)
 
 
-def _op_create_project_skeleton(
+def _op_project_create(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    options = _parse_project_skeleton_args(spec.args, context)
-    output_paths = _project_skeleton_output_paths(options)
-    existing = [path for path in output_paths.values() if path.exists()]
-    if existing and not options.overwrite:
-        paths = ", ".join(str(path) for path in existing)
-        return McoOperationResult.failed(spec, f"Output already exists: {paths}")
+    file_path = _required_path(spec.args, "file", context)
+    project_name = (
+        _optional_string(spec.args, "name", None)
+        or _optional_string(spec.args, "project_name", None)
+        or file_path.stem
+    )
+    overwrite = _optional_bool(spec.args, "overwrite", False)
+    if file_path.exists() and not overwrite:
+        return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
+    outputs = {"project": str(file_path.resolve())}
     if context.dry_run:
         return McoOperationResult.succeeded(
             spec,
-            spec.message or "project skeleton dry run",
-            outputs=_stringified_paths(output_paths),
+            spec.message or "project create dry run",
+            outputs=outputs,
         )
 
-    from altium_monkey.altium_project_bootstrap_builder import ProjectBootstrapBuilder
+    from altium_monkey.altium_prjpcb import AltiumPrjPcb
 
-    context.invalidate_documents(list(output_paths.values()))
-    builder = ProjectBootstrapBuilder(
-        options.project_name,
-        schematic_filename=options.schematic_filename,
-        board_filename=options.board_filename,
-        project_filename=options.project_filename,
-        layer_stack_template=options.layer_stack_template,
-    )
-    _apply_project_skeleton_schematic_sheet_style(
-        builder.schematic_builder,
-        options.schematic_sheet_style,
-    )
-    for document in options.documents:
-        builder.project_builder.add_document(document)
-    if options.board_outline_mils is not None:
-        builder.set_board_outline_rectangle_mils(*options.board_outline_mils)
-    if options.sheet_frame_mils is not None:
-        builder.set_board_sheet_frame_mils(*options.sheet_frame_mils)
-    written = builder.save(options.output_dir)
-    _apply_project_skeleton_board_origin(written.board_path, options.board_origin_mils)
-    context.invalidate_documents(list(output_paths.values()))
+    context.invalidate_documents([file_path])
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    AltiumPrjPcb.create_minimal(project_name).save(file_path)
+    context.invalidate_documents([file_path])
     return McoOperationResult.succeeded(
         spec,
-        spec.message or "created project skeleton",
-        outputs={
-            "output_dir": str(written.output_dir.resolve()),
-            "project": str(written.project_path.resolve()),
-            "schematic": str(written.schematic_path.resolve()),
-            "board": str(written.board_path.resolve()),
-        },
+        spec.message or "created project",
+        outputs=outputs,
     )
 
 
-def _apply_project_skeleton_board_origin(
-    board_path: Path,
-    board_origin_mils: tuple[float, ...] | None,
-) -> None:
-    if board_origin_mils is None:
-        return
+def _op_project_add_document(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    document = _required_string(spec.args, "document", spec.op)
+    unique_id = _optional_string(spec.args, "unique_id", None)
+    normalized = document.replace("/", "\\")
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or f"add project document dry run: {document}",
+            outputs={"project": str(project_file), "document": normalized},
+        )
+    project = _open_project_for_mutation(project_file, context)
+    for existing in getattr(project, "documents", []):
+        if str(existing.get("path", "")).lower() == normalized.lower():
+            return McoOperationResult.succeeded(
+                spec,
+                spec.message or f"project document already present: {document}",
+                outputs={"project": str(project_file), "document": normalized},
+            )
 
-    from altium_monkey import AltiumPcbDoc
+    from altium_monkey.altium_prjpcb_builder import AltiumPrjPcbDocumentEntry
 
-    pcbdoc = AltiumPcbDoc.from_file(board_path)
-    pcbdoc.set_origin_mils(board_origin_mils[0], board_origin_mils[1])
-    pcbdoc.save(board_path)
+    if not context.dry_run:
+        entry = AltiumPrjPcbDocumentEntry.create(
+            normalized,
+            unique_id=unique_id,
+        )
+        project.documents.append(
+            {
+                "path": entry.path,
+                "unique_id": entry.unique_id,
+                "options": list(entry.options)
+                if entry.options
+                else [
+                    ("DocumentPath", entry.path),
+                    ("DocumentUniqueId", entry.unique_id),
+                ],
+            }
+        )
+        context.mark_document_dirty("prjpcb", project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"added project document {document}",
+        outputs={"project": str(project_file), "document": normalized},
+    )
+
+
+def _op_project_add_parameter(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    name = _required_string(spec.args, "name", spec.op)
+    value = _required_string(spec.args, "value", spec.op)
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or f"add project parameter dry run: {name}",
+            outputs={"project": str(project_file), "name": name},
+        )
+    project = _open_project_for_mutation(project_file, context)
+    project.set_parameter(name, value)
+    context.mark_document_dirty("prjpcb", project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"added project parameter {name}",
+        outputs={"project": str(project_file), "name": name},
+    )
+
+
+def _op_project_add_variant(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    name = _required_string(spec.args, "name", spec.op)
+    unique_id = _optional_string(spec.args, "unique_id", None)
+    allow_fabrication = _optional_bool(spec.args, "allow_fabrication", True)
+    current = _optional_bool(spec.args, "current", False)
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or f"add project variant dry run: {name}",
+            outputs={"project": str(project_file), "name": name},
+        )
+    project = _open_project_for_mutation(project_file, context)
+    project.add_variant(
+        name,
+        unique_id=unique_id,
+        allow_fabrication=allow_fabrication,
+        current=current,
+    )
+    context.mark_document_dirty("prjpcb", project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"added project variant {name}",
+        outputs={"project": str(project_file), "name": name},
+    )
+
+
+def _op_schdoc_create(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    file_path = _required_path(spec.args, "file", context)
+    overwrite = _optional_bool(spec.args, "overwrite", False)
+    if file_path.exists() and not overwrite:
+        return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
+    outputs = {"schematic": str(file_path.resolve())}
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or "schematic create dry run",
+            outputs=outputs,
+        )
+
+    from altium_monkey import AltiumSchDoc
+
+    context.invalidate_documents([file_path])
+    schdoc = AltiumSchDoc()
+    _apply_project_skeleton_schematic_sheet_style(
+        schdoc,
+        _optional_string(spec.args, "sheet_style", None),
+    )
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    schdoc.save(file_path)
+    context.invalidate_documents([file_path])
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or "created schematic",
+        outputs=outputs,
+    )
+
+
+def _op_pcbdoc_create(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    file_path = _required_path(spec.args, "file", context)
+    overwrite = _optional_bool(spec.args, "overwrite", False)
+    if file_path.exists() and not overwrite:
+        return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
+    outputs = {"board": str(file_path.resolve())}
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or "board create dry run",
+            outputs=outputs,
+        )
+
+    from altium_monkey import PcbDocBuilder
+
+    context.invalidate_documents([file_path])
+    builder = PcbDocBuilder()
+    layer_stack_template = _optional_string(spec.args, "layer_stack_template", None)
+    if layer_stack_template is not None:
+        builder.set_layer_stack_template(layer_stack_template)
+    board_outline_mils = _optional_number_object(
+        spec.args,
+        "board_outline_mils",
+        ("left", "bottom", "right", "top"),
+    )
+    if board_outline_mils is not None:
+        builder.set_outline_rectangle_mils(*board_outline_mils)
+    sheet_frame_mils = _optional_number_object(
+        spec.args,
+        "sheet_frame_mils",
+        ("x", "y", "width", "height"),
+    )
+    if sheet_frame_mils is not None:
+        builder.set_sheet_frame_mils(*sheet_frame_mils)
+    board_origin_mils = _optional_number_object(spec.args, "board_origin_mils", ("x", "y"))
+    if board_origin_mils is not None:
+        builder.set_origin_mils(*board_origin_mils)
+    else:
+        builder.set_origin_to_outline_lower_left()
+    builder.set_current_view_state("2D")
+    builder.set_2d_current_layer("TOP")
+    builder.save(file_path)
+    context.invalidate_documents([file_path])
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or "created board",
+        outputs=outputs,
+    )
+
+
+def _open_project_for_mutation(
+    project_file: Path,
+    context: McoExecutionContext,
+) -> object:
+    from altium_monkey.altium_prjpcb import AltiumPrjPcb
+
+    return context.open_document_for_mutation(
+        "prjpcb",
+        project_file,
+        project_file,
+        load=lambda path: AltiumPrjPcb(path),
+        save=lambda document, path: document.save(path),
+    )
 
 
 def _apply_project_skeleton_schematic_sheet_style(
@@ -623,58 +837,6 @@ def _apply_project_skeleton_schematic_sheet_style(
         style = SheetStyle(int(sheet_style))
     sheet.sheet_style = int(style)
     sheet.use_custom_sheet = False
-
-
-def _parse_project_skeleton_args(
-    args: Mapping[str, object],
-    context: McoExecutionContext,
-) -> ProjectSkeletonArgs:
-    project_name = _optional_string(args, "project_name", "mate") or "mate"
-    layer_stack_template = (
-        _optional_string(args, "layer_stack_template", "2-layer") or "2-layer"
-    )
-    return ProjectSkeletonArgs(
-        output_dir=_optional_path(args, "output_dir", context.work_dir / "output", context),
-        project_name=project_name,
-        schematic_filename=_optional_string(args, "schematic_filename", None),
-        schematic_sheet_style=_optional_string(args, "schematic_sheet_style", None),
-        board_filename=_optional_string(args, "board_filename", None),
-        project_filename=_optional_string(args, "project_filename", None),
-        layer_stack_template=layer_stack_template,
-        overwrite=_optional_bool(args, "overwrite", False),
-        board_outline_mils=_optional_number_object(
-            args,
-            "board_outline_mils",
-            ("left", "bottom", "right", "top"),
-        ),
-        board_origin_mils=_optional_number_object(
-            args,
-            "board_origin_mils",
-            ("x", "y"),
-        ),
-        sheet_frame_mils=_optional_number_object(
-            args,
-            "sheet_frame_mils",
-            ("x", "y", "width", "height"),
-        ),
-        documents=tuple(_optional_string_list(args, "documents")),
-    )
-
-
-def _project_skeleton_output_paths(options: ProjectSkeletonArgs) -> dict[str, Path]:
-    project = options.project_filename or f"{options.project_name}.PrjPcb"
-    schematic = options.schematic_filename or f"{options.project_name}.SchDoc"
-    board = options.board_filename or f"{options.project_name}.PcbDoc"
-    return {
-        "output_dir": options.output_dir,
-        "project": options.output_dir / project,
-        "schematic": options.output_dir / schematic,
-        "board": options.output_dir / board,
-    }
-
-
-def _stringified_paths(paths: Mapping[str, Path]) -> JsonObject:
-    return {name: str(path.resolve()) for name, path in paths.items()}
 
 
 def _op_copy_file(
@@ -753,19 +915,6 @@ def _optional_bool(
     return value
 
 
-def _optional_path(
-    args: Mapping[str, object],
-    name: str,
-    default: Path,
-    context: McoExecutionContext,
-) -> Path:
-    value = _optional_string(args, name, None)
-    raw_path = default if value is None else Path(value)
-    if raw_path.is_absolute():
-        return raw_path.resolve()
-    return (context.work_dir / raw_path).resolve()
-
-
 def _required_path(
     args: Mapping[str, object],
     name: str,
@@ -795,23 +944,6 @@ def _optional_number_object(
     return tuple(numbers)
 
 
-def _optional_string_list(
-    args: Mapping[str, object],
-    name: str,
-) -> list[str]:
-    value = args.get(name)
-    if value is None:
-        return []
-    if not isinstance(value, list):
-        raise ValueError(f"Field {name!r} must be an array")
-    result: list[str] = []
-    for item in value:
-        if not isinstance(item, str) or not item:
-            raise ValueError(f"Field {name!r} must contain non-empty strings")
-        result.append(item)
-    return result
-
-
 def _mco_template_text() -> str:
     return (
         "{\n"
@@ -819,13 +951,32 @@ def _mco_template_text() -> str:
         "  // MCO operations execute in order. Use on_fail to jump to another id.\n"
         '  "operations": [\n'
         "    {\n"
-        '      "id": "create_mate_skeleton",\n'
-        '      "op": "project.create-skeleton",\n'
-        '      "message": "Create a blank mate project",\n'
+        '      "op": "project.create",\n'
+        '      "id": "create_project",\n'
+        '      "message": "Create a blank Altium project",\n'
         '      "args": {\n'
-        '        "output_dir": "output/mate",\n'
-        '        "project_name": "mate",\n'
-        '        "schematic_sheet_style": "D",\n'
+        '        "file": "output/mate/mate.PrjPcb",\n'
+        '        "name": "mate",\n'
+        '        "overwrite": false\n'
+        "      }\n"
+        "    },\n"
+        "    {\n"
+        '      "op": "schdoc.create",\n'
+        '      "id": "create_schematic",\n'
+        '      "message": "Create a blank schematic",\n'
+        '      "args": {\n'
+        '        "file": "output/mate/mate.SchDoc",\n'
+        '        "sheet_style": "D",\n'
+        '        "overwrite": false\n'
+        "      }\n"
+        "    },\n"
+        "    {\n"
+        '      "op": "pcbdoc.create",\n'
+        '      "id": "create_board",\n'
+        '      "message": "Create a blank board",\n'
+        '      "args": {\n'
+        '        "file": "output/mate/mate.PcbDoc",\n'
+        '        "layer_stack_template": "2-layer",\n'
         '        "overwrite": false,\n'
         '        "board_outline_mils": {\n'
         '          "left": 0,\n'
@@ -834,24 +985,317 @@ def _mco_template_text() -> str:
         '          "top": 2000,\n'
         "        }\n"
         "      }\n"
+        "    },\n"
+        "    {\n"
+        '      "op": "project.add_document",\n'
+        '      "id": "add_schematic_to_project",\n'
+        '      "message": "Add schematic to project",\n'
+        '      "args": {\n'
+        '        "file": "output/mate/mate.PrjPcb",\n'
+        '        "document": "mate.SchDoc"\n'
+        "      }\n"
+        "    },\n"
+        "    {\n"
+        '      "op": "project.add_document",\n'
+        '      "id": "add_board_to_project",\n'
+        '      "message": "Add board to project",\n'
+        '      "args": {\n'
+        '        "file": "output/mate/mate.PrjPcb",\n'
+        '        "document": "mate.PcbDoc"\n'
+        "      }\n"
         "    }\n"
         "  ]\n"
         "}\n"
     )
 
 
-def _default_mco_operations() -> dict[str, McoOperationHandler]:
+def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
     from altium_cruncher.altium_cruncher_mco_cad_ops import CAD_MCO_OPERATIONS
 
-    return {
-        "mco.message": _op_message,
-        "message": _op_message,
-        "mco.fail": _op_fail,
-        "fail": _op_fail,
-        "file.copy": _op_copy_file,
-        "project.create-skeleton": _op_create_project_skeleton,
-        **CAD_MCO_OPERATIONS,
-    }
+    cad = CAD_MCO_OPERATIONS
+    infos = [
+        McoOperationInfo(
+            "mco.message",
+            _op_message,
+            "mco",
+            "Emit a human-readable message.",
+            optional_args=("text",),
+        ),
+        McoOperationInfo(
+            "mco.fail",
+            _op_fail,
+            "mco",
+            "Fail intentionally, usually for control-flow tests.",
+            optional_args=("message",),
+        ),
+        McoOperationInfo(
+            "file.copy",
+            _op_copy_file,
+            "file",
+            "Copy one file into the workflow output tree.",
+            required_args=("source", "destination"),
+            optional_args=("overwrite",),
+        ),
+        McoOperationInfo(
+            "project.create",
+            _op_project_create,
+            "project",
+            "Create an empty .PrjPcb file.",
+            required_args=("file",),
+            optional_args=("name", "project_name", "overwrite"),
+        ),
+        McoOperationInfo(
+            "project.add_document",
+            _op_project_add_document,
+            "project",
+            "Append a document entry to a .PrjPcb file.",
+            required_args=("file", "document"),
+            optional_args=("unique_id",),
+        ),
+        McoOperationInfo(
+            "project.add_parameter",
+            _op_project_add_parameter,
+            "project",
+            "Set one project parameter.",
+            required_args=("file", "name", "value"),
+        ),
+        McoOperationInfo(
+            "project.add_variant",
+            _op_project_add_variant,
+            "project",
+            "Add one project variant.",
+            required_args=("file", "name"),
+            optional_args=("unique_id", "allow_fabrication", "current"),
+        ),
+        McoOperationInfo(
+            "schdoc.create",
+            _op_schdoc_create,
+            "schdoc",
+            "Create an empty schematic document.",
+            required_args=("file",),
+            optional_args=("sheet_style", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.create",
+            _op_pcbdoc_create,
+            "pcbdoc",
+            "Create an empty PCB document.",
+            required_args=("file",),
+            optional_args=(
+                "layer_stack_template",
+                "board_outline_mils",
+                "board_origin_mils",
+                "sheet_frame_mils",
+                "overwrite",
+            ),
+        ),
+        McoOperationInfo(
+            "schdoc.add_wire",
+            cad["schdoc.add-wire"],
+            "schdoc",
+            "Add a schematic wire.",
+            required_args=("file", "points_mils"),
+            optional_args=("overwrite",),
+        ),
+        McoOperationInfo(
+            "schdoc.add_net_label",
+            cad["schdoc.add-net-label"],
+            "schdoc",
+            "Add a schematic net label.",
+            required_args=("file", "text", "location_mils"),
+            optional_args=("orientation", "overwrite"),
+        ),
+        McoOperationInfo(
+            "schdoc.add_component",
+            cad["schdoc.add-component"],
+            "schdoc",
+            "Insert a schematic component from a SchLib.",
+            required_args=("file", "library", "symbol", "designator", "position_mils"),
+            optional_args=(
+                "unique_id",
+                "design_item_id",
+                "footprint_model",
+                "footprint_library",
+                "parameters",
+                "designator_style",
+                "overwrite",
+            ),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_text",
+            cad["pcbdoc.add-text"],
+            "pcbdoc",
+            "Add PCB text.",
+            required_args=("file", "text", "position_mils"),
+            optional_args=(
+                "layer",
+                "height_mils",
+                "font_kind",
+                "font_name",
+                "bold",
+                "italic",
+                "inverted_box",
+                "overwrite",
+            ),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_component",
+            cad["pcbdoc.add-component"],
+            "pcbdoc",
+            "Insert a PCB component from a PcbLib.",
+            required_args=("file", "library", "footprint", "designator", "position_mils"),
+            optional_args=(
+                "layer",
+                "source_unique_id",
+                "source_hierarchical_path",
+                "source_component_library",
+                "source_lib_reference",
+                "source_description",
+                "channel_offset",
+                "comment_text",
+                "component_parameters",
+                "pad_nets",
+                "overwrite",
+            ),
+        ),
+        McoOperationInfo(
+            "pcbdoc.arrange_designators",
+            cad["pcbdoc.arrange-designators"],
+            "pcbdoc",
+            "Position generated PCB designator text.",
+            required_args=("file", "designators"),
+            optional_args=("placement", "offset_mils", "height_mils", "layer", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_track",
+            cad["pcbdoc.add-track"],
+            "pcbdoc",
+            "Add a PCB track.",
+            required_args=("file", "start_mils", "end_mils", "width_mils"),
+            optional_args=("layer", "net", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_arc",
+            cad["pcbdoc.add-arc"],
+            "pcbdoc",
+            "Add a PCB arc.",
+            required_args=(
+                "file",
+                "center_mils",
+                "radius_mils",
+                "start_angle_degrees",
+                "end_angle_degrees",
+                "width_mils",
+            ),
+            optional_args=("layer", "net", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_pad",
+            cad["pcbdoc.add-pad"],
+            "pcbdoc",
+            "Add a free PCB pad.",
+            required_args=("file", "designator", "position_mils", "width_mils", "height_mils"),
+            optional_args=(
+                "shape",
+                "rotation_degrees",
+                "hole_size_mils",
+                "plated",
+                "layer",
+                "net",
+                "solder_mask_expansion_mils",
+                "paste_mask_expansion_mils",
+                "tenting_top",
+                "tenting_bottom",
+                "solder_mask_expansion_mode",
+                "paste_mask_expansion_mode",
+                "overwrite",
+            ),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_via",
+            cad["pcbdoc.add-via"],
+            "pcbdoc",
+            "Add a PCB via.",
+            required_args=("file", "position_mils", "diameter_mils", "hole_size_mils"),
+            optional_args=("layer_start", "layer_end", "net", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_fill",
+            cad["pcbdoc.add-fill"],
+            "pcbdoc",
+            "Add a rectangular PCB fill.",
+            required_args=("file", "corner1_mils", "corner2_mils"),
+            optional_args=("rotation_degrees", "layer", "net", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_region",
+            cad["pcbdoc.add-region"],
+            "pcbdoc",
+            "Add a PCB region.",
+            required_args=("file", "outline_points_mils"),
+            optional_args=(
+                "layer",
+                "hole_points_mils",
+                "is_keepout",
+                "keepout_restrictions",
+                "net",
+                "is_board_cutout",
+                "overwrite",
+            ),
+        ),
+        McoOperationInfo(
+            "pcbdoc.create_user_union",
+            cad["pcbdoc.create-user-union"],
+            "pcbdoc",
+            "Create a user union over generated PCB objects.",
+            required_args=("file", "name"),
+            optional_args=("members", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.export_layer_step",
+            cad["pcbdoc.export-layer-step"],
+            "pcbdoc",
+            "Export a PCB layer STEP artifact.",
+            required_args=("file", "output_file", "layer"),
+            optional_args=("board_name", "z_mm", "highlights", "colors", "overwrite"),
+        ),
+        McoOperationInfo(
+            "pcbdoc.add_embedded_3d_model",
+            cad["pcbdoc.add-embedded-3d-model"],
+            "pcbdoc",
+            "Embed a 3D model in a PCB document.",
+            required_args=("file", "model_file"),
+            optional_args=(
+                "model_name",
+                "name",
+                "layer",
+                "side",
+                "location_mils",
+                "rotation_x_degrees",
+                "rotation_y_degrees",
+                "rotation_z_degrees",
+                "z_mm",
+                "bounds_mils",
+                "projection_outline_mils",
+                "overall_height_mils",
+                "opacity",
+                "overwrite",
+            ),
+        ),
+    ]
+    return {info.name: info for info in infos}
 
 
-DEFAULT_MCO_OPERATIONS: dict[str, McoOperationHandler] = _default_mco_operations()
+def _default_mco_operations(
+    infos: Mapping[str, McoOperationInfo],
+) -> dict[str, McoOperationHandler]:
+    handlers = {info.name: info.handler for info in infos.values()}
+    handlers["message"] = _op_message
+    handlers["fail"] = _op_fail
+    return handlers
+
+
+DEFAULT_MCO_OPERATION_INFO: dict[str, McoOperationInfo] = _default_mco_operation_info()
+DEFAULT_MCO_OPERATIONS: dict[str, McoOperationHandler] = _default_mco_operations(
+    DEFAULT_MCO_OPERATION_INFO
+)

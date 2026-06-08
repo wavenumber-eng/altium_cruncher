@@ -22,6 +22,72 @@ from altium_cruncher.altium_cruncher_mco import (
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _mco_create_project_ops(
+    *,
+    output_dir: str = "generated",
+    project_name: str = "mate",
+    overwrite: bool = True,
+    schematic_sheet_style: str | None = None,
+    board_outline_mils: dict[str, float] | None = None,
+    board_origin_mils: dict[str, float] | None = None,
+    documents: list[str] | None = None,
+) -> list[dict[str, object]]:
+    project_file = f"{output_dir}/{project_name}.PrjPcb"
+    schematic_file = f"{output_dir}/{project_name}.SchDoc"
+    board_file = f"{output_dir}/{project_name}.PcbDoc"
+    board_args: dict[str, object] = {
+        "file": board_file,
+        "layer_stack_template": "2-layer",
+        "overwrite": overwrite,
+    }
+    if board_outline_mils is not None:
+        board_args["board_outline_mils"] = board_outline_mils
+    if board_origin_mils is not None:
+        board_args["board_origin_mils"] = board_origin_mils
+    operations: list[dict[str, object]] = [
+        {
+            "op": "project.create",
+            "id": "create_project",
+            "args": {
+                "file": project_file,
+                "name": project_name,
+                "overwrite": overwrite,
+            },
+        },
+        {
+            "op": "schdoc.create",
+            "id": "create_schematic",
+            "args": {
+                "file": schematic_file,
+                "sheet_style": schematic_sheet_style,
+                "overwrite": overwrite,
+            },
+        },
+        {
+            "op": "pcbdoc.create",
+            "id": "create_board",
+            "args": board_args,
+        },
+    ]
+    project_documents = [
+        *(documents or []),
+        f"{project_name}.SchDoc",
+        f"{project_name}.PcbDoc",
+    ]
+    for index, document in enumerate(project_documents, start=1):
+        operations.append(
+            {
+                "op": "project.add_document",
+                "id": f"add_document_{index}",
+                "args": {
+                    "file": project_file,
+                    "document": document,
+                },
+            }
+        )
+    return operations
+
+
 def test_loads_jsonc_preserves_comment_markers_inside_strings() -> None:
     payload = loads_jsonc(
         """
@@ -156,28 +222,21 @@ def test_execute_mco_caches_documents_and_flushes_on_exit(tmp_path: Path) -> Non
     assert document_path.read_text(encoding="utf-8") == "seedAB"
 
 
-def test_project_create_skeleton_dry_run_reports_outputs_without_writing(
+def test_project_primitive_dry_run_reports_outputs_without_writing(
     tmp_path: Path,
 ) -> None:
     result = execute_mco(
         {
             "schema": MCO_SCHEMA,
-            "operations": [
-                {
-                    "id": "create",
-                    "op": "project.create-skeleton",
-                    "args": {
-                        "output_dir": "generated",
-                        "project_name": "mate",
-                        "board_outline_mils": {
-                            "left": 0,
-                            "bottom": 0,
-                            "right": 500,
-                            "top": 300,
-                        },
-                    },
-                }
-            ],
+            "operations": _mco_create_project_ops(
+                overwrite=False,
+                board_outline_mils={
+                    "left": 0,
+                    "bottom": 0,
+                    "right": 500,
+                    "top": 300,
+                },
+            ),
         },
         McoExecutionContext(work_dir=tmp_path, dry_run=True),
     )
@@ -187,33 +246,24 @@ def test_project_create_skeleton_dry_run_reports_outputs_without_writing(
     assert not (tmp_path / "generated").exists()
 
 
-def test_project_create_skeleton_writes_altium_project_bundle(tmp_path: Path) -> None:
+def test_project_primitives_write_altium_project_bundle(tmp_path: Path) -> None:
     result = execute_mco(
         {
             "schema": MCO_SCHEMA,
-            "operations": [
-                {
-                    "id": "create",
-                    "op": "project.create-skeleton",
-                    "args": {
-                        "output_dir": "generated",
-                        "project_name": "mate",
-                        "schematic_sheet_style": "D",
-                        "overwrite": True,
-                        "board_outline_mils": {
-                            "left": 100,
-                            "bottom": 200,
-                            "right": 600,
-                            "top": 500,
-                        },
-                        "board_origin_mils": {"x": 1234, "y": 5678},
-                        "documents": [
-                            "libraries/schlib/contact.SchLib",
-                            "libraries/pcblib/contact.PcbLib",
-                        ],
-                    },
-                }
-            ],
+            "operations": _mco_create_project_ops(
+                schematic_sheet_style="D",
+                board_outline_mils={
+                    "left": 100,
+                    "bottom": 200,
+                    "right": 600,
+                    "top": 500,
+                },
+                board_origin_mils={"x": 1234, "y": 5678},
+                documents=[
+                    "libraries/schlib/contact.SchLib",
+                    "libraries/pcblib/contact.PcbLib",
+                ],
+            ),
         },
         McoExecutionContext(work_dir=tmp_path),
     )
@@ -276,18 +326,10 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
         {
             "schema": MCO_SCHEMA,
             "operations": [
-                {
-                    "id": "create",
-                    "op": "project.create-skeleton",
-                    "args": {
-                        "output_dir": "generated",
-                        "project_name": "mate",
-                        "overwrite": True,
-                    },
-                },
+                *_mco_create_project_ops(),
                 {
                     "id": "wire",
-                    "op": "schdoc.add-wire",
+                    "op": "schdoc.add_wire",
                     "args": {
                         "file": "generated/mate.SchDoc",
                         "overwrite": True,
@@ -296,7 +338,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "net",
-                    "op": "schdoc.add-net-label",
+                    "op": "schdoc.add_net_label",
                     "args": {
                         "file": "generated/mate.SchDoc",
                         "overwrite": True,
@@ -307,7 +349,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "text",
-                    "op": "pcbdoc.add-text",
+                    "op": "pcbdoc.add_text",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -318,7 +360,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "track",
-                    "op": "pcbdoc.add-track",
+                    "op": "pcbdoc.add_track",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -330,7 +372,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "arc",
-                    "op": "pcbdoc.add-arc",
+                    "op": "pcbdoc.add_arc",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -343,7 +385,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "pad",
-                    "op": "pcbdoc.add-pad",
+                    "op": "pcbdoc.add_pad",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -365,7 +407,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "via",
-                    "op": "pcbdoc.add-via",
+                    "op": "pcbdoc.add_via",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -376,7 +418,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "fill",
-                    "op": "pcbdoc.add-fill",
+                    "op": "pcbdoc.add_fill",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -386,7 +428,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "region",
-                    "op": "pcbdoc.add-region",
+                    "op": "pcbdoc.add_region",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -400,7 +442,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
                 },
                 {
                     "id": "union",
-                    "op": "pcbdoc.create-user-union",
+                    "op": "pcbdoc.create_user_union",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -443,18 +485,10 @@ def test_pcbdoc_add_text_exposes_inverted_frame_label_options(
         {
             "schema": MCO_SCHEMA,
             "operations": [
-                {
-                    "id": "create",
-                    "op": "project.create-skeleton",
-                    "args": {
-                        "output_dir": "generated",
-                        "project_name": "mate",
-                        "overwrite": True,
-                    },
-                },
+                *_mco_create_project_ops(),
                 {
                     "id": "label",
-                    "op": "pcbdoc.add-text",
+                    "op": "pcbdoc.add_text",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -508,18 +542,10 @@ def test_pcbdoc_add_region_can_create_board_cutout(tmp_path: Path) -> None:
         {
             "schema": MCO_SCHEMA,
             "operations": [
-                {
-                    "id": "create",
-                    "op": "project.create-skeleton",
-                    "args": {
-                        "output_dir": "generated",
-                        "project_name": "mate",
-                        "overwrite": True,
-                    },
-                },
+                *_mco_create_project_ops(),
                 {
                     "id": "cutout",
-                    "op": "pcbdoc.add-region",
+                    "op": "pcbdoc.add_region",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -588,7 +614,7 @@ def test_pcbdoc_export_layer_step_operation_writes_artifact(
             "operations": [
                 {
                     "id": "step",
-                    "op": "pcbdoc.export-layer-step",
+                    "op": "pcbdoc.export_layer_step",
                     "args": {
                         "file": "source.PcbDoc",
                         "output_file": "generated/bottom.step",
@@ -655,7 +681,7 @@ def test_pcbdoc_add_embedded_3d_model_operation_dry_run(tmp_path: Path) -> None:
             "operations": [
                 {
                     "id": "insert_step",
-                    "op": "pcbdoc.add-embedded-3d-model",
+                    "op": "pcbdoc.add_embedded_3d_model",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -708,18 +734,10 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
         {
             "schema": MCO_SCHEMA,
             "operations": [
-                {
-                    "id": "create",
-                    "op": "project.create-skeleton",
-                    "args": {
-                        "output_dir": "generated",
-                        "project_name": "mate",
-                        "overwrite": True,
-                    },
-                },
+                *_mco_create_project_ops(),
                 {
                     "id": "symbol",
-                    "op": "schdoc.add-component",
+                    "op": "schdoc.add_component",
                     "args": {
                         "file": "generated/mate.SchDoc",
                         "overwrite": True,
@@ -745,7 +763,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                 },
                 {
                     "id": "footprint",
-                    "op": "pcbdoc.add-component",
+                    "op": "pcbdoc.add_component",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -764,7 +782,7 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
                 },
                 {
                     "id": "designator",
-                    "op": "pcbdoc.arrange-designators",
+                    "op": "pcbdoc.arrange_designators",
                     "args": {
                         "file": "generated/mate.PcbDoc",
                         "overwrite": True,
@@ -854,36 +872,40 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
 
     assert completed.returncode == 0, completed.stderr
     assert mco_path.exists()
-    assert json.loads(
+    catalog = json.loads(
         subprocess.run(
-            [sys.executable, "-m", "altium_cruncher", "mco", "list-ops"],
+            [sys.executable, "-m", "altium_cruncher", "mco", "list", "--json"],
             cwd=PACKAGE_ROOT,
             check=True,
             capture_output=True,
             text=True,
         ).stdout
-    )["operations"] == [
-        "fail",
+    )
+    assert [operation["op"] for operation in catalog["operations"]] == [
         "file.copy",
         "mco.fail",
         "mco.message",
-        "message",
-        "pcbdoc.add-arc",
-        "pcbdoc.add-component",
-        "pcbdoc.add-embedded-3d-model",
-        "pcbdoc.add-fill",
-        "pcbdoc.add-pad",
-        "pcbdoc.add-region",
-        "pcbdoc.add-text",
-        "pcbdoc.add-track",
-        "pcbdoc.add-via",
-        "pcbdoc.arrange-designators",
-        "pcbdoc.create-user-union",
-        "pcbdoc.export-layer-step",
-        "project.create-skeleton",
-        "schdoc.add-component",
-        "schdoc.add-net-label",
-        "schdoc.add-wire",
+        "pcbdoc.add_arc",
+        "pcbdoc.add_component",
+        "pcbdoc.add_embedded_3d_model",
+        "pcbdoc.add_fill",
+        "pcbdoc.add_pad",
+        "pcbdoc.add_region",
+        "pcbdoc.add_text",
+        "pcbdoc.add_track",
+        "pcbdoc.add_via",
+        "pcbdoc.arrange_designators",
+        "pcbdoc.create",
+        "pcbdoc.create_user_union",
+        "pcbdoc.export_layer_step",
+        "project.add_document",
+        "project.add_parameter",
+        "project.add_variant",
+        "project.create",
+        "schdoc.add_component",
+        "schdoc.add_net_label",
+        "schdoc.add_wire",
+        "schdoc.create",
     ]
 
     completed = subprocess.run(
@@ -895,6 +917,7 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
             "run",
             str(mco_path),
             "--dry-run",
+            "--json",
         ],
         cwd=PACKAGE_ROOT,
         check=False,

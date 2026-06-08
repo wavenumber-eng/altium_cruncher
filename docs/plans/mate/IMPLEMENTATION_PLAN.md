@@ -44,6 +44,11 @@ remaining work, and release exit criteria.
   libraries, mate components, reference graphics, board cutouts, PCB labels,
   schematic wires/net labels, designator arrangement, feature union, and STEP
   artifact operations.
+- Generated MCO now uses primitive project/document operations
+  (`project.create`, `schdoc.create`, `pcbdoc.create`,
+  `project.add_document`) and underscore operation names that mirror the
+  Altium Monkey API style. The planner groups schematic mutations before PCB
+  mutations, and `mco list` owns the maintained operation catalog.
 - The Cricket example has been manually inspected in Altium for several output
   slices.
 - Public Cricket mate parts are now resolved by `symbol_name` and
@@ -76,7 +81,8 @@ remaining work, and release exit criteria.
 | S5 | pending | Keep graphics-only projection valid. | A config can intentionally generate reference graphics, outlines, labels, cutouts, and STEP artifacts without placing mate components. |
 | S6 | done | Update Cricket example to the new resolver style. | The example can run from its folder using relative search paths and does not require hand-authored absolute library paths. |
 | S7 | done | Stabilize config and MCO docs. | Design docs, example README, expected operations, and command help match implemented behavior. |
-| S8 | pending | Release signoff. | Focused tests, full test suite, lint/type checks, and manual Altium inspection notes are complete. |
+| S8 | done | Split generated MCO project bootstrap into primitive ops. | Mate-generated MCO uses small project/document ops, canonical underscore op names, grouped SchDoc/PcbDoc phases, pretty run output, and a maintained `mco list` catalog. |
+| S9 | pending | Release signoff. | Focused tests, full test suite, lint/type checks, and manual Altium inspection notes are complete. |
 
 ## Library Resolver Direction
 
@@ -212,3 +218,9 @@ Full signoff:
   `libraries.roots`, removed the checked-in Cricket config and known-parts
   manifest, and moved the public Cricket example to a README-driven layout with
   committed DUT files and minimal `mating_parts/` libraries.
+- 2026-06-07: Split mate-generated project setup into primitive MCO operations,
+  changed generated op names to underscore style, removed the old
+  `project.create-skeleton` command path without retaining a compatibility
+  alias, grouped schematic operations before PCB operations, made MCO/mate run
+  output human-readable by default with opt-in JSON output, and added the
+  maintained `mco list` catalog.

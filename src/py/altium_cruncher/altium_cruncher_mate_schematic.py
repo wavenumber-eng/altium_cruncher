@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from math import ceil
 
-from altium_cruncher.altium_cruncher_mco import JsonObject
+from altium_cruncher.altium_cruncher_mco import JsonObject, mco_operation
 
 _SCHEMATIC_COLUMN_COUNT = 4
 _SCHEMATIC_ORIGIN_MILS = (1200.0, 1200.0)
@@ -121,11 +121,11 @@ def schematic_wire_operation(
     designator: str,
     route: MateSchematicNetRoute,
 ) -> JsonObject:
-    return {
-        "id": f"wire_{_safe_id(designator)}_net",
-        "op": "schdoc.add-wire",
-        "message": f"Add mate schematic wire for {designator}",
-        "args": {
+    return mco_operation(
+        "schdoc.add_wire",
+        f"wire_{_safe_id(designator)}_net",
+        f"Add mate schematic wire for {designator}",
+        {
             "file": schematic_file,
             "overwrite": True,
             "points_mils": [
@@ -133,7 +133,7 @@ def schematic_wire_operation(
                 list(route.wire_end_mils),
             ],
         },
-    }
+    )
 
 
 def schematic_net_label_operation(
@@ -143,18 +143,18 @@ def schematic_net_label_operation(
     net_name: str,
     route: MateSchematicNetRoute,
 ) -> JsonObject:
-    return {
-        "id": f"label_{_safe_id(designator)}_net",
-        "op": "schdoc.add-net-label",
-        "message": f"Add mate schematic net label for {designator}",
-        "args": {
+    return mco_operation(
+        "schdoc.add_net_label",
+        f"label_{_safe_id(designator)}_net",
+        f"Add mate schematic net label for {designator}",
+        {
             "file": schematic_file,
             "overwrite": True,
             "text": net_name,
             "location_mils": list(route.label_position_mils),
             "orientation": route.label_orientation,
         },
-    }
+    )
 
 
 def _signal_pin_layout(

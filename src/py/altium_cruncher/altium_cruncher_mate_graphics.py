@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from altium_cruncher.altium_cruncher_mco import JsonObject
+from altium_cruncher.altium_cruncher_mco import JsonObject, mco_operation
 
 _PAD_SHAPE_CIRCLE = 1
 _PAD_SHAPE_RECTANGLE = 2
@@ -564,11 +564,11 @@ def _board_outline_track_operation(
     layer: str,
     width_mils: float,
 ) -> JsonObject:
-    return {
-        "id": f"project_{_safe_id(board_key)}_outline_segment_{index}",
-        "op": "pcbdoc.add-track",
-        "message": f"Project {board_key} board outline segment {index}",
-        "args": {
+    return mco_operation(
+        "pcbdoc.add_track",
+        f"project_{_safe_id(board_key)}_outline_segment_{index}",
+        f"Project {board_key} board outline segment {index}",
+        {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
             "start_mils": _outline_point(start),
@@ -576,7 +576,7 @@ def _board_outline_track_operation(
             "width_mils": width_mils,
             "layer": layer,
         },
-    }
+    )
 
 
 def _board_outline_arc_operation(
@@ -593,11 +593,11 @@ def _board_outline_arc_operation(
     if not isinstance(center, list | tuple) or len(center) != 2:
         return None
     center_payload = {"x": center[0], "y": center[1]}
-    return {
-        "id": f"project_{_safe_id(board_key)}_outline_arc_{index}",
-        "op": "pcbdoc.add-arc",
-        "message": f"Project {board_key} board outline arc {index}",
-        "args": {
+    return mco_operation(
+        "pcbdoc.add_arc",
+        f"project_{_safe_id(board_key)}_outline_arc_{index}",
+        f"Project {board_key} board outline arc {index}",
+        {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
             "center_mils": [
@@ -618,7 +618,7 @@ def _board_outline_arc_operation(
             "width_mils": width_mils,
             "layer": layer,
         },
-    }
+    )
 
 
 def _board_cutout_region_operation(
@@ -633,18 +633,18 @@ def _board_cutout_region_operation(
     points = _linearized_outline_points(outline)
     if len(points) < 3:
         return None
-    return {
-        "id": f"project_{_safe_id(board_key)}_cutout_{cutout_index}_region",
-        "op": "pcbdoc.add-region",
-        "message": f"Project {board_key} board cutout {cutout_index}",
-        "args": {
+    return mco_operation(
+        "pcbdoc.add_region",
+        f"project_{_safe_id(board_key)}_cutout_{cutout_index}_region",
+        f"Project {board_key} board cutout {cutout_index}",
+        {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
             "outline_points_mils": points,
             "layer": layer,
             "is_board_cutout": True,
         },
-    }
+    )
 
 
 def _outline_vertices(outline: Mapping[str, object]) -> list[JsonObject]:
@@ -1354,14 +1354,14 @@ def _pad_outline_track_operation(
     layer: str,
     width_mils: float,
 ) -> JsonObject:
-    return {
-        "id": (
+    return mco_operation(
+        "pcbdoc.add_track",
+        (
             f"reference_{_safe_id(designator)}_pad_{pad_index}"
             f"_outline_{outline_index}_segment_{segment_index}"
         ),
-        "op": "pcbdoc.add-track",
-        "message": f"Add mate reference outline for {designator}",
-        "args": {
+        f"Add mate reference outline for {designator}",
+        {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
             "start_mils": [start[0], start[1]],
@@ -1369,7 +1369,7 @@ def _pad_outline_track_operation(
             "width_mils": width_mils,
             "layer": layer,
         },
-    }
+    )
 
 
 def _pad_local_arc_operation(
@@ -1394,14 +1394,14 @@ def _pad_local_arc_operation(
     )
     rotation = _mapping_number(geometry, "rotation_degrees", 0.0)
     arc_center = _transform_local_point(center_local, center, rotation)
-    return {
-        "id": (
+    return mco_operation(
+        "pcbdoc.add_arc",
+        (
             f"reference_{_safe_id(designator)}_pad_{pad_index}"
             f"_outline_{outline_index}_arc_{arc_index}"
         ),
-        "op": "pcbdoc.add-arc",
-        "message": f"Add mate reference outline for {designator}",
-        "args": {
+        f"Add mate reference outline for {designator}",
+        {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
             "center_mils": [arc_center[0], arc_center[1]],
@@ -1411,7 +1411,7 @@ def _pad_local_arc_operation(
             "width_mils": width_mils,
             "layer": layer,
         },
-    }
+    )
 
 
 def _pad_ring_operation(
@@ -1426,11 +1426,11 @@ def _pad_ring_operation(
     layer: str,
     width_mils: float,
 ) -> JsonObject:
-    return {
-        "id": f"reference_{_safe_id(designator)}_pad_{pad_index}_ring_{ring_index}",
-        "op": "pcbdoc.add-arc",
-        "message": f"Add mate reference outline for {designator}",
-        "args": {
+    return mco_operation(
+        "pcbdoc.add_arc",
+        f"reference_{_safe_id(designator)}_pad_{pad_index}_ring_{ring_index}",
+        f"Add mate reference outline for {designator}",
+        {
             "file": (Path(output_dir) / board_filename).as_posix(),
             "overwrite": True,
             "center_mils": [
@@ -1443,7 +1443,7 @@ def _pad_ring_operation(
             "width_mils": width_mils,
             "layer": layer,
         },
-    }
+    )
 
 
 def _target_source_pad_geometries(

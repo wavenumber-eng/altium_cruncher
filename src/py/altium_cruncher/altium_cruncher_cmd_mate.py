@@ -9,6 +9,7 @@ from pathlib import Path
 
 from altium_cruncher.altium_cruncher_cmd_launch import cmd_launch
 from altium_cruncher.altium_cruncher_cmd_libraries import print_library_scan_result
+from altium_cruncher.altium_cruncher_cmd_mco import print_mco_execution_result
 from altium_cruncher.altium_cruncher_mate import (
     execute_mate_config,
     inspect_mate_source,
@@ -63,6 +64,9 @@ def _cmd_mate_default(args: argparse.Namespace) -> int:
         launch=getattr(args, "launch", False),
         ad_version=getattr(args, "ad_version", None),
         altium_path=getattr(args, "altium_path", None),
+        json=getattr(args, "json", False),
+        json_output=getattr(args, "json_output", None),
+        no_color=getattr(args, "no_color", False),
     )
     return _cmd_mate_run(run_args)
 
@@ -174,7 +178,7 @@ def _cmd_mate_libraries(args: argparse.Namespace) -> int:
         log.error("Failed scanning mate libraries: %s", exc)
         return 1
     if args.json:
-        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+        print(json.dumps(result.to_dict(), indent=2))
         return 0
     print_library_scan_result(
         result,
@@ -194,7 +198,20 @@ def _cmd_mate_run(args: argparse.Namespace) -> int:
     except Exception as exc:
         log.error("Failed running mate workflow: %s", exc)
         return 1
-    print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    if getattr(args, "json_output", None) is not None:
+        args.json_output.parent.mkdir(parents=True, exist_ok=True)
+        args.json_output.write_text(
+            json.dumps(result.to_dict(), indent=2) + "\n",
+            encoding="utf-8",
+        )
+    if getattr(args, "json", False):
+        print(json.dumps(result.to_dict(), indent=2))
+    else:
+        print_mco_execution_result(
+            result,
+            title="mate",
+            color=not bool(getattr(args, "no_color", False)),
+        )
     if not result.ok:
         return 1
     if getattr(args, "launch", False) and not bool(args.dry_run):
@@ -297,6 +314,21 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         "--altium-path",
         type=Path,
         help="explicit X2.exe or install root for --launch",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="write the mate MCO execution report JSON to stdout",
+    )
+    parser.add_argument(
+        "--json-output",
+        type=Path,
+        help="write the mate MCO execution report JSON to this file",
+    )
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="disable terminal color in human output",
     )
     action_subparsers = parser.add_subparsers(
         dest="mate_action",
@@ -476,6 +508,21 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         "--force",
         action="store_true",
         help="overwrite --emit-mco output when present",
+    )
+    run_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="write the mate MCO execution report JSON to stdout",
+    )
+    run_parser.add_argument(
+        "--json-output",
+        type=Path,
+        help="write the mate MCO execution report JSON to this file",
+    )
+    run_parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="disable terminal color in human output",
     )
     run_parser.set_defaults(handler=cmd_mate)
 

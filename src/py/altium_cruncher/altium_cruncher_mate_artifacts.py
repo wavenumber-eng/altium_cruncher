@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from altium_cruncher.bom_pnp_model import designator_sort_key
-from altium_cruncher.altium_cruncher_mco import JsonObject
+from altium_cruncher.altium_cruncher_mco import JsonObject, mco_operation
 
 _PCB_LAYER_STEP_OPTION_KEYS = (
     "thickness_mm",
@@ -136,12 +136,12 @@ def _pcb_layer_step_operation(
         / f"{_safe_id(board_key)}__{_safe_id(source_layer)}__{artifact_hash}.step"
     )
     args["output_file"] = output_file.as_posix()
-    return {
-        "id": f"export_{_safe_id(board_key)}_{_safe_id(source_layer)}_pcb_layer_step",
-        "op": "pcbdoc.export-layer-step",
-        "message": f"Export {board_key} {source_layer} PCB layer STEP artifact",
-        "args": args,
-    }
+    return mco_operation(
+        "pcbdoc.export_layer_step",
+        f"export_{_safe_id(board_key)}_{_safe_id(source_layer)}_pcb_layer_step",
+        f"Export {board_key} {source_layer} PCB layer STEP artifact",
+        args,
+    )
 
 
 def _pcb_layer_step_artifact_hash(
@@ -238,12 +238,12 @@ def _pcb_layer_step_insert_operation(
     default_bounds = source_board_outline_mils or output_board_outline_mils
     bounds = insert_config.get("bounds_mils", default_bounds)
     _add_optional(model_args, "bounds_mils", bounds)
-    return {
-        "id": f"insert_{_safe_id(board_key)}_pcb_layer_step",
-        "op": "pcbdoc.add-embedded-3d-model",
-        "message": f"Insert {board_key} PCB layer STEP into mate board",
-        "args": model_args,
-    }
+    return mco_operation(
+        "pcbdoc.add_embedded_3d_model",
+        f"insert_{_safe_id(board_key)}_pcb_layer_step",
+        f"Insert {board_key} PCB layer STEP into mate board",
+        model_args,
+    )
 
 
 def _pcb_layer_step_highlights(

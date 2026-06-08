@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from altium_cruncher.altium_cruncher_mco import JsonObject
+from altium_cruncher.altium_cruncher_mco import JsonObject, mco_operation
 
 _PCB_LABEL_STYLE_PASSTHROUGH_KEYS = (
     "rotation_degrees",
@@ -159,11 +159,11 @@ def _pcb_net_label_operation(
     net_name = _target_optional_string(request.target, "net_name")
     if not net_name:
         raise ValueError("Mate PCB net label target must have a net name")
-    return {
-        "id": f"label_{_safe_id(request.designator)}_pcb_net",
-        "op": "pcbdoc.add-text",
-        "message": f"Add mate PCB net label for {request.designator}",
-        "args": {
+    return mco_operation(
+        "pcbdoc.add_text",
+        f"label_{_safe_id(request.designator)}_pcb_net",
+        f"Add mate PCB net label for {request.designator}",
+        {
             "file": board_file,
             "overwrite": True,
             "text": net_name,
@@ -182,7 +182,7 @@ def _pcb_net_label_operation(
                 ),
             ),
         },
-    }
+    )
 
 
 def _pcb_label_column_header_operation(
@@ -192,11 +192,11 @@ def _pcb_label_column_header_operation(
     width_mils: float,
 ) -> JsonObject:
     labels = request.labels
-    return {
-        "id": f"label_column_{_safe_id(request.board_label_column_title)}_header",
-        "op": "pcbdoc.add-text",
-        "message": f"Add mate PCB label column header {request.board_label_column_title}",
-        "args": {
+    return mco_operation(
+        "pcbdoc.add_text",
+        f"label_column_{_safe_id(request.board_label_column_title)}_header",
+        f"Add mate PCB label column header {request.board_label_column_title}",
+        {
             "file": board_file,
             "overwrite": True,
             "text": request.board_label_column_title,
@@ -212,7 +212,7 @@ def _pcb_label_column_header_operation(
             ),
             **_pcb_label_header_style_args(labels),
         },
-    }
+    )
 
 
 def _pcb_net_label_position(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import fnmatch
 import hashlib
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -16,6 +16,7 @@ from altium_cruncher.altium_cruncher_mco import (
     McoExecutionResult,
     execute_mco,
     load_jsonc_file,
+    mco_operation,
 )
 from altium_cruncher.bom_pnp_model import designator_sort_key
 from altium_cruncher.altium_cruncher_mate_parts import (
@@ -399,21 +400,25 @@ def _parse_mate_config(
 
 def build_mate_mco(config: MateConfig) -> JsonObject:
     """Build the executable MCO payload for a mate config."""
-    operations: list[JsonObject] = [
-        _project_create_operation(
-            config.output,
-            documents=_known_part_project_documents(config),
-        )
-    ]
+    operations: list[JsonObject] = _project_bootstrap_operations(config.output)
     marker = config.marker
     if marker is not None:
         operations.append(_pcb_marker_operation(config.output, marker))
-    operations.extend(_known_part_library_copy_operations(config))
+    library_copy_operations = _known_part_library_copy_operations(config)
+    operations.extend(library_copy_operations)
+    operations.extend(_known_part_project_document_operations(config))
     known_part_operations = _known_part_operations(config)
     placement_operations = known_part_operations.placement_operations
+    schdoc_operations = _operations_with_prefix(placement_operations, "schdoc.")
+    pcbdoc_operations = [
+        operation
+        for operation in placement_operations
+        if not str(operation.get("op", "")).startswith("schdoc.")
+    ]
     board_projection_operations = _board_projection_operations(config)
     artifact_operations = build_mate_artifact_operations(config)
-    operations.extend(placement_operations)
+    operations.extend(schdoc_operations)
+    operations.extend(pcbdoc_operations)
     operations.extend(board_projection_operations)
     operations.extend(artifact_operations)
     if placement_operations or board_projection_operations or artifact_operations:
@@ -564,7 +569,7 @@ def write_mate_mco(
         raise FileExistsError(f"Mate MCO already exists: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps(build_mate_mco(config), indent=2, sort_keys=True) + "\n",
+        json.dumps(build_mate_mco(config), indent=2) + "\n",
         encoding="utf-8",
     )
     return output_path.resolve()
@@ -1693,42 +1698,74 @@ def _parse_selection_pad(raw: Mapping[str, object]) -> MateSelectionPad:
     )
 
 
-def _project_create_operation(
-    output: MateOutputConfig,
-    *,
-    documents: list[str] | None = None,
-) -> JsonObject:
-    args: JsonObject = {
-        "output_dir": output.output_dir,
-        "project_name": output.project_name,
+def _project_bootstrap_operations(output: MateOutputConfig) -> list[JsonObject]:
+    project_file = _output_file(output.output_dir, _project_filename(output))
+    schematic_file = _output_file(output.output_dir, _schematic_filename(output))
+    board_file = _output_file(output.output_dir, _board_filename(output))
+    create_board_args: JsonObject = {
+        "file": board_file,
         "layer_stack_template": output.layer_stack_template,
         "overwrite": output.overwrite,
     }
-    _add_optional(args, "schematic_filename", output.schematic_filename)
-    _add_optional(args, "schematic_sheet_style", output.schematic_sheet_style)
-    _add_optional(args, "board_filename", output.board_filename)
-    _add_optional(args, "project_filename", output.project_filename)
-    _add_optional(args, "board_outline_mils", output.board_outline_mils)
-    _add_optional(args, "board_origin_mils", output.board_origin_mils)
-    if documents:
-        args["documents"] = documents
-    return {
-        "id": "create_mate_project",
-        "op": "project.create-skeleton",
-        "message": "Create mate project skeleton",
-        "args": args,
-    }
+    _add_optional(create_board_args, "board_outline_mils", output.board_outline_mils)
+    _add_optional(create_board_args, "board_origin_mils", output.board_origin_mils)
+    return [
+        mco_operation(
+            "project.create",
+            "create_mate_project",
+            "Create mate project",
+            {
+                "file": project_file,
+                "name": output.project_name,
+                "overwrite": output.overwrite,
+            },
+        ),
+        mco_operation(
+            "schdoc.create",
+            "create_mate_schematic",
+            "Create mate schematic",
+            {
+                "file": schematic_file,
+                "sheet_style": output.schematic_sheet_style,
+                "overwrite": output.overwrite,
+            },
+        ),
+        mco_operation(
+            "pcbdoc.create",
+            "create_mate_board",
+            "Create mate board",
+            create_board_args,
+        ),
+        mco_operation(
+            "project.add_document",
+            "add_mate_schematic_to_project",
+            "Add mate schematic to project",
+            {
+                "file": project_file,
+                "document": _schematic_filename(output),
+            },
+        ),
+        mco_operation(
+            "project.add_document",
+            "add_mate_board_to_project",
+            "Add mate board to project",
+            {
+                "file": project_file,
+                "document": _board_filename(output),
+            },
+        ),
+    ]
 
 
 def _pcb_marker_operation(
     output: MateOutputConfig,
     marker: MateMarkerConfig,
 ) -> JsonObject:
-    return {
-        "id": "add_mate_marker",
-        "op": "pcbdoc.add-text",
-        "message": "Add mate PCB marker text",
-        "args": {
+    return mco_operation(
+        "pcbdoc.add_text",
+        "add_mate_marker",
+        "Add mate PCB marker text",
+        {
             "file": _output_file(output.output_dir, _board_filename(output)),
             "overwrite": True,
             "text": marker.text,
@@ -1736,7 +1773,7 @@ def _pcb_marker_operation(
             "height_mils": marker.height_mils,
             "layer": marker.layer,
         },
-    }
+    )
 
 
 def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
@@ -1748,9 +1785,6 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
     board_label_column_indices: dict[str, int] = {}
     board_label_rows: dict[str, int] = {}
     placed_designators: list[str] = []
-    channel_offsets = _component_link_channel_offsets(
-        resolved.designator for resolved in resolved_targets
-    )
     schematic_positions = schematic_grouped_positions(
         [_part_string(resolved.part, "symbol_name") for resolved in resolved_targets]
     )
@@ -1802,7 +1836,6 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
                 part,
                 target,
                 designator,
-                channel_offset=channel_offsets[designator],
             )
         )
         placed_designators.append(designator)
@@ -1873,22 +1906,38 @@ def _known_part_project_documents(config: MateConfig) -> list[str]:
     ]
 
 
+def _known_part_project_document_operations(config: MateConfig) -> list[JsonObject]:
+    project_file = _output_file(config.output.output_dir, _project_filename(config.output))
+    return [
+        mco_operation(
+            "project.add_document",
+            f"add_{_safe_id(project_path)}_to_project",
+            f"Add mate library {Path(project_path).name} to project",
+            {
+                "file": project_file,
+                "document": project_path,
+            },
+        )
+        for project_path in _known_part_project_documents(config)
+    ]
+
+
 def _known_part_library_copy_operations(config: MateConfig) -> list[JsonObject]:
     operations: list[JsonObject] = []
     for reference in _known_part_library_references(config):
         project_path = reference["project_path"]
         source = reference["source"]
         operations.append(
-            {
-                "id": f"copy_{_safe_id(project_path)}",
-                "op": "file.copy",
-                "message": f"Copy mate library {Path(project_path).name}",
-                "args": {
+            mco_operation(
+                "file.copy",
+                f"copy_{_safe_id(project_path)}",
+                f"Copy mate library {Path(project_path).name}",
+                {
                     "source": source,
                     "destination": _output_file(config.output.output_dir, project_path),
                     "overwrite": config.output.overwrite,
                 },
-            }
+            )
         )
     return operations
 
@@ -2152,11 +2201,11 @@ def _schematic_part_operation(
 ) -> JsonObject:
     symbol_name = _part_string(part, "symbol_name")
     footprint_name = _part_string(part, "footprint_name")
-    return {
-        "id": f"add_{_safe_id(designator)}_symbol",
-        "op": "schdoc.add-component",
-        "message": f"Add mate schematic component {designator}",
-        "args": {
+    return mco_operation(
+        "schdoc.add_component",
+        f"add_{_safe_id(designator)}_symbol",
+        f"Add mate schematic component {designator}",
+        {
             "file": _output_file(output.output_dir, _schematic_filename(output)),
             "overwrite": True,
             "library": _copied_known_part_file(output, part, "symbol_library"),
@@ -2173,7 +2222,7 @@ def _schematic_part_operation(
                 position_mils,
             ),
         },
-    }
+    )
 
 
 def _pcb_part_operation(
@@ -2181,8 +2230,6 @@ def _pcb_part_operation(
     part: Mapping[str, object],
     target: Mapping[str, object],
     designator: str,
-    *,
-    channel_offset: int,
 ) -> JsonObject:
     footprint_library = _copied_known_part_file(output, part, "footprint_library")
     symbol_name = _part_string(part, "symbol_name")
@@ -2204,19 +2251,18 @@ def _pcb_part_operation(
         "source_component_library": symbol_library.name,
         "source_lib_reference": symbol_name,
         "source_description": _mate_part_symbol_description(part),
-        "channel_offset": channel_offset,
         "comment_text": "*",
         "component_parameters": _mate_component_parameters(target, part),
     }
     pad_nets = _mate_pad_nets(target, part)
     if pad_nets:
         args["pad_nets"] = pad_nets
-    return {
-        "id": f"add_{_safe_id(designator)}_footprint",
-        "op": "pcbdoc.add-component",
-        "message": f"Add mate PCB component {designator}",
-        "args": args,
-    }
+    return mco_operation(
+        "pcbdoc.add_component",
+        f"add_{_safe_id(designator)}_footprint",
+        f"Add mate PCB component {designator}",
+        args,
+    )
 
 
 def _target_pcb_labels_config(
@@ -2252,25 +2298,25 @@ def _pcb_designator_arrangement_operation(
         "italic": _style_bool(style, "italic", False),
         "stroke_width_mils": _style_float(style, "stroke_width_mils", 8.0),
     }
-    return {
-        "id": "arrange_pcb_designators",
-        "op": "pcbdoc.arrange-designators",
-        "message": "Arrange mate PCB designators",
-        "args": args,
-    }
+    return mco_operation(
+        "pcbdoc.arrange_designators",
+        "arrange_pcb_designators",
+        "Arrange mate PCB designators",
+        args,
+    )
 
 
 def _mate_user_union_operation(output: MateOutputConfig) -> JsonObject:
-    return {
-        "id": "group_mate_features",
-        "op": "pcbdoc.create-user-union",
-        "message": "Group generated mate PCB features",
-        "args": {
+    return mco_operation(
+        "pcbdoc.create_user_union",
+        "group_mate_features",
+        "Group generated mate PCB features",
+        {
             "file": _output_file(output.output_dir, _board_filename(output)),
             "overwrite": True,
             "name": "MATE_FEATURES",
         },
-    }
+    )
 
 
 def _mate_component_parameters(
@@ -2355,14 +2401,6 @@ def _component_link_unique_id(
     return hashlib.sha1(seed.encode("utf-8")).hexdigest()[:8].upper()
 
 
-def _component_link_channel_offsets(designators: Iterable[str]) -> dict[str, int]:
-    ordered = sorted(
-        (str(designator) for designator in designators),
-        key=designator_sort_key,
-    )
-    return {designator: index for index, designator in enumerate(ordered)}
-
-
 def _mate_part_symbol_description(
     part: Mapping[str, object],
 ) -> str:
@@ -2440,6 +2478,21 @@ def _schematic_filename(output: MateOutputConfig) -> str:
 
 def _board_filename(output: MateOutputConfig) -> str:
     return output.board_filename or f"{output.project_name}.PcbDoc"
+
+
+def _project_filename(output: MateOutputConfig) -> str:
+    return output.project_filename or f"{output.project_name}.PrjPcb"
+
+
+def _operations_with_prefix(
+    operations: Sequence[Mapping[str, object]],
+    prefix: str,
+) -> list[JsonObject]:
+    return [
+        dict(operation)
+        for operation in operations
+        if str(operation.get("op", "")).startswith(prefix)
+    ]
 
 
 def _output_file(output_dir: str, filename: str) -> str:
