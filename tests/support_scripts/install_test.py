@@ -76,12 +76,12 @@ def run_install_test(wheel: Path) -> None:
         env = _clean_env(venv_dir)
         _run([str(python), "-m", "pip", "install", str(wheel)], cwd=temp_dir, env=env)
 
-        command = "altium-cruncher"
-        executable = _console_script(venv_dir, command)
-        if not executable.exists():
-            raise SystemExit(f"Missing console script after install: {executable}")
-        _run([str(executable), "--version"], cwd=temp_dir, env=env)
-        _run([command, "--version"], cwd=temp_dir, env=env)
+        for command in ("altium-cruncher", "acr", "ad"):
+            executable = _console_script(venv_dir, command)
+            if not executable.exists():
+                raise SystemExit(f"Missing console script after install: {executable}")
+            _run([str(executable), "--version"], cwd=temp_dir, env=env)
+            _run([command, "--version"], cwd=temp_dir, env=env)
 
         legacy_executable = _console_script(venv_dir, "altium_cruncher")
         if legacy_executable.exists():

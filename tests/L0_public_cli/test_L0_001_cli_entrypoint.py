@@ -81,22 +81,32 @@ def test_design_help_describes_design_json_contents() -> None:
     result = _run_cli("design", "--help")
 
     assert result.returncode == 0, result.stderr
-    assert "netlist data" in result.stdout
-    assert "component records" in result.stdout
-    assert "SVG IDs" in result.stdout
+    assert "design review bundle" in result.stdout
+    assert "serialized SchDoc/PcbDoc JSON" in result.stdout
+    assert "structured notes" in result.stdout
+    assert "output/design_review" in result.stdout
 
 
-def test_easyeda_help_marks_commands_experimental() -> None:
-    """Verify EasyEDA command help is explicit about experimental status."""
+def test_design_review_alias_help_starts() -> None:
+    """Verify design-review and dr aliases route to design help."""
+    for alias in ("design-review", "dr"):
+        result = _run_cli(alias, "--help")
+
+        assert result.returncode == 0, result.stderr
+        assert "design review bundle" in result.stdout
+
+
+def test_easyeda_import_is_first_class_public_command() -> None:
+    """Verify EasyEDA import no longer requires an optional CLI extra."""
     root_result = _run_cli("--help")
 
     assert root_result.returncode == 0, root_result.stderr
     assert "easyeda-import" in root_result.stdout
-    assert "EXPERIMENTAL" in root_result.stdout
 
     command_result = _run_cli("easyeda-import", "--help")
     assert command_result.returncode == 0, command_result.stderr
-    assert "EXPERIMENTAL" in command_result.stdout
+    assert "Generate Altium schematic-library" in command_result.stdout
+    assert "EXPERIMENTAL" not in command_result.stdout
 
 
 def test_easyeda_review_commands_are_not_public_cli_commands() -> None:

@@ -277,7 +277,7 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
             },
             "output": {
                 "dir_template": "{Command}/{VariantName}",
-                "name_template": "{SourceStem}_{PartNumberPCB}_{OutputKind}",
+                "name_template": "{SourceStem}_{PartNumberPCB}{OutputKindSuffix}",
             },
         }
     )
@@ -310,7 +310,32 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
     assert config.highlight_dnp_rows is False
     assert config.pnp_position_mode == "component-origin"
     assert select_variant_names(["A", "B4"], config) == ["B4"]
-    assert output == tmp_path / "bom" / "B4" / "Project_175_TEST_grouped-xlsx.xlsx"
+    assert output == tmp_path / "bom" / "B4" / "Project_175_TEST_grouped.xlsx"
+
+    default_config = BomPnpConfig()
+    assert default_config.output_name_template == (
+        "{SourceStem}_{VariantName}{OutputKindSuffix}"
+    )
+    assert configured_output_file(
+        tmp_path,
+        default_config,
+        source=Path("Project.PrjPcb"),
+        command="pnp",
+        output_kind="json",
+        extension="json",
+        project_parameters={},
+        variant_name=None,
+    ) == tmp_path / "pnp" / "Project_base.json"
+    assert configured_output_file(
+        tmp_path,
+        default_config,
+        source=Path("Project.PrjPcb"),
+        command="bom",
+        output_kind="raw-json",
+        extension="json",
+        project_parameters={},
+        variant_name=None,
+    ) == tmp_path / "bom" / "Project_base_raw.json"
 
 
 def test_bom_pnp_config_loader_accepts_utf8_bom(tmp_path: Path) -> None:

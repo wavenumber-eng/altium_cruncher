@@ -1,15 +1,16 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>design command</title><link rel="stylesheet" href="../styles.css"></head>
-<body data-doc-kind="cli-design" data-command="design" data-config-contract="none">
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="design" data-config-contract="none">
 <main>
 <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
-<header><p class="status">CLI command design</p><h1>design</h1><p class="lede">Generates machine-consumable design JSON from Altium schematic or project inputs.</p></header>
-<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher design project.PrjPcb -o output/design
-altium-cruncher design schematic.SchDoc</code></pre></section>
-<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection in the current directory. <code>-o</code> selects the output directory.</p></section>
-<section id="output"><h2>Output</h2><p>The command writes <code>AltiumDesign.to_json()</code> output containing netlist data, component records, hierarchy, SVG IDs, and lookup indexes. Future output naming should use the shared output path template resolver.</p></section>
-<section id="tests"><h2>Tests</h2><p>L3 verifies Hydroscope project design JSON generation, confirms substantial component and net counts, and checks that SVG ID indexes are present. Additional contract tests should pin the JSON schema.</p></section>
+<header><p class="status">CLI command design</p><h1>design</h1><p class="lede">Generates an agent-facing Altium design review bundle from schematic or project inputs.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher design project.PrjPcb -o output/design_review
+altium-cruncher design-review project.PrjPcb
+altium-cruncher dr schematic.SchDoc</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code> or <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection in the current directory. <code>-o</code> selects the output directory. <code>--no-indexes</code> omits optional lookup indexes from the design JSON. <code>design-review</code> and <code>dr</code> are aliases for the same command and output contract.</p></section>
+<section id="output"><h2>Output</h2><p>The command defaults to <code>output/design_review</code> and writes <code>design_review_manifest.json</code> with schema <code>altium_cruncher.design_review_manifest.a0</code>, <code>README.md</code>, <code>design/&lt;input&gt;_design.json</code> from <code>AltiumDesign.to_json()</code>, <code>notes/&lt;input&gt;_notes.jsonc</code>, serialized SchDoc/PcbDoc JSON under <code>json/schdoc/</code> and <code>json/pcbdoc/</code>, schematic SVGs under <code>sch/</code>, and PCB copper-layer review SVGs under <code>pcb/layers/</code> for project inputs with boards. The design JSON is the primary semantic model for components, nets, hierarchy, PnP, variants, SVG ids, and lookup indexes; its component rows are also the BOM-like part of the netlist. The generated README explains how schematic SVG metadata, PCB SVG metadata, design JSON indexes, and <code>json-dump</code> document snapshots relate, and includes power-tree review hints for following selected two-pin series parts. Each PCB review SVG follows the default <code>pcb-svg</code> layer-output contract but limits physical layers to copper layers, including inner copper layers when present; board outline, board cutouts, drills, and slots are included. Composed PCB views and assembly/HLR virtual layers are intentionally omitted from <code>dr</code>; use <code>pcb-svg</code> when those heavier views are needed. The command logs each generated SVG and JSON artifact as it is written. The notes artifact uses the default review filter and suppresses title-block/sheet-template owned text.</p></section>
+<section id="tests"><h2>Tests</h2><p>L0 verifies help and aliases. Unit workflow tests synthesize SchDoc and PcbDoc inputs, then verify the <code>dr</code> alias writes design JSON, notes JSONC, document JSON, schematic SVG, copper-only PCB review SVGs, manifest, and README artifacts while omitting composed assembly views. L3 continues to verify Hydroscope design JSON contents through the same command.</p></section>
 </main>
 </body>
 </html>

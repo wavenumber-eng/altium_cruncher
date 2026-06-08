@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>outjob command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="outjob" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>outjob</h1><p class="lede">Run Altium project OutJob files from the command line through the public altium-monkey launcher.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher outjob run
+acr outjob run project.PrjPcb
+acr outjob run project.PrjPcb release.OutJob
+acr outjob run release.OutJob --project project.PrjPcb
+acr outjob run --ad-version AD26 --timeout 600</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>run</code> is the initial OutJob action. With no target, the command requires exactly one <code>.PrjPcb</code> in the current directory and runs every existing <code>.OutJob</code> referenced by that project. A project target runs that project's referenced OutJobs unless additional OutJob names or paths are supplied. An OutJob target without <code>--project</code> requires exactly one local project. <code>--ad-version</code> or <code>--series</code> selects an Altium major version. <code>--timeout</code>, <code>--default-generated-output-path</code>, <code>--bind-pcbdoc</code>, <code>--auto-bind-pcbdoc</code>, <code>--no-auto-bind-pcbdoc</code>, <code>--stage-outjob-copy</code>, <code>--no-normalize-generated-paths</code>, <code>--script-directory</code>, <code>--keep-script-artifacts</code>, and <code>--stop-on-error</code> control the underlying runner.</p></section>
+<section id="behavior"><h2>Behavior</h2><p>The command wraps <code>altium_monkey.altium_outjob_runner.AltiumOutJobRunner</code> and requires Windows with Altium Designer installed. By default it runs the project-registered OutJob path, not a staged copy, because Altium output batches are sensitive to project document registration. The command preserves the source <code>.OutJob</code> bytes, temporarily normalizes GeneratedFiles output paths unless disabled, and auto-binds a single project <code>.PcbDoc</code> into embedded <code>DocumentPath=</code> tokens unless disabled. <code>--stage-outjob-copy</code> restores the lower-level runner behavior for advanced cases where a temporary OutJob copy is intentional.</p><p>The runner writes a temporary Pascal unit plus <code>.PrjScr</code> script project, opens the project and OutJob in Altium Designer, calls the <code>WorkSpaceManager:GenerateReport</code> process, waits for a completion marker, and removes temporary artifacts unless requested for inspection.</p></section>
+<section id="output"><h2>Output</h2><p>Normal output prints one status line per OutJob. <code>--json</code> emits schema <code>altium_cruncher.outjob.run.a0</code> with the resolved project, aggregate success, and one result record per OutJob including success, launch code, timeout state, error count, marker/log paths, normalization state, and rebound document path count. The command returns nonzero when input resolution fails or any executed OutJob result is unsuccessful.</p></section>
+<section id="tests"><h2>Tests</h2><p>Unit tests mock <code>AltiumOutJobRunner</code> and verify no-argument project auto-detection, project-referenced OutJob ordering, explicit project and OutJob path resolution, AD version and runner option forwarding, source OutJob restoration, automatic single-PcbDoc binding, non-Windows failure behavior, JSON schema output, ambiguous project errors, and failure exit codes. L0/L99 command inventory tests verify parser, manifest, README, and design-doc registration.</p></section>
+</main>
+</body>
+</html>

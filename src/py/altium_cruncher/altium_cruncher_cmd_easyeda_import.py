@@ -437,13 +437,13 @@ def _preview_pin_text_follows_orientation(policy: EasyEdaSchematicImportPolicy) 
 def register_parser(subparsers):
     easyeda_parser = subparsers.add_parser(
         "easyeda-import",
-        help="EXPERIMENTAL: generate Altium SchLib, PcbLib, and downloaded 3D assets",
+        help="generate Altium SchLib, PcbLib, and downloaded 3D assets",
         description=(
-            "EXPERIMENTAL: generate Altium schematic-library and PCB-library "
-            "artifacts from EasyEDA/LCSC component data by default. If an "
-            "EasyEDA 3D model is referenced and network fetches are enabled, "
-            "the command downloads OBJ and STEP assets. 3D model placement/"
-            "attachment into the generated Altium PcbLib is not implemented."
+            "Generate Altium schematic-library and PCB-library artifacts from "
+            "EasyEDA/LCSC component data by default. If an EasyEDA 3D model is "
+            "referenced and network fetches are enabled, the command downloads "
+            "OBJ and STEP assets. 3D model placement/attachment into the "
+            "generated Altium PcbLib is not implemented."
         ),
         epilog=(
             "Examples:\n"

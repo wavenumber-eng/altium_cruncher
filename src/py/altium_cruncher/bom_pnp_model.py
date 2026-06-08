@@ -71,6 +71,20 @@ _BOM_OUTPUT_KINDS = frozenset(
     }
 )
 _PNP_OUTPUT_KINDS = frozenset({"json", "csv", "xlsx", "jlc-cpl", "jlc-cpl-xlsx"})
+_OUTPUT_KIND_STEMS = {
+    "raw-json": "raw",
+    "legacy-json": "legacy",
+    "grouped-json": "grouped",
+    "grouped-csv": "grouped",
+    "grouped-xlsx": "grouped",
+    "jlc-csv": "jlc",
+    "jlc-xlsx": "jlc",
+    "json": "",
+    "csv": "",
+    "xlsx": "",
+    "jlc-cpl": "jlc-cpl",
+    "jlc-cpl-xlsx": "jlc-cpl",
+}
 _BOM_SOURCE_MODES = frozenset({"schematic", "pcb", "merged"})
 _PNP_POSITION_MODES = frozenset(PNP_POSITION_MODES)
 _DNP_PLACEMENTS = frozenset({"inline", "end", "separate"})
@@ -200,7 +214,7 @@ class BomPnpConfig:
     layer_order: tuple[str, ...] = ("top", "bottom")
     prefix_order: tuple[str, ...] = ()
     output_dir_template: str = "{Command}"
-    output_name_template: str = "{SourceStem}_{VariantName}_{OutputKind}"
+    output_name_template: str = "{SourceStem}_{VariantName}{OutputKindSuffix}"
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, object]) -> "BomPnpConfig":
@@ -301,7 +315,7 @@ class BomPnpConfig:
             ),
             output_name_template=_string_value(
                 output.get("name_template")
-                or "{SourceStem}_{VariantName}_{OutputKind}"
+                or "{SourceStem}_{VariantName}{OutputKindSuffix}"
             ),
         )
 
@@ -428,9 +442,13 @@ def configured_output_file(
 ) -> Path:
     """Resolve a safe configured output path for one generated artifact."""
     variant_label = variant_name or "base"
+    output_kind_stem = _output_kind_stem(output_kind)
+    output_kind_suffix = f"_{output_kind_stem}" if output_kind_stem else ""
     tokens: dict[str, TemplateValue] = {
         "Command": command,
         "OutputKind": output_kind,
+        "OutputKindStem": output_kind_stem,
+        "OutputKindSuffix": output_kind_suffix,
         "SourceName": source.name,
         "SourceStem": source.stem,
         "VariantName": variant_label,
@@ -458,6 +476,16 @@ def configured_output_file(
     output_dir = output_root.joinpath(*relative_dir.parts)
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / filename
+
+
+def _output_kind_stem(output_kind: str) -> str:
+    """Return the filename stem fragment for an output kind."""
+    if output_kind in _OUTPUT_KIND_STEMS:
+        return _OUTPUT_KIND_STEMS[output_kind]
+    for extension_suffix in ("-json", "-csv", "-xlsx"):
+        if output_kind.endswith(extension_suffix):
+            return output_kind[: -len(extension_suffix)]
+    return output_kind
 
 
 @dataclass(frozen=True, slots=True)

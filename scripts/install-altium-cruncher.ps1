@@ -94,7 +94,7 @@ Write-Host "Using uv: $uv"
 
 $packageName = "altium-cruncher"
 if ($IncludeEasyeda) {
-    $packageName = "altium-cruncher[easyeda]"
+    Write-Warning "-IncludeEasyeda is no longer required; easyeda-import is included in the base package."
 }
 
 $packageSpec = $packageName

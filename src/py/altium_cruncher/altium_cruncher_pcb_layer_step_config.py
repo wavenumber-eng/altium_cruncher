@@ -84,9 +84,13 @@ PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT = """{
 
        "features"
          tracks:   true/false, include copper tracks.
+                   May also be {enabled, color, body} when the output should
+                   split normal tracks into their own colored STEP body.
          arcs:     true/false, include copper arcs.
          fills:    true/false, include fill rectangles.
          polygons: true/false, include poured-polygon primitives.
+                   May also be {enabled, color, body} when pours should be
+                   colored separately from normal copper.
          regions:  true/false, include copper region primitives.
          vias:     true/false, include via copper.
          free_pads: true/false, include pads not owned by a component.
@@ -223,10 +227,18 @@ PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT = """{
           "include_designators": ["TP*"]
         },
         "free_pads": false,
-        "tracks": false,
+        "tracks": {
+          "enabled": false,
+          "color": "#B87333",
+          "body": "tracks"
+        },
         "arcs": false,
         "fills": false,
-        "polygons": false,
+        "polygons": {
+          "enabled": false,
+          "color": "#7A8F2A",
+          "body": "polygons"
+        },
         "regions": false,
         "vias": false
       },

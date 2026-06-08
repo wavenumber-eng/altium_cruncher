@@ -9,7 +9,6 @@ import json
 import logging
 import math
 from pathlib import Path
-import re
 from typing import Any
 
 from altium_monkey.altium_board import BoardOutlineVertex, resolve_outline_arc_segment
@@ -22,12 +21,24 @@ from altium_cruncher.altium_cruncher_pcb_layer_step_config import (
     PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT,
     resolve_pcb_layer_selector,
 )
+from altium_cruncher.altium_cruncher_pcb_layer_step_highlights import (
+    PcbLayerStepHighlight,
+    highlight_bodies_from_geometries,
+)
+from altium_cruncher.altium_cruncher_pcb_layer_step_utils import (
+    _board_name_from_pcbdoc,
+    _dedupe_closed_points,
+    _iu_to_mils,
+    _mils_to_mm,
+    _octagon_points,
+    _points_close,
+    _step_name,
+    layer_step_output_name as layer_step_output_name,
+)
 from altium_cruncher import altium_cruncher_pcb_layer_step_origin as step_origin
 
 log = logging.getLogger(__name__)
 
-MIL_TO_MM = 0.0254
-INTERNAL_UNITS_PER_MIL = 10000.0
 DEFAULT_COPPER_COLOR = "#B87333"
 DEFAULT_OUTLINE_COLOR = "#111111"
 DEFAULT_BOARD_CUTOUT_COLOR = "#FF0000"
@@ -124,6 +135,11 @@ class PcbLayerStepOptions:
     include_free_pads: bool = True
     include_designators: tuple[str, ...] = ()
     pad_color_rules: tuple[_PadColorRule, ...] = ()
+    track_color: str | None = None
+    track_body: str = "tracks"
+    polygon_color: str | None = None
+    polygon_body: str = "polygons"
+    highlights: tuple["PcbLayerStepHighlight", ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -157,6 +173,12 @@ def _coerce_color(value: object, default: str) -> str:
     text = _coerce_str(value, default).strip()
     named = _COLOR_NAMES.get(text.casefold())
     return named or text
+
+
+def _coerce_optional_color(value: object) -> str | None:
+    if value is None:
+        return None
+    return _coerce_color(value, DEFAULT_COPPER_COLOR)
 
 
 def _coerce_str_tuple(value: object) -> tuple[str, ...]:
@@ -282,6 +304,62 @@ def _config_mapping(value: object, field_name: str) -> Mapping[str, object]:
             f"pcb-layer-step config field '{field_name}' must be an object"
         )
     return value
+
+
+def _feature_value(
+    features: Mapping[str, object],
+    name: str,
+    *aliases: str,
+) -> object:
+    for key in (name, *aliases):
+        if key in features:
+            return features[key]
+    return None
+
+
+def _feature_enabled(
+    *,
+    features: Mapping[str, object],
+    merged: Mapping[str, object],
+    name: str,
+    default: bool,
+    legacy_key: str,
+    aliases: tuple[str, ...] = (),
+) -> bool:
+    value = _feature_value(features, name, *aliases)
+    if isinstance(value, Mapping):
+        return _coerce_bool(value.get("enabled"), default)
+    if value is not None:
+        return _coerce_bool(value, default)
+    return _coerce_bool(merged.get(legacy_key), default)
+
+
+def _feature_color_and_body(
+    *,
+    features: Mapping[str, object],
+    colors: Mapping[str, object],
+    merged: Mapping[str, object],
+    name: str,
+    body_default: str,
+    color_key: str,
+    body_key: str,
+    aliases: tuple[str, ...] = (),
+) -> tuple[str | None, str]:
+    color_value = merged.get(color_key)
+    body_value = merged.get(body_key)
+    for candidate in (
+        _feature_value(colors, name, *aliases),
+        _feature_value(features, name, *aliases),
+    ):
+        if isinstance(candidate, Mapping):
+            color_value = candidate.get("color", color_value)
+            body_value = candidate.get("body", body_value)
+        elif candidate is not None and not isinstance(candidate, bool):
+            color_value = candidate
+    return (
+        _coerce_optional_color(color_value),
+        _step_name(str(body_value or body_default)),
+    )
 
 
 def _merge_options(data: Mapping[str, object]) -> dict[str, object]:
@@ -414,6 +492,10 @@ class PcbLayerStepConfig:
     include_free_pads: bool = True
     include_designators: tuple[str, ...] = ()
     pad_color_rules: tuple[_PadColorRule, ...] = ()
+    track_color: str | None = None
+    track_body: str = "tracks"
+    polygon_color: str | None = None
+    polygon_body: str = "polygons"
     outputs: tuple["PcbLayerStepConfig", ...] = ()
 
     @classmethod
@@ -463,6 +545,26 @@ class PcbLayerStepConfig:
             merged=merged,
             default=default,
         )
+        track_color, track_body = _feature_color_and_body(
+            features=features,
+            colors=colors,
+            merged=merged,
+            name="tracks",
+            aliases=("traces",),
+            body_default="tracks",
+            color_key="track_color",
+            body_key="track_body",
+        )
+        polygon_color, polygon_body = _feature_color_and_body(
+            features=features,
+            colors=colors,
+            merged=merged,
+            name="polygons",
+            aliases=("poured_polygons",),
+            body_default="polygons",
+            color_key="polygon_color",
+            body_key="polygon_body",
+        )
         cut_holes = _coerce_bool(merged.get("cut_holes"), default.cut_holes)
         drill_color = _drill_color_source(drills=drills, merged=merged)
         return cls(
@@ -507,9 +609,13 @@ class PcbLayerStepConfig:
             include_board_outline=_coerce_bool(
                 merged.get("include_board_outline"), default.include_board_outline
             ),
-            include_poured_polygons=_coerce_bool(
-                features.get("polygons", merged.get("include_poured_polygons")),
-                default.include_poured_polygons,
+            include_poured_polygons=_feature_enabled(
+                features=features,
+                merged=merged,
+                name="polygons",
+                aliases=("poured_polygons",),
+                legacy_key="include_poured_polygons",
+                default=default.include_poured_polygons,
             ),
             cut_holes=cut_holes,
             drill_hole_mode=_coerce_drill_hole_mode(
@@ -579,9 +685,13 @@ class PcbLayerStepConfig:
             arc_segments=int(
                 _coerce_float(merged.get("arc_segments"), default.arc_segments)
             ),
-            include_tracks=_coerce_bool(
-                features.get("tracks", merged.get("include_tracks")),
-                default.include_tracks,
+            include_tracks=_feature_enabled(
+                features=features,
+                merged=merged,
+                name="tracks",
+                aliases=("traces",),
+                legacy_key="include_tracks",
+                default=default.include_tracks,
             ),
             include_arcs=_coerce_bool(
                 features.get("arcs", merged.get("include_arcs")),
@@ -606,6 +716,10 @@ class PcbLayerStepConfig:
             ),
             include_designators=_coerce_str_tuple(component_pad_designators),
             pad_color_rules=_coerce_pad_color_rules(colors.get("pad_rules")),
+            track_color=track_color,
+            track_body=track_body,
+            polygon_color=polygon_color,
+            polygon_body=polygon_body,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -655,6 +769,10 @@ class PcbLayerStepConfig:
                 }
                 for rule in self.pad_color_rules
             ],
+            "track_color": self.track_color,
+            "track_body": self.track_body,
+            "polygon_color": self.polygon_color,
+            "polygon_body": self.polygon_body,
         }
 
     def to_options(self) -> PcbLayerStepOptions:
@@ -693,6 +811,10 @@ class PcbLayerStepConfig:
             include_free_pads=self.include_free_pads,
             include_designators=self.include_designators,
             pad_color_rules=self.pad_color_rules,
+            track_color=self.track_color,
+            track_body=self.track_body,
+            polygon_color=self.polygon_color,
+            polygon_body=self.polygon_body,
         )
 
 
@@ -944,6 +1066,17 @@ def _build_manifest(
                 }
                 for rule in opts.pad_color_rules
             ],
+            "feature_color_rules": {
+                "tracks": {
+                    "color": opts.track_color,
+                    "body": opts.track_body,
+                },
+                "polygons": {
+                    "color": opts.polygon_color,
+                    "body": opts.polygon_body,
+                },
+            },
+            "highlight_count": len(opts.highlights),
         },
         "counts": counts,
         "bytes": output_path.stat().st_size,
@@ -967,6 +1100,7 @@ def _build_step_bodies(
     shared_cutouts = [*boolean_drill_cutouts, *board_cutouts]
     bodies = [
         *_copper_bodies_from_features(features, opts, shared_cutouts),
+        *_highlight_bodies(opts),
         *_drill_overlay_bodies(drill_features, drill_hole_mode, opts),
         *_outline_bodies(pcbdoc, opts),
     ]
@@ -1011,12 +1145,27 @@ def _body_style_for_feature(
     feature: _SourceFeature,
     opts: PcbLayerStepOptions,
 ) -> tuple[str, str]:
+    if feature.kind == "track" and opts.track_color is not None:
+        return opts.track_body, opts.track_color
+    if feature.kind == "polygon" and opts.polygon_color is not None:
+        return opts.polygon_body, opts.polygon_color
     if feature.kind in {"component_pad", "free_pad"}:
         designator = feature.component_designator or feature.pad_designator or ""
         for rule in opts.pad_color_rules:
             if _matches_any_pattern(designator, rule.designators):
                 return rule.body, rule.color
     return "copper", opts.copper_color
+
+
+def _highlight_bodies(opts: PcbLayerStepOptions) -> list[dict[str, Any]]:
+    return highlight_bodies_from_geometries(
+        highlights=opts.highlights,
+        layer=opts.layer,
+        z_mm=opts.z_mm,
+        copper_thickness_mm=opts.thickness_mm,
+        pad_shape_region=_pad_shape_region,
+        step_name=_step_name,
+    )
 
 
 def _drill_overlay_bodies(
@@ -1129,31 +1278,25 @@ def _build_counts(
     board_cutouts: list[_Region],
     bodies: list[dict[str, Any]],
 ) -> dict[str, int]:
+    drill_overlay_count, plated_overlay_count, non_plated_overlay_count = (
+        _drill_overlay_counts(drill_features, drill_hole_mode)
+    )
     return {
         "source_layer_geometries": len(features),
         "drill_cut_geometries": len(drill_features),
         "drill_boolean_cut_geometries": len(boolean_drill_cutouts),
-        "drill_overlay_geometries": len(drill_features)
-        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
-        else 0,
-        "drill_plated_overlay_geometries": sum(
-            1 for feature in drill_features if feature.plated
-        )
-        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
-        else 0,
-        "drill_non_plated_overlay_geometries": sum(
-            1 for feature in drill_features if not feature.plated
-        )
-        if drill_hole_mode == DRILL_HOLE_MODE_OVERLAY
-        else 0,
+        "drill_overlay_geometries": drill_overlay_count,
+        "drill_plated_overlay_geometries": plated_overlay_count,
+        "drill_non_plated_overlay_geometries": non_plated_overlay_count,
         "board_cutout_geometries": len(board_cutouts),
         "board_cutout_outline_geometries": sum(
             len(body.get("regions", []))
             for body in bodies
             if str(body.get("id")) == "board_cutouts"
         ),
-        "copper_bodies": sum(
-            1 for body in bodies if str(body.get("id")) not in _NON_COPPER_BODY_IDS
+        "copper_bodies": sum(1 for body in bodies if _is_step_copper_body(body)),
+        "highlight_bodies": sum(
+            1 for body in bodies if str(body.get("kind")) == "highlight"
         ),
         "outline_bodies": sum(
             1 for body in bodies if str(body.get("id")) == "board_outline"
@@ -1163,6 +1306,23 @@ def _build_counts(
         ),
         "body_count": len(bodies),
     }
+
+
+def _drill_overlay_counts(
+    drill_features: list[_DrillFeature],
+    drill_hole_mode: str,
+) -> tuple[int, int, int]:
+    if drill_hole_mode != DRILL_HOLE_MODE_OVERLAY:
+        return (0, 0, 0)
+    plated_count = sum(1 for feature in drill_features if feature.plated)
+    return (len(drill_features), plated_count, len(drill_features) - plated_count)
+
+
+def _is_step_copper_body(body: Mapping[str, Any]) -> bool:
+    return (
+        str(body.get("id")) not in _NON_COPPER_BODY_IDS
+        and str(body.get("kind")) != "highlight"
+    )
 
 
 def _effective_drill_hole_mode(opts: PcbLayerStepOptions, drill_count: int) -> str:
@@ -1189,17 +1349,17 @@ def _collect_layer_features(
     opts: PcbLayerStepOptions,
 ) -> list[_SourceFeature]:
     features: list[_SourceFeature] = []
-    if opts.include_tracks:
+    if opts.include_tracks or opts.include_poured_polygons:
         features.extend(_track_features(pcbdoc, layer, opts))
-    if opts.include_arcs:
+    if opts.include_arcs or opts.include_poured_polygons:
         features.extend(_arc_features(pcbdoc, layer, opts))
-    if opts.include_fills:
+    if opts.include_fills or opts.include_poured_polygons:
         features.extend(_fill_features(pcbdoc, layer, opts))
     if layer.is_copper():
         features.extend(_pad_features(pcbdoc, layer, opts))
         if opts.include_vias:
             features.extend(_via_features(pcbdoc, layer))
-    if opts.include_regions:
+    if opts.include_regions or opts.include_poured_polygons:
         features.extend(_region_features(pcbdoc, layer, opts))
     return features
 
@@ -1213,11 +1373,16 @@ def _track_features(
     for track in getattr(pcbdoc, "tracks", []) or []:
         if int(getattr(track, "layer", 0) or 0) != layer.value:
             continue
-        if _is_poured_polygon_primitive(track) and not opts.include_poured_polygons:
+        is_polygon = _is_poured_polygon_primitive(track)
+        if is_polygon and not opts.include_poured_polygons:
+            continue
+        if not is_polygon and not opts.include_tracks:
             continue
         region = _track_region(track)
         if region is not None:
-            features.append(_SourceFeature("track", region))
+            features.append(
+                _SourceFeature("polygon" if is_polygon else "track", region)
+            )
     return features
 
 
@@ -1230,11 +1395,14 @@ def _arc_features(
     for arc in getattr(pcbdoc, "arcs", []) or []:
         if int(getattr(arc, "layer", 0) or 0) != layer.value:
             continue
-        if _is_poured_polygon_primitive(arc) and not opts.include_poured_polygons:
+        is_polygon = _is_poured_polygon_primitive(arc)
+        if is_polygon and not opts.include_poured_polygons:
+            continue
+        if not is_polygon and not opts.include_arcs:
             continue
         region = _arc_region(arc)
         if region is not None:
-            features.append(_SourceFeature("arc", region))
+            features.append(_SourceFeature("polygon" if is_polygon else "arc", region))
     return features
 
 
@@ -1247,11 +1415,14 @@ def _fill_features(
     for fill in getattr(pcbdoc, "fills", []) or []:
         if int(getattr(fill, "layer", 0) or 0) != layer.value:
             continue
-        if _is_poured_polygon_primitive(fill) and not opts.include_poured_polygons:
+        is_polygon = _is_poured_polygon_primitive(fill)
+        if is_polygon and not opts.include_poured_polygons:
+            continue
+        if not is_polygon and not opts.include_fills:
             continue
         region = _fill_region(fill)
         if region is not None:
-            features.append(_SourceFeature("fill", region))
+            features.append(_SourceFeature("polygon" if is_polygon else "fill", region))
     return features
 
 
@@ -1317,10 +1488,17 @@ def _normal_region_feature(
         getattr(region, "is_keepout", False)
     ):
         return None
-    if _is_poured_polygon_primitive(region) and not opts.include_poured_polygons:
+    is_polygon = _is_poured_polygon_primitive(region)
+    if is_polygon and not opts.include_poured_polygons:
+        return None
+    if not is_polygon and not opts.include_regions:
         return None
     converted = _region_from_outline_vertices(region)
-    return _SourceFeature("region", converted) if converted is not None else None
+    return (
+        _SourceFeature("polygon" if is_polygon else "region", converted)
+        if converted is not None
+        else None
+    )
 
 
 def _shapebased_region_feature(
@@ -1332,11 +1510,14 @@ def _shapebased_region_feature(
         return None
     if bool(getattr(region, "is_keepout", False)):
         return None
-    if _is_poured_polygon_primitive(region) and not opts.include_poured_polygons:
+    is_polygon = _is_poured_polygon_primitive(region)
+    if is_polygon and not opts.include_poured_polygons:
+        return None
+    if not is_polygon and not opts.include_regions:
         return None
     converted = _shapebased_region(region)
     return (
-        _SourceFeature("shapebased_region", converted)
+        _SourceFeature("polygon" if is_polygon else "shapebased_region", converted)
         if converted is not None
         else None
     )
@@ -1589,6 +1770,7 @@ def _pad_region(pad: Any, layer: PcbLayer) -> _Region | None:
         shape=shape,
         rotation_degrees=rotation,
         corner_radius_percent=corner_pct,
+        corner_radius_mm=None,
     )
     return region
 
@@ -1950,13 +2132,26 @@ def _pad_shape_region(
     shape: int,
     rotation_degrees: float,
     corner_radius_percent: int,
+    corner_radius_mm: float | None = None,
 ) -> _Region:
     if shape == int(PadShape.CIRCLE):
         if math.isclose(width_mm, height_mm, rel_tol=1e-9, abs_tol=1e-9):
             return _circle_region(center, width_mm / 2.0)
-        return _ellipse_region(
-            center, width_mm / 2.0, height_mm / 2.0, rotation_degrees, 48
+        length_mm = max(width_mm, height_mm)
+        diameter_mm = min(width_mm, height_mm)
+        axis_rotation = (
+            rotation_degrees if width_mm >= height_mm else rotation_degrees + 90.0
         )
+        region = _capsule_region(
+            center,
+            length_mm,
+            diameter_mm,
+            axis_rotation,
+            arc_segments=32,
+        )
+        if region is not None:
+            return region
+        return _circle_region(center, diameter_mm / 2.0)
     if shape == int(PadShape.OCTAGONAL):
         points = _octagon_points(center[0], center[1], width_mm / 2.0, height_mm / 2.0)
         if not math.isclose(rotation_degrees, 0.0, abs_tol=1e-9):
@@ -1966,7 +2161,11 @@ def _pad_shape_region(
         return _Region(_Ring(points))
     if shape == int(PadShape.ROUNDED_RECTANGLE):
         radius = (
-            (max(0, corner_radius_percent) / 100.0) * min(width_mm, height_mm) / 2.0
+            max(0.0, corner_radius_mm)
+            if corner_radius_mm is not None
+            else (max(0, corner_radius_percent) / 100.0)
+            * min(width_mm, height_mm)
+            / 2.0
         )
         return _rounded_rectangle_region(
             center, width_mm, height_mm, radius, rotation_degrees
@@ -2370,66 +2569,3 @@ def _is_poured_polygon_primitive(primitive: Any) -> bool:
     except (TypeError, ValueError):
         return False
     return polygon_index_int not in {0, 0xFFFF}
-
-
-def _octagon_points(
-    cx: float, cy: float, half_w: float, half_h: float
-) -> list[tuple[float, float]]:
-    chamfer = min(half_w, half_h) / 2.0
-    return [
-        (cx + half_w, cy - (half_h - chamfer)),
-        (cx + half_w, cy + half_h - chamfer),
-        (cx + half_w - chamfer, cy + half_h),
-        (cx - (half_w - chamfer), cy + half_h),
-        (cx - half_w, cy + half_h - chamfer),
-        (cx - half_w, cy - (half_h - chamfer)),
-        (cx - (half_w - chamfer), cy - half_h),
-        (cx + half_w - chamfer, cy - half_h),
-    ]
-
-
-def _mils_to_mm(value: float) -> float:
-    return float(value) * MIL_TO_MM
-
-
-def _iu_to_mils(value: Any) -> float:
-    return float(value or 0.0) / INTERNAL_UNITS_PER_MIL
-
-
-def _points_close(
-    a: tuple[float, float], b: tuple[float, float], tol: float = 1e-9
-) -> bool:
-    return math.isclose(a[0], b[0], abs_tol=tol) and math.isclose(
-        a[1], b[1], abs_tol=tol
-    )
-
-
-def _dedupe_closed_points(
-    points: list[tuple[float, float]],
-) -> list[tuple[float, float]]:
-    deduped: list[tuple[float, float]] = []
-    for x, y in points:
-        point = (float(x), float(y))
-        if deduped and _points_close(deduped[-1], point):
-            continue
-        deduped.append(point)
-    if len(deduped) > 1 and _points_close(deduped[0], deduped[-1]):
-        deduped.pop()
-    return deduped
-
-
-def _board_name_from_pcbdoc(pcbdoc: Any) -> str:
-    filepath = getattr(pcbdoc, "filepath", None)
-    if filepath:
-        return Path(filepath).stem
-    return "board"
-
-
-def _step_name(value: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_]+", "_", value).strip("_") or "board"
-
-
-def layer_step_output_name(board_name: str, layer: PcbLayer) -> str:
-    """Return the conventional filename for one generated layer STEP artifact."""
-    layer_name = re.sub(r"[^A-Za-z0-9]+", "_", layer.to_json_name().lower()).strip("_")
-    return f"{_step_name(board_name)}__{layer_name}_layer.step"

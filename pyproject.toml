@@ -1,6 +1,6 @@
 [project]
 name = "altium-cruncher"
-version = "2026.5.28"
+version = "2026.6.7"
 description = "Cross-platform Altium CLI utilities built on public altium-monkey"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -9,17 +9,16 @@ authors = [
     { name = "Wavenumber LLC" },
 ]
 dependencies = [
-    "altium-monkey==2026.5.26",
+    "altium-monkey==2026.6.7",
     "colorama>=0.4.6",
+    "easyeda-monkey>=2026.5.26",
     "json-with-comments>=1.2.10",
     "openpyxl>=3.1.0",
     "wn-geometer==2026.5.25",
 ]
 
 [project.optional-dependencies]
-easyeda = [
-    "easyeda-monkey>=2026.5.26",
-]
+easyeda = []
 test = [
     "jsonschema>=4.0.0",
     "pytest>=8.0.0",
@@ -48,6 +47,8 @@ Issues = "https://github.com/wavenumber-eng/altium_cruncher/issues"
 
 [project.scripts]
 altium-cruncher = "altium_cruncher._cli:main"
+acr = "altium_cruncher._cli:main"
+ad = "altium_cruncher.altium_cruncher_cmd_launch:main_ad"
 
 [build-system]
 requires = ["hatchling"]
@@ -62,6 +63,7 @@ include = [
     "CONTRIBUTING.md",
     "docs/**",
     "docs/contracts/**",
+    "examples/**",
     "scripts/**",
     "tests/**",
     "pyproject.toml",
@@ -85,5 +87,5 @@ python_classes = "Test*"
 python_functions = "test_*"
 markers = [
     "slow: long-running tests",
-    "easyeda: tests requiring side-installed easyeda-monkey",
+    "easyeda: tests covering EasyEDA import fixtures",
 ]

@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>mate portable config design</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body data-doc-status="accepted">
+  <h1 data-key="mate-config.title"><span class="knockout">mate</span> portable config design</h1>
+
+  <h2 data-key="mate-config.status">Status</h2>
+  <p>
+    This document describes the implemented <code>mate_config.a0</code> shape
+    and the portable design direction. The command contract is
+    <a href="mate.html">mate.html</a>, and the generated Altium MCO operation
+    contract is <a href="mco.html">mco.html</a>. Current implementation covers
+    config initialization, selector resolution, name-based library lookup,
+    mate component placement, PCB labels, board outline/cutout graphics and
+    regions, STEP artifact insertion, PCB designator arrangement, and
+    source-side validation. Some future projection actions remain draft.
+  </p>
+
+  <h2 data-key="mate-config.goal">Goal</h2>
+  <p>
+    The current command name is <code>mate</code>, but the domain model
+    is broader: create an output board that mates to an input board. The first
+    feature-complete use case is cricket-node mated to node-test-array derived
+    fixture parts. The config model should remain portable enough to map later
+    to KiCad and a generic <code>pcb_cruncher</code> workflow, while the
+    current MCO backend remains Altium-specific.
+  </p>
+
+  <h2 data-key="mate-config.vocabulary">Vocabulary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Term</th>
+        <th>Meaning</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>source</code>, <code>input</code>, <code>DUT</code></td>
+        <td>The existing board being analyzed. For the first workflow this is cricket-node.</td>
+      </tr>
+      <tr>
+        <td><code>destination</code>, <code>output</code>, <code>mate</code></td>
+        <td>The generated board that physically mates to the source board.</td>
+      </tr>
+      <tr>
+        <td>human config</td>
+        <td>The human-authored or GUI-authored source of truth. It describes intent and should avoid derived facts.</td>
+      </tr>
+      <tr>
+        <td>resolved plan</td>
+        <td>The planner's internal view after reading source board facts: coordinates, nets, sides, source geometry, selected objects, and projection actions.</td>
+      </tr>
+      <tr>
+        <td>MCO</td>
+        <td>The derived, inspectable, Altium-specific operation script compiled from the human config and resolved plan.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 data-key="mate-config.principles">Config Principles</h2>
+  <ul>
+    <li>The config is source code; MCO is compiled output.</li>
+    <li>The config should name what to select and what to project, not manually repeat coordinates, net names, or source side in normal use.</li>
+    <li>The planner resolves physical and electrical source facts from the source project.</li>
+    <li>The config should support both hand editing and future GUI authoring.</li>
+    <li>Portable concepts belong in config; backend-specific primitive details belong in generated MCO or backend settings.</li>
+    <li>The first implementation may keep an Altium command and Altium library files, but the conceptual config should not depend on Altium-only object names where a portable term is available.</li>
+  </ul>
+
+  <h2 data-key="mate-config.pipeline">Theory Of Operations</h2>
+  <ol>
+    <li><code>mate</code> writes an editable <code>mate.a0.jsonc</code> when no config exists.</li>
+    <li>The user or future GUI edits the config to choose source objects, mate parts, graphics, labels, output paths, and artifacts.</li>
+    <li><code>plan</code> resolves selectors against the source project, resolves symbol and footprint names from <code>libraries.roots</code>, validates source-side and geometry rules, and compiles MCO.</li>
+    <li><code>mate</code> with an existing config executes the generated MCO to create the output board and supporting artifacts.</li>
+    <li>The user opens the output project in Altium for visual inspection, then iterates on the config.</li>
+  </ol>
+
+  <h2 data-key="mate-config.source-objects">Source Object Classes</h2>
+  <p>
+    The cricket-node use case needs these source object classes to be explicit
+    in the planner, even when the first config uses presets or designator
+    patterns.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Class</th>
+        <th>Resolved Facts</th>
+        <th>First Use</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>component</td>
+        <td>Designator, footprint, schematic linkage when available, side, center, pads, net names, pin/pad mapping.</td>
+        <td>TP-style test pads, M-style mounts, future J/connector/header mating.</td>
+      </tr>
+      <tr>
+        <td>free pad or drill</td>
+        <td>Location, size, hole size, plated state, layer/span, net name when resolvable.</td>
+        <td>Cricket-node 2 mm NPTH alignment pins and other free pads.</td>
+      </tr>
+      <tr>
+        <td>board outline</td>
+        <td>Closed outline geometry, origin relationship, arcs/lines when available.</td>
+        <td>Mechanical reference graphics or output outline setup.</td>
+      </tr>
+      <tr>
+        <td>internal cutout</td>
+        <td>Regions inside the outline, shape geometry, layer/object metadata.</td>
+        <td>Mechanical reference graphics and optional actual output cutouts.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 data-key="mate-config.projections">Projection Actions</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Meaning</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>mate_component</code></td>
+        <td>Place a different symbol/footprint that mates to the selected source object, such as a pogo pin for a source test pad. The public A0 form names <code>symbol_name</code> and <code>footprint_name</code>; the planner resolves concrete libraries from <code>libraries.roots</code>.</td>
+      </tr>
+      <tr>
+        <td><code>copy_source_footprint</code></td>
+        <td>Project the source footprint 1:1 into the output. This supports .100 inch headers, shield-style boards, and early workflows without a curated mate library.</td>
+      </tr>
+      <tr>
+        <td><code>same_pad</code></td>
+        <td>Project equivalent pads or drills without a full component abstraction.</td>
+      </tr>
+      <tr>
+        <td><code>reference_graphics</code></td>
+        <td>Add mechanical or silkscreen reference geometry, such as source-pad outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports <code>source_pad_outline</code> from inspected source pad geometry, with one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>. The outline follows the effective source-layer pad body for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads. <code>clearance_mils</code> is the visible gap from the source pad edge to the inside edge of the outline stroke, so zero clearance makes the outline touch the pad edge. Filled source-pad graphics are a planned reference mode but are not part of this subset.</td>
+      </tr>
+      <tr>
+        <td><code>label</code></td>
+        <td>Add text labels near mate features or in arranged groups. Labels may be tied to source nets, source designators, or custom text.</td>
+      </tr>
+      <tr>
+        <td><code>breakout</code></td>
+        <td>Add additional connectors wired to selected source nets, such as future Saleae-style 2x4 headers with generated net labels and text labels.</td>
+      </tr>
+      <tr>
+        <td><code>outline_or_cutout</code></td>
+        <td>Project source board outline or internal cutouts as graphics, actual output cutouts, or both.</td>
+      </tr>
+      <tr>
+        <td><code>alignment_artifact</code></td>
+        <td>Produce generated helper outputs such as a bottom-layer STEP artifact from <code>pcb-layer-step</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 data-key="mate-config.side-origin-rules">Side And Origin Rules</h2>
+  <ul>
+    <li>The planner should infer selected source object side from the source board.</li>
+    <li>The user should not normally specify <code>source_mount_side</code>; it is a resolved fact or optional validation expectation.</li>
+    <li>Selections that mix top-side and bottom-side SMT-like objects should fail with a clear diagnostic.</li>
+    <li>Mechanical mount features may be listed in <code>validation.side_agnostic_kinds</code> when they should not participate in signal-side inference.</li>
+    <li>Through-hole or 1:1 copied connector workflows may be explicitly side-agnostic.</li>
+    <li>For cricket-node bottom-mount style workflows, source and output board origins should remain aligned so STEP artifacts and projected geometry line up.</li>
+    <li>When <code>output.origin</code> is <code>preserve_source</code>, the planner resolves source outline bounds and source board origin, then passes both to the generated output project skeleton rather than requiring the config to repeat derived coordinates.</li>
+    <li>The current Altium project skeleton supports rectangular output board outlines. <code>output.board_outline.mode</code> may use <code>source_bounds</code> for the DUT bounds or <code>source_bounds_with_margin</code> for a larger rectangle. <code>margin_mils</code> may be one number or an object with <code>left</code>, <code>bottom</code>, <code>right</code>, and <code>top</code>. Exact <code>match_shape</code> output is deferred until the skeleton supports arbitrary outline geometry.</li>
+  </ul>
+
+  <h2 data-key="mate-config.cricket-node-target">Cricket-Node Feature-Complete Target</h2>
+  <p>
+    The first complete workflow should support cricket-node without requiring
+    users to type resolved coordinates or net names. The config should select
+    source objects, and the planner should resolve the facts needed to compile
+    MCO.
+  </p>
+  <ul>
+    <li>Select cricket-node test points by explicit designator, range, or pattern such as <code>TP*</code>.</li>
+    <li>Select mount features and allow node-test-array <code>M5-M8</code> normalization to output <code>M1-M4</code> where needed.</li>
+    <li>Select free NPTH alignment holes as source free-pad/drill objects; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
+    <li>Project mate components from public SchLib/PcbLib files resolved by name from <code>mating_parts/</code>.</li>
+    <li>Place generated schematic symbols on a roomy sheet, currently ANSI <code>D</code> by default, grouped by symbol type. Route each netted symbol with a wire that leaves the symbol in the resolved mate symbol signal pin orientation. The schematic net label is placed on that wire, rotated with the wire direction, and the wire is long enough to sit under the estimated full label text.</li>
+    <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>MATE_FEATURES</code> so they can be manually moved after generation.</li>
+    <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
+    <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad's effective layer shape for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads.</li>
+    <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
+    <li>Detect and project internal board cutouts as Mechanical 1 graphics, actual output board-cutout regions, or both.</li>
+    <li>Generate a bottom-layer <code>pcb-layer-step</code> artifact for visual/mechanical alignment and optionally insert the generated STEP into the output PcbDoc at a configurable Z height.</li>
+    <li>Group generated PCB-side features into <code>MATE_FEATURES</code>, excluding movable PCB net-label text.</li>
+  </ul>
+
+  <h2 data-key="mate-config.proposed-shape">Proposed Config Shape</h2>
+  <p>
+    This is the implemented public A0 shape used by the Cricket Node example.
+    Some optional sections and future projection actions may still evolve after
+    review.
+  </p>
+  <pre>{
+  "schema": "wn.pcb_cruncher.mate_config.a0",
+  "source": {
+    "board": "path/to/cricket-node.PrjPcb",
+    "pcbdoc": null
+  },
+  "output": {
+    "backend": "altium",
+    "output_dir": "output/cricket-node-mate",
+    "project_name": "cricket_node_mate",
+    "schematic_sheet_style": "D",
+    "origin": "preserve_source",
+    "board_outline": {
+      "mode": "source_bounds_with_margin",
+      "margin_mils": {
+        "left": 500,
+        "bottom": 500,
+        "right": 3000,
+        "top": 500
+      }
+    }
+  },
+  "libraries": {
+    "roots": ["mating_parts"],
+    "recursive": true
+  },
+  "validation": {
+    "source_side": "infer_single_side",
+    "allow_side_agnostic_through_hole": true
+  },
+  "projections": [
+    {
+      "id": "test_points",
+      "source": {
+        "object": "component",
+        "designators": "TP*"
+      },
+      "actions": [
+        {
+          "kind": "mate_component",
+          "symbol_name": "YZ209315103P-01",
+          "footprint_name": "YZ209315103P-01",
+          "designator_prefix": "TP",
+          "signal_pad_designator": "1"
+        },
+        {
+          "kind": "reference_graphics",
+          "shape": "source_pad_outline",
+          "layer": "MECHANICAL_1",
+          "style": {
+            "mode": "outline",
+            "outline_count": 1,
+            "clearance_mils": 10,
+            "stroke_width_mils": 10
+          }
+        },
+        {
+          "kind": "label",
+          "text": "source_net",
+          "placement": {
+            "side": "board_right",
+            "offset_mils": [250, 250],
+            "box_size_mils": [450, 70],
+            "row_spacing_mils": 90,
+            "column_spacing_mils": 80,
+            "auto_width_padding_mils": 80
+          }
+        }
+      ]
+    },
+    {
+      "id": "mounts",
+      "source": {
+        "object": "component",
+        "designators": "M1-4"
+      },
+      "actions": [
+        {
+          "kind": "mate_component",
+          "symbol_name": "9774080360R",
+          "footprint_name": "9774080360R-YIYUAN",
+          "designator_prefix": "M"
+        }
+      ]
+    },
+    {
+      "id": "alignment_pins",
+      "source": {
+        "object": "free_pad",
+        "hole_size_mils": {"min": 75, "max": 85},
+        "plated": false
+      },
+      "actions": [
+        {
+          "kind": "mate_component",
+          "symbol_name": "H2184-05",
+          "footprint_name": "H2184-05",
+          "designator_prefix": "P",
+          "signal_pad_designator": "1"
+        },
+        {"kind": "label", "text": "source_net"}
+      ]
+    }
+  ],
+  "pcb_designators": {
+    "enabled": true,
+    "placement": "above_component",
+    "offset_mils": [0, 10],
+    "width_factor": 0.6,
+    "style": {
+      "height_mils": 40,
+      "layer": "TOP_OVERLAY",
+      "font_kind": "truetype",
+      "font_name": "Arial",
+      "bold": true,
+      "stroke_width_mils": 8
+    }
+  },
+  "board_projection": {
+    "outline": {
+      "graphics": {
+        "enabled": true,
+        "layer": "TOP_OVERLAY",
+        "stroke_width_mils": 8
+      }
+    },
+    "cutouts": {
+      "graphics": {
+        "enabled": true,
+        "layer": "MECHANICAL_1",
+        "stroke_width_mils": 8
+      },
+      "actual_cutouts": true
+    }
+  },
+  "artifacts": {
+    "pcb_layer_step": {
+      "enabled": true,
+      "source_layer": "bottom",
+      "thickness_mm": 0.035,
+      "z_mm": -0.0175,
+      "features": {
+        "tracks": {"enabled": false, "color": "#B87333"},
+        "polygons": {"enabled": false, "color": "#7A8F2A"},
+        "arcs": false,
+        "fills": false,
+        "regions": false,
+        "vias": false,
+        "component_pads": {
+          "mode": "matching_designators",
+          "include_designators": ["TP*"]
+        },
+        "free_pads": false
+      },
+      "drills": {
+        "mode": "overlay",
+        "minimum_diameter_mm": 0.85,
+        "shape": "ring",
+        "ring_width_mm": 0.12,
+        "plated_ring_shape": "pad"
+      },
+      "fuse_copper": false,
+      "insert_in_output": {
+        "enabled": true,
+        "z_mm": 8.5,
+        "layer": "MECHANICAL_13",
+        "side": "TOP"
+      },
+      "highlights": [
+        {"projection": "test_points", "color": "#FF0000"}
+      ]
+    }
+  }
+}</pre>
+
+  <h2 data-key="mate-config.seed-behavior">Init And GUI Behavior</h2>
+  <p>
+    Before a GUI exists, bare <code>mate</code> produces a commented config
+    with useful selector presets and optional sections. Later, a GUI can render
+    the source board SVG, show grouped source objects such as test points,
+    debug pads, connectors, and mounts, and write the same config format after
+    user selection.
+  </p>
+  <p>
+    Source selectors are local to each projection group. Component designators
+    may be a wildcard, a compact range such as <code>TP1-5</code>, a
+    comma-separated expression such as <code>TP1-5, U12</code>, or an explicit
+    JSON array for machine-generated configs.
+  </p>
+  <p>
+    Projection actions own their output options. For example, two projection
+    groups may both use <code>label</code> actions but choose different
+    placement side, offsets, box sizes, and text style. Mate configs therefore
+    do not use the legacy global <code>pcb_labels</code> block as the primary
+    label contract. A label <code>side</code> of <code>left</code> or
+    <code>right</code> places the label relative to the projected target, while
+    <code>board_left</code> or <code>board_right</code> places labels in
+    vertical columns inside the output board outline. Board-edge labels are
+    grouped by projection id, falling back to source kind when no projection id
+    is present. Each board-edge column gets a silkscreen text header using that
+    group name. <code>row_spacing_mils</code> sets spacing within a column,
+    <code>column_spacing_mils</code> sets spacing between columns, and
+    <code>auto_width_padding_mils</code> is added to the longest rendered label
+    estimate so every board-edge label box uses the same width. Board-edge
+    labels and their headers are emitted after the generated feature union and
+    are therefore not part of <code>MATE_FEATURES</code>.
+  </p>
+  <p>
+    Generated schematic placement is intentionally simple but collision-aware:
+    mate symbols are placed on a coarse grid grouped by symbol type and sorted
+    in natural designator order within each group, the default sheet style is
+    <code>D</code>, schematic designators are centered just above their symbols,
+    wires extend away from each symbol in the selected signal pin orientation,
+    and schematic net labels sit along those wires with matching orientation.
+    Wire length is estimated from the label text so it remains visible beneath
+    the label, and the grid leaves room before the next symbol column. This
+    keeps the first generated schematic reviewable while leaving
+    connector-specific and breakout-specific schematic organization for later
+    slices.
+  </p>
+  <p>
+    <code>pcb_designators</code> is a post-placement PCB text normalization
+    block. The current implemented placement is <code>above_component</code>;
+    it updates the generated component-owned designator text instead of adding
+    duplicate loose text. The cricket-node default is Arial TrueType, 40 mil,
+    bold, on top overlay.
+  </p>
+  <p>
+    Artifact highlights reference projection ids instead of duplicating source
+    selectors. <code>pcb-layer-step</code> owns layer, local STEP Z, thickness,
+    feature visibility, and feature colors. Output-board insertion owns the
+    model-placement <code>z_mm</code>; for the Cricket Node example that value
+    is <code>8.5</code> mm while the exported STEP uses local
+    <code>z_mm: -0.0175</code>. Since <code>z_mm</code> is the bottom extrusion
+    plane and copper thickness is <code>0.035 mm</code>, local <code>Z=0</code>
+    is the copper mid-plane. The first example renders selected TP pads red and
+    makes track and polygon visibility/color choices explicit.
+  </p>
+
+  <h2 data-key="mate-config.deferred">Deferred Topics</h2>
+  <ul>
+    <li>ALX CAD part-library-backed metadata for durable mate part associations.</li>
+    <li>Full Saleae-style breakout connector automation.</li>
+    <li>Multi-pin connector mate pin mapping and mirrored pin-order policies.</li>
+    <li>Exact source-shape output board outlines once the project skeleton can set arbitrary board outline geometry.</li>
+    <li>Filled source-pad reference graphics using the same shape model as outline graphics.</li>
+    <li>Generic update-in-place behavior for existing mate boards.</li>
+  </ul>
+</body>
+</html>

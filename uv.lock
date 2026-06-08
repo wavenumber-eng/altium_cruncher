@@ -4,20 +4,18 @@ requires-python = ">=3.11, <3.13"
 
 [[package]]
 name = "altium-cruncher"
-version = "2026.5.28"
+version = "2026.6.7"
 source = { editable = "." }
 dependencies = [
     { name = "altium-monkey" },
     { name = "colorama" },
+    { name = "easyeda-monkey" },
     { name = "json-with-comments" },
     { name = "openpyxl" },
     { name = "wn-geometer" },
 ]
 
 [package.optional-dependencies]
-easyeda = [
-    { name = "easyeda-monkey" },
-]
 test = [
     { name = "build" },
     { name = "jsonschema" },
@@ -41,10 +39,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "altium-monkey", specifier = "==2026.5.26" },
+    { name = "altium-monkey", specifier = "==2026.6.7" },
     { name = "build", marker = "extra == 'test'", specifier = ">=1.2.0" },
     { name = "colorama", specifier = ">=0.4.6" },
-    { name = "easyeda-monkey", marker = "extra == 'easyeda'", specifier = ">=2026.5.26" },
+    { name = "easyeda-monkey", specifier = ">=2026.5.26" },
     { name = "json-with-comments", specifier = ">=1.2.10" },
     { name = "jsonschema", marker = "extra == 'test'", specifier = ">=4.0.0" },
     { name = "openpyxl", specifier = ">=3.1.0" },
@@ -70,7 +68,7 @@ dev = [
 
 [[package]]
 name = "altium-monkey"
-version = "2026.5.26"
+version = "2026.6.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "freetype-py" },
@@ -80,9 +78,9 @@ dependencies = [
     { name = "uharfbuzz" },
     { name = "wn-geometer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e6/1d/0ea11458018b6562bf4010c1734ca9e1f046281756bdc8e5ede58e871f95/altium_monkey-2026.5.26.tar.gz", hash = "sha256:509a04169547a7fca06a3cef0d83e153f3a5a501e323786079737dbc352d5f55", size = 1033979, upload-time = "2026-05-27T00:57:41.792Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/48/7b/87305aa9cf4fdce2a49953977a4f112466fe8d4072db292a94ddad01ed13/altium_monkey-2026.6.7.tar.gz", hash = "sha256:9d2c69edda2e46b70617f25950ca56589b266bdd750c8310b2f32c3284ad390d", size = 1122069, upload-time = "2026-06-07T14:00:41.09Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/53/cc/ee39d8fd5cb77508d5dd148726c598c84813ee13b009e8cc74dd118260f3/altium_monkey-2026.5.26-py3-none-any.whl", hash = "sha256:3ba2b43b804fc1d24bf6a42500732b1d813f2ec0f3caa9d66b8765be7575893a", size = 1124212, upload-time = "2026-05-27T00:57:39.635Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/d5/92158b31c65fd8d8f5a17f05ea7578ff2c9aa30d8ee3923e0d5d15243070/altium_monkey-2026.6.7-py3-none-any.whl", hash = "sha256:3b7ec9b73960962fba943587a57c1e4b9d818ac53378c8e8bded6e83f50e071d", size = 1211432, upload-time = "2026-06-07T14:00:39.195Z" },
 ]
 
 [[package]]

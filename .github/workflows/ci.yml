@@ -13,14 +13,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macOS CI is deferred for the first public release until hosted-runner
-        # wheel compatibility is explicitly validated.
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.12"]
 
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v8.2.0
       - name: Set up Python
         run: uv python install ${{ matrix.python-version }}
       - name: Validate Windows installer script

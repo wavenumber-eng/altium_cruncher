@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>pcb-layer-step command</title><link rel="stylesheet" href="../styles.css"></head>
-<body data-doc-kind="cli-design" data-command="pcb-layer-step" data-config-contract="docs/contracts/pcb_layer_step_config.v2.schema.json">
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="pcb-layer-step" data-config-contract="docs/contracts/pcb_layer_step_config.v2.schema.json">
 <main>
 <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
 <header><p class="status">CLI command design</p><h1>pcb-layer-step</h1><p class="lede">Generates a compact fixture-alignment STEP model from selected Altium PCB layer geometry.</p></header>
@@ -42,10 +42,10 @@ altium-cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --config pcb-la
       "name": "fixture_alignment",
       "output_step": "{board}__fixture_alignment.step",
       "features": {
-        "tracks": false,
+        "tracks": {"enabled": false, "color": "#B87333", "body": "tracks"},
         "arcs": false,
         "fills": false,
-        "polygons": false,
+        "polygons": {"enabled": false, "color": "#7A8F2A", "body": "polygons"},
         "regions": false,
         "vias": false,
         "component_pads": {
@@ -75,7 +75,7 @@ altium-cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --config pcb-la
   ]
 }</code></pre><p>The v2 shape should preserve a migration path from the existing single-output config. The loader can accept the current flat object as one implicit output, but generated templates should use <code>outputs[]</code> so repeated fixture artifacts do not require repeated command invocations.</p></section>
 
-<section id="feature-model"><h2>Feature Model</h2><p>The command should collect typed source features before creating Geometer regions. A typed feature keeps source kind, layer, optional component designator, optional pad designator, optional hole diameter, optional plating state, optional full pad region, and generated planar region. This is the key design change needed for filtering and colorization.</p><p>Supported feature categories should include tracks, arcs, fills, poured polygons, non-polygon regions, shape-based regions, component pads, free pads, vias, board outline, and board cutouts. Board-profile cutouts are separate from the outer board outline for visual coloring, but still act as cutouts against copper bodies. Defaults should favor fixture alignment: bottom layer, board outline included, component pads included by designator rules, vias excluded, pours excluded, and traces/arcs off unless requested.</p></section>
+<section id="feature-model"><h2>Feature Model</h2><p>The command should collect typed source features before creating Geometer regions. A typed feature keeps source kind, layer, optional component designator, optional pad designator, optional hole diameter, optional plating state, optional full pad region, and generated planar region. This is the key design change needed for filtering and colorization.</p><p>Supported feature categories should include tracks, arcs, fills, poured polygons, non-polygon regions, shape-based regions, component pads, free pads, vias, board outline, and board cutouts. Board-profile cutouts are separate from the outer board outline for visual coloring, but still act as cutouts against copper bodies. Defaults should favor fixture alignment: bottom layer, board outline included, component pads included by designator rules, vias excluded, pours excluded, and traces/arcs off unless requested.</p><p><code>features.tracks</code> and <code>features.polygons</code> may be booleans or objects with <code>enabled</code>, <code>color</code>, and <code>body</code>. This lets mate configs make trace and poured-polygon visibility and colors explicit while keeping legacy boolean configs valid.</p></section>
 
 <section id="designator-selection"><h2>Designator Selection</h2><p>Designator filtering should support both broad families and explicit parts. The expected matching form is a list of case-insensitive shell-style patterns and exact names, such as <code>TP*</code>, <code>J*</code>, <code>U1</code>, and <code>U2</code>. Component-owned pads use the owning PCB component designator. Free pads may use their pad designator but should be opt-in because they are not tied to a component placement.</p><p>Color rules should be evaluated after inclusion filtering. Rules can match the same designator patterns and assign a STEP body color. Because Geometer colors are body-level, matching pads should be grouped into separate bodies such as <code>test_points</code> rather than relying on per-region color. For Cricket Node, the design validation target is all <code>TP*</code> component pads colored red.</p></section>
 

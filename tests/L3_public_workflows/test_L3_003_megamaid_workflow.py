@@ -8,6 +8,7 @@ import sys
 from types import SimpleNamespace
 
 import pytest
+import jsonc  # type: ignore[import-untyped]
 
 from altium_cruncher import altium_cruncher_cmd_megamaid as megamaid
 import altium_monkey.altium_schdoc as schdoc_module
@@ -110,6 +111,79 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
     assert "Logging error" not in combined_output
 
     manifest = json.loads((output_dir / "megamaid_manifest.json").read_text())
+    document_jsons = manifest["document_jsons"]
+    document_kinds = {entry["kind"] for entry in document_jsons}
+    assert {"SchDoc", "PcbDoc"}.issubset(document_kinds)
+    for entry in document_jsons:
+        assert str(entry["json"]).startswith(f"json/{str(entry['kind']).lower()}/")
+        payload = _read_manifest_json(output_dir, str(entry["json"]))
+        assert payload["schema"] == "altium_cruncher.json_dump.a0"
+        assert payload["kind"] == entry["kind"]
+
+    notes_payload = _read_manifest_jsonc(
+        output_dir,
+        str(manifest["notes"]["notes_json"]),
+    )
+    assert notes_payload["schema"] == "altium_cruncher.notes.a0"
+    assert str(manifest["notes"]["notes_json"]).endswith(".jsonc")
+    assert "counts" not in notes_payload
+
+    library_jsons = manifest["library_jsons"]
+    assert library_jsons["schlib"]
+    assert library_jsons["pcblib"]
+    assert {entry["scope"] for entry in library_jsons["schlib"]} == {
+        "combined",
+        "split",
+    }
+    assert {entry["scope"] for entry in library_jsons["pcblib"]} == {
+        "combined",
+        "split",
+    }
+    for entry in [*library_jsons["schlib"], *library_jsons["pcblib"]]:
+        assert str(entry["json"]).startswith(f"json/{str(entry['kind']).lower()}/")
+        payload = _read_manifest_json(output_dir, str(entry["json"]))
+        assert payload["schema"] == "altium_cruncher.json_dump.a0"
+        assert payload["kind"] == entry["kind"]
+
+    schlib_entries = manifest["schlib"]
+    assert len(schlib_entries) == 1
+    assert schlib_entries[0]["combined_schlib"] == "schlib/combined/Hydroscope.SchLib"
+    assert schlib_entries[0]["split_dir"] == "schlib/split"
+    assert schlib_entries[0]["split_file_count"] == len(
+        schlib_entries[0]["split_files"]
+    )
+    assert all(
+        str(path).startswith("schlib/split/") for path in schlib_entries[0]["split_files"]
+    )
+    assert not any((output_dir / "schlib" / "split").glob("*/*.SchLib"))
+
+    bom_manifest = manifest["bom"]
+    assert bom_manifest["output_kinds"] == ["raw-json", "grouped-xlsx"]
+    bom_artifacts = [
+        artifact
+        for output in bom_manifest["outputs"]
+        for artifact in output["artifacts"]
+    ]
+    assert any(str(path).endswith("_raw.json") for path in bom_artifacts)
+    assert any(str(path).endswith("_grouped.xlsx") for path in bom_artifacts)
+    assert not any("grouped-json" in str(path) for path in bom_artifacts)
+    flat_bom_json = next(path for path in bom_artifacts if str(path).endswith("_raw.json"))
+    flat_bom_payload = json.loads((output_dir / flat_bom_json).read_text())
+    assert isinstance(flat_bom_payload, list)
+
+    pnp_manifest = manifest["pnp"]
+    assert pnp_manifest["output_kinds"] == ["json", "csv"]
+    pnp_artifacts = [
+        artifact
+        for output in pnp_manifest["outputs"]
+        for artifact in output["artifacts"]
+    ]
+    assert any(str(path).endswith("_base.json") for path in pnp_artifacts)
+    assert any(str(path).endswith("_base.csv") for path in pnp_artifacts)
+    pnp_json = next(path for path in pnp_artifacts if str(path).endswith("_base.json"))
+    pnp_payload = json.loads((output_dir / pnp_json).read_text())
+    assert pnp_payload["schema"] == "wn.altium_cruncher.pnp.v1"
+
     assert manifest["embedded_assets"]["model_file_count"] == 29
     assert manifest["sch_images"]["image_file_count"] == 7
 
@@ -119,6 +193,23 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
         data = png_path.read_bytes()
         assert data.startswith(b"\x89PNG\r\n\x1a\n"), png_path.name
         assert not data.startswith(b"BM"), png_path.name
+
+
+def _read_manifest_json(output_dir: Path, relative_path: str) -> dict[str, object]:
+    path = output_dir / relative_path
+    assert path.exists(), relative_path
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    return payload
+
+
+def _read_manifest_jsonc(output_dir: Path, relative_path: str) -> dict[str, object]:
+    path = output_dir / relative_path
+    assert path.exists(), relative_path
+    assert path.suffix == ".jsonc"
+    payload = jsonc.loads(path.read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    return payload
 
 
 def _run_megamaid_command(command: list[str], output_dir: Path) -> str:

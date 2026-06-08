@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026.6.7
+
+- Consume pinned `altium-monkey==2026.6.7`.
+- Add `acr` and `ad` executable aliases for local workflows.
+- Promote `easyeda-import` to a first-class public command dependency.
+- Add `installs`, `launch`, and `profiles` commands for Altium install,
+  launcher, and ProgramData profile diagnostics.
+- Expand `design` into an agent-facing design review bundle, with
+  `design-review` and `dr` aliases, serialized SchDoc/PcbDoc JSON, structured
+  notes JSONC, schematic SVGs, copper-layer PCB review SVGs, manifest, and
+  README output.
+- Align design-review PCB SVG output with the default `pcb-svg` layer-output
+  folder shape under `pcb/layers/`, limited to copper layers including inner
+  copper layers, and log generated review artifacts progressively.
+- Add a dedicated `notes` command for Altium Note objects, text frames, and
+  free schematic text.
+- Write `notes` and design-review note artifacts as sparse JSONC with relative
+  paths and Altium unique ids; sheet-template/title-block owned text is
+  suppressed by default, with an opt-in raw text flag for diagnostics.
+- Extend `megamaid` output with serialized document JSON, combined extracted
+  library JSON, and notes JSONC artifacts under the shared `json/<kind>/`
+  folder convention.
+- Add `outjob run` for executing project-referenced or explicit `.OutJob`
+  files through the public `altium-monkey` runner.
+- Change standalone `json-dump` batch output to write `schdoc/`, `pcbdoc/`,
+  and related domain folders directly under `output/json-dump`, with
+  `--layout flat` for single-folder dumps.
+- Clean configured BOM/PnP/JLC output filenames so format-only outputs rely on
+  the file extension while semantic stems such as `raw`, `grouped`, and
+  `jlc-cpl` remain visible.
+- Add the initial beta `mate` release for Cricket Node-style fixture and debug
+  mating-board testing. The public example generates primitive MCO operations,
+  resolves mate parts from local SchLib/PcbLib search roots, projects DUT
+  reference graphics and cutouts, creates linked schematic/PCB components,
+  emits a user union, generates loose manual net labels, and can embed a
+  bottom-layer fixture-alignment STEP artifact.
+- Add `mco list` as a maintained operation catalog, with message-first MCO run
+  output and explicit required/optional argument groups in human catalog output.
+- Add the `examples/mate/bug-brain` fixture as source material for future
+  header-style mate workflows.
+
 ## 2026.5.28
 
 - Bootstrap standalone `altium-cruncher` public package from the prior private
@@ -18,8 +59,11 @@
   EasyEDA workflows through `easyeda-monkey`.
 - Add ADR-0005 and L99 checks for CLI design docs plus public dataclass and
   major-interface design/test ownership.
-- Consume pinned `altium-monkey==2026.5.26` and expose explicit PnP position mode
+- Consume pinned `altium-monkey==2026.6.7` and expose explicit PnP position mode
   selection for BOM/PnP/JLC workflows.
+- Add experimental `json-dump`, `mco`, and `mate` commands for
+  reference inspection, generated CAD operation execution, and Cricket Node
+  mating-board workflow development.
 - Align BOM/PnP spreadsheet output with `bom_cruncher` by using `openpyxl`;
   XLSX cells are written as text so package values such as `0603` retain
   leading zeroes.

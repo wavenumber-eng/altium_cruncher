@@ -3,28 +3,48 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import hashlib
 import json
 import logging
 from pathlib import Path, PureWindowsPath
 import re
 import shutil
+from typing import Any
 import zlib
 
 from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
 )
+from altium_cruncher.altium_cruncher_cmd_bom import (
+    _bom_from_configured_source,
+    _configured_bom_artifacts,
+)
+from altium_cruncher.altium_cruncher_cmd_pnp import _configured_pnp_artifacts
+from altium_cruncher.altium_cruncher_json_dump import (
+    build_json_dump_payload,
+    document_json_output_path,
+)
+from altium_cruncher.bom_pnp_cli_common import (
+    load_optional_bom_pnp_config,
+    project_parameters_from_design,
+    warn_for_unknown_variants,
+)
+from altium_cruncher.bom_pnp_model import BomPnpConfig, select_variant_names
+from altium_cruncher.altium_cruncher_notes import build_notes_payload
+from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
 
 log = logging.getLogger(__name__)
+
+MEGAMAID_BOM_OUTPUT_KINDS = ("raw-json", "grouped-xlsx")
+MEGAMAID_PNP_OUTPUT_KINDS = ("json", "csv")
 
 
 def _relative_to_root(path: Path, root: Path) -> str:
     try:
-        return str(path.resolve().relative_to(root.resolve()))
+        return path.resolve().relative_to(root.resolve()).as_posix()
     except Exception:
-        return str(path)
+        return str(path).replace("\\", "/")
 
 
 def _prepare_megamaid_output_root(output_dir: Path) -> None:
@@ -33,10 +53,14 @@ def _prepare_megamaid_output_root(output_dir: Path) -> None:
         output_dir / "schlib",
         output_dir / "pcblib",
         output_dir / "bom",
+        output_dir / "pnp",
         output_dir / "netlist",
         output_dir / "embedded_models",
         output_dir / "embedded_fonts",
         output_dir / "sch_images",
+        output_dir / "documents",
+        output_dir / "json",
+        output_dir / "notes",
     ]
     owned_files = [
         output_dir / "megamaid_manifest.json",
@@ -48,42 +72,6 @@ def _prepare_megamaid_output_root(output_dir: Path) -> None:
         if file_path.exists():
             file_path.unlink()
     output_dir.mkdir(parents=True, exist_ok=True)
-
-
-def _write_bom_csv(bom: list[dict], output_file: Path) -> None:
-    """Write BOM rows to CSV using the standard cruncher column contract."""
-    all_params = set()
-    for comp in bom:
-        all_params.update(comp.get("parameters", {}).keys())
-    param_columns = sorted(all_params)
-    fixed_columns = [
-        "Designator",
-        "Value",
-        "Footprint",
-        "Library Ref",
-        "Description",
-        "Sheet",
-        "DNP",
-    ]
-
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    with output_file.open("w", newline="", encoding="utf-8-sig") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(fixed_columns + param_columns)
-        for comp in sorted(bom, key=lambda c: c.get("designator", "")):
-            row = [
-                comp.get("designator", ""),
-                comp.get("value", ""),
-                comp.get("footprint", ""),
-                comp.get("library_ref", ""),
-                comp.get("description", ""),
-                comp.get("sheet", ""),
-                "Yes" if comp.get("dnp") else "No",
-            ]
-            params = comp.get("parameters", {})
-            for param_name in param_columns:
-                row.append(params.get(param_name, ""))
-            writer.writerow(row)
 
 
 def _sanitize_asset_name(name: str, fallback: str) -> str:
@@ -241,6 +229,246 @@ def _extract_project_embedded_assets(
     }
 
 
+def _write_json_payload(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _write_json_dump_artifact(
+    *,
+    source_path: Path,
+    output_path: Path,
+    output_root: Path,
+) -> dict[str, object]:
+    payload = build_json_dump_payload(source_path)
+    _write_json_payload(output_path, payload)
+    return {
+        "source": str(source_path),
+        "kind": str(payload["kind"]),
+        "json": _relative_to_root(output_path, output_root),
+    }
+
+
+def _write_project_document_jsons(
+    *,
+    schdoc_paths: list[Path],
+    pcbdoc_paths: list[Path],
+    output_root: Path,
+) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
+    used_names: set[str] = set()
+    for source_path in [*schdoc_paths, *pcbdoc_paths]:
+        kind = "SchDoc" if source_path.suffix.lower() == ".schdoc" else "PcbDoc"
+        entries.append(
+            _write_json_dump_artifact(
+                source_path=source_path,
+                output_path=document_json_output_path(
+                    source_path,
+                    output_root,
+                    kind,
+                    used_names,
+                    root_subdir="json",
+                ),
+                output_root=output_root,
+            )
+        )
+    return entries
+
+
+def _write_notes_json(
+    *,
+    input_project: Path,
+    output_root: Path,
+) -> dict[str, object]:
+    payload = build_notes_payload(input_project)
+    output_path = output_root / "notes" / f"{input_project.stem}_notes.jsonc"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(render_notes_jsonc(payload), encoding="utf-8")
+    return {
+        "notes_json": _relative_to_root(output_path, output_root),
+    }
+
+
+def _write_megamaid_bom_artifacts(
+    *,
+    design: Any,
+    input_project: Path,
+    output_root: Path,
+    config: BomPnpConfig,
+    variants: list[str | None],
+) -> dict[str, object]:
+    """Write megamaid BOM artifacts through the public BOM normalization path."""
+    project_parameters = project_parameters_from_design(design)
+    entries: list[dict[str, object]] = []
+    for variant in variants:
+        bom = _bom_from_configured_source(design, config, variant=variant)
+        written = _configured_bom_artifacts(
+            output_root,
+            bom,
+            config=config,
+            source=input_project,
+            variant=variant,
+            project_parameters=project_parameters,
+            output_kinds=MEGAMAID_BOM_OUTPUT_KINDS,
+        )
+        entries.append(
+            {
+                "variant": variant or "base",
+                "component_count": len(bom),
+                "artifacts": [_relative_to_root(path, output_root) for path in written],
+            }
+        )
+    return {
+        "output_kinds": list(MEGAMAID_BOM_OUTPUT_KINDS),
+        "outputs": entries,
+    }
+
+
+def _write_megamaid_pnp_artifacts(
+    *,
+    design: Any,
+    input_project: Path,
+    output_root: Path,
+    config: BomPnpConfig,
+    variants: list[str | None],
+    enabled: bool,
+) -> dict[str, object]:
+    """Write megamaid PnP artifacts through the public PnP normalization path."""
+    if not enabled:
+        return {
+            "output_kinds": list(MEGAMAID_PNP_OUTPUT_KINDS),
+            "outputs": [],
+            "skipped": "project has no PcbDoc",
+        }
+    project_parameters = project_parameters_from_design(design)
+    entries: list[dict[str, object]] = []
+    for variant in variants:
+        pnp = design.to_pnp(
+            variant=variant,
+            units=config.pnp_units,
+            position_mode=config.pnp_position_mode,
+            exclude_no_bom=config.pnp_exclude_no_bom,
+        )
+        written = _configured_pnp_artifacts(
+            output_root,
+            pnp,
+            config=config,
+            source=input_project,
+            variant=variant,
+            units=config.pnp_units,
+            position_mode=config.pnp_position_mode,
+            project_parameters=project_parameters,
+            output_kinds=MEGAMAID_PNP_OUTPUT_KINDS,
+        )
+        entries.append(
+            {
+                "variant": variant or "base",
+                "placement_count": len(pnp),
+                "artifacts": [_relative_to_root(path, output_root) for path in written],
+            }
+        )
+    return {
+        "output_kinds": list(MEGAMAID_PNP_OUTPUT_KINDS),
+        "outputs": entries,
+    }
+
+
+def _write_library_jsons(
+    *,
+    sch_manifest: list[dict[str, object]],
+    pcb_manifest: list[dict[str, object]],
+    output_root: Path,
+) -> dict[str, list[dict[str, object]]]:
+    return {
+        "schlib": _write_schlib_jsons(sch_manifest, output_root),
+        "pcblib": _write_pcblib_jsons(pcb_manifest, output_root),
+    }
+
+
+def _write_schlib_jsons(
+    sch_manifest: list[dict[str, object]],
+    output_root: Path,
+) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
+    split_index = 0
+    for index, entry in enumerate(sch_manifest, start=1):
+        source_path = Path(str(entry["combined_schlib"]))
+        entries.append(
+            {
+                "scope": "combined",
+                **_write_json_dump_artifact(
+                    source_path=source_path,
+                    output_path=output_root
+                    / "json"
+                    / "schlib"
+                    / "combined"
+                    / f"{index:02d}__{source_path.stem}.SchLib.json",
+                    output_root=output_root,
+                ),
+            }
+        )
+        for split_file in entry.get("split_files", []):
+            split_index += 1
+            split_path = Path(str(split_file))
+            entries.append(
+                {
+                    "scope": "split",
+                    **_write_json_dump_artifact(
+                        source_path=split_path,
+                        output_path=output_root
+                        / "json"
+                        / "schlib"
+                        / "split"
+                        / f"{split_index:03d}__{split_path.stem}.SchLib.json",
+                        output_root=output_root,
+                    ),
+                }
+            )
+    return entries
+
+
+def _write_pcblib_jsons(
+    pcb_manifest: list[dict[str, object]],
+    output_root: Path,
+) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
+    split_index = 0
+    for index, entry in enumerate(pcb_manifest, start=1):
+        source_path = Path(str(entry["combined_pcblib"]))
+        entries.append(
+            {
+                "scope": "combined",
+                **_write_json_dump_artifact(
+                    source_path=source_path,
+                    output_path=output_root
+                    / "json"
+                    / "pcblib"
+                    / "combined"
+                    / f"{index:02d}__{source_path.stem}.PcbLib.json",
+                    output_root=output_root,
+                ),
+            }
+        )
+        for split_file in entry.get("split_files", []):
+            split_index += 1
+            split_path = Path(str(split_file))
+            entries.append(
+                {
+                    "scope": "split",
+                    **_write_json_dump_artifact(
+                        source_path=split_path,
+                        output_path=output_root
+                        / "json"
+                        / "pcblib"
+                        / "split"
+                        / f"{split_index:03d}__{split_path.stem}.PcbLib.json",
+                        output_root=output_root,
+                    ),
+                }
+            )
+    return entries
+
+
 def _extract_project_schematic_images(
     *,
     schdoc_paths: list[Path],
@@ -324,57 +552,78 @@ def _extract_schlibs_for_project(
     *,
     schdoc_paths: list[Path],
     output_root: Path,
+    project_stem: str,
     debug: bool,
-) -> list[dict]:
+) -> list[dict[str, object]]:
     from altium_monkey.altium_schdoc import AltiumSchDoc
     from altium_monkey.altium_schlib import AltiumSchLib
-    from altium_monkey.altium_schlib_merger import merge_directory
+    from altium_monkey.altium_schlib_merger import merge_schlibs
 
     combined_root = output_root / "combined"
     split_root = output_root / "split"
+    scratch_root = output_root / "_scratch_split"
     combined_root.mkdir(parents=True, exist_ok=True)
     split_root.mkdir(parents=True, exist_ok=True)
+    scratch_root.mkdir(parents=True, exist_ok=True)
 
-    manifest_entries: list[dict] = []
-    multi_schematic = len(schdoc_paths) > 1
-    for schdoc_path in schdoc_paths:
-        schdoc = AltiumSchDoc(schdoc_path)
-        split_dir = split_root / schdoc_path.stem if multi_schematic else split_root
-        split_dir.mkdir(parents=True, exist_ok=True)
-        results = schdoc.extract_symbols(
-            output_dir=split_dir,
-            combined_schlib=False,
-            split_schlibs=True,
-            debug=debug,
-        )
-        successful = sum(1 for ok in results.values() if ok)
+    split_results_by_schdoc: list[dict[str, object]] = []
+    try:
+        for index, schdoc_path in enumerate(schdoc_paths, start=1):
+            schdoc = AltiumSchDoc(schdoc_path)
+            scratch_dir = scratch_root / f"{index:02d}__{schdoc_path.stem}"
+            scratch_dir.mkdir(parents=True, exist_ok=True)
+            results = schdoc.extract_symbols(
+                output_dir=scratch_dir,
+                combined_schlib=False,
+                split_schlibs=True,
+                debug=debug,
+            )
+            split_results_by_schdoc.append(
+                {
+                    "source_schdoc": str(schdoc_path),
+                    "split_results": dict(sorted(results.items())),
+                }
+            )
 
-        combined_path = combined_root / f"{schdoc_path.stem}.SchLib"
-        if successful == 0:
+        extracted_files = sorted(scratch_root.rglob("*.SchLib"))
+        combined_path = combined_root / f"{project_stem}.SchLib"
+        if not extracted_files:
             AltiumSchLib().save(combined_path, sync_pin_text_data=True)
         else:
-            success = merge_directory(
-                split_dir,
+            success = merge_schlibs(
+                extracted_files,
                 combined_path,
-                pattern="*.SchLib",
                 handle_conflicts="skip",
                 verbose=debug,
             )
             if not success:
                 raise RuntimeError(
-                    f"Failed to create combined SchLib for {schdoc_path.name}"
+                    f"Failed to create combined project SchLib for {project_stem}"
                 )
 
-        manifest_entries.append(
+        combined = AltiumSchLib(combined_path)
+        split_results = combined.split(split_root, verbose=debug)
+        split_files = [
+            str(path)
+            for path in sorted(
+                (path for path in split_results.values() if path is not None),
+                key=lambda item: item.name.lower(),
+            )
+        ]
+        return [
             {
-                "source_schdoc": str(schdoc_path),
+                "source_schdocs": [str(path) for path in schdoc_paths],
                 "combined_schlib": str(combined_path),
-                "split_dir": str(split_dir),
-                "split_symbol_count": successful,
-                "split_results": dict(sorted(results.items())),
+                "split_dir": str(split_root),
+                "symbol_count": len(combined.symbols),
+                "split_file_count": len(split_files),
+                "split_files": split_files,
+                "split_results_by_schdoc": split_results_by_schdoc,
             }
-        )
-    return manifest_entries
+        ]
+    finally:
+        if scratch_root.exists():
+            shutil.rmtree(scratch_root)
 
 
 def _extract_pcblibs_for_project(
@@ -382,7 +631,7 @@ def _extract_pcblibs_for_project(
     pcbdoc_paths: list[Path],
     output_root: Path,
     debug: bool,
-) -> list[dict]:
+) -> list[dict[str, object]]:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
     combined_root = output_root / "combined"
@@ -390,7 +639,7 @@ def _extract_pcblibs_for_project(
     combined_root.mkdir(parents=True, exist_ok=True)
     split_root.mkdir(parents=True, exist_ok=True)
 
-    manifest_entries: list[dict] = []
+    manifest_entries: list[dict[str, object]] = []
     multi_board = len(pcbdoc_paths) > 1
     for pcbdoc_path in pcbdoc_paths:
         pcbdoc = AltiumPcbDoc.from_file(pcbdoc_path)
@@ -401,6 +650,10 @@ def _extract_pcblibs_for_project(
 
         pcblib.save(combined_path)
         split_results = pcblib.split(split_dir, verbose=debug)
+        split_files = [
+            str(path)
+            for path in sorted(split_results.values(), key=lambda item: item.name.lower())
+        ]
 
         manifest_entries.append(
             {
@@ -409,6 +662,7 @@ def _extract_pcblibs_for_project(
                 "split_dir": str(split_dir),
                 "footprint_count": len(pcblib.footprints),
                 "split_file_count": len(split_results),
+                "split_files": split_files,
             }
         )
     return manifest_entries
@@ -449,9 +703,20 @@ def cmd_megamaid(args) -> int:
             log.error("No SchDoc or PcbDoc files found in project: %s", input_file)
             return 1
 
+        bom_pnp_config, bom_pnp_config_path = load_optional_bom_pnp_config(
+            getattr(args, "config", None)
+        )
+        available_variants = design.get_variants()
+        variants_to_process = select_variant_names(
+            available_variants,
+            bom_pnp_config,
+        )
+        warn_for_unknown_variants(log, variants_to_process, available_variants)
+
         sch_manifest = _extract_schlibs_for_project(
             schdoc_paths=schdoc_paths,
             output_root=output_dir / "schlib",
+            project_stem=input_file.stem,
             debug=debug,
         )
         pcb_manifest = _extract_pcblibs_for_project(
@@ -469,10 +734,35 @@ def cmd_megamaid(args) -> int:
             output_root=output_dir,
             debug=debug,
         )
-
-        base_bom = design.to_bom()
-        bom_path = output_dir / "bom" / f"{input_file.stem}_bom.csv"
-        _write_bom_csv(base_bom, bom_path)
+        document_jsons = _write_project_document_jsons(
+            schdoc_paths=schdoc_paths,
+            pcbdoc_paths=pcbdoc_paths,
+            output_root=output_dir,
+        )
+        library_jsons = _write_library_jsons(
+            sch_manifest=sch_manifest,
+            pcb_manifest=pcb_manifest,
+            output_root=output_dir,
+        )
+        notes_manifest = _write_notes_json(
+            input_project=input_file,
+            output_root=output_dir,
+        )
+        bom_manifest = _write_megamaid_bom_artifacts(
+            design=design,
+            input_project=input_file,
+            output_root=output_dir,
+            config=bom_pnp_config,
+            variants=variants_to_process,
+        )
+        pnp_manifest = _write_megamaid_pnp_artifacts(
+            design=design,
+            input_project=input_file,
+            output_root=output_dir,
+            config=bom_pnp_config,
+            variants=variants_to_process,
+            enabled=bool(pcbdoc_paths),
+        )
 
         netlist_payload = design.to_json(include_indexes=True)
         netlist_path = output_dir / "netlist" / f"{input_file.stem}_netlist.json"
@@ -483,18 +773,20 @@ def cmd_megamaid(args) -> int:
             "kind": "megamaid",
             "input_project": str(input_file),
             "output_root": str(output_dir),
-            "variants": design.get_variants(),
+            "variants": available_variants,
+            "bom_pnp_config": str(bom_pnp_config_path) if bom_pnp_config_path else None,
             "schdoc_count": len(schdoc_paths),
             "pcbdoc_count": len(pcbdoc_paths),
-            "bom": {
-                "base_csv": _relative_to_root(bom_path, output_dir),
-                "component_count": len(base_bom),
-            },
+            "bom": bom_manifest,
+            "pnp": pnp_manifest,
             "netlist": {
                 "design_json": _relative_to_root(netlist_path, output_dir),
                 "component_count": len(netlist_payload.get("components", [])),
                 "net_count": len(netlist_payload.get("nets", [])),
             },
+            "document_jsons": document_jsons,
+            "library_jsons": library_jsons,
+            "notes": notes_manifest,
             "schlib": [
                 {
                     **entry,
@@ -504,6 +796,10 @@ def cmd_megamaid(args) -> int:
                     "split_dir": _relative_to_root(
                         Path(entry["split_dir"]), output_dir
                     ),
+                    "split_files": [
+                        _relative_to_root(Path(path), output_dir)
+                        for path in entry.get("split_files", [])
+                    ],
                 }
                 for entry in sch_manifest
             ],
@@ -516,6 +812,10 @@ def cmd_megamaid(args) -> int:
                     "split_dir": _relative_to_root(
                         Path(entry["split_dir"]), output_dir
                     ),
+                    "split_files": [
+                        _relative_to_root(Path(path), output_dir)
+                        for path in entry.get("split_files", [])
+                    ],
                 }
                 for entry in pcb_manifest
             ],
@@ -565,7 +865,8 @@ def cmd_megamaid(args) -> int:
 
         log.info("SchLib outputs: %d document(s)", len(sch_manifest))
         log.info("PcbLib outputs: %d document(s)", len(pcb_manifest))
-        log.info("BOM: %s", bom_path.name)
+        log.info("BOM outputs: %s", ", ".join(MEGAMAID_BOM_OUTPUT_KINDS))
+        log.info("PnP outputs: %s", ", ".join(MEGAMAID_PNP_OUTPUT_KINDS))
         log.info("Netlist: %s", netlist_path.name)
         log.info("Manifest: %s", manifest_path.name)
         return 0
@@ -587,11 +888,15 @@ def register_parser(subparsers):
             "  altium-cruncher megamaid project.PrjPcb\n"
             "  altium-cruncher megamaid                 # Auto-detect PrjPcb in CWD\n"
             "  altium-cruncher megamaid project.PrjPcb -o output/megamaid\n"
+            "  altium-cruncher megamaid project.PrjPcb --config bom.config\n"
             "\n"
             "Output tree:\n"
             "  schlib/combined, schlib/split\n"
             "  pcblib/combined, pcblib/split\n"
-            "  bom, netlist\n"
+            "  bom, pnp, netlist, notes\n"
+            "  json/schdoc, json/pcbdoc\n"
+            "  json/schlib/combined, json/schlib/split\n"
+            "  json/pcblib/combined, json/pcblib/split\n"
             "  embedded_models, embedded_fonts\n"
             "  sch_images\n"
         ),
@@ -607,6 +912,11 @@ def register_parser(subparsers):
         "--output",
         type=Path,
         help="output directory (default: ./output/megamaid)",
+    )
+    megamaid_parser.add_argument(
+        "--config",
+        type=Path,
+        help="BOM/PnP JSON/JSONC config for aliases, variants, and output templates",
     )
     megamaid_parser.add_argument(
         "--debug",

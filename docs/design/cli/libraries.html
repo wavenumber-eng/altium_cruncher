@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>libraries command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="libraries" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>libraries</h1><p class="lede">Discover symbol and footprint names in Altium schematic and PCB libraries.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher libraries
+altium-cruncher libraries mating_parts
+altium-cruncher libraries C:\cad\parts --json
+altium-cruncher libraries local_lib --no-recursive --absolute</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p>Positional roots may be <code>.SchLib</code> files, <code>.PcbLib</code> files, or directories. With no roots, the command scans the current directory. Directory scans are recursive by default; <code>--no-recursive</code> limits the scan to direct children. <code>--json</code> emits machine-readable JSON. <code>--absolute</code> keeps absolute paths in human output. <code>--no-color</code> disables terminal color.</p></section>
+<section id="behavior"><h2>Behavior</h2><p>The command parses Altium schematic libraries for symbol names and PCB libraries for footprint names using the same scanner used by <code>mate</code> library resolution. Human output is optimized for command-line inspection: section headers include counts, names are aligned, and paths are relative to the current working directory when possible. JSON output uses schema <code>altium_cruncher.libraries.scan.a0</code> and keeps absolute paths for automation.</p></section>
+<section id="output"><h2>Output</h2><p>Human output has <code>Symbols</code> and <code>Footprints</code> sections. Each row contains the discovered name and the library file path. Parse warnings are listed separately without failing the full scan unless scanner setup itself fails.</p></section>
+<section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_mate.py</code>. It verifies SchLib/PcbLib symbol and footprint discovery, relative-path human output, JSON schema output, and the compatibility path used by the mate planner.</p></section>
+</main>
+</body>
+</html>
