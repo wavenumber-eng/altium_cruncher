@@ -26,7 +26,7 @@ altium-cruncher mco run mate.mco.jsonc --json</code></pre></section>
     <tr><td>Catalog</td><td><code>mco list</code> pretty-prints supported operations grouped by functional area. <code>mco list --json</code> emits <code>altium_cruncher.mco.operations.a0</code> metadata with required and optional args; <code>--output</code> writes a JSONC catalog for agents and generated-workflow authors.</td></tr>
   </table></section>
 
-  <section id="output"><h2>Output</h2><p><code>run</code> prints a colorized human-readable summary by default, including operation count, error count, and one line per operation. Use <code>--json</code> for machine-readable stdout or <code>--json-output</code> to write the structured result while keeping human output on the terminal. Mutation operations return output paths and operation-specific fields in JSON mode. On a normal run, dirty CAD documents are saved after operation execution completes.</p><pre><code>{
+  <section id="output"><h2>Output</h2><p><code>run</code> prints a colorized human-readable summary by default, including operation count, error count, and one message-first block per operation with the internal <code>op</code> and <code>id</code> shown as secondary detail. Use <code>--json</code> for machine-readable stdout or <code>--json-output</code> to write the structured result while keeping human output on the terminal. Mutation operations return output paths and operation-specific fields in JSON mode. On a normal run, dirty CAD documents are saved after operation execution completes.</p><pre><code>{
   "schema": "wn.altium_cruncher.mco.v1",
   "ok": true,
   "dry_run": false,

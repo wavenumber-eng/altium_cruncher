@@ -11,12 +11,15 @@ import pytest
 from altium_cruncher.altium_cruncher_mco import (
     MCO_SCHEMA,
     McoExecutionContext,
+    McoExecutionResult,
     McoOperationResult,
+    McoOperationSpec,
     execute_mco,
     load_jsonc_file,
     loads_jsonc,
     write_mco_template,
 )
+from altium_cruncher.altium_cruncher_cmd_mco import print_mco_execution_result
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -929,6 +932,31 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
     payload = json.loads(completed.stdout)
     assert payload["ok"] is True
     assert payload["dry_run"] is True
+
+
+def test_mco_pretty_output_leads_with_message(capsys: pytest.CaptureFixture[str]) -> None:
+    spec = McoOperationSpec(
+        operation_id="create_mate_project",
+        op="project.create",
+        args={},
+        message="Create mate project",
+    )
+    result = McoExecutionResult(
+        ok=True,
+        dry_run=True,
+        results=(
+            McoOperationResult.succeeded(
+                spec,
+                "Create mate project",
+            ),
+        ),
+    )
+
+    print_mco_execution_result(result, title="mate", color=False)
+
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[1] == "  OK   Create mate project"
+    assert lines[2] == "       project.create create_mate_project"
 
 
 def test_write_mco_template_requires_force_for_existing_file(tmp_path: Path) -> None:

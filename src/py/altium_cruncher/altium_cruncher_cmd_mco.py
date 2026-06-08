@@ -110,9 +110,9 @@ def print_mco_execution_result(
         op = _style(item.op, Fore.CYAN, use_color)
         operation_id = _style(item.operation_id, Fore.WHITE, use_color)
         styled_label = _style(label, label_color, use_color, bright=True)
-        print(f"  {styled_label:<4} {op} {operation_id}")
-        if item.message:
-            print(f"       {item.message}")
+        message = item.message or f"{item.op} {item.operation_id}"
+        print(f"  {styled_label:<4} {message}")
+        print(f"       {op} {operation_id}")
         if item.error and not item.is_ok:
             print(f"       {_style(item.error, Fore.RED, use_color)}")
     print(

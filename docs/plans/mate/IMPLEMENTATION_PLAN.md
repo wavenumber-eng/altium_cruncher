@@ -16,9 +16,7 @@ remaining work, and release exit criteria.
   and test obligations.
 - `docs/design/cli/mco.html` - generated MCO operation contract.
 - `examples/mate/cricket-node/README.md` - runnable Cricket Node
-  reference workflow.
-- `examples/mate/cricket-node/expected-operations.md` - example-level
-  expected output behavior.
+  reference workflow and example-level expected output behavior.
 
 ## Goals
 
@@ -224,3 +222,6 @@ Full signoff:
   alias, grouped schematic operations before PCB operations, made MCO/mate run
   output human-readable by default with opt-in JSON output, and added the
   maintained `mco list` catalog.
+- 2026-06-07: Changed MCO human output to lead with the operation message and
+  moved the Cricket expected-operation sequence into the example README so the
+  public folder has one primary instruction document.
