@@ -28,7 +28,7 @@ This inventory records the command set migrated from the private
 | `notes` | public | unit/CLI | Extracts dedicated schematic notes, text frames, and free text strings to structured JSON for agent review workflows. |
 | `outjob` | public | unit/CLI | Runs project-referenced or explicit `.OutJob` files through the public `altium-monkey` OutJob runner. |
 | `mco` | experimental | unit/CLI | Executes Monkey Change Order JSONC operation files used by generated workflows. |
-| `mate` | experimental | unit/CLI/example | Generates Cricket Node fixture mating-board plans and runnable MCO files from DUT selections. |
+| `mate` | beta | unit/CLI/example | Initial beta for Cricket Node-style fixture and debug mating-board workflows. Broader mate modes remain future work. |
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
 | `profiles` | public | unit/CLI | Lists Altium ProgramData profiles and can clean selected extension module state with explicit targeting and dry-run support. |
 

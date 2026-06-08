@@ -97,7 +97,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
 | `outjob` | Run project OutJob files through Altium Designer. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
-| `mate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Experimental |
+| `mate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Beta |
 | `clean` | Normalize SchDoc, SchLib, or PcbLib assets using JSON/JSONC config. | Public |
 | `profiles` | Inspect and clean Altium ProgramData profile extension state. | Public |
 | `easyeda-import` | Generate Altium SchLib, PcbLib footprint, and downloaded 3D assets from EasyEDA/LCSC data. | Public |
@@ -112,6 +112,11 @@ User-editable config files may use JSONC comments and trailing commas.
 The `pcb-svg` HLR and pin-oriented views are beta quality. Hidden-line
 rendering, embedded STEP projection, pin visibility, and related details are
 expected to improve, and current output may contain errors or omissions.
+
+The `mate` command is an initial beta intended for Cricket Node-style fixture
+and debug mating-board testing. Broader mating modes, richer library metadata,
+header and multi-pin connector workflows, and GUI-assisted config authoring are
+planned future work.
 
 Compact JSON output is a core direction for machine-consumable Altium design
 data, but the first standalone milestone prioritizes command parity and

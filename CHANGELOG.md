@@ -30,8 +30,16 @@
 - Clean configured BOM/PnP/JLC output filenames so format-only outputs rely on
   the file extension while semantic stems such as `raw`, `grouped`, and
   `jlc-cpl` remain visible.
-- Continue experimental `mco` and `mate` development toward Cricket
-  Node mating-board automation.
+- Add the initial beta `mate` release for Cricket Node-style fixture and debug
+  mating-board testing. The public example generates primitive MCO operations,
+  resolves mate parts from local SchLib/PcbLib search roots, projects DUT
+  reference graphics and cutouts, creates linked schematic/PCB components,
+  emits a user union, generates loose manual net labels, and can embed a
+  bottom-layer fixture-alignment STEP artifact.
+- Add `mco list` as a maintained operation catalog, with message-first MCO run
+  output and explicit required/optional argument groups in human catalog output.
+- Add the `examples/mate/bug-brain` fixture as source material for future
+  header-style mate workflows.
 
 ## 2026.5.28
 

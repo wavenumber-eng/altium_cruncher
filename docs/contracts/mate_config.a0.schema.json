@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/mate_config.a0.schema.json",
+  "title": "Altium Cruncher Mate Config A0",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "source", "output", "projections"],
+  "properties": {
+    "schema": {
+      "const": "wn.pcb_cruncher.mate_config.a0"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["board"],
+      "properties": {
+        "board": {"type": "string"},
+        "project_context": {"type": "string"}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "libraries": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "recursive": {"type": "boolean"}
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "projections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "source", "actions"],
+        "properties": {
+          "id": {"type": "string"},
+          "source": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["kind"],
+              "properties": {
+                "kind": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "pcb_designators": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "board_projection": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

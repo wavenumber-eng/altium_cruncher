@@ -13,6 +13,7 @@ from colorama import Fore, Style, just_fix_windows_console
 
 from altium_cruncher.altium_cruncher_mco import (
     McoExecutionResult,
+    McoOperationResult,
     execute_mco_file,
     mco_operation_catalog,
     write_mco_template,
@@ -105,16 +106,7 @@ def print_mco_execution_result(
         )
     )
     for item in result.results:
-        label = "OK" if item.is_ok else "FAIL"
-        label_color = Fore.GREEN if item.is_ok else Fore.RED
-        op = _style(item.op, Fore.CYAN, use_color)
-        operation_id = _style(item.operation_id, Fore.WHITE, use_color)
-        styled_label = _style(label, label_color, use_color, bright=True)
-        message = item.message or f"{item.op} {item.operation_id}"
-        print(f"  {styled_label:<4} {message}")
-        print(f"       {op} {operation_id}")
-        if item.error and not item.is_ok:
-            print(f"       {_style(item.error, Fore.RED, use_color)}")
+        _print_mco_operation_result(item, use_color=use_color)
     print(
         _style(
             f"{title} complete: {status}, {len(result.results)} operations, "
@@ -124,6 +116,23 @@ def print_mco_execution_result(
             bright=True,
         )
     )
+
+
+def _print_mco_operation_result(
+    item: McoOperationResult,
+    *,
+    use_color: bool,
+) -> None:
+    label = "OK" if item.is_ok else "FAIL"
+    label_color = Fore.GREEN if item.is_ok else Fore.RED
+    op = _style(item.op, Fore.CYAN, use_color)
+    operation_id = _style(item.operation_id, Fore.WHITE, use_color)
+    styled_label = _style(label, label_color, use_color, bright=True)
+    message = item.message or f"{item.op} {item.operation_id}"
+    print(f"  {styled_label:<4} {message}")
+    print(f"       {op} {operation_id}")
+    if item.error and not item.is_ok:
+        print(f"       {_style(item.error, Fore.RED, use_color)}")
 
 
 def print_mco_operation_catalog(*, color: bool = True) -> None:
@@ -137,17 +146,13 @@ def print_mco_operation_catalog(*, color: bool = True) -> None:
     for group in sorted(by_group):
         print(_style(group, Fore.YELLOW, use_color, bright=True))
         for info in by_group[group]:
-            args = ", ".join(
-                [
-                    *(f"{name}" for name in info.required_args),
-                    *(f"{name}?" for name in info.optional_args),
-                ]
-            )
             op = _style(info.name, Fore.CYAN, use_color)
             print(f"  {op}")
             print(f"    {info.summary}")
-            if args:
-                print(f"    args: {args}")
+            if info.required_args:
+                print(f"    required: {', '.join(info.required_args)}")
+            if info.optional_args:
+                print(f"    optional: {', '.join(info.optional_args)}")
 
 
 def _write_mco_execution_json(result: McoExecutionResult, output: Path) -> None:
@@ -161,7 +166,7 @@ def _write_mco_execution_json(result: McoExecutionResult, output: Path) -> None:
 def _mco_operations_jsonc_text(payload: dict[str, object]) -> str:
     return (
         "// Supported MCO operation catalog for this altium-cruncher version.\n"
-        "// Required args are listed without a suffix; optional args use '?'.\n"
+        "// Each operation lists required_args and optional_args separately.\n"
         + json.dumps(payload, indent=2, sort_keys=True)
         + "\n"
     )

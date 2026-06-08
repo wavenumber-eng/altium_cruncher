@@ -910,6 +910,23 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
         "schdoc.add_wire",
         "schdoc.create",
     ]
+    human_catalog = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "mco",
+            "list",
+            "--no-color",
+        ],
+        cwd=PACKAGE_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "    required: file, document" in human_catalog
+    assert "    optional: unique_id" in human_catalog
+    assert "unique_id?" not in human_catalog
 
     completed = subprocess.run(
         [

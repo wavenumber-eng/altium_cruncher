@@ -8,7 +8,7 @@ from typing import Any
 MIL_TO_MM = 0.0254
 
 
-def board_origin_mils(pcbdoc: Any) -> tuple[float, float]:
+def board_origin_mils(pcbdoc: object) -> tuple[float, float]:
     """Return the Altium board placement origin in source mils."""
     board = getattr(pcbdoc, "board", None)
     if board is None:

@@ -278,6 +278,23 @@ def _pcb_layer_step_colors(
     board: object,
     layer_step: Mapping[str, object],
 ) -> JsonObject | None:
+    rules = _pcb_layer_step_color_rules(board, layer_step)
+    colors = _initial_pcb_layer_step_colors(layer_step)
+    if not rules:
+        return colors or None
+    existing_rules = colors.get("pad_rules", [])
+    if existing_rules is None:
+        existing_rules = []
+    if not isinstance(existing_rules, list):
+        raise ValueError("Mate pcb_layer_step.colors.pad_rules must be an array")
+    colors["pad_rules"] = [*existing_rules, *rules]
+    return colors
+
+
+def _pcb_layer_step_color_rules(
+    board: object,
+    layer_step: Mapping[str, object],
+) -> list[JsonObject]:
     rules: list[JsonObject] = []
     for spec in _highlight_specs(layer_step):
         projection_id = _required_string(spec, "projection")
@@ -291,19 +308,14 @@ def _pcb_layer_step_colors(
                 "body": projection_id,
             }
         )
+    return rules
+
+
+def _initial_pcb_layer_step_colors(layer_step: Mapping[str, object]) -> JsonObject:
     existing = layer_step.get("colors")
     if existing is not None and not isinstance(existing, dict):
         raise ValueError("Mate pcb_layer_step.colors must be an object")
-    colors: JsonObject = dict(existing) if isinstance(existing, dict) else {}
-    if not rules:
-        return colors or None
-    existing_rules = colors.get("pad_rules", [])
-    if existing_rules is None:
-        existing_rules = []
-    if not isinstance(existing_rules, list):
-        raise ValueError("Mate pcb_layer_step.colors.pad_rules must be an array")
-    colors["pad_rules"] = [*existing_rules, *rules]
-    return colors
+    return dict(existing) if isinstance(existing, dict) else {}
 
 
 def _highlight_specs(layer_step: Mapping[str, object]) -> list[JsonObject]:

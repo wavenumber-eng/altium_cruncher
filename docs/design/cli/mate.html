@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>mate command</title><link rel="stylesheet" href="../styles.css"></head>
-<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="mate" data-config-contract="mate-config-a0">
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="mate" data-config-contract="docs/contracts/mate_config.a0.schema.json">
 <main>
   <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
-  <header><p class="status">CLI command design</p><h1>mate</h1><p class="lede">Generates mating-board projects from a human-authored DUT projection config.</p></header>
+  <header><p class="status">CLI command design</p><h1>mate</h1><p class="lede">Generates beta mating-board projects from a human-authored DUT projection config.</p></header>
 
-  <section id="purpose"><h2>Purpose</h2><p><code>mate</code> creates a board that physically mates to a source DUT board. The command compiles a JSONC config into an Altium-specific Monkey Change Order, then can execute that MCO to create the output project. The Cricket Node example is the first public reference workflow.</p><p>The config remains the human-authored source of truth. The generated MCO is derived output and may contain resolved coordinates, nets, library file paths, and primitive-level Altium operation arguments.</p></section>
+  <section id="purpose"><h2>Purpose</h2><p><code>mate</code> creates a board that physically mates to a source DUT board. The command compiles a JSONC config into an Altium-specific Monkey Change Order, then can execute that MCO to create the output project. The Cricket Node example is the first public reference workflow and represents the initial beta release surface for fixture/debug testing.</p><p>The config remains the human-authored source of truth. The generated MCO is derived output and may contain resolved coordinates, nets, library file paths, and primitive-level Altium operation arguments. Broader header-style, multi-pin connector, richer library metadata, and GUI-assisted workflows remain future work.</p></section>
 
   <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher mate
 altium-cruncher mate --dry-run

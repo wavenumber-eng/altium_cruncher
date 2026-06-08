@@ -1,6 +1,6 @@
 # Mate Implementation Plan
 
-Status: active, Cricket public example cleanup verified
+Status: complete for the 2026.6.7 initial beta; future modes deferred
 
 This plan tracks the implementation slices for the `mate` mating-board
 workflow in `altium_cruncher`. The stable public contracts live in the design
@@ -53,8 +53,10 @@ remaining work, and release exit criteria.
   `footprint_name` from config-relative `libraries.roots`; the old generated
   known-parts manifest remains a tested compatibility path but is no longer
   part of the public example.
-- The next design pressure is missing-part fallback behavior, graphics-only
-  projections, and simplifying the config further after manual inspection.
+- The initial beta is scoped to Cricket Node-style fixture/debug workflows.
+  Missing-part fallback behavior, graphics-only-only workflows, header-style
+  mating, multi-pin connectors, richer library metadata, and GUI-assisted
+  config authoring are deferred to future work.
 
 ## Terminology
 
@@ -76,11 +78,11 @@ remaining work, and release exit criteria.
 | S2 | done | Add public-safe Altium library indexing. | `altium_cruncher` can index `.SchLib` symbol names and `.PcbLib` footprint names from configured roots without importing private packages. |
 | S3 | done | Add named mate-component resolution. | Config accepts `libraries.roots` plus `mate_component.symbol_name` and `footprint_name`, while preserving the existing manifest/cache path for compatibility tests. |
 | S4 | done | Resolve mate components during planning. | `mate plan` resolves symbol/footprint names to concrete libraries, reports clear errors for zero or multiple matches, and emits concrete MCO paths only in generated output. |
-| S5 | pending | Keep graphics-only projection valid. | A config can intentionally generate reference graphics, outlines, labels, cutouts, and STEP artifacts without placing mate components. |
+| S5 | deferred | Keep graphics-only projection valid. | A config can intentionally generate reference graphics, outlines, labels, cutouts, and STEP artifacts without placing mate components. |
 | S6 | done | Update Cricket example to the new resolver style. | The example can run from its folder using relative search paths and does not require hand-authored absolute library paths. |
 | S7 | done | Stabilize config and MCO docs. | Design docs, example README, expected operations, and command help match implemented behavior. |
 | S8 | done | Split generated MCO project bootstrap into primitive ops. | Mate-generated MCO uses small project/document ops, canonical underscore op names, grouped SchDoc/PcbDoc phases, pretty run output, and a maintained `mco list` catalog. |
-| S9 | pending | Release signoff. | Focused tests, full test suite, lint/type checks, and manual Altium inspection notes are complete. |
+| S9 | done | Release signoff. | Focused tests, full test suite, lint/type checks, and manual Altium inspection notes are complete. |
 
 ## Library Resolver Direction
 
@@ -225,3 +227,7 @@ Full signoff:
 - 2026-06-07: Changed MCO human output to lead with the operation message and
   moved the Cricket expected-operation sequence into the example README so the
   public folder has one primary instruction document.
+- 2026-06-07: Closed the initial `mate` revision as beta-quality fixture/debug
+  automation, added the Bug Brain source fixture for future header-style work,
+  and deferred graphics-only, richer library metadata, header/multi-pin, GUI,
+  and update-in-place workflows to post-release slices.
