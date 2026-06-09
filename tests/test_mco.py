@@ -297,6 +297,91 @@ def test_project_primitives_write_altium_project_bundle(tmp_path: Path) -> None:
     ]
 
 
+def test_project_variant_mco_operations_roundtrip(tmp_path: Path) -> None:
+    from altium_monkey.altium_prjpcb import AltiumPrjPcb
+
+    project_path = tmp_path / "demo.PrjPcb"
+    project = AltiumPrjPcb.create_minimal("demo")
+    project.add_variant("A", unique_id="A-GUID", allow_fabrication=True, current=True)
+    project.save(project_path)
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "dnp",
+                    "op": "project.toggle_variant_dnp",
+                    "args": {
+                        "file": "demo.PrjPcb",
+                        "variant": "A",
+                        "designator": "R1",
+                        "unique_id": "R1UID",
+                    },
+                },
+                {
+                    "id": "clone",
+                    "op": "project.clone_variant",
+                    "args": {
+                        "file": "demo.PrjPcb",
+                        "source_name": "A",
+                        "name": "B",
+                        "unique_id": "B-GUID",
+                        "allow_fabrication": False,
+                        "current": True,
+                    },
+                },
+                {
+                    "id": "rename",
+                    "op": "project.rename_variant",
+                    "args": {
+                        "file": "demo.PrjPcb",
+                        "name": "B",
+                        "new_name": "C",
+                    },
+                },
+                {
+                    "id": "delete",
+                    "op": "project.delete_variant",
+                    "args": {
+                        "file": "demo.PrjPcb",
+                        "name": "A",
+                    },
+                },
+                {
+                    "id": "list",
+                    "op": "project.list_variants",
+                    "args": {
+                        "file": "demo.PrjPcb",
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+    reparsed = AltiumPrjPcb(project_path)
+    assert set(reparsed.variants) == {"C"}
+    assert reparsed.get_current_variant() == "C"
+    variant = reparsed.variants["C"]
+    assert variant["unique_id"] == "B-GUID"
+    assert variant["allow_fabrication"] is False
+    assert variant["DNP"] == ["R1"]
+    assert variant["variations"] == [
+        {
+            "Designator": "R1",
+            "UniqueId": "\\R1UID",
+            "Kind": "1",
+            "AlternatePart": "",
+        }
+    ]
+    list_payload = result.results[-1].outputs
+    assert list_payload["schema"] == "altium_cruncher.variants.list.a0"
+    assert list_payload["variant_count"] == 1
+    assert list_payload["rows"][0]["operation"] == "DNP"
+
+
 def test_file_copy_operation_copies_into_generated_tree(tmp_path: Path) -> None:
     source = tmp_path / "source" / "fixture.SchLib"
     source.parent.mkdir(parents=True)
@@ -904,7 +989,13 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
         "project.add_document",
         "project.add_parameter",
         "project.add_variant",
+        "project.add_variant_dnp",
+        "project.clone_variant",
         "project.create",
+        "project.delete_variant",
+        "project.list_variants",
+        "project.rename_variant",
+        "project.toggle_variant_dnp",
         "schdoc.add_component",
         "schdoc.add_net_label",
         "schdoc.add_wire",

@@ -24,6 +24,7 @@
     {"name": "sch-svg", "status": "public", "requires_extra": null},
     {"name": "split", "status": "public", "requires_extra": null},
     {"name": "svg", "status": "public", "requires_extra": null},
+    {"name": "variants", "status": "public", "requires_extra": null},
     {"name": "version", "status": "public", "requires_extra": null}
   ]
 }

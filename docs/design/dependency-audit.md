@@ -1,7 +1,7 @@
 # Dependency Audit
 
 Status: initial audit
-Last updated: 2026-05-27
+Last updated: 2026-06-09
 
 ## Purpose
 
@@ -21,6 +21,10 @@ before the standalone `altium-cruncher` repo fully replaces the private
   trailing commas so users can temporarily disable config sections while
   comparing output. Generated artifacts and checked-in contract examples remain
   strict JSON.
+- `rich` is an intentional runtime dependency for terminal table rendering in
+  commands that need readable bounded columns, grouping, and colorized emphasis.
+  Initial use is the `variants list` command, where long DNP/change rows need
+  width-aware wrapping without command-local table formatting code.
 
 ## Toolz
 

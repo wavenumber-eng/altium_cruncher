@@ -10,7 +10,12 @@ from pathlib import Path
 
 from colorama import Fore, Style
 
-from altium_cruncher._cli import _color_command_names_in_help, _format_parser_error_line
+from altium_cruncher._cli import (
+    CruncherArgumentParser,
+    _color_command_names_in_help,
+    _configure_nested_help_color,
+    _format_parser_error_line,
+)
 from altium_cruncher._version import __version__, cli_version_text
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -174,6 +179,28 @@ def test_cli_help_colorizes_root_command_names_with_altium_amber() -> None:
 
     assert f"    {color}bom{Style.RESET_ALL}                 generate BOM" in colored
     assert f"    {color}pcb-layer-step{Style.RESET_ALL}      generate STEP geometry" in colored
+
+
+def test_cli_help_color_configuration_recurses_to_subcommands() -> None:
+    """Verify nested command parsers inherit visible subcommand names for help color."""
+    parser = CruncherArgumentParser(prog="acr")
+    subparsers = parser.add_subparsers(
+        dest="command",
+        parser_class=CruncherArgumentParser,
+    )
+    variants = subparsers.add_parser("variants")
+    variant_actions = variants.add_subparsers(
+        dest="variants_action",
+        parser_class=CruncherArgumentParser,
+    )
+    list_parser = variant_actions.add_parser("list")
+    toggle_parser = variant_actions.add_parser("toggle-dnp")
+
+    _configure_nested_help_color(parser)
+
+    assert variants.command_names_for_help_color == ("list", "toggle-dnp")
+    assert list_parser.command_names_for_help_color == ()
+    assert toggle_parser.command_names_for_help_color == ()
 
 
 def test_cli_parser_error_formatter_supports_red_terminal_output() -> None:

@@ -96,6 +96,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |
 | `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
 | `outjob` | Run project OutJob files through Altium Designer. | Public |
+| `variants` | Inspect and edit PrjPcb project variants. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
 | `mate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Beta |
 | `clean` | Normalize SchDoc, SchLib, or PcbLib assets using JSON/JSONC config. | Public |
@@ -172,7 +173,7 @@ release workflow is GitHub Actions plus PyPI Trusted Publishing/OIDC. Local
 Twine upload is fallback only.
 
 Current release notes are available in
-`docs/releases/2026-06-07.md`.
+`docs/releases/2026-06-09.md`.
 
 `altium-cruncher` remains AGPL-3.0-or-later because it imports and depends on
 the AGPL `altium-monkey` package for normal operation.

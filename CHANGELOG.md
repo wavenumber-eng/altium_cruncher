@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026.6.9
+
+- Consume pinned `altium-monkey==2026.6.9`.
+- Add the public `variants` command for PrjPcb variant inspection and
+  MCO-backed variant edits.
+- Add project variant MCO operations for list, delete, rename, clone, DNP set,
+  and DNP toggle workflows.
+- Render variant list output with width-aware Rich tables grouped by variant
+  and schematic sheet, including resolved component values for DNP rows.
+- Add shared recursive CLI help coloring for command and subcommand names,
+  with plain captured output and `NO_COLOR`/`TERM=dumb` behavior preserved.
+- Add filesystem-safe PcbLib split filenames so footprint names containing
+  Windows-invalid characters no longer fail split, extract, or megamaid.
+- Normalize Altium XML-BOM oracle aliases in L3 release tests so reference
+  comparisons tolerate exports that use `Comment` where older output used
+  `Name`.
+- Add ADR-0006 for CLI help output policy and update variant/MCO design docs.
+
 ## 2026.6.7
 
 - Consume pinned `altium-monkey==2026.6.7`.

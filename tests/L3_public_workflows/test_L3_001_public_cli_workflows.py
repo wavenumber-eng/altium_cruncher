@@ -178,6 +178,28 @@ def test_library_extract_split_merge_commands_use_public_fixtures(tmp_path: Path
     assert merged_files[0].stat().st_size > 0
 
 
+def test_pcblib_split_command_sanitizes_windows_invalid_footprint_filename(
+    tmp_path: Path,
+) -> None:
+    """Verify PcbLib split filenames are safe without renaming footprints."""
+    from altium_monkey import AltiumPcbLib
+
+    footprint_name = 'HEADER 2x4 .100"'
+    source_pcblib = tmp_path / "source.PcbLib"
+    pcblib = AltiumPcbLib()
+    pcblib.add_footprint(footprint_name)
+    pcblib.save(source_pcblib)
+
+    split_dir = tmp_path / "split"
+    _run_cli("split", str(source_pcblib), "-o", str(split_dir))
+
+    split_file = split_dir / "HEADER 2x4 .100_.PcbLib"
+    assert split_file.exists()
+
+    reloaded = AltiumPcbLib.from_file(split_file)
+    assert [footprint.name for footprint in reloaded.footprints] == [footprint_name]
+
+
 def test_intlib_extract_command_uses_public_fixture(tmp_path: Path) -> None:
     """Exercise IntLib source extraction on a redistributable fixture."""
     from altium_monkey.altium_pcblib import AltiumPcbLib

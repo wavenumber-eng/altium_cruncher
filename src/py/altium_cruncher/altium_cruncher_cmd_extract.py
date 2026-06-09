@@ -11,6 +11,7 @@ from altium_cruncher.altium_cruncher_common import (
     find_pcbdocs_in_cwd,
     find_prjpcb_in_cwd,
 )
+from altium_cruncher.altium_cruncher_pcblib_split import split_pcblib_filesystem_safe
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ def _cmd_extract_pcbdoc(
 
         if split:
             split_dir = output_dir / "split"
-            results = pcblib.split(split_dir, verbose=verbose)
+            results = split_pcblib_filesystem_safe(pcblib, split_dir, verbose=verbose)
             log.info(f"  Created {len(results)} individual PcbLib file(s)")
 
         if not split and not combined:

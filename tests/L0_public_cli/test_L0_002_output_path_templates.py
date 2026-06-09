@@ -12,6 +12,7 @@ from altium_cruncher.output_path_templates import (
     resolve_output_expression,
     resolve_output_name,
     resolve_output_relative_path,
+    sanitize_output_name,
 )
 
 
@@ -98,6 +99,12 @@ def test_relative_output_path_sanitizes_invalid_filename_characters() -> None:
     )
 
     assert resolved == PurePosixPath("releases/830-TEST-PCBA - daplink_ duo__")
+
+
+def test_raw_output_name_sanitizes_invalid_filename_characters() -> None:
+    """Verify raw generated filenames cannot retain Windows-invalid characters."""
+    assert sanitize_output_name('HEADER 2x4 .100".PcbLib') == "HEADER 2x4 .100_.PcbLib"
+    assert sanitize_output_name(r"bad\path/name:Pcb*?") == "bad_path_name_Pcb__"
 
 
 def test_relative_output_path_rejects_absolute_and_traversal_paths() -> None:

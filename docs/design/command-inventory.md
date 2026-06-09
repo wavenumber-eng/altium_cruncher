@@ -1,7 +1,7 @@
 # Command Inventory
 
 Status: initial migration inventory
-Last updated: 2026-06-07
+Last updated: 2026-06-09
 
 This inventory records the command set migrated from the private
 `toolz/altium_cruncher` package into the standalone public repo.
@@ -27,6 +27,7 @@ This inventory records the command set migrated from the private
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM/PnP, netlist, manifest, document/library JSON, notes, and embedded assets. |
 | `notes` | public | unit/CLI | Extracts dedicated schematic notes, text frames, and free text strings to structured JSON for agent review workflows. |
 | `outjob` | public | unit/CLI | Runs project-referenced or explicit `.OutJob` files through the public `altium-monkey` OutJob runner. |
+| `variants` | public | `L0_public_cli`/unit | Inspects PrjPcb project variants and exposes MCO-backed delete, rename, clone, and DNP toggle operations. |
 | `mco` | experimental | unit/CLI | Executes Monkey Change Order JSONC operation files used by generated workflows. |
 | `mate` | beta | unit/CLI/example | Initial beta for Cricket Node-style fixture and debug mating-board workflows. Broader mate modes remain future work. |
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
@@ -44,6 +45,9 @@ Shared help requirements for every command:
 - command lists should be alphabetical;
 - help output should include readable spacing between version, usage, commands,
   and options;
+- interactive help may highlight command and subcommand names through the shared
+  parser layer, while captured help remains plain text and `NO_COLOR` /
+  `TERM=dumb` are respected;
 - top-level help should explicitly show how to request command-specific help.
 - root-level logging controls are `--quiet`, `--verbose`, and `--log-level`;
   normal command progress is INFO, while parser internals should stay DEBUG.
@@ -221,6 +225,8 @@ Split notes:
   `SchLib` files, output filename pattern behavior, and symbol filtering;
 - PcbLib coverage should include file-set matching and reparsing generated
   `PcbLib` files;
+- PcbLib split filenames must sanitize Windows-invalid characters while keeping
+  the original footprint name inside the library content and result mapping;
 - heavy AD25/native/interop parity is not required for the public CLI split
   test; stable semantic matching is enough.
 
@@ -250,6 +256,9 @@ Megamaid notes:
   should use the shared PnP command path, netlist JSON, SchDoc/PcbDoc JSON under
   `json/schdoc/` and `json/pcbdoc/`, and notes JSONC should exist, and manifest
   counts/paths should be validated;
+- PcbLib split artifacts use filesystem-safe output filenames so extracted
+  footprint names with quotes, slashes, colons, or wildcard characters remain
+  exportable on Windows;
 - rerun behavior should clear megamaid-owned stale artifacts while preserving
   unrelated files under the output root.
 
