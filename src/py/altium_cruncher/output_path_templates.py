@@ -80,6 +80,12 @@ def resolve_output_name(
     return _sanitize_path_part(resolved)
 
 
+def sanitize_output_name(name_text: str) -> str:
+    """Return a safe single path component from raw output name text."""
+    normalized = str(name_text).replace("\\", "_").replace("/", "_").strip()
+    return _sanitize_path_part(normalized)
+
+
 def sanitize_relative_output_path(path_text: str) -> PurePosixPath:
     """Normalize and sanitize a generated relative output path."""
     normalized = str(path_text).strip().replace("\\", "/")

@@ -8,6 +8,7 @@ objectives = [
     "The package exposes the expected public version string",
     "The CLI can start through the installed console entry point",
     "The public command manifest stays aligned with help output",
+    "Project variant CLI commands auto-detect PrjPcb inputs and refuse ambiguous workspaces",
 ]
 
 [dependencies]
@@ -69,5 +70,35 @@ test_brace_template_supports_command_tokens_and_project_parameters = "Brace temp
 test_output_name_rejects_path_separators = "Filename-only helper rejects path separators"
 test_missing_parameter_can_raise_or_resolve_empty = "Missing project parameters have explicit policy"
 test_relative_output_path_sanitizes_invalid_filename_characters = "Unsafe filename characters are sanitized"
+test_raw_output_name_sanitizes_invalid_filename_characters = "Raw output names sanitize unsafe filename characters"
 test_relative_output_path_rejects_absolute_and_traversal_paths = "Absolute paths and traversal are rejected"
 test_relative_output_path_normalizes_backslashes = "Windows separators normalize to relative path parts"
+
+[[subtests]]
+id = "L0_003"
+file = "test_L0_003_variants_cli.py"
+name = "Variants CLI"
+description = "Validate project variant CLI auto-detection, DNP toggling, list rendering, argument help, and ambiguous PrjPcb handling"
+concerns = ["cli", "contracts", "release"]
+test_case_type = "contract"
+test_cases = "../../docs/design/cli/variants.html"
+
+[subtests.code_under_test]
+module = "altium_cruncher.altium_cruncher_cmd_variants"
+
+[subtests.objectives]
+project_detection = "Use exactly one local PrjPcb when no explicit project path is passed"
+variant_edits = "Expose project variant DNP toggles through the CLI-backed MCO operation"
+ambiguity = "List multiple local PrjPcb choices and require an explicit project"
+argument_help = "List available variants when mutation arguments are missing"
+expression_resolution = "Resolve Altium parameter expressions such as =Value in variant rows"
+
+[subtests.approach]
+subprocess_cli = "Invoke the package command with temporary PrjPcb projects"
+
+[subtests.test_functions]
+test_variants_cli_auto_detects_project_and_edits_dnp = "Auto-detect one project, toggle a DNP row, and list variants as JSON and text"
+test_variants_cli_refuses_ambiguous_cwd_projects = "Refuse multiple local projects and print their names"
+test_variants_cli_missing_args_lists_available_variants = "Show available variant names when mutation arguments are missing"
+test_variants_cli_help_lists_toggle_dnp_command = "Show the public toggle-dnp command and hide the compatibility alias"
+test_variants_cli_resolves_altium_value_expressions = "Resolve variant AlternatePart and parameter expressions against component values"

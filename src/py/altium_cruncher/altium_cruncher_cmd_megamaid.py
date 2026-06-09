@@ -16,6 +16,7 @@ from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
 )
+from altium_cruncher.altium_cruncher_pcblib_split import split_pcblib_filesystem_safe
 from altium_cruncher.altium_cruncher_cmd_bom import (
     _bom_from_configured_source,
     _configured_bom_artifacts,
@@ -649,7 +650,7 @@ def _extract_pcblibs_for_project(
         split_dir = split_root / pcbdoc_path.stem if multi_board else split_root
 
         pcblib.save(combined_path)
-        split_results = pcblib.split(split_dir, verbose=debug)
+        split_results = split_pcblib_filesystem_safe(pcblib, split_dir, verbose=debug)
         split_files = [
             str(path)
             for path in sorted(split_results.values(), key=lambda item: item.name.lower())

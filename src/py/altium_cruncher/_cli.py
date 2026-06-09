@@ -98,6 +98,9 @@ from altium_cruncher.altium_cruncher_cmd_split import (
 from altium_cruncher.altium_cruncher_cmd_svg import (
     register_parser as register_svg_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_variants import (
+    register_parser as register_variants_parser,
+)
 
 LOG_LEVEL_BY_NAME = {
     "debug": logging.DEBUG,
@@ -192,6 +195,19 @@ def _configure_root_help_color(
 ) -> None:
     """Attach root command names used for colorized terminal help."""
     parser.command_names_for_help_color = tuple(str(command) for command in subparsers.choices)
+    _configure_nested_help_color(parser)
+
+
+def _configure_nested_help_color(parser: argparse.ArgumentParser) -> None:
+    """Attach nested subcommand names used for colorized terminal help."""
+    for action in parser._actions:
+        if not isinstance(action, argparse._SubParsersAction):
+            continue
+        command_names = tuple(str(command) for command in action.choices)
+        if isinstance(parser, CruncherArgumentParser):
+            parser.command_names_for_help_color = command_names
+        for child_parser in action.choices.values():
+            _configure_nested_help_color(child_parser)
 
 
 def _cmd_version(_args: argparse.Namespace) -> int:
@@ -274,6 +290,7 @@ def main() -> None:
     register_sch_svg_parser(command_subparsers)
     register_split_parser(command_subparsers)
     register_svg_parser(command_subparsers)
+    register_variants_parser(command_subparsers)
 
     version_parser = subparsers.add_parser("version", help="Print version information")
     version_parser.set_defaults(handler=_cmd_version)

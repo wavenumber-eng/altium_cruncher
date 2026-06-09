@@ -14,3 +14,4 @@ This folder records accepted architecture decisions for `altium-cruncher`.
   Documentation lifecycle and release boundary.
 - [ADR-0005](ADR-0005-design-doc-and-test-ownership-signoff.md) - Design
   documentation and test ownership signoff.
+- [ADR-0006](ADR-0006-cli-help-output-policy.md) - CLI help output policy.

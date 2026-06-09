@@ -144,7 +144,14 @@ def _legacy_output_name(project: Path, variant: str | None, kind: str, ext: str)
 def _xml_bom_rows(path: Path) -> list[dict[str, str]]:
     """Parse Altium XML-BOM rows into dictionaries."""
     root = ET.parse(path).getroot()
-    return [dict(row.attrib) for row in root.findall(".//ROW")]
+    return [_normalize_xml_bom_row(dict(row.attrib)) for row in root.findall(".//ROW")]
+
+
+def _normalize_xml_bom_row(row: dict[str, str]) -> dict[str, str]:
+    """Normalize Altium XML-BOM column aliases used by different exports."""
+    if "Name" not in row and "Comment" in row:
+        row["Name"] = row["Comment"]
+    return row
 
 
 def _pnp_rows(path: Path) -> list[dict[str, str]]:

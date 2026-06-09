@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_common import _resolve_output_dir
+from altium_cruncher.altium_cruncher_pcblib_split import split_pcblib_filesystem_safe
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def _cmd_split_pcblib(input_file: Path, output_dir: Path, args) -> int:
     pcblib = AltiumPcbLib.from_file(input_file)
     log.info(f"Found {len(pcblib.footprints)} footprint(s)")
 
-    results = pcblib.split(output_dir=output_dir, verbose=True)
+    results = split_pcblib_filesystem_safe(pcblib, output_dir=output_dir, verbose=True)
     log.info("-" * 60)
     log.info(f"Split complete: {len(results)} successful, 0 failed")
     return 0

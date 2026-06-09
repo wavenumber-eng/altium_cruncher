@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>variants command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="variants" data-config-contract="none">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>variants</h1><p class="lede">Inspects and edits project variants in Altium <code>.PrjPcb</code> files.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>variants</code> is a project-level convenience command for common variant maintenance. Each write action is implemented as a single MCO operation so generated workflows and terminal users share the same mutation behavior.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher variants
+altium-cruncher variants list
+altium-cruncher variants list project.PrjPcb --json
+altium-cruncher variants delete A --project project.PrjPcb
+altium-cruncher variants rename A A1
+altium-cruncher variants clone A A-debug --current
+altium-cruncher variants toggle-dnp A R15 --unique-id \QTUCRUVF</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><p>When no project path is supplied, the command requires exactly one <code>.PrjPcb</code> in the current directory. Running <code>variants</code> with no subcommand is shorthand for <code>variants list</code> when that project can be resolved. Multiple local projects are listed and the user must pass one explicitly with the optional positional project path or <code>--project</code>. <code>list</code> accepts <code>--json</code> and <code>--no-color</code>. Mutation subcommands accept <code>--dry-run</code> and <code>--json</code>. <code>clone</code> accepts <code>--unique-id</code>, <code>--allow-fabrication</code>, <code>--no-allow-fabrication</code>, and <code>--current</code>. <code>toggle-dnp</code> accepts an optional Altium variation <code>--unique-id</code>; when omitted while marking DNP, the command attempts to infer it from an exact schematic designator match. Calling <code>toggle-dnp</code> for a designator already marked Not Fitted removes that DNP variation row.</p><p>The underlying MCO operations are <code>project.list_variants</code>, <code>project.delete_variant</code>, <code>project.rename_variant</code>, <code>project.clone_variant</code>, and <code>project.toggle_variant_dnp</code>. The lower-level <code>project.add_variant_dnp</code> operation remains available for deterministic generated workflows that only want to set DNP.</p></section>
+
+  <section id="output"><h2>Output</h2><p>Human <code>list</code> output uses Rich tables. The summary table reports DNP and change counts instead of repeating every designator, then change details are grouped as variant panels containing schematic-sheet tables. Change tables omit a Variant column because the panel title owns that context and include a Value column resolved from component <code>Comment</code> first, then <code>Value</code>. Terminal color highlights DNP rows when enabled, while <code>--no-color</code> keeps bordered, width-aware ASCII tables for readable captured output. Altium parameter expressions such as <code>=Value</code> are resolved in pretty output without showing the source expression suffix.</p><p>JSON list output uses <code>altium_cruncher.variants.list.a0</code> and includes the project path, current variant, variant summaries, flattened change rows, schematic-index warnings, raw expression values, resolved component values, and resolved values for alternate parts and parameter overrides. Mutation commands print the MCO operation message by default with blank-line padding, or the full MCO execution result with <code>--json</code>.</p></section>
+
+  <section id="tests"><h2>Tests</h2><p>Unit coverage verifies MCO variant mutation round-trips and CLI project auto-detection, JSON output, DNP toggling, missing-argument variant hints, <code>=Value</code> resolution, and ambiguous project errors.</p></section>
+</main>
+</body>
+</html>

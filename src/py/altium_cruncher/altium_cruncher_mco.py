@@ -716,6 +716,184 @@ def _op_project_add_variant(
     )
 
 
+def _op_project_list_variants(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    if not context.dry_run:
+        context.flush_document("prjpcb", project_file)
+
+    from altium_cruncher.altium_cruncher_prjpcb_variants import (
+        summarize_project_variants,
+    )
+
+    outputs = summarize_project_variants(project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or "listed project variants",
+        outputs=outputs,
+    )
+
+
+def _op_project_delete_variant(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    name = _required_string(spec.args, "name", spec.op)
+    project = _project_for_variant_mutation(project_file, context)
+
+    from altium_cruncher.altium_cruncher_prjpcb_variants import (
+        delete_project_variant,
+    )
+
+    outputs = {
+        "project": str(project_file),
+        **delete_project_variant(project, name),
+    }
+    if not context.dry_run:
+        context.mark_document_dirty("prjpcb", project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"deleted project variant {name}",
+        outputs=outputs,
+    )
+
+
+def _op_project_rename_variant(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    name = _required_string(spec.args, "name", spec.op)
+    new_name = _required_string(spec.args, "new_name", spec.op)
+    project = _project_for_variant_mutation(project_file, context)
+
+    from altium_cruncher.altium_cruncher_prjpcb_variants import (
+        rename_project_variant,
+    )
+
+    outputs = {
+        "project": str(project_file),
+        **rename_project_variant(project, name, new_name),
+    }
+    if not context.dry_run:
+        context.mark_document_dirty("prjpcb", project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"renamed project variant {name} to {new_name}",
+        outputs=outputs,
+    )
+
+
+def _op_project_clone_variant(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    source_name = _required_string(spec.args, "source_name", spec.op)
+    name = _required_string(spec.args, "name", spec.op)
+    unique_id = _optional_string(spec.args, "unique_id", None)
+    allow_fabrication = _optional_bool_or_none(spec.args, "allow_fabrication")
+    current = _optional_bool(spec.args, "current", False)
+    project = _project_for_variant_mutation(project_file, context)
+
+    from altium_cruncher.altium_cruncher_prjpcb_variants import (
+        clone_project_variant,
+    )
+
+    outputs = {
+        "project": str(project_file),
+        **clone_project_variant(
+            project,
+            source_name,
+            name,
+            unique_id=unique_id,
+            allow_fabrication=allow_fabrication,
+            current=current,
+        ),
+    }
+    if not context.dry_run:
+        context.mark_document_dirty("prjpcb", project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"cloned project variant {source_name} to {name}",
+        outputs=outputs,
+    )
+
+
+def _op_project_add_variant_dnp(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    variant = _required_string(spec.args, "variant", spec.op)
+    designator = _required_string(spec.args, "designator", spec.op)
+    unique_id = _optional_string(spec.args, "unique_id", None)
+    alternate_part = _optional_string(spec.args, "alternate_part", "") or ""
+    project = _project_for_variant_mutation(project_file, context)
+
+    from altium_cruncher.altium_cruncher_prjpcb_variants import (
+        add_project_variant_dnp,
+    )
+
+    outputs = {
+        "project": str(project_file),
+        **add_project_variant_dnp(
+            project,
+            project_file,
+            variant=variant,
+            designator=designator,
+            unique_id=unique_id,
+            alternate_part=alternate_part,
+        ),
+    }
+    if not context.dry_run:
+        context.mark_document_dirty("prjpcb", project_file)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"added DNP {designator} to project variant {variant}",
+        outputs=outputs,
+    )
+
+
+def _op_project_toggle_variant_dnp(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    project_file = _required_path(spec.args, "file", context)
+    variant = _required_string(spec.args, "variant", spec.op)
+    designator = _required_string(spec.args, "designator", spec.op)
+    unique_id = _optional_string(spec.args, "unique_id", None)
+    alternate_part = _optional_string(spec.args, "alternate_part", "") or ""
+    project = _project_for_variant_mutation(project_file, context)
+
+    from altium_cruncher.altium_cruncher_prjpcb_variants import (
+        toggle_project_variant_dnp,
+    )
+
+    outputs = {
+        "project": str(project_file),
+        **toggle_project_variant_dnp(
+            project,
+            project_file,
+            variant=variant,
+            designator=designator,
+            unique_id=unique_id,
+            alternate_part=alternate_part,
+        ),
+    }
+    if not context.dry_run:
+        context.mark_document_dirty("prjpcb", project_file)
+    action = "marked DNP" if outputs.get("dnp") else "reverted to fitted"
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"{action} {designator} in project variant {variant}",
+        outputs=outputs,
+    )
+
+
 def _op_schdoc_create(
     spec: McoOperationSpec,
     context: McoExecutionContext,
@@ -818,6 +996,18 @@ def _open_project_for_mutation(
     )
 
 
+def _project_for_variant_mutation(
+    project_file: Path,
+    context: McoExecutionContext,
+) -> object:
+    if not context.dry_run:
+        return _open_project_for_mutation(project_file, context)
+
+    from altium_monkey.altium_prjpcb import AltiumPrjPcb
+
+    return AltiumPrjPcb(project_file)
+
+
 def _apply_project_skeleton_schematic_sheet_style(
     schdoc: object,
     sheet_style: str | None,
@@ -910,6 +1100,18 @@ def _optional_bool(
     value = args.get(name)
     if value is None:
         return default
+    if not isinstance(value, bool):
+        raise ValueError(f"Field {name!r} must be a boolean")
+    return value
+
+
+def _optional_bool_or_none(
+    args: Mapping[str, object],
+    name: str,
+) -> bool | None:
+    value = args.get(name)
+    if value is None:
+        return None
     if not isinstance(value, bool):
         raise ValueError(f"Field {name!r} must be a boolean")
     return value
@@ -1066,6 +1268,51 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             "Add one project variant.",
             required_args=("file", "name"),
             optional_args=("unique_id", "allow_fabrication", "current"),
+        ),
+        McoOperationInfo(
+            "project.add_variant_dnp",
+            _op_project_add_variant_dnp,
+            "project",
+            "Mark one designator Not Fitted in a project variant.",
+            required_args=("file", "variant", "designator"),
+            optional_args=("unique_id", "alternate_part"),
+        ),
+        McoOperationInfo(
+            "project.toggle_variant_dnp",
+            _op_project_toggle_variant_dnp,
+            "project",
+            "Toggle one designator between fitted and Not Fitted in a project variant.",
+            required_args=("file", "variant", "designator"),
+            optional_args=("unique_id", "alternate_part"),
+        ),
+        McoOperationInfo(
+            "project.clone_variant",
+            _op_project_clone_variant,
+            "project",
+            "Clone an existing project variant under a new name.",
+            required_args=("file", "source_name", "name"),
+            optional_args=("unique_id", "allow_fabrication", "current"),
+        ),
+        McoOperationInfo(
+            "project.delete_variant",
+            _op_project_delete_variant,
+            "project",
+            "Delete one project variant.",
+            required_args=("file", "name"),
+        ),
+        McoOperationInfo(
+            "project.list_variants",
+            _op_project_list_variants,
+            "project",
+            "List project variants, DNP rows, and parameter changes.",
+            required_args=("file",),
+        ),
+        McoOperationInfo(
+            "project.rename_variant",
+            _op_project_rename_variant,
+            "project",
+            "Rename one project variant.",
+            required_args=("file", "name", "new_name"),
         ),
         McoOperationInfo(
             "schdoc.create",
