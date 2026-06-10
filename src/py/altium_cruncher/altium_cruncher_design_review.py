@@ -10,6 +10,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from altium_cruncher.altium_cruncher_common import warn_non_numeric_sheet_numbers
 from altium_cruncher.altium_cruncher_json_dump import (
     build_json_dump_payload,
     document_json_output_path,
@@ -38,6 +39,7 @@ def write_design_review_bundle(
 ) -> dict[str, object]:
     """Write the full design-review bundle for a SchDoc or PrjPcb."""
     design = _load_design(input_file)
+    warn_non_numeric_sheet_numbers(log, design)
     design_payload = design.to_json(include_indexes=include_indexes)
     design_json_path = output_dir / "design" / f"{input_file.stem}_design.json"
     _write_json(design_json_path, design_payload)

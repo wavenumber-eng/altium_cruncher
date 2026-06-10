@@ -248,6 +248,39 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert "indexes.component_to_nets" in readme
 
 
+def test_design_review_tolerates_non_numeric_sheet_number(tmp_path: Path) -> None:
+    """A part number typed into the SheetNumber title-block field must not crash dr."""
+    repo_root = Path(__file__).resolve().parents[1]
+    schdoc_path = tmp_path / "annotated.SchDoc"
+    output_dir = tmp_path / "review"
+    doc = AltiumSchDoc()
+    for parameter in doc.parameters:
+        if parameter.name == "SheetNumber":
+            parameter.text = "09-0436-00"
+    doc.add_object(
+        make_sch_text_string(
+            location_mils=SchPointMils(100, 100),
+            text="Free text",
+        )
+    )
+    assert doc.save(schdoc_path)
+
+    result = _run_cli(repo_root, "dr", str(schdoc_path), "-o", str(output_dir))
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    combined_output = result.stdout + result.stderr
+    assert "non-numeric SheetNumber '09-0436-00'" in combined_output
+    manifest = json.loads(
+        (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
+    )
+    design_payload = json.loads(
+        (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
+    )
+    assert design_payload["sheets"] == [
+        {"filename": "annotated.SchDoc", "sheet_number": 1}
+    ]
+
+
 def test_design_review_uses_design_review_default_output_dir(tmp_path: Path) -> None:
     """Default design-review output should be output/design_review."""
     repo_root = Path(__file__).resolve().parents[1]

@@ -56,6 +56,7 @@ def cmd_design(args: argparse.Namespace) -> int:
         )
     except Exception as exc:
         log.error("Design review generation failed for %s: %s", input_file.name, exc)
+        log.debug("Design review traceback", exc_info=True)
         return 1
 
     log.info("Design review bundle: %s", output_dir)

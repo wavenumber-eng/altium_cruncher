@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Tolerate non-numeric `SheetNumber` document parameters (for example a part
+  number typed into the title-block field) in `design`/`dr` and `megamaid`.
+  Affected sheets fall back to document-order numbering with a warning instead
+  of failing design JSON generation with `ValueError`.
+- Log the design-review failure traceback at debug level so `--verbose`
+  exposes the crash site.
+
 ## 2026.6.9
 
 - Consume pinned `altium-monkey==2026.6.9`.

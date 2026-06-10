@@ -15,6 +15,7 @@ import zlib
 from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
+    warn_non_numeric_sheet_numbers,
 )
 from altium_cruncher.altium_cruncher_pcblib_split import split_pcblib_filesystem_safe
 from altium_cruncher.altium_cruncher_cmd_bom import (
@@ -698,6 +699,7 @@ def cmd_megamaid(args) -> int:
 
     try:
         design = AltiumDesign.from_prjpcb(input_file)
+        warn_non_numeric_sheet_numbers(log, design)
         schdoc_paths = design.project.get_schdoc_paths() if design.project else []
         pcbdoc_paths = design.get_pcbdoc_paths()
         if not schdoc_paths and not pcbdoc_paths:
