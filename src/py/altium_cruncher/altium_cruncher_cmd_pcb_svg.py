@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 from pathlib import Path
 
@@ -23,6 +22,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgGlobalConfig,
     PcbSvgViewConfig,
     parse_pcb_layer_selector,
+    pcb_svg_config_text,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
     PcbSvgComponentInventory,
@@ -75,7 +75,9 @@ def _load_config_template_inventory(
             pcbdoc_selector=pcbdoc_selector,
         ), None
     except Exception as exc:
-        log.debug("Unable to build pcb-svg config inventory for %s: %s", input_file, exc)
+        log.debug(
+            "Unable to build pcb-svg config inventory for %s: %s", input_file, exc
+        )
         return (), f"{type(exc).__name__}: {exc}"
 
 
@@ -142,7 +144,7 @@ def _default_pcb_svg_config_text(
     inventory_error: str | None = None,
 ) -> str:
     """Return the JSONC text used for auto-created PCB SVG configs."""
-    payload = json.dumps(PcbSvgConfig.default().to_dict(), indent=2)
+    payload = pcb_svg_config_text(PcbSvgConfig.default()).rstrip()
     inventory_hints = "".join(
         _inventory_hint_lines(inventories, inventory_error=inventory_error)
     )
@@ -170,27 +172,28 @@ def _default_pcb_svg_config_text(
         "/*\n"
         "HLR modes:\n"
         "  bounding_box - pad-bounds rectangle; no Geometer/STEP projection.\n"
-        "  simple       - Geometer simple outline, with pad-bounds fallback when no STEP model is available.\n"
+        "  outline      - Geometer silhouette/outline, with pad-bounds fallback when no STEP model is available.\n"
         "  detail       - Geometer detailed visible projection, with pad-bounds fallback when no STEP model is available.\n"
         "  none         - suppress HLR projection.\n"
+        "  simple       - legacy alias for outline.\n"
         "\n"
         "Assembly HLR style override example, globally, inside any view.styles,\n"
         "or inside components.<designator>.assembly_hlr for a single part:\n"
-        "  \"assembly_hlr\": {\n"
-        "    \"enabled\": true,\n"
-        "    \"color\": \"#F59E0B\",\n"
-        "    \"line_width_mm\": 0.12,\n"
-        "    \"projection_algorithm\": \"exact\",\n"
-        "    \"curve_mode\": \"native_arcs\",\n"
-        "    \"samples_per_curve\": 24,\n"
-        "    \"round_digits\": 3,\n"
-        "    \"include_visible\": true,\n"
-        "    \"include_outline\": true,\n"
-        "    \"union_polygons\": true,\n"
-        "    \"mesh_linear_deflection\": 0.01,\n"
-        "    \"mesh_angular_deflection\": 0.5,\n"
-        "    \"mesh_relative\": false,\n"
-        "    \"hlr_angle_tolerance\": 0.0174533\n"
+        '  "assembly_hlr": {\n'
+        '    "enabled": true,\n'
+        '    "color": "#F59E0B",\n'
+        '    "line_width_mm": 0.12,\n'
+        '    "projection_algorithm": "exact",\n'
+        '    "curve_mode": "native_arcs",\n'
+        '    "samples_per_curve": 24,\n'
+        '    "round_digits": 3,\n'
+        '    "include_visible": true,\n'
+        '    "include_outline": true,\n'
+        '    "union_polygons": true,\n'
+        '    "mesh_linear_deflection": 0.01,\n'
+        '    "mesh_angular_deflection": 0.5,\n'
+        '    "mesh_relative": false,\n'
+        '    "hlr_angle_tolerance": 0.0174533\n'
         "  }\n"
         "\n"
         "Geometer pass-through settings currently accepted by assembly_hlr include:\n"
@@ -199,26 +202,26 @@ def _default_pcb_svg_config_text(
         "\n"
         "Component override examples:\n"
         "\n"
-        "  \"components\": {\n"
-        "    \"J1\": {\"projection\": \"none\"},\n"
-        "    \"U5\": {\"pin1_pad\": \"B1\", \"assembly_hlr\": {\"color\": \"#2563EB\"}},\n"
-        "    \"TP1\": {\"pin1_enabled\": false},\n"
-        "    \"R12\": {\"pin1_enabled\": true},\n"
-        "    \"D15\": {\n"
-        "      \"projection\": \"bounding_box\",\n"
-        "      \"cathode_pad\": \"C\",\n"
-        "      \"assembly_hlr\": {\"line_width_mm\": 0.2, \"mesh_linear_deflection\": 0.02}\n"
+        '  "components": {\n'
+        '    "J1": {"projection": "none"},\n'
+        '    "U5": {"pin1_pad": "B1", "assembly_hlr": {"color": "#2563EB"}},\n'
+        '    "TP1": {"pin1_enabled": false},\n'
+        '    "R12": {"pin1_enabled": true},\n'
+        '    "D15": {\n'
+        '      "projection": "bounding_box",\n'
+        '      "cathode_pad": "C",\n'
+        '      "assembly_hlr": {"line_width_mm": 0.2, "mesh_linear_deflection": 0.02}\n'
         "    }\n"
         "  }\n"
         "\n"
-        "Projection modes: detail, simple, bounding_box, none.\n"
+        "Projection modes: detail, outline, bounding_box, none; simple is accepted as a legacy alias.\n"
         "Use DRILLS/SLOTS plus drills.non_plated_color and slots.non_plated_color\n"
         "to show non-plated holes separately from plated holes.\n"
         "\n"
         "Pin-1 exclusions:\n"
         "  pin1.exclude_designator_prefixes uses the alphabetic refdes prefix.\n"
-        "  [\"R\", \"C\", \"L\"] excludes R1/R2, C1/C2, and L1/L2.\n"
-        "  A component override such as \"R12\": {\"pin1_enabled\": true}\n"
+        '  ["R", "C", "L"] excludes R1/R2, C1/C2, and L1/L2.\n'
+        '  A component override such as "R12": {"pin1_enabled": true}\n'
         "  turns pin-1 marking back on for that specific component.\n"
         "*/\n"
         "\n"
@@ -254,7 +257,9 @@ def _load_pcb_svg_config(config_path: Path) -> PcbSvgConfig:
     try:
         raw_data = load_json_config(config_path)
     except Exception as exc:
-        raise ValueError(f"Failed to parse pcb-svg config '{config_path}': {exc}") from exc
+        raise ValueError(
+            f"Failed to parse pcb-svg config '{config_path}': {exc}"
+        ) from exc
     return PcbSvgConfig.from_dict(raw_data)
 
 
@@ -474,7 +479,9 @@ def cmd_pcb_svg(args: object) -> int:
                 log.error(
                     "No file specified and no .PrjPcb/.PcbDoc found in current directory"
                 )
-                log.info("Usage: altium-cruncher pcb-svg [project.PrjPcb | board.PcbDoc]")
+                log.info(
+                    "Usage: altium-cruncher pcb-svg [project.PrjPcb | board.PcbDoc]"
+                )
                 return 1
             input_files = pcbdocs
             log.info("Auto-detected %s standalone PcbDoc file(s)", len(pcbdocs))

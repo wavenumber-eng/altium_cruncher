@@ -438,7 +438,9 @@ def write_mate_config_template(
         raise FileExistsError(f"Mate config already exists: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        mate_tpl.mate_template_text(schema=MATE_CONFIG_SCHEMA, source_board=source_board),
+        mate_tpl.mate_template_text(
+            schema=MATE_CONFIG_SCHEMA, source_board=source_board
+        ),
         encoding="utf-8",
     )
     return output_path.resolve()
@@ -550,7 +552,7 @@ def write_mate_seed_config(
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps(payload, indent=2) + "\n",
+        mate_tpl.mate_config_payload_text(payload) + "\n",
         encoding="utf-8",
     )
     return output_path.resolve()
@@ -741,8 +743,7 @@ def _board_outline_margin_mils(
         )
         if any(side < 0.0 for side in margin):
             raise ValueError(
-                "Mate output.board_outline.margin_mils sides must be "
-                "non-negative"
+                "Mate output.board_outline.margin_mils sides must be non-negative"
             )
         return margin
     raise ValueError(
@@ -798,9 +799,7 @@ def _selection_from_inspection(inspection: Mapping[str, object]) -> JsonObject:
         boards = []
     return {
         "boards": [
-            _selection_board(board)
-            for board in boards
-            if isinstance(board, dict)
+            _selection_board(board) for board in boards if isinstance(board, dict)
         ]
     }
 
@@ -1018,9 +1017,7 @@ def _parse_libraries_config(
         roots = []
         for root_value in root_values:
             if not isinstance(root_value, str) or not root_value:
-                raise ValueError(
-                    "Mate libraries.roots must contain non-empty strings"
-                )
+                raise ValueError("Mate libraries.roots must contain non-empty strings")
             roots.append(root_value)
     else:
         raise ValueError("Mate libraries.roots must be a string or array")
@@ -1084,9 +1081,7 @@ def _parse_pcb_designators_config(
     enabled = _optional_bool(raw, "enabled", default_enabled)
     placement = _optional_string(raw, "placement", "above_component")
     if placement != "above_component":
-        raise ValueError(
-            "Mate pcb_designators.placement must be above_component"
-        )
+        raise ValueError("Mate pcb_designators.placement must be above_component")
     return MatePcbDesignatorsConfig(
         enabled=enabled,
         placement=placement,
@@ -1168,7 +1163,9 @@ def _mate_projection_items(root: Mapping[str, object]) -> list[JsonObject]:
     projections = root.get("projections", [])
     if not isinstance(projections, list):
         raise ValueError("Mate config projections must be an array")
-    return [dict(projection) for projection in projections if isinstance(projection, dict)]
+    return [
+        dict(projection) for projection in projections if isinstance(projection, dict)
+    ]
 
 
 def _validate_mate_source_sides(
@@ -1475,7 +1472,9 @@ def _component_matches_selector(
 ) -> bool:
     designator = str(component.get("designator", "") or "")
     kind = str(component.get("kind", "") or "")
-    return _designator_matches_selector(designator, selector) and _kind_matches_selector(
+    return _designator_matches_selector(
+        designator, selector
+    ) and _kind_matches_selector(
         kind,
         selector,
     )
@@ -1532,10 +1531,7 @@ def _expand_designator_range(pattern: str) -> set[str] | None:
         or end_number < start_number
     ):
         return None
-    return {
-        f"{start_prefix}{number}"
-        for number in range(start_number, end_number + 1)
-    }
+    return {f"{start_prefix}{number}" for number in range(start_number, end_number + 1)}
 
 
 def _split_designator_number(value: str) -> tuple[str, int | None]:
@@ -1631,9 +1627,7 @@ def _parse_selection_config(raw: Mapping[str, object]) -> MateSelectionConfig:
         raise ValueError("Mate selection.boards must be an array")
     return MateSelectionConfig(
         boards=tuple(
-            _parse_selection_board(board)
-            for board in boards
-            if isinstance(board, dict)
+            _parse_selection_board(board) for board in boards if isinstance(board, dict)
         )
     )
 
@@ -1804,7 +1798,9 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
                 schematic_position,
             )
         )
-        schematic_file = _output_file(config.output.output_dir, _schematic_filename(config.output))
+        schematic_file = _output_file(
+            config.output.output_dir, _schematic_filename(config.output)
+        )
         net_name = _target_optional_string(target, "net_name")
         net_route = schematic_net_route(
             symbol_library_path=_part_source_file(part, "symbol_library"),
@@ -1866,7 +1862,9 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
     return _KnownPartOperations(
         operations,
         pcb_net_label_operations(
-            board_file=_output_file(config.output.output_dir, _board_filename(config.output)),
+            board_file=_output_file(
+                config.output.output_dir, _board_filename(config.output)
+            ),
             board_outline_mils=config.output.board_outline_mils,
             requests=pcb_label_requests,
         ),
@@ -1906,7 +1904,9 @@ def _known_part_project_documents(config: MateConfig) -> list[str]:
 
 
 def _known_part_project_document_operations(config: MateConfig) -> list[JsonObject]:
-    project_file = _output_file(config.output.output_dir, _project_filename(config.output))
+    project_file = _output_file(
+        config.output.output_dir, _project_filename(config.output)
+    )
     return [
         mco_operation(
             "project.add_document",
@@ -2176,6 +2176,7 @@ def _placement_targets(
                 }
             )
     return targets
+
 
 def _transform_placement(
     x_mils: float,
@@ -2461,7 +2462,7 @@ def _normalized_designator(
         if upper_designator == key:
             return value
         if upper_designator.startswith(f"{key}_"):
-            return f"{value}{designator[len(key):]}"
+            return f"{value}{designator[len(key) :]}"
     return designator
 
 

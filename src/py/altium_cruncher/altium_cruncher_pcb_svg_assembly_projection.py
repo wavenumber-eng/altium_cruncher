@@ -91,7 +91,9 @@ class AssemblyProjectionCache:
             None
             if options.hlr_angle_tolerance is None
             else float(options.hlr_angle_tolerance),
-            tuple(sorted((str(k), bool(v)) for k, v in (options.edge_flags or {}).items())),
+            tuple(
+                sorted((str(k), bool(v)) for k, v in (options.edge_flags or {}).items())
+            ),
             tuple(float(v) for v in pose_signature),
         )
 
@@ -168,18 +170,25 @@ class AssemblyProjectionCache:
             "include_visible": bool(options.include_visible),
             "include_outline": bool(options.include_outline),
             "union_simple_polygons": bool(options.union_polygons),
+            "union_outline_polygons": bool(options.union_polygons),
         }
         if options.projection_algorithm:
             hlr_options["projection_algorithm"] = str(options.projection_algorithm)
         if options.mesh_linear_deflection is not None:
-            hlr_options["mesh_linear_deflection"] = float(options.mesh_linear_deflection)
+            hlr_options["mesh_linear_deflection"] = float(
+                options.mesh_linear_deflection
+            )
         if options.mesh_angular_deflection is not None:
-            hlr_options["mesh_angular_deflection"] = float(options.mesh_angular_deflection)
+            hlr_options["mesh_angular_deflection"] = float(
+                options.mesh_angular_deflection
+            )
         if options.mesh_relative is not None:
             hlr_options["mesh_relative"] = bool(options.mesh_relative)
         if options.hlr_angle_tolerance is not None:
             hlr_options["hlr_angle_tolerance"] = float(options.hlr_angle_tolerance)
-        hlr_options.update({key: bool(value) for key, value in (options.edge_flags or {}).items()})
+        hlr_options.update(
+            {key: bool(value) for key, value in (options.edge_flags or {}).items()}
+        )
 
         result = geometer.project_step_hlr(
             step_bytes,
@@ -194,7 +203,7 @@ class AssemblyProjectionCache:
             options=hlr_options,
         )
 
-        simple = result.geometry(view_id, "simple")
+        simple = _result_geometry(result, view_id, "outline", "simple")
         detail = result.geometry(view_id, "detail")
         return AssemblyProjectedGeometry(
             simple_line_segments=self._dedupe_segments(
@@ -293,6 +302,18 @@ class AssemblyProjectionCache:
         return tuple(deduped)
 
 
+def _result_geometry(
+    result: object,
+    view_id: str,
+    preferred: str,
+    fallback: str,
+) -> Mapping[str, object]:
+    try:
+        return result.geometry(view_id, preferred)
+    except KeyError:
+        return result.geometry(view_id, fallback)
+
+
 def _matrix4_for_geometer(matrix: Any) -> list[list[float]]:
     if hasattr(matrix, "tolist"):
         matrix = matrix.tolist()
@@ -301,7 +322,9 @@ def _matrix4_for_geometer(matrix: Any) -> list[list[float]]:
         flat = [float(value) for value in values]
         return [flat[idx : idx + 4] for idx in range(0, 16, 4)]
     if len(values) != 4:
-        raise ValueError("transform_matrix must be a 4x4 matrix or flat 16-value sequence")
+        raise ValueError(
+            "transform_matrix must be a 4x4 matrix or flat 16-value sequence"
+        )
     rows: list[list[float]] = []
     for row in values:
         row_values = list(row)
@@ -342,7 +365,10 @@ def _segment_from_json(
         return None
     values = list(raw)
     if len(values) == 4:
-        return (float(values[0]), float(values[1])), (float(values[2]), float(values[3]))
+        return (float(values[0]), float(values[1])), (
+            float(values[2]),
+            float(values[3]),
+        )
     if len(values) == 2:
         start = _point2(values[0])
         end = _point2(values[1])

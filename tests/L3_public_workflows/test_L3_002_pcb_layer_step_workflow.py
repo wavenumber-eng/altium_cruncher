@@ -132,14 +132,16 @@ def test_pcb_layer_step_cricket_fixture_variants_compare_request_sizes(
                 "vias": false,
                 "component_pads": {
                   "mode": "matching_designators",
-                  "include_designators": ["TP*"]
+                  "include_designators": ["TP*"],
+                  "highlight_rules": [
+                    {
+                      "designators": ["TP*"],
+                      "color": "red",
+                      "step_body_name": "test_points"
+                    }
+                  ]
                 },
                 "free_pads": false
-              },
-              "colors": {
-                "pad_rules": [
-                  {"designators": ["TP*"], "color": "red", "body": "test_points"}
-                ]
               },
               "drills": {
                 "mode": "none"
@@ -158,14 +160,16 @@ def test_pcb_layer_step_cricket_fixture_variants_compare_request_sizes(
                 "vias": false,
                 "component_pads": {
                   "mode": "matching_designators",
-                  "include_designators": ["TP*"]
+                  "include_designators": ["TP*"],
+                  "highlight_rules": [
+                    {
+                      "designators": ["TP*"],
+                      "color": "red",
+                      "step_body_name": "test_points"
+                    }
+                  ]
                 },
                 "free_pads": false
-              },
-              "colors": {
-                "pad_rules": [
-                  {"designators": ["TP*"], "color": "red", "body": "test_points"}
-                ]
               },
               "drills": {
                 "mode": "overlay",

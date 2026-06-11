@@ -272,8 +272,14 @@ def _normalize_draw_order(tokens: list[str]) -> list[str]:
     return body + holes + hlr
 
 
+def _svg_symbol_mode(projection_mode: str) -> str:
+    return "simple" if projection_mode in {"outline", "simple"} else projection_mode
+
+
 def _safe_svg_id(value: str) -> str:
-    return "".join(ch if ch.isalnum() or ch in "._-" else "-" for ch in value).strip("-")
+    return "".join(ch if ch.isalnum() or ch in "._-" else "-" for ch in value).strip(
+        "-"
+    )
 
 
 def _synthetic_layer_metadata_attrs(
@@ -396,7 +402,10 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         if board is None:
             return (0.0, 0.0)
         try:
-            return (float(getattr(board, "origin_x", 0.0)), float(getattr(board, "origin_y", 0.0)))
+            return (
+                float(getattr(board, "origin_x", 0.0)),
+                float(getattr(board, "origin_y", 0.0)),
+            )
         except (TypeError, ValueError):
             return (0.0, 0.0)
 
@@ -938,11 +947,11 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
 
     @staticmethod
     def _hlr_emitted_modes(mode: str, override_modes: dict[str, str]) -> set[str]:
-        emitted_modes = {mode}
+        emitted_modes = {_svg_symbol_mode(mode)}
         emitted_modes.update(
-            projection
+            _svg_symbol_mode(projection)
             for projection in override_modes.values()
-            if projection in {"simple", "detail"}
+            if projection in {"outline", "simple", "detail"}
         )
         return emitted_modes
 
@@ -1068,11 +1077,18 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         exclude_designators: set[str] | None = None,
     ) -> list[tuple[str, tuple[float, float, float, float]]]:
         result: list[tuple[str, tuple[float, float, float, float]]] = []
-        for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
-            if _component_side(component) != ("top" if layer == PcbLayer.TOP else "bottom"):
+        for component_index, component in enumerate(
+            getattr(pcbdoc, "components", []) or []
+        ):
+            if _component_side(component) != (
+                "top" if layer == PcbLayer.TOP else "bottom"
+            ):
                 continue
             designator = _component_designator(component)
-            if include_designators is not None and designator not in include_designators:
+            if (
+                include_designators is not None
+                and designator not in include_designators
+            ):
                 continue
             if exclude_designators is not None and designator in exclude_designators:
                 continue
@@ -1175,8 +1191,8 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             if projection in {"none", "bounding_box"}:
                 skip_component_depth = max(line.count("<g ") - line.count("</g>"), 1)
                 continue
-            if projection in {"simple", "detail"}:
-                active_projection = projection
+            if projection in {"outline", "simple", "detail"}:
+                active_projection = _svg_symbol_mode(projection)
             elif line.startswith("    </g>"):
                 active_projection = None
             if (
@@ -1196,7 +1212,10 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         for designator, projection in overrides.items():
             escaped = html.escape(designator)
             token = _safe_svg_id(designator)
-            if f'data-component="{escaped}"' in line or f"assembly-comp-{token}-" in line:
+            if (
+                f'data-component="{escaped}"' in line
+                or f"assembly-comp-{token}-" in line
+            ):
                 return projection
         return None
 
@@ -1285,7 +1304,11 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         if not marker_elements and not self.options.show_empty_layers:
             return []
 
-        layer_id = PCB_SVG_PIN1_TOP_LAYER_ID if token == "PIN1_TOP" else PCB_SVG_PIN1_BOTTOM_LAYER_ID
+        layer_id = (
+            PCB_SVG_PIN1_TOP_LAYER_ID
+            if token == "PIN1_TOP"
+            else PCB_SVG_PIN1_BOTTOM_LAYER_ID
+        )
         attrs = [f'id="pin1-markers-{side}"']
         if self.options.include_metadata:
             attrs.extend(
@@ -1311,7 +1334,9 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
     ) -> list[str]:
         side = "top" if layer == PcbLayer.TOP else "bottom"
         marker_elements: list[str] = []
-        for component_index, component in enumerate(getattr(pcbdoc, "components", []) or []):
+        for component_index, component in enumerate(
+            getattr(pcbdoc, "components", []) or []
+        ):
             if _component_side(component) != side:
                 continue
             designator = _component_designator(component)
@@ -1319,7 +1344,9 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 continue
             if self._component_pad_designator_count(pcbdoc, component_index) <= 1:
                 continue
-            pad = self._pin1_pad_for_component(pcbdoc, component_index, component, layer)
+            pad = self._pin1_pad_for_component(
+                pcbdoc, component_index, component, layer
+            )
             if pad is not None:
                 marker_elements.extend(
                     self._pin1_marker_svg(ctx, component, pad, layer, styles)
@@ -1379,7 +1406,8 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         if selected is None:
             return None
         by_designator = {
-            str(getattr(pad, "designator", "") or "").strip().upper(): pad for pad in pads
+            str(getattr(pad, "designator", "") or "").strip().upper(): pad
+            for pad in pads
         }
         return by_designator.get(selected.upper())
 
@@ -1417,9 +1445,11 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 if isinstance(raw_rendered, (list, tuple)):
                     rendered = [str(element) for element in raw_rendered]
             if rendered:
-                return [f"<g {' '.join(group_attrs)}>"] + [
-                    f"  {element}" for element in rendered
-                ] + ["</g>"]
+                return (
+                    [f"<g {' '.join(group_attrs)}>"]
+                    + [f"  {element}" for element in rendered]
+                    + ["</g>"]
+                )
 
         x_mils, y_mils = _pad_center_mils(pad)
         width_mils, height_mils = _pad_size_mils(pad, layer)
@@ -1563,8 +1593,12 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         primitives: list[str] = []
         if _style_enabled(styles, "copper_traces"):
             trace_color = _style_color(styles, "copper_traces", ctx.layer_color(layer))
-            primitives.extend(self._render_tracks_for_layer(ctx, pcbdoc, layer, trace_color))  # noqa: SLF001
-            primitives.extend(self._render_arcs_for_layer(ctx, pcbdoc, layer, trace_color))  # noqa: SLF001
+            primitives.extend(
+                self._render_tracks_for_layer(ctx, pcbdoc, layer, trace_color)
+            )  # noqa: SLF001
+            primitives.extend(
+                self._render_arcs_for_layer(ctx, pcbdoc, layer, trace_color)
+            )  # noqa: SLF001
         if _style_enabled(styles, "vias"):
             primitives.extend(
                 self._render_vias_for_layer(
@@ -1575,9 +1609,15 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 )
             )
         if _style_enabled(styles, "copper_polygons"):
-            polygon_color = _style_color(styles, "copper_polygons", ctx.layer_color(layer))
-            primitives.extend(self._render_fills_for_layer(ctx, pcbdoc, layer, polygon_color))  # noqa: SLF001
-            primitives.extend(self._render_regions_for_layer(ctx, pcbdoc, layer, polygon_color))  # noqa: SLF001
+            polygon_color = _style_color(
+                styles, "copper_polygons", ctx.layer_color(layer)
+            )
+            primitives.extend(
+                self._render_fills_for_layer(ctx, pcbdoc, layer, polygon_color)
+            )  # noqa: SLF001
+            primitives.extend(
+                self._render_regions_for_layer(ctx, pcbdoc, layer, polygon_color)
+            )  # noqa: SLF001
         primitives.extend(self._render_a0_pads(ctx, pcbdoc, layer, styles))
         return primitives
 
@@ -1637,7 +1677,9 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         if _style_enabled(styles, "silkscreen_component_graphics"):
             comp_graphics: list[object] = []
             for collection in graphics_collections:
-                comp_graphics.extend(item for item in collection if _is_component_linked(item))
+                comp_graphics.extend(
+                    item for item in collection if _is_component_linked(item)
+                )
             primitives.extend(
                 self._render_primitive_collection(  # noqa: SLF001
                     ctx,
@@ -1661,7 +1703,9 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                     ctx,
                     board_graphics,
                     layer,
-                    _style_color(styles, "silkscreen_board_graphics", ctx.layer_color(layer)),
+                    _style_color(
+                        styles, "silkscreen_board_graphics", ctx.layer_color(layer)
+                    ),
                 )
             )
         primitives.extend(self._render_a0_silkscreen_texts(ctx, pcbdoc, layer, styles))
@@ -1687,7 +1731,8 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 [
                     text
                     for text in texts
-                    if _is_component_linked(text) and bool(getattr(text, "is_designator", False))
+                    if _is_component_linked(text)
+                    and bool(getattr(text, "is_designator", False))
                 ],
             ),
             (
@@ -1879,7 +1924,9 @@ def _extract_svg_group(svg_text: str, group_id: str) -> ET.Element:
     root = ET.fromstring(svg_text)
     result = _find_element_by_id(root, group_id)
     if result is None:
-        raise ValueError(f"Generated SVG does not contain expected group id {group_id!r}")
+        raise ValueError(
+            f"Generated SVG does not contain expected group id {group_id!r}"
+        )
     return result
 
 
@@ -1899,13 +1946,20 @@ def _is_legacy_generated_view_artifact(elem: ET.Element) -> bool:
         return True
     if not _is_svg_group(elem):
         return False
-    return elem.attrib.get("data-layer-key") is not None or elem.attrib.get("id") == "board-outline"
+    return (
+        elem.attrib.get("data-layer-key") is not None
+        or elem.attrib.get("id") == "board-outline"
+    )
 
 
-def _remove_legacy_generated_view_artifacts(root: ET.Element, protected_group_id: str) -> None:
+def _remove_legacy_generated_view_artifacts(
+    root: ET.Element, protected_group_id: str
+) -> None:
     protected_group = _find_element_by_id(root, protected_group_id)
     protected_descendant_ids = (
-        {id(elem) for elem in protected_group.iter()} if protected_group is not None else set()
+        {id(elem) for elem in protected_group.iter()}
+        if protected_group is not None
+        else set()
     )
     parent_map = {child: parent for parent in root.iter() for child in parent}
     removals: list[tuple[ET.Element, ET.Element]] = []
@@ -1923,7 +1977,9 @@ def _remove_legacy_generated_view_artifacts(root: ET.Element, protected_group_id
             continue
 
 
-def _replace_generated_metadata(existing_root: ET.Element, new_root: ET.Element) -> None:
+def _replace_generated_metadata(
+    existing_root: ET.Element, new_root: ET.Element
+) -> None:
     new_metadata = _find_element_by_id(new_root, SVG_ENRICHMENT_METADATA_ID)
     old_metadata = _find_element_by_id(existing_root, SVG_ENRICHMENT_METADATA_ID)
     parent_map = {child: parent for parent in existing_root.iter() for child in parent}
@@ -1950,7 +2006,9 @@ def _replace_group_in_svg(existing_svg: str, new_svg: str, group_id: str) -> str
     new_root = ET.fromstring(new_svg)
     new_group = _find_element_by_id(new_root, group_id)
     if new_group is None:
-        raise ValueError(f"Generated SVG does not contain expected group id {group_id!r}")
+        raise ValueError(
+            f"Generated SVG does not contain expected group id {group_id!r}"
+        )
     old_group = _find_element_by_id(existing_root, group_id)
     if old_group is None:
         raise ValueError(f"Existing SVG does not contain durable group {group_id!r}")
@@ -1959,7 +2017,9 @@ def _replace_group_in_svg(existing_svg: str, new_svg: str, group_id: str) -> str
         existing_root.attrib.update(new_root.attrib)
         _replace_generated_metadata(existing_root, new_root)
         _remove_legacy_generated_view_artifacts(existing_root, group_id)
-        parent_map = {child: parent for parent in existing_root.iter() for child in parent}
+        parent_map = {
+            child: parent for parent in existing_root.iter() for child in parent
+        }
         parent = parent_map.get(old_group)
         if parent is None:
             raise ValueError(f"Existing SVG group {group_id!r} has no parent")
@@ -1974,11 +2034,15 @@ def write_or_update_view_svg(path: Path, svg_text: str, *, group_id: str) -> Non
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         try:
-            updated = _replace_group_in_svg(path.read_text(encoding="utf-8"), svg_text, group_id)
+            updated = _replace_group_in_svg(
+                path.read_text(encoding="utf-8"), svg_text, group_id
+            )
             path.write_text(updated, encoding="utf-8")
             return
         except Exception as exc:
-            log.warning("Replacing whole SVG after group update failed for %s: %s", path, exc)
+            log.warning(
+                "Replacing whole SVG after group update failed for %s: %s", path, exc
+            )
     path.write_text(svg_text, encoding="utf-8")
 
 
@@ -2165,7 +2229,9 @@ def render_pcb_svg_a0_to_output(
             log.error("Error loading design context for %s: %s", input_file.name, exc)
             return 1
         if input_file.suffix.lower() == ".pcbdoc":
-            log.info("pcb-svg design context for %s: %s", input_file.name, design_source)
+            log.info(
+                "pcb-svg design context for %s: %s", input_file.name, design_source
+            )
 
         for render_input in iter_pcb_render_inputs(
             design,

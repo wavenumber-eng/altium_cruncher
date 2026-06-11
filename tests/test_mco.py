@@ -560,9 +560,7 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
     assert len(pcbdoc.vias) == 1
     assert len(pcbdoc.fills) == 1
     assert len(pcbdoc.regions) == 1
-    assert [user_union.name for user_union in pcbdoc.user_unions] == [
-        "MATE_FEATURES"
-    ]
+    assert [user_union.name for user_union in pcbdoc.user_unions] == ["MATE_FEATURES"]
     assert pcbdoc.user_unions[0].member_count >= 6
 
 
@@ -1042,7 +1040,9 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
     assert payload["dry_run"] is True
 
 
-def test_mco_pretty_output_leads_with_message(capsys: pytest.CaptureFixture[str]) -> None:
+def test_mco_pretty_output_leads_with_message(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     spec = McoOperationSpec(
         operation_id="create_mate_project",
         op="project.create",
@@ -1070,6 +1070,10 @@ def test_mco_pretty_output_leads_with_message(capsys: pytest.CaptureFixture[str]
 def test_write_mco_template_requires_force_for_existing_file(tmp_path: Path) -> None:
     output_path = tmp_path / "template.mco.jsonc"
     write_mco_template(output_path)
+
+    text = output_path.read_text(encoding="utf-8")
+    assert "MCO operation name. Options:" in text
+    assert "project.create" in text
 
     try:
         write_mco_template(output_path)

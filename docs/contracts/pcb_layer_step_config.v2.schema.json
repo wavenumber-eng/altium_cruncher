@@ -47,20 +47,6 @@
     "copper_color": {
       "$ref": "#/$defs/color"
     },
-    "track_color": {
-      "$ref": "#/$defs/color"
-    },
-    "track_body": {
-      "type": "string",
-      "minLength": 1
-    },
-    "polygon_color": {
-      "$ref": "#/$defs/color"
-    },
-    "polygon_body": {
-      "type": "string",
-      "minLength": 1
-    },
     "outline_width_mm": {
       "type": "number",
       "minimum": 0
@@ -120,6 +106,18 @@
     "drill_plated_ring_shape": {
       "$ref": "#/$defs/platedRingShape"
     },
+    "drill_selected_component_mode": {
+      "$ref": "#/$defs/drillScopedMode"
+    },
+    "drill_other_component_mode": {
+      "$ref": "#/$defs/drillScopedMode"
+    },
+    "drill_free_pad_mode": {
+      "$ref": "#/$defs/drillScopedMode"
+    },
+    "drill_via_mode": {
+      "$ref": "#/$defs/drillScopedMode"
+    },
     "fuse_copper": {
       "type": "boolean"
     },
@@ -154,17 +152,11 @@
     "include_designators": {
       "$ref": "#/$defs/stringList"
     },
-    "pad_color_rules": {
-      "$ref": "#/$defs/padRules"
-    },
     "board_outline": {
       "$ref": "#/$defs/boardOutline"
     },
     "features": {
       "$ref": "#/$defs/features"
-    },
-    "colors": {
-      "$ref": "#/$defs/colors"
     },
     "drills": {
       "$ref": "#/$defs/drills"
@@ -213,20 +205,6 @@
         },
         "copper_color": {
           "$ref": "#/$defs/color"
-        },
-        "track_color": {
-          "$ref": "#/$defs/color"
-        },
-        "track_body": {
-          "type": "string",
-          "minLength": 1
-        },
-        "polygon_color": {
-          "$ref": "#/$defs/color"
-        },
-        "polygon_body": {
-          "type": "string",
-          "minLength": 1
         },
         "outline_width_mm": {
           "type": "number",
@@ -287,6 +265,18 @@
         "drill_plated_ring_shape": {
           "$ref": "#/$defs/platedRingShape"
         },
+        "drill_selected_component_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
+        "drill_other_component_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
+        "drill_free_pad_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
+        "drill_via_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
         "fuse_copper": {
           "type": "boolean"
         },
@@ -321,17 +311,11 @@
         "include_designators": {
           "$ref": "#/$defs/stringList"
         },
-        "pad_color_rules": {
-          "$ref": "#/$defs/padRules"
-        },
         "board_outline": {
           "$ref": "#/$defs/boardOutline"
         },
         "features": {
           "$ref": "#/$defs/features"
-        },
-        "colors": {
-          "$ref": "#/$defs/colors"
         },
         "drills": {
           "$ref": "#/$defs/drills"
@@ -389,6 +373,9 @@
     "features": {
       "type": "object",
       "properties": {
+        "defaults": {
+          "$ref": "#/$defs/featureDefaults"
+        },
         "tracks": {
           "$ref": "#/$defs/featureSwitch"
         },
@@ -396,10 +383,10 @@
           "$ref": "#/$defs/featureSwitch"
         },
         "arcs": {
-          "type": "boolean"
+          "$ref": "#/$defs/featureSwitch"
         },
         "fills": {
-          "type": "boolean"
+          "$ref": "#/$defs/featureSwitch"
         },
         "polygons": {
           "$ref": "#/$defs/featureSwitch"
@@ -408,10 +395,13 @@
           "$ref": "#/$defs/featureSwitch"
         },
         "regions": {
-          "type": "boolean"
+          "$ref": "#/$defs/featureSwitch"
+        },
+        "shapebased_regions": {
+          "$ref": "#/$defs/featureSwitch"
         },
         "vias": {
-          "type": "boolean"
+          "$ref": "#/$defs/featureSwitch"
         },
         "component_pads": {
           "oneOf": [
@@ -419,68 +409,24 @@
               "type": "boolean"
             },
             {
-              "type": "object",
-              "properties": {
-                "mode": {
-                  "enum": ["none", "all", "matching_designators"]
-                },
-                "include_designators": {
-                  "$ref": "#/$defs/stringList"
-                }
-              },
-              "additionalProperties": false
+              "$ref": "#/$defs/componentPads"
             }
           ]
         },
         "free_pads": {
-          "type": "boolean"
+          "$ref": "#/$defs/featureSwitch"
         }
       },
       "additionalProperties": false
     },
-    "colors": {
+    "featureDefaults": {
       "type": "object",
       "properties": {
-        "default_copper": {
+        "color": {
           "$ref": "#/$defs/color"
-        },
-        "tracks": {
-          "$ref": "#/$defs/featureColor"
-        },
-        "traces": {
-          "$ref": "#/$defs/featureColor"
-        },
-        "polygons": {
-          "$ref": "#/$defs/featureColor"
-        },
-        "poured_polygons": {
-          "$ref": "#/$defs/featureColor"
-        },
-        "pad_rules": {
-          "$ref": "#/$defs/padRules"
         }
       },
       "additionalProperties": false
-    },
-    "padRules": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["designators", "color"],
-        "properties": {
-          "designators": {
-            "$ref": "#/$defs/stringList"
-          },
-          "color": {
-            "$ref": "#/$defs/color"
-          },
-          "body": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "additionalProperties": false
-      }
     },
     "featureSwitch": {
       "oneOf": [
@@ -496,35 +442,67 @@
             "color": {
               "$ref": "#/$defs/color"
             },
-            "body": {
+            "step_body_name": {
               "type": "string",
               "minLength": 1
+            },
+            "thickness_bias_mm": {
+              "type": "number",
+              "minimum": 0
             }
           },
           "additionalProperties": false
         }
       ]
     },
-    "featureColor": {
-      "oneOf": [
-        {
+    "componentPads": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "mode": {
+          "enum": ["none", "all", "matching_designators"]
+        },
+        "include_designators": {
+          "$ref": "#/$defs/stringList"
+        },
+        "color": {
           "$ref": "#/$defs/color"
         },
-        {
-          "type": "object",
-          "required": ["color"],
-          "properties": {
-            "color": {
-              "$ref": "#/$defs/color"
-            },
-            "body": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "additionalProperties": false
+        "step_body_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "thickness_bias_mm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "highlight_rules": {
+          "$ref": "#/$defs/highlightRules"
         }
-      ]
+      },
+      "additionalProperties": false
+    },
+    "highlightRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["designators", "color"],
+        "properties": {
+          "designators": {
+            "$ref": "#/$defs/stringList"
+          },
+          "color": {
+            "$ref": "#/$defs/color"
+          },
+          "step_body_name": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
     },
     "drills": {
       "type": "object",
@@ -555,6 +533,18 @@
         "plated_ring_shape": {
           "$ref": "#/$defs/platedRingShape"
         },
+        "selected_component_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
+        "other_component_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
+        "free_pad_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
+        "via_mode": {
+          "$ref": "#/$defs/drillScopedMode"
+        },
         "overlay_thickness_mm": {
           "type": "number",
           "minimum": 0
@@ -565,11 +555,14 @@
     "drillMode": {
       "enum": ["auto", "cut", "overlay", "none"]
     },
+    "drillScopedMode": {
+      "enum": ["inherit", "cut", "overlay", "none"]
+    },
     "drillShape": {
       "enum": ["solid", "ring"]
     },
     "platedRingShape": {
-      "enum": ["annulus", "pad"]
+      "enum": ["annulus"]
     }
   }
 }

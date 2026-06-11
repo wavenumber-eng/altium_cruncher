@@ -1,7 +1,7 @@
 # Quality Signoff Status
 
 Status: initial bootstrap audit
-Last updated: 2026-06-09
+Last updated: 2026-06-11
 
 ## Passing Gates
 
@@ -24,6 +24,8 @@ Last updated: 2026-06-09
 `L99_signoff` now includes hard checks for command design docs, config contract
 links, config schema validation, generated-template conformance, and public
 dataclass / major-interface design ownership.
+It also verifies that generated editable JSONC configs carry option comments for
+representative string/enum fields, following ADR-0007.
 
 Current known gaps:
 
