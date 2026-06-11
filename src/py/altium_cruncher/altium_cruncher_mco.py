@@ -8,6 +8,8 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from altium_cruncher.config_json import render_commented_jsonc
+
 MCO_SCHEMA = "wn.altium_cruncher.mco.v1"
 JsonObject = dict[str, object]
 
@@ -965,7 +967,9 @@ def _op_pcbdoc_create(
     )
     if sheet_frame_mils is not None:
         builder.set_sheet_frame_mils(*sheet_frame_mils)
-    board_origin_mils = _optional_number_object(spec.args, "board_origin_mils", ("x", "y"))
+    board_origin_mils = _optional_number_object(
+        spec.args, "board_origin_mils", ("x", "y")
+    )
     if board_origin_mils is not None:
         builder.set_origin_mils(*board_origin_mils)
     else:
@@ -1147,68 +1151,113 @@ def _optional_number_object(
 
 
 def _mco_template_text() -> str:
-    return (
-        "{\n"
-        f'  "schema": "{MCO_SCHEMA}",\n'
-        "  // MCO operations execute in order. Use on_fail to jump to another id.\n"
-        '  "operations": [\n'
-        "    {\n"
-        '      "op": "project.create",\n'
-        '      "id": "create_project",\n'
-        '      "message": "Create a blank Altium project",\n'
-        '      "args": {\n'
-        '        "file": "output/mate/mate.PrjPcb",\n'
-        '        "name": "mate",\n'
-        '        "overwrite": false\n'
-        "      }\n"
-        "    },\n"
-        "    {\n"
-        '      "op": "schdoc.create",\n'
-        '      "id": "create_schematic",\n'
-        '      "message": "Create a blank schematic",\n'
-        '      "args": {\n'
-        '        "file": "output/mate/mate.SchDoc",\n'
-        '        "sheet_style": "D",\n'
-        '        "overwrite": false\n'
-        "      }\n"
-        "    },\n"
-        "    {\n"
-        '      "op": "pcbdoc.create",\n'
-        '      "id": "create_board",\n'
-        '      "message": "Create a blank board",\n'
-        '      "args": {\n'
-        '        "file": "output/mate/mate.PcbDoc",\n'
-        '        "layer_stack_template": "2-layer",\n'
-        '        "overwrite": false,\n'
-        '        "board_outline_mils": {\n'
-        '          "left": 0,\n'
-        '          "bottom": 0,\n'
-        '          "right": 3000,\n'
-        '          "top": 2000,\n'
-        "        }\n"
-        "      }\n"
-        "    },\n"
-        "    {\n"
-        '      "op": "project.add_document",\n'
-        '      "id": "add_schematic_to_project",\n'
-        '      "message": "Add schematic to project",\n'
-        '      "args": {\n'
-        '        "file": "output/mate/mate.PrjPcb",\n'
-        '        "document": "mate.SchDoc"\n'
-        "      }\n"
-        "    },\n"
-        "    {\n"
-        '      "op": "project.add_document",\n'
-        '      "id": "add_board_to_project",\n'
-        '      "message": "Add board to project",\n'
-        '      "args": {\n'
-        '        "file": "output/mate/mate.PrjPcb",\n'
-        '        "document": "mate.PcbDoc"\n'
-        "      }\n"
-        "    }\n"
-        "  ]\n"
-        "}\n"
+    return render_commented_jsonc(
+        _mco_template_payload(),
+        comments_by_path={
+            ("schema",): "MCO config contract id.",
+            (
+                "operations",
+            ): "Operations execute in order. Use on_fail to jump to another operation id.",
+            ("operations", "args"): (
+                "Operation-specific arguments. Use altium-cruncher mco ops to inspect each contract."
+            ),
+            ("operations", "args", "board_outline_mils"): (
+                "Board outline rectangle in mils."
+            ),
+        },
+        comments_by_key=_mco_template_key_comments(),
+        header_lines=(
+            "altium-cruncher MCO operation file.",
+            "This file is JSONC: comments and trailing commas are accepted.",
+            "String operation fields list their accepted options in the field comment.",
+        ),
     )
+
+
+def _mco_template_payload() -> JsonObject:
+    return {
+        "schema": MCO_SCHEMA,
+        "operations": [
+            {
+                "op": "project.create",
+                "id": "create_project",
+                "message": "Create a blank Altium project",
+                "args": {
+                    "file": "output/mate/mate.PrjPcb",
+                    "name": "mate",
+                    "overwrite": False,
+                },
+            },
+            {
+                "op": "schdoc.create",
+                "id": "create_schematic",
+                "message": "Create a blank schematic",
+                "args": {
+                    "file": "output/mate/mate.SchDoc",
+                    "sheet_style": "D",
+                    "overwrite": False,
+                },
+            },
+            {
+                "op": "pcbdoc.create",
+                "id": "create_board",
+                "message": "Create a blank board",
+                "args": {
+                    "file": "output/mate/mate.PcbDoc",
+                    "layer_stack_template": "2-layer",
+                    "overwrite": False,
+                    "board_outline_mils": {
+                        "left": 0,
+                        "bottom": 0,
+                        "right": 3000,
+                        "top": 2000,
+                    },
+                },
+            },
+            {
+                "op": "project.add_document",
+                "id": "add_schematic_to_project",
+                "message": "Add schematic to project",
+                "args": {
+                    "file": "output/mate/mate.PrjPcb",
+                    "document": "mate.SchDoc",
+                },
+            },
+            {
+                "op": "project.add_document",
+                "id": "add_board_to_project",
+                "message": "Add board to project",
+                "args": {
+                    "file": "output/mate/mate.PrjPcb",
+                    "document": "mate.PcbDoc",
+                },
+            },
+        ],
+    }
+
+
+def _mco_template_key_comments() -> dict[str, str | tuple[str, ...]]:
+    operations = ", ".join(available_mco_operations())
+    return {
+        "op": ("MCO operation name. Options:", operations),
+        "id": "Stable operation id used by logs and on_fail jumps.",
+        "message": "Free-form human-readable operation message.",
+        "file": "Path to the target Altium document or project file.",
+        "name": "Free-form generated object or project name.",
+        "overwrite": "Allow replacing an existing output object/file.",
+        "document": "Project-relative document path to add to a .PrjPcb.",
+        "sheet_style": (
+            "Schematic sheet style. Options: Altium SheetStyle enum name or native enum id."
+        ),
+        "layer_stack_template": (
+            "Layer stack template id. Options are supplied by altium-monkey; "
+            "the generated default uses 2-layer."
+        ),
+        "left": "Rectangle left coordinate in mils.",
+        "bottom": "Rectangle bottom coordinate in mils.",
+        "right": "Rectangle right coordinate in mils.",
+        "top": "Rectangle top coordinate in mils.",
+    }
 
 
 def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
@@ -1390,7 +1439,13 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             cad["pcbdoc.add-component"],
             "pcbdoc",
             "Insert a PCB component from a PcbLib.",
-            required_args=("file", "library", "footprint", "designator", "position_mils"),
+            required_args=(
+                "file",
+                "library",
+                "footprint",
+                "designator",
+                "position_mils",
+            ),
             optional_args=(
                 "layer",
                 "source_unique_id",
@@ -1411,7 +1466,13 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             "pcbdoc",
             "Position generated PCB designator text.",
             required_args=("file", "designators"),
-            optional_args=("placement", "offset_mils", "height_mils", "layer", "overwrite"),
+            optional_args=(
+                "placement",
+                "offset_mils",
+                "height_mils",
+                "layer",
+                "overwrite",
+            ),
         ),
         McoOperationInfo(
             "pcbdoc.add_track",
@@ -1441,7 +1502,13 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             cad["pcbdoc.add-pad"],
             "pcbdoc",
             "Add a free PCB pad.",
-            required_args=("file", "designator", "position_mils", "width_mils", "height_mils"),
+            required_args=(
+                "file",
+                "designator",
+                "position_mils",
+                "width_mils",
+                "height_mils",
+            ),
             optional_args=(
                 "shape",
                 "rotation_degrees",

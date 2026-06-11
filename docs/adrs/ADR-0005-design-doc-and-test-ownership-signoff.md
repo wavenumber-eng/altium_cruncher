@@ -47,7 +47,6 @@ ownership links are missing.
 
 Commands with config files or stable machine-readable output need contracts
 under `docs/contracts/` and conformance tests before the command is release-ready.
-Generated configs remain strict JSON by default because that is easy to parse
-and validate. Command config readers may accept JSONC comments and trailing
-commas for hand-edited files, but durable contracts and checked-in schema
-examples remain strict JSON.
+Generated human-editable configs follow ADR-0007 and should be JSONC with useful
+field comments. Durable contracts and checked-in schema examples remain strict
+JSON.

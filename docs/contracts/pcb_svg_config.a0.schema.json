@@ -128,7 +128,7 @@
           },
           "mirror": { "type": "boolean" },
           "assembly_hlr_mode": {
-            "enum": ["simple", "detail", "detailed", "bounding_box", "none"]
+            "enum": ["outline", "simple", "detail", "detailed", "bounding_box", "none"]
           },
           "styles": { "$ref": "#/$defs/styleTable" },
           "description": { "type": "string" }
@@ -152,7 +152,7 @@
       ]
     },
     "projectionMode": {
-      "enum": ["detail", "simple", "bounding_box", "none"]
+      "enum": ["detail", "outline", "simple", "bounding_box", "none"]
     },
     "componentOverride": {
       "type": "object",

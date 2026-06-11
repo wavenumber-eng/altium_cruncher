@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -15,6 +14,327 @@ from altium_cruncher.altium_cruncher_mate_defaults import (
     default_mate_label_style_payload,
     default_mate_output_payload,
 )
+from altium_cruncher.config_json import enum_help, render_commented_jsonc
+
+_MATE_CONFIG_COMMENT_BY_PATH = {
+    ("schema",): "Mate config contract id.",
+    ("source",): "DUT source board input and load policy.",
+    ("source", "board"): "Path to the DUT .PrjPcb or .PcbDoc.",
+    ("source", "project_context"): enum_help(
+        "Project loading mode.",
+        ("auto", "none", "schematic"),
+    ),
+    ("output",): "Generated mate project output settings.",
+    ("output", "backend"): enum_help(
+        "Output backend.",
+        ("altium",),
+    ),
+    ("output", "output_dir"): "Directory for generated project and artifacts.",
+    ("output", "project_name"): "Base name for generated project documents.",
+    ("output", "schematic_sheet_style"): (
+        "Generated schematic sheet size/style, such as D."
+    ),
+    ("output", "origin"): "How generated output coordinates are initialized.",
+    ("output", "board_outline"): "Generated output-board outline policy.",
+    ("output", "board_outline", "mode"): enum_help(
+        "Generated board-outline mode.",
+        (
+            "source_bounds",
+            "match_source_bounds",
+            "match_bounds",
+            "source_bounds_with_margin",
+            "source_bounds_plus_margin",
+            "padded_rectangle",
+            "padded_source_bounds",
+        ),
+    ),
+    ("output", "board_outline", "margin_mils"): (
+        "Board-outline expansion around source bounds in mils."
+    ),
+    ("output", "overwrite"): "Allow replacing existing generated output files.",
+    ("output", "layer_stack_template"): (
+        "Layer stack template id. Options are supplied by altium-monkey; "
+        "the generated default uses 2-layer."
+    ),
+    ("libraries",): "Library roots used to resolve mate symbols and footprints.",
+    ("libraries", "roots"): "Directories scanned for SchLib/PcbLib files.",
+    ("libraries", "recursive"): "Scan library roots recursively when true.",
+    ("validation",): "Source-side validation and ambiguity handling.",
+    ("validation", "source_side"): enum_help(
+        "How the source mount side is inferred.",
+        ("infer_single_side", "any", "none", "top", "bottom"),
+    ),
+    ("validation", "allow_side_agnostic_through_hole"): (
+        "Allow through-hole mate targets to be used across source sides."
+    ),
+    ("validation", "side_agnostic_kinds"): (
+        "Projection kinds allowed to ignore source side."
+    ),
+    ("projections",): "Named DUT feature groups projected into the mate output.",
+    ("projections", "id"): "Stable projection id referenced by actions/artifacts.",
+    ("projections", "source"): "DUT source selector for this projection.",
+    ("projections", "source", "object"): enum_help(
+        "Source object kind.",
+        ("component", "free_pad"),
+    ),
+    ("projections", "source", "designators"): (
+        "Designator wildcard/range expression, such as TP* or M1-4."
+    ),
+    ("projections", "source", "hole_size_mils"): ("Free-pad hole-size filter in mils."),
+    ("projections", "source", "hole_size_mils", "min"): (
+        "Minimum accepted hole size in mils."
+    ),
+    ("projections", "source", "hole_size_mils", "max"): (
+        "Maximum accepted hole size in mils."
+    ),
+    ("projections", "source", "plated"): "Free-pad plating filter.",
+    ("projections", "actions"): "Actions applied to each matched source object.",
+    ("projections", "actions", "kind"): enum_help(
+        "Action kind.",
+        ("mate_component", "reference_graphics", "label"),
+    ),
+    ("projections", "actions", "part"): (
+        "Known-parts manifest id for seeded mate_component actions."
+    ),
+    ("projections", "actions", "symbol_name"): (
+        "Schematic symbol name for explicit mate_component actions."
+    ),
+    ("projections", "actions", "footprint_name"): (
+        "PCB footprint name for explicit mate_component actions."
+    ),
+    ("projections", "actions", "designator_prefix"): (
+        "Generated mate component designator prefix."
+    ),
+    ("projections", "actions", "signal_pad_designator"): (
+        "Pad designator used for generated signal routing."
+    ),
+    ("projections", "actions", "shape"): enum_help(
+        "Reference graphics source shape mode.",
+        ("source_pad_outline",),
+    ),
+    ("projections", "actions", "layer"): "Target Altium layer for this action.",
+    ("projections", "actions", "style"): "Action-specific display/text style.",
+    ("projections", "actions", "text"): "Label text source, such as source_net.",
+    ("projections", "actions", "placement"): "Label placement policy object.",
+    ("pcb_designators",): "PCB-side component designator normalization settings.",
+    ("pcb_designators", "enabled"): "Enable generated designator normalization.",
+    ("pcb_designators", "placement"): enum_help(
+        "Designator placement mode.",
+        ("above_component",),
+    ),
+    ("pcb_designators", "offset_mils"): "Designator placement offset in mils.",
+    ("pcb_designators", "width_factor"): "Text width scaling factor.",
+    ("pcb_designators", "style"): "Generated designator text style.",
+    ("board_projection",): "Reference graphics copied from the DUT board.",
+    ("board_projection", "outline"): "DUT board-outline reference graphics.",
+    ("board_projection", "outline", "graphics"): (
+        "Board-outline drawing operation settings."
+    ),
+    ("board_projection", "cutouts"): "DUT board-cutout reference behavior.",
+    ("board_projection", "cutouts", "graphics"): (
+        "Board-cutout drawing operation settings."
+    ),
+    ("board_projection", "cutouts", "actual_cutouts"): (
+        "Create actual board cutouts when true; otherwise graphics only."
+    ),
+    ("artifacts",): "Optional generated artifacts produced by mate planning/runs.",
+    ("artifacts", "pcb_layer_step"): (
+        "PCB layer STEP artifact generated with the same defaults as "
+        "pcb-layer-step --init-config."
+    ),
+    ("artifacts", "pcb_layer_step", "enabled"): (
+        "Enable a local STEP model of the selected DUT PCB layer."
+    ),
+    ("artifacts", "pcb_layer_step", "source_layer"): enum_help(
+        "DUT PCB layer selector passed to pcb-layer-step.",
+        ("bottom", "top", "native layer name", "layer id"),
+    ),
+    ("artifacts", "pcb_layer_step", "z_mm"): (
+        "Bottom Z plane for the exported local STEP bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "thickness_mm"): (
+        "Nominal extrusion thickness for selected copper features."
+    ),
+    ("artifacts", "pcb_layer_step", "include_board_outline"): (
+        "Include separate board-outline bodies for visual registration."
+    ),
+    ("artifacts", "pcb_layer_step", "board_outline"): (
+        "Board outline and cutout body styling."
+    ),
+    ("artifacts", "pcb_layer_step", "board_outline", "color"): (
+        "STEP color for the outer board outline body."
+    ),
+    ("artifacts", "pcb_layer_step", "board_outline", "cutout_color"): (
+        "STEP color for interior board cutout outline bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "board_outline", "cutouts"): (
+        "Include separate outline bodies around interior board cutouts."
+    ),
+    ("artifacts", "pcb_layer_step", "board_outline", "width_mm"): (
+        "Outline stroke body width in millimeters."
+    ),
+    ("artifacts", "pcb_layer_step", "board_outline", "fuse"): (
+        "Request planar fusion for board-outline bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "features"): (
+        "Copper feature selection, color, body-name, and thickness-bias policy."
+    ),
+    ("artifacts", "pcb_layer_step", "features", "defaults"): (
+        "Fallback feature styling when a feature does not override it."
+    ),
+    ("artifacts", "pcb_layer_step", "features", "component_pads"): (
+        "Component-owned pad selection and styling."
+    ),
+    ("artifacts", "pcb_layer_step", "features", "free_pads"): (
+        "Pads not owned by a PCB component."
+    ),
+    ("artifacts", "pcb_layer_step", "features", "tracks"): ("Copper track primitives."),
+    ("artifacts", "pcb_layer_step", "features", "arcs"): ("Copper arc primitives."),
+    ("artifacts", "pcb_layer_step", "features", "fills"): ("Copper fill primitives."),
+    ("artifacts", "pcb_layer_step", "features", "polygons"): (
+        "Poured polygon copper primitives."
+    ),
+    ("artifacts", "pcb_layer_step", "features", "regions"): (
+        "Non-polygon copper region primitives."
+    ),
+    ("artifacts", "pcb_layer_step", "features", "vias"): ("Via copper pad primitives."),
+    ("artifacts", "pcb_layer_step", "features", "component_pads", "mode"): enum_help(
+        "Component pad mode.",
+        ("none", "all", "matching_designators"),
+    ),
+    (
+        "artifacts",
+        "pcb_layer_step",
+        "features",
+        "component_pads",
+        "include_designators",
+    ): ("Case-insensitive shell-style component designator patterns to include."),
+    ("artifacts", "pcb_layer_step", "features", "component_pads", "highlight_rules"): (
+        "Rules that split matching pads into separately colored STEP bodies."
+    ),
+    (
+        "artifacts",
+        "pcb_layer_step",
+        "features",
+        "component_pads",
+        "highlight_rules",
+        "designators",
+    ): ("Case-insensitive shell-style designator patterns for this highlight."),
+    ("artifacts", "pcb_layer_step", "drills"): ("Drill and slot visualization policy."),
+    ("artifacts", "pcb_layer_step", "drills", "mode"): enum_help(
+        "Global drill mode.",
+        ("auto", "cut", "overlay", "none"),
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "selected_component_mode"): enum_help(
+        "Drill mode for pads selected by component_pads.",
+        ("inherit", "cut", "overlay", "none"),
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "other_component_mode"): enum_help(
+        "Drill mode for unselected component-owned pads.",
+        ("inherit", "cut", "overlay", "none"),
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "free_pad_mode"): enum_help(
+        "Drill mode for pads not owned by a component.",
+        ("inherit", "cut", "overlay", "none"),
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "via_mode"): enum_help(
+        "Drill mode for via holes.",
+        ("inherit", "cut", "overlay", "none"),
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "minimum_diameter_mm"): (
+        "Omit drill overlays/cuts below this diameter."
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "shape"): enum_help(
+        "Overlay shape.",
+        ("solid", "ring"),
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "color"): (
+        "Default STEP color for drill overlay bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "plated_color"): (
+        "STEP color for plated drill overlay bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "non_plated_color"): (
+        "STEP color for non-plated drill overlay bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "ring_width_mm"): (
+        "Fixed annulus width when drill shape is ring."
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "plated_ring_shape"): enum_help(
+        "Plated drill ring policy.",
+        ("annulus",),
+    ),
+    ("artifacts", "pcb_layer_step", "drills", "overlay_thickness_mm"): (
+        "Z thickness for separate drill overlay bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "fuse_copper"): (
+        "Request Geometer planar fusion for copper bodies."
+    ),
+    ("artifacts", "pcb_layer_step", "insert_in_output"): (
+        "Insert the generated STEP artifact into the mate output PcbDoc."
+    ),
+    ("artifacts", "pcb_layer_step", "insert_in_output", "enabled"): (
+        "Enable embedding the STEP model in the generated output board."
+    ),
+    ("artifacts", "pcb_layer_step", "insert_in_output", "z_mm"): (
+        "Model placement Z in the generated output board."
+    ),
+    ("artifacts", "pcb_layer_step", "insert_in_output", "layer"): enum_help(
+        "Altium layer used for the embedded STEP model.",
+        ("native layer name", "layer id"),
+    ),
+    ("artifacts", "pcb_layer_step", "insert_in_output", "side"): enum_help(
+        "Board side used for the embedded STEP model.",
+        ("TOP", "BOTTOM", "native projection enum id"),
+    ),
+    ("artifacts", "pcb_layer_step", "highlights"): (
+        "Projection-driven extra highlight geometries added to the artifact."
+    ),
+    ("artifacts", "pcb_layer_step", "highlights", "projection"): (
+        "Projection id whose source pad geometries should be highlighted."
+    ),
+    ("artifacts", "pcb_layer_step", "highlights", "color"): (
+        "STEP color for this projection highlight."
+    ),
+}
+
+_MATE_CONFIG_COMMENT_BY_KEY = {
+    "enabled": "Enable this feature body.",
+    "color": "STEP color for this body or rule.",
+    "step_body_name": "Stable Geometer STEP body id/name.",
+    "thickness_bias_mm": (
+        "Symmetric Z bias that prevents overlapping colored bodies from z-fighting."
+    ),
+    "designators": "Case-insensitive shell-style designator patterns.",
+    "side": enum_help(
+        "Board side selector.",
+        ("top", "bottom", "left", "right", "board_left", "board_right"),
+    ),
+    "layer": enum_help(
+        "Altium layer selector.",
+        ("native layer name", "layer id"),
+    ),
+    "style": "Rendering or text style object.",
+    "graphics": "Graphics output settings.",
+    "height_mils": "Text height in mils.",
+    "font_kind": enum_help(
+        "Text font kind.",
+        ("truetype", "stroke", "barcode"),
+    ),
+    "font_name": "Free-form text font face name.",
+    "bold": "Render text in bold when true.",
+    "stroke_width_mils": "Stroke width in mils.",
+    "text_justification": enum_help(
+        "Altium text justification.",
+        ("Altium text justification enum name", "native enum id"),
+    ),
+    "mode": "Mode selector for this object; see the field-specific comment for options.",
+    "offset_mils": "XY offset in mils.",
+    "box_size_mils": "Label box width and height in mils.",
+    "row_spacing_mils": "Vertical spacing between generated label rows.",
+    "column_spacing_mils": "Horizontal spacing between generated label columns.",
+    "auto_width_padding_mils": "Extra padding added to auto-sized label boxes.",
+}
 
 
 def mate_seed_projections(inspection: Mapping[str, object]) -> list[JsonObject]:
@@ -39,6 +359,7 @@ def mate_template_text(
 ) -> str:
     """Return the editable default mate JSONC template text."""
     payload = _mate_template_payload(schema=schema, source_board=source_board)
+    payload_text = mate_config_payload_text(payload)
     return (
         "/*\n"
         "  altium-cruncher mate config a0\n"
@@ -51,8 +372,31 @@ def mate_template_text(
         "  mate_component actions resolve symbol_name and footprint_name by\n"
         "  scanning the configured library roots. The generated MCO is a derived\n"
         "  artifact; keep this config as the human-authored source of truth.\n"
+        "\n"
+        "  Generated mate config sections are JSONC-commented from the config\n"
+        "  help registry. artifacts.pcb_layer_step is generated from the same\n"
+        "  default payload as pcb-layer-step --init-config.\n"
         "*/\n"
-        f"{json.dumps(payload, indent=2)}\n"
+        f"{payload_text}\n"
+    )
+
+
+def mate_config_payload_text(payload: JsonObject) -> str:
+    """Render a mate config payload as commented JSONC."""
+    return render_commented_jsonc(
+        payload,
+        comments_by_path=_MATE_CONFIG_COMMENT_BY_PATH,
+        comments_by_key=_MATE_CONFIG_COMMENT_BY_KEY,
+    ).rstrip()
+
+
+def _mate_config_comment_maps() -> tuple[
+    Mapping[tuple[str, ...] | str, str | tuple[str, ...]],
+    Mapping[str, str | tuple[str, ...]],
+]:
+    return (
+        _MATE_CONFIG_COMMENT_BY_PATH,
+        _MATE_CONFIG_COMMENT_BY_KEY,
     )
 
 

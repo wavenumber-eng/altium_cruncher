@@ -29,7 +29,12 @@ HYDROSCOPE_SCHDOC = HYDROSCOPE_DIR / "CPU.SchDoc"
 HYDROSCOPE_SCHLIB = HYDROSCOPE_DIR / "Hydroscope.SCHLIB"
 HYDROSCOPE_PCBDOC = HYDROSCOPE_DIR / "TZ-SB-0001-PCB-[A] (HydroScope Mainboard).PcbDoc"
 RT_SUPER_C1_INTLIB = (
-    PACKAGE_ROOT / "tests" / "assets" / "intlib" / "rt_super_c1" / "input"
+    PACKAGE_ROOT
+    / "tests"
+    / "assets"
+    / "intlib"
+    / "rt_super_c1"
+    / "input"
     / "RT_SUPER_C1.IntLib"
 )
 CUTOUTS_DIR = PACKAGE_ROOT / "tests" / "assets" / "projects" / "cutouts"
@@ -79,7 +84,9 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
         "-o",
         str(bom_dir),
     )
-    bom_payload = json.loads((bom_dir / "Hydroscope_bom.json").read_text(encoding="utf-8"))
+    bom_payload = json.loads(
+        (bom_dir / "Hydroscope_bom.json").read_text(encoding="utf-8")
+    )
     assert bom_payload["schema"] == "wn.altium_cruncher.bom.v1"
     assert bom_payload["component_count"] >= 100
 
@@ -100,7 +107,9 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
 
     pnp_dir = tmp_path / "pnp"
     _run_cli("pnp", str(HYDROSCOPE_PROJECT), "--format", "json", "-o", str(pnp_dir))
-    pnp_payload = json.loads((pnp_dir / "Hydroscope_pnp.json").read_text(encoding="utf-8"))
+    pnp_payload = json.loads(
+        (pnp_dir / "Hydroscope_pnp.json").read_text(encoding="utf-8")
+    )
     assert pnp_payload["units"] == "mm"
     assert len(pnp_payload["placements"]) >= 100
 
@@ -118,23 +127,44 @@ def test_bom_pnp_config_and_jlc_command_use_public_project(tmp_path: Path) -> No
     """Exercise shared BOM/PnP config and paired JLC outputs."""
     config_path = tmp_path / "bom.config"
     _run_cli("bom", "--write-config", str(config_path))
-    config_payload = json.loads(config_path.read_text(encoding="utf-8"))
+    config_payload = load_json_config(config_path)
     assert config_payload["schema"] == "wn.altium_cruncher.bom.config.v1"
 
     bom_root = tmp_path / "configured-bom"
-    _run_cli("bom", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(bom_root))
+    _run_cli(
+        "bom",
+        str(HYDROSCOPE_PROJECT),
+        "--config",
+        str(config_path),
+        "-o",
+        str(bom_root),
+    )
     assert (bom_root / "bom" / "Hydroscope_base_raw.json").exists()
     assert (bom_root / "bom" / "Hydroscope_base_grouped.xlsx").exists()
     assert (bom_root / "bom" / "bom.config.used.json").exists()
 
     pnp_root = tmp_path / "configured-pnp"
-    _run_cli("pnp", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(pnp_root))
+    _run_cli(
+        "pnp",
+        str(HYDROSCOPE_PROJECT),
+        "--config",
+        str(config_path),
+        "-o",
+        str(pnp_root),
+    )
     assert (pnp_root / "pnp" / "Hydroscope_base.json").exists()
     assert (pnp_root / "pnp" / "Hydroscope_base.csv").exists()
     assert (pnp_root / "pnp" / "bom.config.used.json").exists()
 
     jlc_root = tmp_path / "jlc"
-    _run_cli("jlc", str(HYDROSCOPE_PROJECT), "--config", str(config_path), "-o", str(jlc_root))
+    _run_cli(
+        "jlc",
+        str(HYDROSCOPE_PROJECT),
+        "--config",
+        str(config_path),
+        "-o",
+        str(jlc_root),
+    )
     assert (jlc_root / "jlc" / "Hydroscope_base_jlc.xlsx").exists()
     assert (jlc_root / "jlc" / "Hydroscope_base_jlc-cpl.xlsx").exists()
     assert (jlc_root / "jlc" / "bom.config.used.json").exists()
@@ -152,12 +182,12 @@ def test_output_path_template_uses_public_project_parameters() -> None:
         variant_name="A",
     )
 
-    assert str(resolved) == (
-        "releases/A/TZ-SB-0001 - Hydroscope Mainboard - A"
-    )
+    assert str(resolved) == ("releases/A/TZ-SB-0001 - Hydroscope Mainboard - A")
 
 
-def test_library_extract_split_merge_commands_use_public_fixtures(tmp_path: Path) -> None:
+def test_library_extract_split_merge_commands_use_public_fixtures(
+    tmp_path: Path,
+) -> None:
     """Exercise library extraction plus split/merge on public Hydroscope files."""
     extract_dir = tmp_path / "extract"
     _run_cli("extract", str(HYDROSCOPE_SCHDOC), "--combined", "-o", str(extract_dir))
@@ -166,7 +196,9 @@ def test_library_extract_split_merge_commands_use_public_fixtures(tmp_path: Path
     assert extracted.stat().st_size > 0
 
     split_dir = tmp_path / "split"
-    _run_cli("split", str(HYDROSCOPE_SCHLIB), "-o", str(split_dir), "--symbols", "SMT_TEST")
+    _run_cli(
+        "split", str(HYDROSCOPE_SCHLIB), "-o", str(split_dir), "--symbols", "SMT_TEST"
+    )
     split_file = split_dir / "SMT_TEST.SchLib"
     assert split_file.exists()
     assert split_file.stat().st_size > 0
@@ -230,7 +262,9 @@ def test_intlib_extract_command_uses_public_fixture(tmp_path: Path) -> None:
     assert isinstance(pcblib.footprints, list)
 
 
-def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Path) -> None:
+def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(
+    tmp_path: Path,
+) -> None:
     """Exercise pcb-svg against a copied public PcbDoc and explicit config."""
     pcbdoc = tmp_path / "board.PcbDoc"
     shutil.copy2(HYDROSCOPE_PCBDOC, pcbdoc)
@@ -267,7 +301,9 @@ def test_pcb_svg_command_uses_public_pcbdoc_without_private_context(tmp_path: Pa
         str(output_dir),
     )
 
-    manifest = json.loads((output_dir / "board__views.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (output_dir / "board__views.json").read_text(encoding="utf-8")
+    )
     assert manifest["schema"] == "pcb.svg.manifest.a0"
     assert manifest["board"] == "board"
     assert (output_dir / "layers" / "board__TOP.svg").exists()
@@ -300,7 +336,7 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
                         "group_id": "pcb-svg-view-assembly-top",
                         "output_svg": "assembly_top_view/{board}__assembly_top_view.svg",
                         "layers": ["BOARD_OUTLINE", "TOP", "ASSEMBLY_HLR_TOP"],
-                        "assembly_hlr_mode": "simple",
+                        "assembly_hlr_mode": "outline",
                     },
                     {
                         "name": "assembly_bottom_view",
@@ -308,7 +344,7 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
                         "group_id": "pcb-svg-view-assembly-bottom",
                         "output_svg": "assembly_bottom_view/{board}__assembly_bottom_view.svg",
                         "layers": ["BOARD_OUTLINE", "BOTTOM", "ASSEMBLY_HLR_BOTTOM"],
-                        "assembly_hlr_mode": "simple",
+                        "assembly_hlr_mode": "outline",
                     },
                 ],
             },
@@ -323,7 +359,9 @@ def test_pcb_svg_assembly_views_use_geometer_hlr(tmp_path: Path) -> None:
     top_svg = (
         output_dir / "assembly_top_view" / "board__assembly_top_view.svg"
     ).read_text(encoding="utf-8")
-    assert (output_dir / "assembly_bottom_view" / "board__assembly_bottom_view.svg").exists()
+    assert (
+        output_dir / "assembly_bottom_view" / "board__assembly_bottom_view.svg"
+    ).exists()
     assert 'id="assembly-overlay"' in top_svg
     assert 'data-assembly-symbol="simple"' in top_svg
     assert 'data-layer-id="1"' in top_svg
@@ -344,7 +382,7 @@ def test_pcb_svg_copper_polygon_style_colors_shape_based_regions(
                     "styles": {
                         "copper_traces": {"color": "#111111"},
                         "copper_polygons": {"color": "#12AB34"},
-                    }
+                    },
                 },
                 "layer_outputs": {"enabled": False},
                 "views": [
@@ -362,14 +400,27 @@ def test_pcb_svg_copper_polygon_style_colors_shape_based_regions(
     )
     output_dir = tmp_path / "pcb-svg"
 
-    _run_cli("pcb-svg", str(CRICKET_NODE_PCBDOC), "--config", str(config), "-o", str(output_dir))
+    _run_cli(
+        "pcb-svg",
+        str(CRICKET_NODE_PCBDOC),
+        "--config",
+        str(config),
+        "-o",
+        str(output_dir),
+    )
 
     top_svg = (output_dir / "views" / "cricket-node-hw__B__top_view.svg").read_text(
         encoding="utf-8"
     )
     assert 'data-primitive="shapebased-region"' in top_svg
-    assert 'fill="#12AB34" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"' in top_svg
-    assert 'fill="#000000" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"' not in top_svg
+    assert (
+        'fill="#12AB34" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"'
+        in top_svg
+    )
+    assert (
+        'fill="#000000" fill-rule="evenodd" stroke="none" data-primitive="shapebased-region"'
+        not in top_svg
+    )
     assert 'data-canvas-bounds-mode="board_outline"' in top_svg
     assert '"canvas":{"altium_origin_mils":' in top_svg
     assert '"x_absolute_mils":' in top_svg
@@ -427,7 +478,9 @@ def test_pcb_svg_cutout_layer_uses_configured_hashes(tmp_path: Path) -> None:
     )
     output_dir = CUTOUTS_DIR / "output" / "pcb-svg" / "cutout-layer"
 
-    _run_cli("pcb-svg", str(CUTOUTS_PCBDOC), "--config", str(config), "-o", str(output_dir))
+    _run_cli(
+        "pcb-svg", str(CUTOUTS_PCBDOC), "--config", str(config), "-o", str(output_dir)
+    )
 
     cutout_svg_path = output_dir / "layers" / "cutout_multiple__BOARD_CUTOUTS.svg"
     cutout_svg = cutout_svg_path.read_text(encoding="utf-8")
@@ -460,7 +513,7 @@ def test_clean_command_creates_template_for_public_schdoc_copy(tmp_path: Path) -
     config_text = config_path.read_text(encoding="utf-8")
     payload = load_json_config(config_path)
     assert "// Generated by altium-cruncher clean." in config_text
-    assert "// Pin name/designator fonts inside symbols." in config_text
+    assert "/* Pin name/designator fonts inside symbols. */" in config_text
     assert payload["schema"] == "wn.altium.clean.config.v1"
 
 
@@ -489,8 +542,15 @@ def test_clean_init_config_writes_templates_without_cleaning(tmp_path: Path) -> 
     schematic_text = schematic_config.read_text(encoding="utf-8")
     pcblib_text = pcblib_config.read_text(encoding="utf-8")
     assert not fake_schlib.exists()
-    assert "// Use --init-config to write this template without cleaning an input." in schematic_text
-    assert "// Altium font family name to apply." in schematic_text
-    assert "// Text matching mode: all, regex, contains, or exact." in pcblib_text
+    assert (
+        "/* Use --init-config to write this template without cleaning an input. */"
+        in schematic_text
+    )
+    assert "/* Altium font family name to apply. */" in schematic_text
+    assert (
+        "/* Text matching mode. Options: all, regex, contains, exact. */" in pcblib_text
+    )
     assert load_json_config(schematic_config)["schema"] == "wn.altium.clean.config.v1"
-    assert load_json_config(pcblib_config)["schema"] == "wn.altium.pcblib.clean.config.v1"
+    assert (
+        load_json_config(pcblib_config)["schema"] == "wn.altium.pcblib.clean.config.v1"
+    )

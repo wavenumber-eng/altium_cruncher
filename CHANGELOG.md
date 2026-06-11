@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026.6.11
+
+- Consume pinned `altium-monkey==2026.6.11` and `wn-geometer==2026.6.10`
+  for the OCCT V8-backed geometry stack used by assembly HLR and PCB layer
+  STEP export.
+- Narrow the package metadata to Python `>=3.12,<3.13`, matching the current
+  public Altium Monkey dependency.
+- Prefer `outline` for `pcb-svg` assembly silhouette projections while keeping
+  `simple` as a legacy config alias, and read Geometer's current outline result
+  key for STEP overlays.
+- Update `pcb-layer-step` defaults for fixture-alignment models: explicit
+  feature bodies, colors, thickness bias, selected pad highlights, scoped drill
+  policies, and yellow board outline/cutout bodies.
+- Align `mate` generated PCB layer STEP artifacts with the standalone
+  `pcb-layer-step --init-config` defaults.
+- Route generated editable configs through the shared JSONC comment renderer
+  and add ADR-0007: string/enum fields in generated config comments must list
+  accepted options.
+
 ## 2026.6.9
 
 - Consume pinned `altium-monkey==2026.6.9`.

@@ -14,10 +14,6 @@ _PCB_LAYER_STEP_OPTION_KEYS = (
     "thickness_mm",
     "z_mm",
     "copper_color",
-    "track_color",
-    "track_body",
-    "polygon_color",
-    "polygon_body",
     "outline_width_mm",
     "outline_color",
     "board_cutout_color",
@@ -36,6 +32,10 @@ _PCB_LAYER_STEP_OPTION_KEYS = (
     "drill_hole_shape",
     "drill_ring_width_mm",
     "drill_plated_ring_shape",
+    "drill_selected_component_mode",
+    "drill_other_component_mode",
+    "drill_free_pad_mode",
+    "drill_via_mode",
     "fuse_copper",
     "fuse_board_outline",
     "arc_segments",
@@ -48,12 +48,11 @@ _PCB_LAYER_STEP_OPTION_KEYS = (
     "include_free_pads",
     "include_designators",
     "features",
-    "colors",
     "drills",
     "board_outline",
 )
 
-_PCB_LAYER_STEP_CACHE_VERSION = "mate-pcb-layer-step-2026-06-07-a"
+_PCB_LAYER_STEP_CACHE_VERSION = "mate-pcb-layer-step-2026-06-11-b"
 
 
 def build_mate_artifact_operations(config: object) -> list[JsonObject]:
@@ -120,9 +119,7 @@ def _pcb_layer_step_operation(
     for option_key in _PCB_LAYER_STEP_OPTION_KEYS:
         if option_key in layer_step:
             args[option_key] = layer_step[option_key]
-    colors = _pcb_layer_step_colors(board, layer_step)
-    if colors:
-        args["colors"] = colors
+    _add_pcb_layer_step_highlight_rules(args, board, layer_step)
     artifact_hash = _pcb_layer_step_artifact_hash(
         board=board,
         board_key=board_key,
@@ -274,24 +271,38 @@ def _pcb_layer_step_highlights(
     return result
 
 
-def _pcb_layer_step_colors(
+def _add_pcb_layer_step_highlight_rules(
+    args: JsonObject,
     board: object,
     layer_step: Mapping[str, object],
-) -> JsonObject | None:
-    rules = _pcb_layer_step_color_rules(board, layer_step)
-    colors = _initial_pcb_layer_step_colors(layer_step)
+) -> None:
+    rules = _pcb_layer_step_highlight_rules(board, layer_step)
     if not rules:
-        return colors or None
-    existing_rules = colors.get("pad_rules", [])
+        return
+    features = args.get("features", {})
+    if not isinstance(features, dict):
+        raise ValueError("Mate pcb_layer_step.features must be an object")
+    component_pads = features.get("component_pads", {})
+    if isinstance(component_pads, bool):
+        component_pads = {"enabled": component_pads}
+    if not isinstance(component_pads, dict):
+        raise ValueError(
+            "Mate pcb_layer_step.features.component_pads must be an object"
+        )
+    existing_rules = component_pads.get("highlight_rules", [])
     if existing_rules is None:
         existing_rules = []
     if not isinstance(existing_rules, list):
-        raise ValueError("Mate pcb_layer_step.colors.pad_rules must be an array")
-    colors["pad_rules"] = [*existing_rules, *rules]
-    return colors
+        raise ValueError(
+            "Mate pcb_layer_step.features.component_pads.highlight_rules "
+            "must be an array"
+        )
+    component_pads["highlight_rules"] = [*existing_rules, *rules]
+    features["component_pads"] = component_pads
+    args["features"] = features
 
 
-def _pcb_layer_step_color_rules(
+def _pcb_layer_step_highlight_rules(
     board: object,
     layer_step: Mapping[str, object],
 ) -> list[JsonObject]:
@@ -305,17 +316,10 @@ def _pcb_layer_step_color_rules(
             {
                 "designators": designators,
                 "color": _optional_string(spec, "color", "#ffcc00") or "#ffcc00",
-                "body": projection_id,
+                "step_body_name": projection_id,
             }
         )
     return rules
-
-
-def _initial_pcb_layer_step_colors(layer_step: Mapping[str, object]) -> JsonObject:
-    existing = layer_step.get("colors")
-    if existing is not None and not isinstance(existing, dict):
-        raise ValueError("Mate pcb_layer_step.colors must be an object")
-    return dict(existing) if isinstance(existing, dict) else {}
 
 
 def _highlight_specs(layer_step: Mapping[str, object]) -> list[JsonObject]:

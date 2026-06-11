@@ -13,6 +13,7 @@ from altium_cruncher.altium_cruncher_common import (
 )
 from altium_cruncher.altium_cruncher_pcb_layer_step import (
     PCB_LAYER_STEP_CONFIG_FILENAME,
+    PCB_LAYER_STEP_LEGACY_CONFIG_FILENAME,
     PcbLayerStepConfig,
     PcbLayerStepOptions,
     export_pcb_layer_step,
@@ -216,13 +217,13 @@ def resolve_pcb_layer_step_configs(
         return config_by_input, created_paths
 
     for input_file in resolved_input_files:
-        auto_config_path = input_file.parent / PCB_LAYER_STEP_CONFIG_FILENAME
+        auto_config_path = _auto_config_path_for_input(input_file)
         if not auto_config_path.exists():
             write_default_pcb_layer_step_config(auto_config_path)
             created_paths.append(auto_config_path)
 
     for input_file in resolved_input_files:
-        auto_config_path = input_file.parent / PCB_LAYER_STEP_CONFIG_FILENAME
+        auto_config_path = _auto_config_path_for_input(input_file)
         loaded = config_cache.get(auto_config_path)
         if loaded is None:
             loaded = load_pcb_layer_step_config(auto_config_path)
@@ -230,6 +231,16 @@ def resolve_pcb_layer_step_configs(
         config_by_input[input_file] = loaded
 
     return config_by_input, sorted(set(created_paths))
+
+
+def _auto_config_path_for_input(input_file: Path) -> Path:
+    jsonc_path = input_file.parent / PCB_LAYER_STEP_CONFIG_FILENAME
+    if jsonc_path.exists():
+        return jsonc_path
+    legacy_path = input_file.parent / PCB_LAYER_STEP_LEGACY_CONFIG_FILENAME
+    if legacy_path.exists():
+        return legacy_path
+    return jsonc_path
 
 
 def _iter_output_configs(config: PcbLayerStepConfig) -> tuple[PcbLayerStepConfig, ...]:
@@ -348,6 +359,10 @@ def _options_from_config_and_args(
                 config.drill_plated_ring_shape,
             )
         ),
+        drill_selected_component_mode=config.drill_selected_component_mode,
+        drill_other_component_mode=config.drill_other_component_mode,
+        drill_free_pad_mode=config.drill_free_pad_mode,
+        drill_via_mode=config.drill_via_mode,
         fuse_copper=False
         if bool(getattr(args, "no_fuse", False))
         else config.fuse_copper,
@@ -364,6 +379,30 @@ def _options_from_config_and_args(
         include_free_pads=config.include_free_pads,
         include_designators=config.include_designators,
         pad_color_rules=config.pad_color_rules,
+        track_color=config.track_color,
+        track_body=config.track_body,
+        arc_color=config.arc_color,
+        arc_body=config.arc_body,
+        fill_color=config.fill_color,
+        fill_body=config.fill_body,
+        polygon_color=config.polygon_color,
+        polygon_body=config.polygon_body,
+        region_color=config.region_color,
+        region_body=config.region_body,
+        via_color=config.via_color,
+        via_body=config.via_body,
+        component_pad_color=config.component_pad_color,
+        component_pad_body=config.component_pad_body,
+        free_pad_color=config.free_pad_color,
+        free_pad_body=config.free_pad_body,
+        track_thickness_bias_mm=config.track_thickness_bias_mm,
+        arc_thickness_bias_mm=config.arc_thickness_bias_mm,
+        fill_thickness_bias_mm=config.fill_thickness_bias_mm,
+        polygon_thickness_bias_mm=config.polygon_thickness_bias_mm,
+        region_thickness_bias_mm=config.region_thickness_bias_mm,
+        via_thickness_bias_mm=config.via_thickness_bias_mm,
+        component_pad_thickness_bias_mm=config.component_pad_thickness_bias_mm,
+        free_pad_thickness_bias_mm=config.free_pad_thickness_bias_mm,
     )
 
 
@@ -430,7 +469,7 @@ def register_parser(subparsers):
             "and a separate board-outline body."
         ),
         epilog="Examples:\n"
-        "  altium-cruncher pcb-layer-step --init-config --config pcb-layer-step.json\n"
+        "  altium-cruncher pcb-layer-step --init-config --config pcb-layer-step.jsonc\n"
         "  altium-cruncher pcb-layer-step board.PcbDoc\n"
         "  altium-cruncher pcb-layer-step project.PrjPcb --doc board.PcbDoc --layer bottom\n"
         "  altium-cruncher pcb-layer-step board.PcbDoc --exclude-poured-polygons\n"
@@ -514,12 +553,12 @@ def register_parser(subparsers):
     parser.add_argument(
         "--outline-color",
         default=None,
-        help="STEP color for board outline, #RRGGBB or #AARRGGBB (default: #111111)",
+        help="STEP color for board outline, #RRGGBB or #AARRGGBB (default: #FFFF00)",
     )
     parser.add_argument(
         "--board-cutout-color",
         default=None,
-        help="STEP color for interior board-cutout outline bodies (default: #FF0000)",
+        help="STEP color for interior board-cutout outline bodies (default: #FFFF00)",
     )
     parser.add_argument(
         "--exclude-poured-polygons",
@@ -602,9 +641,9 @@ def register_parser(subparsers):
     )
     parser.add_argument(
         "--drill-plated-ring-shape",
-        choices=["annulus", "pad"],
+        choices=["annulus"],
         default=None,
-        help="plated drill ring source: fixed annulus or full pad shape",
+        help="plated drill ring source: fixed annulus",
     )
     parser.add_argument(
         "--no-fuse",

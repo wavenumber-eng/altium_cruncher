@@ -15,3 +15,5 @@ This folder records accepted architecture decisions for `altium-cruncher`.
 - [ADR-0005](ADR-0005-design-doc-and-test-ownership-signoff.md) - Design
   documentation and test ownership signoff.
 - [ADR-0006](ADR-0006-cli-help-output-policy.md) - CLI help output policy.
+- [ADR-0007](ADR-0007-generated-jsonc-config-comment-policy.md) - Generated
+  JSONC config comment policy.

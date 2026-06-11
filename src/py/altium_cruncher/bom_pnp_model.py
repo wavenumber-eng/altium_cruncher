@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-import json
 from pathlib import Path
 import re
 
@@ -15,7 +14,11 @@ from altium_monkey.altium_pnp_position import (
     normalize_pnp_position_mode,
 )
 
-from altium_cruncher.config_json import load_json_config
+from altium_cruncher.config_json import (
+    enum_help,
+    load_json_config,
+    render_commented_jsonc,
+)
 from altium_cruncher.output_path_templates import (
     TemplateValue,
     resolve_output_name,
@@ -89,6 +92,95 @@ _BOM_SOURCE_MODES = frozenset({"schematic", "pcb", "merged"})
 _PNP_POSITION_MODES = frozenset(PNP_POSITION_MODES)
 _DNP_PLACEMENTS = frozenset({"inline", "end", "separate"})
 _VARIANT_MODES = frozenset({"base", "all", "named"})
+
+_BOM_PNP_CONFIG_COMMENTS: dict[tuple[str, ...], str | tuple[str, ...]] = {
+    ("schema",): "BOM/PnP config contract id.",
+    ("field_aliases",): (
+        "Canonical BOM field aliases used to normalize project parameters.",
+        "Each key is a canonical output field; each value lists accepted source names.",
+    ),
+    ("variants",): "Variant selection policy for BOM and PnP outputs.",
+    ("variants", "mode"): enum_help(
+        "Variant mode.",
+        tuple(sorted(_VARIANT_MODES)),
+    ),
+    ("variants", "names"): "Variant names used when mode is named.",
+    (
+        "variants",
+        "include_base",
+    ): "Include the base/no-variant output alongside named variants.",
+    ("bom",): "BOM normalization and artifact output settings.",
+    ("bom", "source_mode"): enum_help(
+        "BOM source mode.",
+        tuple(sorted(_BOM_SOURCE_MODES)),
+    ),
+    ("bom", "outputs"): enum_help(
+        "BOM artifacts to generate.",
+        tuple(sorted(_BOM_OUTPUT_KINDS)),
+    ),
+    (
+        "bom",
+        "group_fields",
+    ): "Canonical fields used to group fitted parts into BOM rows.",
+    ("bom", "output_fields"): "Columns emitted in grouped BOM table outputs.",
+    (
+        "bom",
+        "include_dnp",
+    ): "Include do-not-populate components in normalized BOM data.",
+    (
+        "bom",
+        "split_dnp",
+    ): "Keep fitted and DNP components in separate grouped BOM lines.",
+    ("bom", "dnp_placement"): enum_help(
+        "Placement for DNP rows in grouped outputs.",
+        tuple(sorted(_DNP_PLACEMENTS)),
+    ),
+    ("bom", "highlight_dnp_rows"): "Apply DNP row highlighting in spreadsheet outputs.",
+    (
+        "bom",
+        "prefix_order",
+    ): "Designator prefix ordering for grouped BOM row designators.",
+    ("bom", "pcb_line_item"): "Optional synthetic PCB line item added to BOM outputs.",
+    ("bom", "pcb_line_item", "enabled"): "Enable the synthetic PCB line item.",
+    (
+        "bom",
+        "pcb_line_item",
+        "designator",
+    ): "Designator text for the synthetic PCB line item.",
+    (
+        "bom",
+        "pcb_line_item",
+        "fields",
+    ): "Field templates for the synthetic PCB line item.",
+    ("pnp",): "Pick-and-place normalization and artifact output settings.",
+    ("pnp", "outputs"): enum_help(
+        "PnP artifacts to generate.",
+        tuple(sorted(_PNP_OUTPUT_KINDS)),
+    ),
+    ("pnp", "output_fields"): "Columns emitted in PnP table outputs.",
+    ("pnp", "units"): enum_help(
+        "Output coordinate units.",
+        ("mils", "mm"),
+    ),
+    ("pnp", "position_mode"): enum_help(
+        "How component centers are derived.",
+        tuple(sorted(_PNP_POSITION_MODES)),
+    ),
+    ("pnp", "exclude_no_bom"): "Exclude placements for components marked no-BOM.",
+    ("pnp", "layer_order"): "Layer ordering for PnP rows. Common values: top, bottom.",
+    ("pnp", "prefix_order"): "Designator prefix ordering for PnP rows.",
+    ("output",): "Output path template settings shared by BOM and PnP artifacts.",
+    ("output", "dir_template"): (
+        "Output directory template. Supported tokens include {Command}, "
+        "{SourceName}, {SourceStem}, {VariantName}, {OutputKind}, "
+        "{OutputKindStem}, and {OutputKindSuffix}."
+    ),
+    ("output", "name_template"): (
+        "Output filename stem template. Supported tokens include {Command}, "
+        "{SourceName}, {SourceStem}, {VariantName}, {OutputKind}, "
+        "{OutputKindStem}, and {OutputKindSuffix}."
+    ),
+}
 
 _DESIGNATOR_TOKEN_RE = re.compile(r"\d+|[A-Za-z]+|[^A-Za-z\d]+")
 _LEADING_PREFIX_RE = re.compile(r"^[A-Za-z]+")
@@ -379,6 +471,19 @@ def load_bom_pnp_config(path: Path) -> BomPnpConfig:
     return BomPnpConfig.from_mapping(payload)
 
 
+def bom_pnp_config_text(config: BomPnpConfig | None = None) -> str:
+    """Render a BOM/PnP config as commented JSONC."""
+    return render_commented_jsonc(
+        (config or BomPnpConfig()).to_json_obj(),
+        comments_by_path=_BOM_PNP_CONFIG_COMMENTS,
+        header_lines=(
+            "altium-cruncher BOM/PnP configuration.",
+            "This file is JSONC: comments and trailing commas are accepted.",
+            "String mode fields list their accepted options in the field comment.",
+        ),
+    )
+
+
 def _pnp_position_mode_from_config(pnp: Mapping[str, object]) -> PnpPositionMode:
     """Return the configured PnP position mode."""
     raw_mode = _string_value(
@@ -396,7 +501,7 @@ def write_bom_pnp_config(
     """Write a default BOM/PnP config template."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps((config or BomPnpConfig()).to_json_obj(), indent=2) + "\n",
+        bom_pnp_config_text(config),
         encoding="utf-8",
     )
 
@@ -581,10 +686,7 @@ def normalize_bom_components(
 ) -> list[NormalizedBomComponent]:
     """Normalize raw Altium Monkey BOM dicts into canonical records."""
     alias_config = aliases or FieldAliasConfig()
-    return [
-        _normalize_bom_component(component, alias_config)
-        for component in bom
-    ]
+    return [_normalize_bom_component(component, alias_config) for component in bom]
 
 
 def normalize_pnp_entries(
@@ -829,13 +931,12 @@ def bom_raw_payload(
     }
 
 
-def flat_raw_bom_payload(bom: Sequence[Mapping[str, object]]) -> list[dict[str, object]]:
+def flat_raw_bom_payload(
+    bom: Sequence[Mapping[str, object]],
+) -> list[dict[str, object]]:
     """Return flat raw BOM components before aliases or grouping are applied."""
     return [
-        {
-            str(name): _json_compatible_value(value)
-            for name, value in component.items()
-        }
+        {str(name): _json_compatible_value(value) for name, value in component.items()}
         for component in bom
     ]
 
@@ -1326,10 +1427,7 @@ def _line_fields(components: Sequence[NormalizedBomComponent]) -> dict[str, str]
 def _json_compatible_value(value: object) -> object:
     """Return a JSON-compatible value while preserving raw field names."""
     if isinstance(value, Mapping):
-        return {
-            str(name): _json_compatible_value(item)
-            for name, item in value.items()
-        }
+        return {str(name): _json_compatible_value(item) for name, item in value.items()}
     if isinstance(value, list | tuple):
         return [_json_compatible_value(item) for item in value]
     if value is None or isinstance(value, str | int | float | bool):

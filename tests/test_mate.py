@@ -41,6 +41,9 @@ from altium_cruncher.altium_cruncher_mate_libraries import (
     scan_mate_libraries,
 )
 from altium_cruncher.altium_cruncher_mco import MCO_SCHEMA, load_jsonc_file
+from altium_cruncher.altium_cruncher_pcb_layer_step_config import (
+    default_pcb_layer_step_mate_artifact_payload,
+)
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -607,9 +610,7 @@ def test_mate_mco_places_named_library_parts_from_selection(tmp_path: Path) -> N
         "libraries/pcblib/YZ209315103P-01.PcbLib",
         "libraries/schlib/YZ209315103P-01.SchLib",
     ]
-    copy_ops = [
-        operation for operation in operations if operation["op"] == "file.copy"
-    ]
+    copy_ops = [operation for operation in operations if operation["op"] == "file.copy"]
     assert [operation["args"]["destination"] for operation in copy_ops] == [
         "generated/libraries/pcblib/YZ209315103P-01.PcbLib",
         "generated/libraries/schlib/YZ209315103P-01.SchLib",
@@ -875,7 +876,9 @@ def test_mate_known_part_operations_use_natural_designator_order(
 
 def test_cricket_node_mate_example_config_is_planable(tmp_path: Path) -> None:
     example_dir = PACKAGE_ROOT / "examples" / "mate" / "cricket-node"
-    example_config = PACKAGE_ROOT / "examples" / "mate" / "cricket-node" / "mate.a0.jsonc"
+    example_config = (
+        PACKAGE_ROOT / "examples" / "mate" / "cricket-node" / "mate.a0.jsonc"
+    )
     if (PACKAGE_ROOT / ".git").exists():
         tracked_config = subprocess.run(
             [
@@ -932,10 +935,11 @@ def test_cricket_node_mate_example_config_is_planable(tmp_path: Path) -> None:
         "libraries/schlib/YZ209315103P-01.SchLib",
     ]
     assert sum(1 for operation in operations if operation["op"] == "file.copy") == 6
-    assert any(operation["op"] == "pcbdoc.export_layer_step" for operation in operations)
     assert any(
-        operation["op"] == "pcbdoc.add_embedded_3d_model"
-        for operation in operations
+        operation["op"] == "pcbdoc.export_layer_step" for operation in operations
+    )
+    assert any(
+        operation["op"] == "pcbdoc.add_embedded_3d_model" for operation in operations
     )
     assert any(
         operation["op"] == "pcbdoc.create_user_union"
@@ -953,9 +957,21 @@ def test_cricket_node_draft_mate_config_is_parseable(tmp_path: Path) -> None:
     )
 
     payload = load_jsonc_file(draft_config)
+    config_text = draft_config.read_text(encoding="utf-8")
 
     assert isinstance(payload, dict)
     assert payload["schema"] == MATE_CONFIG_SCHEMA
+    assert "/* Optional generated artifacts produced by mate planning/runs. */" in (
+        config_text
+    )
+    assert "/* PCB layer STEP artifact generated with the same defaults as " in (
+        config_text
+    )
+    assert "/* STEP color for the outer board outline body. */" in config_text
+    assert (
+        "/* Drill mode for pads selected by component_pads. Options: inherit, "
+        "cut, overlay, none. */" in config_text
+    )
     assert payload["source"]["board"] == "11-10028__cricket-node-hw__B.PrjPcb"
     assert payload["output"]["backend"] == "altium"
     assert payload["output"]["board_outline"] == {
@@ -987,30 +1003,9 @@ def test_cricket_node_draft_mate_config_is_parseable(tmp_path: Path) -> None:
         "stroke_width_mils": 8,
     }
     assert payload["board_projection"]["cutouts"]["actual_cutouts"] is True
-    assert payload["artifacts"]["pcb_layer_step"]["source_layer"] == "bottom"
-    assert payload["artifacts"]["pcb_layer_step"]["z_mm"] == -0.0175
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["tracks"] == {
-        "enabled": False,
-        "color": "#B87333",
-    }
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["polygons"] == {
-        "enabled": False,
-        "color": "#7A8F2A",
-    }
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["component_pads"] == {
-        "mode": "matching_designators",
-        "include_designators": ["TP*"],
-    }
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["free_pads"] is False
-    assert payload["artifacts"]["pcb_layer_step"]["drills"] == {
-        "mode": "overlay",
-        "minimum_diameter_mm": 0.85,
-        "shape": "ring",
-        "ring_width_mm": 0.12,
-        "plated_ring_shape": "pad",
-    }
-    assert payload["artifacts"]["pcb_layer_step"]["fuse_copper"] is False
-    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
+    assert payload["artifacts"]["pcb_layer_step"] == (
+        default_pcb_layer_step_mate_artifact_payload()
+    )
     assert projections["test_points"]["actions"][0]["symbol_name"] == "YZ209315103P-01"
     assert projections["mounts"]["actions"][0]["footprint_name"] == (
         "9774080360R-YIYUAN"
@@ -1079,30 +1074,9 @@ def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
     }
     assert payload["validation"]["source_side"] == "infer_single_side"
     assert payload["validation"]["side_agnostic_kinds"] == ["mount"]
-    assert payload["artifacts"]["pcb_layer_step"]["highlights"] == [
-        {"projection": "test_points", "color": "#FF0000"}
-    ]
-    assert (
-        payload["artifacts"]["pcb_layer_step"]["features"]["tracks"]["enabled"] is False
+    assert payload["artifacts"]["pcb_layer_step"] == (
+        default_pcb_layer_step_mate_artifact_payload()
     )
-    assert (
-        payload["artifacts"]["pcb_layer_step"]["features"]["polygons"]["enabled"]
-        is False
-    )
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["component_pads"] == {
-        "mode": "matching_designators",
-        "include_designators": ["TP*"],
-    }
-    assert payload["artifacts"]["pcb_layer_step"]["features"]["free_pads"] is False
-    assert payload["artifacts"]["pcb_layer_step"]["drills"] == {
-        "mode": "overlay",
-        "minimum_diameter_mm": 0.85,
-        "shape": "ring",
-        "ring_width_mm": 0.12,
-        "plated_ring_shape": "pad",
-    }
-    assert payload["artifacts"]["pcb_layer_step"]["fuse_copper"] is False
-    assert payload["artifacts"]["pcb_layer_step"]["insert_in_output"]["z_mm"] == 8.5
     assert payload["projections"][0]["actions"][1] == {
         "kind": "reference_graphics",
         "shape": "source_pad_outline",
@@ -1740,11 +1714,11 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     ] == [
         ("alignment_pins", "#44aaee", 1),
     ]
-    assert step_op["args"]["colors"]["pad_rules"] == [
+    assert step_op["args"]["features"]["component_pads"]["highlight_rules"] == [
         {
             "designators": ["TP1", "TP2"],
             "color": "#FF0000",
-            "body": "test_points",
+            "step_body_name": "test_points",
         }
     ]
     assert step_op["args"]["z_mm"] == -0.0175
@@ -1764,9 +1738,10 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     assert insert_step_op["op"] == "pcbdoc.add_embedded_3d_model"
     assert insert_step_op["args"]["file"] == "generated/mate.PcbDoc"
     assert insert_step_op["args"]["model_file"] == step_op["args"]["output_file"]
-    assert insert_step_op["args"]["model_name"] == Path(
-        step_op["args"]["output_file"]
-    ).name
+    assert (
+        insert_step_op["args"]["model_name"]
+        == Path(step_op["args"]["output_file"]).name
+    )
     assert insert_step_op["args"]["location_mils"] == [1000.0, 2000.0]
     assert insert_step_op["args"]["z_mm"] == 8.5
     assert insert_step_op["args"]["bounds_mils"] == {
@@ -1916,7 +1891,7 @@ def test_mate_seed_cli_can_write_mate_config(tmp_path: Path) -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
-    payload = json.loads(seed_path.read_text(encoding="utf-8"))
+    payload = load_jsonc_file(seed_path)
     assert payload["schema"] == MATE_CONFIG_SCHEMA
     assert payload["known_parts"]["manifest"] == str(manifest_path)
     assert [projection["id"] for projection in payload["projections"]] == [

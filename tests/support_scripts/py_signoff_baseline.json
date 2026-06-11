@@ -38,7 +38,6 @@
     "src/py/altium_cruncher/altium_cruncher_cmd_bom.py::cmd_bom",
     "src/py/altium_cruncher/altium_cruncher_cmd_bom.py::register_parser",
     "src/py/altium_cruncher/altium_cruncher_cmd_clean.py::register_parser",
-    "src/py/altium_cruncher/altium_cruncher_cmd_design.py::register_parser",
     "src/py/altium_cruncher/altium_cruncher_cmd_easyeda_import.py::register_parser",
     "src/py/altium_cruncher/altium_cruncher_cmd_extract.py::cmd_extract",
     "src/py/altium_cruncher/altium_cruncher_cmd_extract.py::register_parser",
@@ -73,7 +72,7 @@
     "src/py/altium_cruncher/altium_cruncher_pcb_view_core.py::resolve_configs",
     "src/py/altium_cruncher/altium_cruncher_pcb_workflow.py::iter_pcb_render_inputs"
   ],
-  "any_count_total": 193,
+  "any_count_total": 192,
   "complexity_offenders": {
     "src/py/altium_cruncher/altium_clean.py::CleanApplyResult.changed": 22,
     "src/py/altium_cruncher/altium_clean.py::_apply_font_spec_to_pin": 17,
@@ -137,10 +136,12 @@
       ]
     }
   ],
-  "file_bytes_offenders": {},
+  "file_bytes_offenders": {
+    "src/py/altium_cruncher/altium_cruncher_pcb_layer_step.py": 118767
+  },
   "file_lines_offenders": {
     "src/py/altium_cruncher/altium_cruncher_mate.py": 2722,
-    "src/py/altium_cruncher/altium_cruncher_pcb_layer_step.py": 2615
+    "src/py/altium_cruncher/altium_cruncher_pcb_layer_step.py": 3274
   },
   "max_file_bytes": 100000,
   "max_file_lines": 2500,

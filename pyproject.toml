@@ -1,21 +1,21 @@
 [project]
 name = "altium-cruncher"
-version = "2026.6.9"
+version = "2026.6.11"
 description = "Cross-platform Altium CLI utilities built on public altium-monkey"
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.12,<3.13"
 license = { text = "AGPL-3.0-or-later" }
 authors = [
     { name = "Wavenumber LLC" },
 ]
 dependencies = [
-    "altium-monkey==2026.6.9",
+    "altium-monkey==2026.6.11",
     "colorama>=0.4.6",
     "easyeda-monkey>=2026.5.26",
     "json-with-comments>=1.2.10",
     "openpyxl>=3.1.0",
     "rich>=13.7.0",
-    "wn-geometer==2026.5.25",
+    "wn-geometer==2026.6.10",
 ]
 
 [project.optional-dependencies]

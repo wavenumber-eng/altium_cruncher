@@ -316,26 +316,32 @@ def test_bom_pnp_config_parses_outputs_and_templates(tmp_path: Path) -> None:
     assert default_config.output_name_template == (
         "{SourceStem}_{VariantName}{OutputKindSuffix}"
     )
-    assert configured_output_file(
-        tmp_path,
-        default_config,
-        source=Path("Project.PrjPcb"),
-        command="pnp",
-        output_kind="json",
-        extension="json",
-        project_parameters={},
-        variant_name=None,
-    ) == tmp_path / "pnp" / "Project_base.json"
-    assert configured_output_file(
-        tmp_path,
-        default_config,
-        source=Path("Project.PrjPcb"),
-        command="bom",
-        output_kind="raw-json",
-        extension="json",
-        project_parameters={},
-        variant_name=None,
-    ) == tmp_path / "bom" / "Project_base_raw.json"
+    assert (
+        configured_output_file(
+            tmp_path,
+            default_config,
+            source=Path("Project.PrjPcb"),
+            command="pnp",
+            output_kind="json",
+            extension="json",
+            project_parameters={},
+            variant_name=None,
+        )
+        == tmp_path / "pnp" / "Project_base.json"
+    )
+    assert (
+        configured_output_file(
+            tmp_path,
+            default_config,
+            source=Path("Project.PrjPcb"),
+            command="bom",
+            output_kind="raw-json",
+            extension="json",
+            project_parameters={},
+            variant_name=None,
+        )
+        == tmp_path / "bom" / "Project_base_raw.json"
+    )
 
 
 def test_bom_pnp_config_loader_accepts_utf8_bom(tmp_path: Path) -> None:
@@ -368,6 +374,12 @@ def test_bom_config_auto_create_uses_default_policy(
     assert created is True
     assert config_path == tmp_path / "bom.config"
     assert config_path.exists()
+    config_text = config_path.read_text(encoding="utf-8")
+    assert "/* BOM artifacts to generate. Options:" in config_text
+    assert "raw-json" in config_text
+    assert "grouped-xlsx" in config_text
+    assert "/* PnP artifacts to generate. Options:" in config_text
+    assert "/* Variant mode. Options: all, base, named. */" in config_text
     assert config.variant_mode == "all"
     assert config.include_base_variant is True
     assert config.bom_outputs == ("raw-json", "grouped-xlsx")

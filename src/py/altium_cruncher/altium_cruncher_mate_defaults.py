@@ -5,6 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_mco import JsonObject
+from altium_cruncher.altium_cruncher_pcb_layer_step_config import (
+    default_pcb_layer_step_mate_artifact_payload,
+)
 
 DEFAULT_MATE_BOARD_OUTLINE_MARGIN_MILS = 250.0
 
@@ -94,53 +97,7 @@ def default_mate_board_projection_payload() -> JsonObject:
 
 
 def default_mate_artifacts_payload() -> JsonObject:
-    return {
-        "pcb_layer_step": {
-            "enabled": True,
-            "source_layer": "bottom",
-            "thickness_mm": 0.035,
-            "z_mm": -0.0175,
-            "features": {
-                "tracks": {
-                    "enabled": False,
-                    "color": "#B87333",
-                },
-                "polygons": {
-                    "enabled": False,
-                    "color": "#7A8F2A",
-                },
-                "arcs": False,
-                "fills": False,
-                "regions": False,
-                "vias": False,
-                "component_pads": {
-                    "mode": "matching_designators",
-                    "include_designators": ["TP*"],
-                },
-                "free_pads": False,
-            },
-            "drills": {
-                "mode": "overlay",
-                "minimum_diameter_mm": 0.85,
-                "shape": "ring",
-                "ring_width_mm": 0.12,
-                "plated_ring_shape": "pad",
-            },
-            "fuse_copper": False,
-            "insert_in_output": {
-                "enabled": True,
-                "z_mm": 8.5,
-                "layer": "MECHANICAL_13",
-                "side": "TOP",
-            },
-            "highlights": [
-                {
-                    "projection": "test_points",
-                    "color": "#FF0000",
-                }
-            ],
-        }
-    }
+    return {"pcb_layer_step": default_pcb_layer_step_mate_artifact_payload()}
 
 
 def default_output_config_payload() -> JsonObject:

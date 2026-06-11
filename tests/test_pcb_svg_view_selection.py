@@ -71,7 +71,9 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     assert top_view["group_id"] == "pcb-svg-view-top"
     assert top_layers[-1] == "ASSEMBLY_HLR_TOP"
     top_pin1_view = next(view for view in views if view["name"] == "top_pin1_view")
-    bottom_pin1_view = next(view for view in views if view["name"] == "bottom_pin1_view")
+    bottom_pin1_view = next(
+        view for view in views if view["name"] == "bottom_pin1_view"
+    )
     top_hlr_bounds = next(
         view for view in views if view["name"] == "top_hlr_bounding_boxes"
     )
@@ -94,8 +96,8 @@ def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
         "PIN1_BOTTOM",
         "ASSEMBLY_HLR_BOTTOM",
     ]
-    assert top_pin1_view["assembly_hlr_mode"] == "simple"
-    assert bottom_pin1_view["assembly_hlr_mode"] == "simple"
+    assert top_pin1_view["assembly_hlr_mode"] == "outline"
+    assert bottom_pin1_view["assembly_hlr_mode"] == "outline"
     assert top_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
     assert bottom_hlr_bounds["assembly_hlr_mode"] == "bounding_box"
 
@@ -221,7 +223,15 @@ def test_pcb_svg_cli_overrides_created_default_config(tmp_path) -> None:
     assert "Common physical layer tokens" in created_text
     assert "Synthetic layer tokens" in created_text
     assert "add global.pcbdoc" in created_text
-    assert "Projection modes: detail, simple, bounding_box, none" in created_text
+    assert (
+        "Projection modes: detail, outline, bounding_box, none; simple is accepted as a legacy alias."
+        in created_text
+    )
+    assert "/* Canvas bounds mode. Options: all_geometry, board_outline. */" in (
+        created_text
+    )
+    assert "/* Assembly projection mode for this view. Options:" in created_text
+    assert "/* Projection mode for fitted components. Options:" in created_text
     assert '"pcbdoc": null' not in created_text
     assert _enabled_views(resolved) == {"top_view"}
     assert resolved.layer_outputs["enabled"] is True
@@ -297,6 +307,27 @@ def test_pcb_svg_config_accepts_virtual_assembly_options() -> None:
     assert "components" in payload
 
 
+def test_pcb_svg_config_normalizes_simple_projection_alias_to_outline() -> None:
+    config = PcbSvgConfig.from_dict(
+        {
+            "schema": PCB_SVG_CONFIG_SCHEMA,
+            "assembly": {"default_projection": "simple"},
+            "components": {"U1": {"projection": "simple"}},
+            "views": [
+                {
+                    "name": "assembly",
+                    "layers": ["ASSEMBLY_HLR_TOP"],
+                    "assembly_hlr_mode": "simple",
+                }
+            ],
+        }
+    )
+
+    assert config.assembly.default_projection == "outline"
+    assert config.components["U1"].projection == "outline"
+    assert config.views[0].assembly_hlr_mode == "outline"
+
+
 def test_pcb_svg_component_inventory_detects_sides_and_diodes() -> None:
     led_component = SimpleNamespace(
         designator="D1",
@@ -347,7 +378,9 @@ def test_pcb_svg_component_inventory_detects_sides_and_diodes() -> None:
 def test_pcb_svg_config_template_comments_include_cricket_node_inventory() -> None:
     inventories = load_pcb_svg_component_inventory(CRICKET_PCBDOC)
 
-    text = _default_pcb_svg_config_text(cast(tuple[PcbSvgComponentInventory, ...], inventories))
+    text = _default_pcb_svg_config_text(
+        cast(tuple[PcbSvgComponentInventory, ...], inventories)
+    )
 
     assert "// Component inventory (designator: side, footprint, auto pin-1):" in text
     assert "//   D15: top, footprint=LED-0805-RED, pin1=none" in text
@@ -511,7 +544,7 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_a1_pad_and_through_hole() -> None:
 
     assert 'data-layer-key="PIN1_TOP"' in svg
     assert 'data-feature="pin1-marker"' in svg
-    assert '<circle ' in svg
+    assert "<circle " in svg
     assert 'data-component-designator="U1"' in svg
     assert 'data-pad-designator="1"' in svg
     assert 'data-component-designator="J1"' in svg
@@ -623,7 +656,9 @@ def test_pcb_svg_pin1_layer_honors_disabled_component_override() -> None:
     assert 'data-feature="pin1-marker"' not in svg
 
 
-def test_pcb_svg_pin1_layer_excludes_global_prefixes_with_component_enable_override() -> None:
+def test_pcb_svg_pin1_layer_excludes_global_prefixes_with_component_enable_override() -> (
+    None
+):
     pcbdoc = AltiumPcbDoc()
     pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 500)
     for component_index, (designator, x_mils) in enumerate(
@@ -918,13 +953,9 @@ def test_pcb_svg_hlr_bounding_box_mode_honors_component_style_override() -> None
     )
 
     assert (
-        'stroke="#FF0000" stroke-width="0.33" '
-        'data-component-designator="J1"'
+        'stroke="#FF0000" stroke-width="0.33" data-component-designator="J1"'
     ) in svg
-    assert (
-        'stroke="#00AA00" stroke-width="0.1" '
-        'data-component-designator="U1"'
-    ) in svg
+    assert ('stroke="#00AA00" stroke-width="0.1" data-component-designator="U1"') in svg
 
 
 def test_pcb_svg_hlr_component_style_override_builds_projection_options() -> None:

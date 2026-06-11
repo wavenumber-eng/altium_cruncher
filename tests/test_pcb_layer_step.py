@@ -98,7 +98,7 @@ def test_pcb_layer_step_config_auto_created_next_to_input(tmp_path) -> None:
         args, [input_file]
     )
 
-    config_path = tmp_path / "pcb-layer-step.json"
+    config_path = tmp_path / "pcb-layer-step.jsonc"
     assert created_configs == [config_path.resolve()]
     assert config_path.exists()
     assert config_by_input[input_file.resolve()].layer == "bottom"
@@ -107,7 +107,9 @@ def test_pcb_layer_step_config_auto_created_next_to_input(tmp_path) -> None:
     config = load_pcb_layer_step_config(config_path)
     assert config.schema == PCB_LAYER_STEP_CONFIG_SCHEMA_V2
     assert len(config.outputs) == 1
-    assert config.outputs[0].include_designators == ("TP*",)
+    assert config.outputs[0].include_designators == ("TP*", "M*")
+    assert config.outputs[0].outline_color == "#FFFF00"
+    assert config.outputs[0].board_cutout_color == "#FFFF00"
     assert config.outputs[0].pad_color_rules[0].color == "#FF0000"
 
 
@@ -125,13 +127,15 @@ def test_pcb_layer_step_init_config_writes_template_without_loading_input(
         )
     )
 
-    config_path = tmp_path / "pcb-layer-step.json"
+    config_path = tmp_path / "pcb-layer-step.jsonc"
     config_text = config_path.read_text(encoding="utf-8")
     assert result == 0
     assert "COMMON OUTPUT FIELDS" in config_text
     assert "matching_designators" in config_text
     assert "drill_plated_ring_shape" in config_text
+    assert "selected_component_mode" in config_text
     assert "altium-cruncher pcb-layer-step --help" in config_text
+    assert "/* Global drill mode. Options: auto, cut, overlay, none. */" in config_text
     config = load_pcb_layer_step_config(config_path)
     assert config.outputs[0].include_tracks is False
     assert config.outputs[0].include_arcs is False
@@ -193,7 +197,7 @@ def test_pcb_layer_step_options_merge_config_with_cli_overrides() -> None:
 
 def test_pcb_layer_step_config_loader_accepts_jsonc(tmp_path) -> None:
     """Load editable layer STEP configs with comments and trailing commas."""
-    config_path = tmp_path / "pcb-layer-step.json"
+    config_path = tmp_path / "pcb-layer-step.jsonc"
     config_path.write_text(
         """
         {
@@ -232,25 +236,41 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
                 "tracks": {
                   "enabled": false,
                   "color": "#123456",
-                  "body": "trace_copper"
+                  "step_body_name": "trace_copper",
+                  "thickness_bias_mm": 0.001
+                },
+                "arcs": {
+                  "enabled": false,
+                  "color": "#ABCDEF",
+                  "step_body_name": "arc_copper"
                 },
                 "polygons": {
                   "enabled": true,
                   "color": "#654321",
-                  "body": "poured_copper"
+                  "step_body_name": "poured_copper",
+                  "thickness_bias_mm": 0.004
                 },
                 "component_pads": {
                   "mode": "matching_designators",
-                  "include_designators": ["TP*", "J*", "U1", "U2"]
+                  "include_designators": ["TP*", "J*", "U1", "U2"],
+                  "color": "#C0FFEE",
+                  "step_body_name": "component_pad_copper",
+                  "thickness_bias_mm": 0.011,
+                  "highlight_rules": [
+                    {
+                      "designators": ["TP*"],
+                      "color": "red",
+                      "step_body_name": "test_points"
+                    }
+                  ]
                 },
                 "free_pads": false,
-                "vias": false,
-              },
-              "colors": {
-                "default_copper": "copper",
-                "pad_rules": [
-                  {"designators": ["TP*"], "color": "red", "body": "test_points"}
-                ],
+                "vias": {
+                  "enabled": false,
+                  "color": "#00CAFE",
+                  "step_body_name": "via_copper",
+                  "thickness_bias_mm": 0.007
+                },
               },
               "drills": {
                 "mode": "overlay",
@@ -259,7 +279,11 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
                 "plated_color": "green",
                 "non_plated_color": "blue",
                 "ring_width_mm": 0.15,
-                "plated_ring_shape": "pad",
+                "plated_ring_shape": "annulus",
+                "selected_component_mode": "cut",
+                "other_component_mode": "none",
+                "free_pad_mode": "overlay",
+                "via_mode": "inherit",
               },
               "fuse_copper": false,
             }
@@ -276,18 +300,32 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
     assert output.include_tracks is False
     assert output.track_color == "#123456"
     assert output.track_body == "trace_copper"
+    assert output.arc_color == "#ABCDEF"
+    assert output.arc_body == "arc_copper"
     assert output.include_poured_polygons is True
     assert output.polygon_color == "#654321"
     assert output.polygon_body == "poured_copper"
     assert output.include_vias is False
+    assert output.via_color == "#00CAFE"
+    assert output.via_body == "via_copper"
+    assert output.component_pad_color == "#C0FFEE"
+    assert output.component_pad_body == "component_pad_copper"
     assert output.board_cutout_color == "#FF0000"
     assert output.include_designators == ("TP*", "J*", "U1", "U2")
     assert output.pad_color_rules[0].color == "#FF0000"
+    assert output.track_thickness_bias_mm == 0.001
+    assert output.polygon_thickness_bias_mm == 0.004
+    assert output.via_thickness_bias_mm == 0.007
+    assert output.component_pad_thickness_bias_mm == 0.011
     assert output.drill_minimum_diameter_mm == 0.85
     assert output.drill_hole_shape == "ring"
     assert output.drill_plated_hole_color == "#008000"
     assert output.drill_non_plated_hole_color == "#0000FF"
-    assert output.drill_plated_ring_shape == "pad"
+    assert output.drill_plated_ring_shape == "annulus"
+    assert output.drill_selected_component_mode == "cut"
+    assert output.drill_other_component_mode == "none"
+    assert output.drill_free_pad_mode == "overlay"
+    assert output.drill_via_mode == "inherit"
 
 
 def test_pcb_layer_step_input_resolution_accepts_pcbdoc_and_prjpcb(tmp_path) -> None:
@@ -676,17 +714,15 @@ def test_export_pcb_layer_step_filters_designators_and_renders_drill_rings(
                         "component_pads": {
                             "mode": "matching_designators",
                             "include_designators": ["TP*", "J*", "U1"],
+                            "highlight_rules": [
+                                {
+                                    "designators": ["TP*"],
+                                    "color": "red",
+                                    "step_body_name": "test_points",
+                                }
+                            ],
                         },
                         "free_pads": False,
-                    },
-                    "colors": {
-                        "pad_rules": [
-                            {
-                                "designators": ["TP*"],
-                                "color": "red",
-                                "body": "test_points",
-                            }
-                        ]
                     },
                     "drills": {
                         "mode": "overlay",
@@ -705,10 +741,15 @@ def test_export_pcb_layer_step_filters_designators_and_renders_drill_rings(
     )
 
     bodies = {body["id"]: body for body in captured["request"]["bodies"]}
-    assert set(bodies) == {"test_points", "copper", "drill_holes", "board_outline"}
+    assert set(bodies) == {
+        "test_points",
+        "copper_pads",
+        "drill_holes",
+        "board_outline",
+    }
     assert bodies["test_points"]["color"] == "#FF0000"
     assert len(bodies["test_points"]["regions"]) == 1
-    assert len(bodies["copper"]["regions"]) == 2
+    assert len(bodies["copper_pads"]["regions"]) == 2
     assert len(bodies["drill_holes"]["regions"]) == 1
     assert "holes" in bodies["drill_holes"]["regions"][0]
 
@@ -781,7 +822,6 @@ def test_export_pcb_layer_step_colors_cutouts_and_plating_specific_drills(
             drill_ring_width_mm=0.1,
             drill_plated_hole_color="#00FF00",
             drill_non_plated_hole_color="#0000FF",
-            drill_plated_ring_shape="pad",
         ),
     )
 
@@ -802,7 +842,7 @@ def test_export_pcb_layer_step_colors_cutouts_and_plating_specific_drills(
     assert "holes" in non_plated_region
     plated_width = _region_width(plated_region)
     non_plated_width = _region_width(non_plated_region)
-    assert plated_width > non_plated_width
+    assert abs(plated_width - non_plated_width) < 1e-9
 
 
 def test_export_pcb_layer_step_splits_track_and_polygon_colors(
@@ -883,18 +923,22 @@ def test_export_pcb_layer_step_overlays_dense_drill_sets(
         options=PcbLayerStepOptions(layer=PcbLayer.BOTTOM),
     )
 
-    bodies = captured["request"]["bodies"]
-    assert [body["id"] for body in bodies] == [
+    bodies = {body["id"]: body for body in captured["request"]["bodies"]}
+    assert set(bodies) == {
         "copper",
+        "copper_vias",
         "drill_holes",
         "board_outline",
-    ]
-    assert "cutouts" not in bodies[0]
-    assert len(bodies[1]["regions"]) == 130
+    }
+    assert "cutouts" in bodies["copper"]
+    assert bodies["copper_vias"]["z_mm"] == -0.006
+    assert bodies["copper_vias"]["thickness_mm"] == 0.047
+    assert len(bodies["drill_holes"]["regions"]) == 130
 
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["options"]["effective_drill_hole_mode"] == "overlay"
     assert manifest["counts"]["drill_boolean_cut_geometries"] == 0
+    assert manifest["counts"]["drill_copper_cutout_geometries"] == 130
     assert manifest["counts"]["drill_overlay_geometries"] == 130
 
 
