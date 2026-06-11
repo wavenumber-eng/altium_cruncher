@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.6.11
+
+- Consume pinned `altium-monkey==2026.6.11` and `wn-geometer==2026.6.10`
+  for the OCCT V8-backed geometry stack used by assembly HLR and PCB layer
+  STEP export.
+- Narrow the package metadata to Python `>=3.12,<3.13`, matching the current
+  public Altium Monkey dependency.
+
 ## 2026.6.9
 
 - Consume pinned `altium-monkey==2026.6.9`.
