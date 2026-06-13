@@ -22,6 +22,7 @@ This inventory records the command set migrated from the private
 | `easyeda-import` | public | fixture lane | First-class command backed by the normal `easyeda-monkey` runtime dependency; default output includes SchLib, PcbLib footprint, and downloaded 3D assets when available. 3D model placement into PcbLib is not implemented. |
 | `installs` | public | unit/CLI | Lists discovered Altium Designer `X2.exe` paths from Program Files, environment overrides, and registry rows. |
 | `launch` | public | unit/CLI/install smoke | Launches the selected Altium Designer install, optionally opening a file. The `ad` console script is a shortcut for this command. |
+| `pcblib` | public | unit/CLI | Creates PcbLib footprint libraries by compiling the workflow to small MCO operations. Initial surface creates a one-footprint library; pad/text/body insertion remains a future MCO extension. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM/PnP, netlist, manifest, document/library JSON, notes, and embedded assets. |

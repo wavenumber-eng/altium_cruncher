@@ -18,6 +18,7 @@ from altium_cruncher.altium_cruncher_mco import (
 if TYPE_CHECKING:
     from altium_cruncher.altium_cruncher_pcb_layer_step import PcbLayerStepHighlight
     from altium_monkey import (
+        AltiumPcbLib,
         AltiumPcbDoc,
         AltiumSchDoc,
         TextJustification,
@@ -295,6 +296,89 @@ def _op_pcbdoc_add_component(
             "library": str(library_path.resolve()),
             "footprint": footprint_name,
             "designator": designator,
+        },
+    )
+
+
+def _op_pcblib_create(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    file_path = _path_from_arg(spec.args, "file", context)
+    overwrite = _optional_bool(spec.args, "overwrite", False)
+    if file_path.exists() and not overwrite:
+        return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
+    outputs = {"library": str(file_path.resolve())}
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or "PcbLib create dry run",
+            outputs=outputs,
+        )
+
+    from altium_monkey import AltiumPcbLib
+
+    context.invalidate_documents([file_path])
+    context.open_document_for_mutation(
+        "pcblib",
+        file_path,
+        file_path,
+        load=lambda path: AltiumPcbLib(path),
+        save=_save_document_to_path,
+    )
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or "created PcbLib session",
+        outputs=outputs,
+    )
+
+
+def _op_pcblib_add_footprint(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    paths = _mutation_paths(spec.args, context)
+    name = _required_string(spec.args, "name")
+    height = _optional_string(spec.args, "height", "0mil") or "0mil"
+    description = _optional_string(spec.args, "description", "") or ""
+    item_guid = _optional_string(spec.args, "item_guid", "") or ""
+    revision_guid = _optional_string(spec.args, "revision_guid", "") or ""
+    parameters = _optional_string_dict(spec.args, "parameters") or {}
+    primitive_parameters = (
+        _optional_string_dict(spec.args, "primitive_parameters") or {}
+    )
+    if context.dry_run:
+        return _dry_run_result(
+            spec,
+            paths,
+            {
+                "footprint": name,
+                "parameters": len(parameters),
+                "primitive_parameters": len(primitive_parameters),
+            },
+        )
+
+    pcblib = _open_pcblib_for_mutation(paths, context)
+    _reject_duplicate_pcblib_footprint(pcblib, name, paths.output_file)
+    footprint = pcblib.add_footprint(
+        name,
+        height=height,
+        description=description,
+        item_guid=item_guid,
+        revision_guid=revision_guid,
+    )
+    for parameter_name, parameter_value in parameters.items():
+        footprint.set_parameter(parameter_name, parameter_value)
+    for parameter_name, parameter_value in primitive_parameters.items():
+        footprint.set_footprint_primitive_parameter(parameter_name, parameter_value)
+    _mark_pcblib_dirty(context, paths)
+    return _success_result(
+        spec,
+        paths,
+        {
+            "footprint": name,
+            "parameters": len(parameters),
+            "primitive_parameters": len(primitive_parameters),
         },
     )
 
@@ -840,6 +924,24 @@ def _open_pcbdoc_for_mutation(
     )
 
 
+def _open_pcblib_for_mutation(
+    paths: FileMutationPaths,
+    context: McoExecutionContext,
+) -> "AltiumPcbLib":
+    from altium_monkey import AltiumPcbLib
+
+    return cast(
+        "AltiumPcbLib",
+        context.open_document_for_mutation(
+            "pcblib",
+            paths.input_file,
+            paths.output_file,
+            load=AltiumPcbLib.from_file,
+            save=_save_document_to_path,
+        ),
+    )
+
+
 def _mark_schdoc_dirty(
     context: McoExecutionContext,
     paths: FileMutationPaths,
@@ -852,6 +954,13 @@ def _mark_pcbdoc_dirty(
     paths: FileMutationPaths,
 ) -> None:
     context.mark_document_dirty("pcbdoc", paths.output_file)
+
+
+def _mark_pcblib_dirty(
+    context: McoExecutionContext,
+    paths: FileMutationPaths,
+) -> None:
+    context.mark_document_dirty("pcblib", paths.output_file)
 
 
 def _save_document_to_path(document: object, output_file: Path) -> None:
@@ -1262,6 +1371,18 @@ def _pcblib_footprint(
         f"Footprint {footprint_name!r} not found in {library_path}. "
         f"Available footprints: {available}"
     )
+
+
+def _reject_duplicate_pcblib_footprint(
+    pcblib: object,
+    footprint_name: str,
+    library_path: Path,
+) -> None:
+    if any(
+        str(getattr(footprint, "name", "") or "") == footprint_name
+        for footprint in list(getattr(pcblib, "footprints", []) or [])
+    ):
+        raise ValueError(f"Footprint {footprint_name!r} already exists in {library_path}")
 
 
 def _apply_schematic_text_style(
@@ -1742,6 +1863,8 @@ CAD_MCO_OPERATIONS: dict[str, McoOperationHandler] = {
     "schdoc.add-wire": _op_schdoc_add_wire,
     "schdoc.add-net-label": _op_schdoc_add_net_label,
     "schdoc.add-component": _op_schdoc_add_component,
+    "pcblib.create": _op_pcblib_create,
+    "pcblib.add-footprint": _op_pcblib_add_footprint,
     "pcbdoc.arrange-designators": _op_pcbdoc_arrange_designators,
     "pcbdoc.add-text": _op_pcbdoc_add_text,
     "pcbdoc.add-component": _op_pcbdoc_add_component,

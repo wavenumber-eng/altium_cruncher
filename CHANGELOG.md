@@ -15,6 +15,8 @@
   policies, and yellow board outline/cutout bodies.
 - Align `mate` generated PCB layer STEP artifacts with the standalone
   `pcb-layer-step --init-config` defaults.
+- Add `pcblib create`, backed by generated `pcblib.create` and
+  `pcblib.add_footprint` MCO operations, for one-footprint PcbLib authoring.
 - Route generated editable configs through the shared JSONC comment renderer
   and add ADR-0007: string/enum fields in generated config comments must list
   accepted options.

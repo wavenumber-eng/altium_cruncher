@@ -18,6 +18,7 @@
     {"name": "notes", "status": "public", "requires_extra": null},
     {"name": "outjob", "status": "public", "requires_extra": null},
     {"name": "pcb-layer-step", "status": "public", "requires_extra": null},
+    {"name": "pcblib", "status": "public", "requires_extra": null},
     {"name": "pcb-svg", "status": "public", "requires_extra": null},
     {"name": "pnp", "status": "public", "requires_extra": null},
     {"name": "profiles", "status": "public", "requires_extra": null},

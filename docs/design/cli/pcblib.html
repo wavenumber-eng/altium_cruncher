@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>pcblib command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="pcblib" data-config-contract="none">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>pcblib</h1><p class="lede">Authors PCB footprint libraries through generated MCO operations.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>pcblib</code> provides small public authoring workflows for Altium <code>.PcbLib</code> files. The command is intentionally a wrapper over MCO rather than a separate writer path, so future footprint operations such as pad, text, body, and model insertion can reuse the same document-session and reporting behavior.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher pcblib create footprints/test_fixture.PcbLib
+altium-cruncher pcblib create footprints/test_fixture.PcbLib --footprint DBG_CONTACT_FP --force
+altium-cruncher pcblib create fixture.PcbLib --parameter AREA=1mil^2 --primitive-parameter Value=TP1
+altium-cruncher pcblib create fixture.PcbLib --emit-mco fixture.mco.json --json</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><table><tr><th>Argument</th><th>Contract</th></tr>
+    <tr><td><code>create file</code></td><td>Destination <code>.PcbLib</code>. The output path is passed into the generated MCO as <code>file</code>.</td></tr>
+    <tr><td><code>--footprint</code></td><td>Initial footprint pattern name. If omitted, the output filename stem is used.</td></tr>
+    <tr><td><code>--height</code>, <code>--description</code></td><td>Initial footprint metadata written through the standard PcbLib <code>Parameters</code> stream.</td></tr>
+    <tr><td><code>--parameter NAME=VALUE</code></td><td>Additional standard footprint <code>Parameters</code> entries. May be repeated.</td></tr>
+    <tr><td><code>--primitive-parameter NAME=VALUE</code></td><td>Footprint-level <code>PrimitiveParameters</code> side-stream entries. May be repeated.</td></tr>
+    <tr><td><code>--emit-mco</code></td><td>Writes the generated MCO JSON before execution so the exact operation sequence can be inspected or replayed with <code>mco run</code>.</td></tr>
+    <tr><td><code>--force</code>, <code>--dry-run</code>, <code>--json</code>, <code>--json-output</code></td><td>Follow the existing MCO command semantics for overwrite, non-mutating planning, stdout JSON, and sidecar JSON report output.</td></tr>
+  </table></section>
+
+  <section id="mco"><h2>MCO Shape</h2><p><code>pcblib create</code> compiles to <code>pcblib.create</code> followed by <code>pcblib.add_footprint</code>. <code>pcblib.create</code> initializes a new PcbLib document session, and <code>pcblib.add_footprint</code> performs the first saveable mutation. This keeps library creation decomposed enough for later primitive-level footprint MCO operators.</p></section>
+
+  <section id="output"><h2>Output</h2><p>The command writes the requested <code>.PcbLib</code> file unless <code>--dry-run</code> is used. Human output is the standard MCO execution summary. <code>--json</code> writes the execution report to stdout, <code>--json-output</code> writes the same report to a file, and <code>--emit-mco</code> writes the generated operation payload before execution.</p></section>
+
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_mco.py</code> and <code>tests/test_pcblib_command.py</code>. It verifies the PcbLib MCO operators, generated operation catalog entries, CLI MCO emission, execution reporting, and generated library reparse including footprint metadata and PrimitiveParameters.</p></section>
+</main>
+</body>
+</html>

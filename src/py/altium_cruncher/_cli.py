@@ -83,6 +83,9 @@ from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
 from altium_cruncher.altium_cruncher_cmd_pcb_layer_step import (
     register_parser as register_pcb_layer_step_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_pcblib import (
+    register_parser as register_pcblib_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_pnp import (
     register_parser as register_pnp_parser,
 )
@@ -284,6 +287,7 @@ def main() -> None:
     register_notes_parser(command_subparsers)
     register_outjob_parser(command_subparsers)
     register_pcb_layer_step_parser(command_subparsers)
+    register_pcblib_parser(command_subparsers)
     register_pcb_svg_parser(command_subparsers)
     register_pnp_parser(command_subparsers)
     register_profiles_parser(command_subparsers)

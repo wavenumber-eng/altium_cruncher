@@ -91,6 +91,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `installs` | List discovered Altium Designer install paths. | Public |
 | `launch` | Launch Altium Designer, optionally opening a file. | Public |
 | `libraries` | List symbol and footprint names in Altium SchLib/PcbLib files. | Public |
+| `pcblib` | Create PcbLib footprint libraries through MCO operations. | Public |
 | `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
 | `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |

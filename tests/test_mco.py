@@ -297,6 +297,54 @@ def test_project_primitives_write_altium_project_bundle(tmp_path: Path) -> None:
     ]
 
 
+def test_pcblib_primitives_create_library_with_footprint(tmp_path: Path) -> None:
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "create",
+                    "op": "pcblib.create",
+                    "args": {
+                        "file": "generated/fixture.PcbLib",
+                        "overwrite": False,
+                    },
+                },
+                {
+                    "id": "footprint",
+                    "op": "pcblib.add_footprint",
+                    "args": {
+                        "file": "generated/fixture.PcbLib",
+                        "name": "DBG_CONTACT_FP",
+                        "height": "12mil",
+                        "description": "Debug contact footprint",
+                        "parameters": {"AREA": "1mil^2"},
+                        "primitive_parameters": {
+                            "FixtureRole": "contact",
+                            "Value": "A|B=C",
+                        },
+                        "overwrite": True,
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumPcbLib
+
+    pcblib = AltiumPcbLib.from_file(tmp_path / "generated" / "fixture.PcbLib")
+    assert [footprint.name for footprint in pcblib.footprints] == ["DBG_CONTACT_FP"]
+    footprint = pcblib.footprints[0]
+    assert footprint.parameters["HEIGHT"] == "12mil"
+    assert footprint.parameters["DESCRIPTION"] == "Debug contact footprint"
+    assert footprint.parameters["AREA"] == "1mil^2"
+    assert footprint.footprint_primitive_parameters["FixtureRole"] == "contact"
+    assert footprint.footprint_primitive_parameters["Value"] == "A|B=C"
+
+
 def test_project_variant_mco_operations_roundtrip(tmp_path: Path) -> None:
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
 
@@ -746,7 +794,7 @@ def test_pcbdoc_export_layer_step_operation_writes_artifact(
     assert result.results[0].outputs["highlight_count"] == 1
     assert [body["id"] for body in requests[0]["bodies"]] == [
         "tracks",
-        "copper",
+        "copper_pads",
         "test_points",
         "board_outline",
     ]
@@ -984,6 +1032,8 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
         "pcbdoc.create",
         "pcbdoc.create_user_union",
         "pcbdoc.export_layer_step",
+        "pcblib.add_footprint",
+        "pcblib.create",
         "project.add_document",
         "project.add_parameter",
         "project.add_variant",
