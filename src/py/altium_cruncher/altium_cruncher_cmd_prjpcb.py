@@ -28,6 +28,7 @@ from altium_cruncher.altium_cruncher_project_profiles import (
 from altium_cruncher.config_json import load_json_config, render_commented_jsonc
 
 PROJECT_CONFIG_SCHEMA = "wn.altium_cruncher.project_skeleton.v1"
+PROJECT_CONFIG_SUFFIX = ".project.jsonc"
 
 log = logging.getLogger(__name__)
 
@@ -324,27 +325,58 @@ def execute_project_create_mco(
 def cmd_prjpcb(args: argparse.Namespace) -> int:
     """Dispatch PrjPcb subcommands."""
     action = getattr(args, "prjpcb_action", None)
+    if action is None:
+        return _cmd_prjpcb_default(args)
     if action == "init":
         return _cmd_prjpcb_init(args)
     if action == "create":
         return _cmd_prjpcb_create(args)
     if action == "add-sheet":
         return _cmd_prjpcb_add_sheet(args)
-    help_parser = getattr(args, "_prjpcb_parser", None)
-    if help_parser is not None:
-        help_parser.print_help()
-        return 0
     log.error("No prjpcb subcommand specified")
     return 1
 
 
+def _cmd_prjpcb_default(_args: argparse.Namespace) -> int:
+    try:
+        config_path = _auto_config_path(Path.cwd())
+        if not config_path.exists():
+            project_name = _infer_project_name_from_config_arg(config_path)
+            output_path = write_project_config(
+                config_path,
+                default_project_config(project_name=project_name),
+                overwrite=False,
+            )
+            log.info("Wrote %s", output_path)
+            return 0
+
+        config = load_project_config(config_path)
+        result = execute_project_create_mco(
+            config,
+            config_dir=config_path.resolve().parent,
+            overwrite=False,
+            dry_run=False,
+        )
+    except Exception as exc:
+        log.error("Failed running default PrjPcb workflow: %s", exc)
+        return 1
+
+    print_mco_execution_result(result, title="prjpcb")
+    log.info("Config: %s", config_path.resolve())
+    return 0 if result.ok else 1
+
+
 def _cmd_prjpcb_init(args: argparse.Namespace) -> int:
     try:
-        config = default_project_config(
+        config_path, project_name = _resolve_config_path_and_project_name(
+            args.config,
             project_name=args.project_name,
+        )
+        config = default_project_config(
+            project_name=project_name,
             layer_count=args.layers,
         )
-        output_path = write_project_config(args.config, config, overwrite=bool(args.force))
+        output_path = write_project_config(config_path, config, overwrite=bool(args.force))
     except Exception as exc:
         log.error("Failed writing project config: %s", exc)
         return 1
@@ -354,7 +386,10 @@ def _cmd_prjpcb_init(args: argparse.Namespace) -> int:
 
 def _cmd_prjpcb_create(args: argparse.Namespace) -> int:
     try:
-        config_path = Path(args.config)
+        config_path, project_name = _resolve_config_path_and_project_name(
+            args.config,
+            project_name=args.project_name,
+        )
         if not config_path.exists():
             if not bool(args.defaults):
                 raise FileNotFoundError(
@@ -363,13 +398,19 @@ def _cmd_prjpcb_create(args: argparse.Namespace) -> int:
             write_project_config(
                 config_path,
                 default_project_config(
-                    project_name=args.project_name,
+                    project_name=project_name,
                     layer_count=args.layers,
                 ),
                 overwrite=bool(args.force),
             )
         config = load_project_config(config_path)
-        written_config = Path(args.write_config) if args.write_config else _config_copy_path(config_path, config)
+        if args.write_config:
+            written_config, _unused_name = _resolve_config_path_and_project_name(
+                args.write_config,
+                project_name=project_name,
+            )
+        else:
+            written_config = _config_copy_path(config_path, config)
         if written_config.resolve() == config_path.resolve():
             written_config = config_path.resolve()
         else:
@@ -455,6 +496,53 @@ def _cmd_prjpcb_add_sheet(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def _resolve_config_path_and_project_name(
+    config_arg: Path | str,
+    *,
+    project_name: str | None,
+) -> tuple[Path, str]:
+    config_path = Path(config_arg)
+    resolved_project_name = project_name or _infer_project_name_from_config_arg(
+        config_path
+    )
+    if config_path.suffix:
+        return config_path, resolved_project_name
+    return (
+        config_path.with_name(f"{config_path.name}{PROJECT_CONFIG_SUFFIX}"),
+        resolved_project_name,
+    )
+
+
+def _infer_project_name_from_config_arg(config_path: Path) -> str:
+    name = config_path.stem if config_path.suffix else config_path.name
+    suffix_stem = PROJECT_CONFIG_SUFFIX.removesuffix(".jsonc")
+    if name.endswith(suffix_stem):
+        name = name[: -len(suffix_stem)]
+    if not name or name in {".", ".."}:
+        raise ValueError(
+            "Could not infer a project name; pass a config filename or --project-name"
+        )
+    return name
+
+
+def _auto_config_path(cwd: Path) -> Path:
+    project_name = cwd.name or "generated_project"
+    preferred = cwd / f"{project_name}{PROJECT_CONFIG_SUFFIX}"
+    if preferred.exists():
+        return preferred
+
+    existing_configs = sorted(cwd.glob(f"*{PROJECT_CONFIG_SUFFIX}"))
+    if len(existing_configs) == 1:
+        return existing_configs[0]
+    if len(existing_configs) > 1:
+        names = ", ".join(path.name for path in existing_configs)
+        raise ValueError(
+            "Multiple project config files found; pass `prjpcb create CONFIG`: "
+            f"{names}"
+        )
+    return preferred
+
+
 def _config_copy_path(config_path: Path, config: JsonObject) -> Path:
     project = _object(config.get("project"), "project")
     project_file = Path(_string(project.get("file"), "project.file"))
@@ -513,7 +601,11 @@ def register_parser(
     parser = subparsers.add_parser(
         "prjpcb",
         help="create Altium PrjPcb skeletons",
-        description="Create .PrjPcb project skeletons through JSONC config and MCO operations.",
+        description=(
+            "Create .PrjPcb project skeletons through JSONC config and MCO "
+            "operations. With no subcommand, writes a sample config when none "
+            "exists, or runs the existing config when one is present."
+        ),
     )
     action_subparsers = parser.add_subparsers(
         dest="prjpcb_action",
@@ -525,11 +617,18 @@ def register_parser(
         "init",
         help="write a project skeleton JSONC config",
     )
-    init_parser.add_argument("config", type=Path, help="output project config path")
+    init_parser.add_argument(
+        "config",
+        type=Path,
+        help=(
+            "output project config path or bare project name; bare names write "
+            "NAME.project.jsonc"
+        ),
+    )
     init_parser.add_argument(
         "--project-name",
-        default="generated_project",
-        help="default project name",
+        default=None,
+        help="default project name (default: infer from config path or bare name)",
     )
     init_parser.add_argument(
         "--layers",
@@ -548,7 +647,11 @@ def register_parser(
         "create",
         help="create a project skeleton from JSONC config",
     )
-    create_parser.add_argument("config", type=Path, help="project config path")
+    create_parser.add_argument(
+        "config",
+        type=Path,
+        help="project config path or bare project name",
+    )
     create_parser.add_argument(
         "--defaults",
         action="store_true",
@@ -556,8 +659,11 @@ def register_parser(
     )
     create_parser.add_argument(
         "--project-name",
-        default="generated_project",
-        help="default project name used with --defaults",
+        default=None,
+        help=(
+            "default project name used with --defaults "
+            "(default: infer from config path or bare name)"
+        ),
     )
     create_parser.add_argument(
         "--layers",

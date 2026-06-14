@@ -11,6 +11,9 @@
   JSONC-driven PrjPcb skeleton generation with project parameters, multiple
   schematic sheets, generated rigid board stacks, board outlines, and the
   standard mechanical layer-kind profile.
+- Make `prjpcb` with no subcommand bootstrap `<cwd-name>.project.jsonc` on the
+  first run and use that config on later runs; bare project names passed to
+  `prjpcb init` and `prjpcb create` resolve to `NAME.project.jsonc`.
 - Keep generated PrjPcb/PcbDoc stack authoring scoped to generated rigid
   layer stacks; `.stackup` and `.stackupx` import into new PcbDoc files is
   tracked as future Altium Monkey work.

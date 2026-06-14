@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +12,17 @@ from altium_cruncher.config_json import load_json_config
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _cli_env() -> dict[str, str]:
+    env = os.environ.copy()
+    src_path = str(PACKAGE_ROOT / "src" / "py")
+    env["PYTHONPATH"] = (
+        src_path
+        if not env.get("PYTHONPATH")
+        else src_path + os.pathsep + env["PYTHONPATH"]
+    )
+    return env
 
 
 def test_prjpcb_init_and_create_cli_writes_config_mco_and_project(
@@ -33,6 +45,7 @@ def test_prjpcb_init_and_create_cli_writes_config_mco_and_project(
             "4",
         ],
         cwd=PACKAGE_ROOT,
+        env=_cli_env(),
         check=False,
         capture_output=True,
         text=True,
@@ -62,6 +75,7 @@ def test_prjpcb_init_and_create_cli_writes_config_mco_and_project(
             "--json",
         ],
         cwd=PACKAGE_ROOT,
+        env=_cli_env(),
         check=False,
         capture_output=True,
         text=True,
@@ -111,6 +125,80 @@ def test_prjpcb_init_and_create_cli_writes_config_mco_and_project(
     )
 
 
+def test_prjpcb_init_bare_name_writes_named_project_config(tmp_path: Path) -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "prjpcb",
+            "init",
+            "test",
+            "--layers",
+            "4",
+        ],
+        cwd=tmp_path,
+        env=_cli_env(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    config_file = tmp_path / "test.project.jsonc"
+    assert completed.returncode == 0, completed.stderr
+    assert config_file.exists()
+    assert not (tmp_path / "test").exists()
+
+    config = load_json_config(config_file)
+    assert config["project"]["name"] == "test"
+    assert config["project"]["file"] == "test.PrjPcb"
+    assert config["schematics"][0]["file"] == "test.SchDoc"
+    assert config["pcb"]["file"] == "test.PcbDoc"
+    assert len(config["pcb"]["layer_stack"]["copper_layers"]) == 4
+
+
+def test_prjpcb_no_args_writes_then_uses_auto_config(tmp_path: Path) -> None:
+    work_dir = tmp_path / "auto_project"
+    work_dir.mkdir()
+
+    first_completed = subprocess.run(
+        [sys.executable, "-m", "altium_cruncher", "prjpcb"],
+        cwd=work_dir,
+        env=_cli_env(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert first_completed.returncode == 0, first_completed.stderr
+
+    config_file = work_dir / "auto_project.project.jsonc"
+    assert config_file.exists()
+    assert not (work_dir / "auto_project.PrjPcb").exists()
+    config = load_json_config(config_file)
+    assert config["project"]["name"] == "auto_project"
+
+    second_completed = subprocess.run(
+        [sys.executable, "-m", "altium_cruncher", "prjpcb"],
+        cwd=work_dir,
+        env=_cli_env(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert second_completed.returncode == 0, second_completed.stderr
+    assert (work_dir / "auto_project.PrjPcb").exists()
+    assert (work_dir / "auto_project.SchDoc").exists()
+    assert (work_dir / "auto_project.PcbDoc").exists()
+
+    from altium_monkey.altium_prjpcb import AltiumPrjPcb
+
+    project = AltiumPrjPcb(work_dir / "auto_project.PrjPcb")
+    assert [document["path"] for document in project.documents] == [
+        "auto_project.SchDoc",
+        "auto_project.PcbDoc",
+    ]
+
+
 def test_prjpcb_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) -> None:
     config_file = tmp_path / "demo.project.jsonc"
     subprocess.run(
@@ -128,6 +216,7 @@ def test_prjpcb_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) ->
             "--json",
         ],
         cwd=PACKAGE_ROOT,
+        env=_cli_env(),
         check=True,
         capture_output=True,
         text=True,
@@ -145,6 +234,7 @@ def test_prjpcb_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) ->
             "--json",
         ],
         cwd=PACKAGE_ROOT,
+        env=_cli_env(),
         check=False,
         capture_output=True,
         text=True,
@@ -164,7 +254,6 @@ def test_prjpcb_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) ->
 
 def test_prjpcb_parent_and_subcommand_help_start() -> None:
     for args in (
-        ("prjpcb",),
         ("prjpcb", "--help"),
         ("prjpcb", "init", "--help"),
         ("prjpcb", "create", "--help"),
@@ -173,6 +262,7 @@ def test_prjpcb_parent_and_subcommand_help_start() -> None:
         completed = subprocess.run(
             [sys.executable, "-m", "altium_cruncher", *args],
             cwd=PACKAGE_ROOT,
+            env=_cli_env(),
             check=False,
             capture_output=True,
             text=True,

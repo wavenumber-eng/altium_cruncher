@@ -88,6 +88,22 @@ def run_install_test(wheel: Path) -> None:
             raise SystemExit(f"Unexpected legacy console script after install: {legacy_executable}")
 
         _run([str(python), "-m", "altium_cruncher", "version"], cwd=temp_dir, env=env)
+        prjpcb_dir = temp_dir / "prjpcb_smoke"
+        prjpcb_dir.mkdir()
+        _run(["acr", "prjpcb"], cwd=prjpcb_dir, env=env)
+        config = prjpcb_dir / "prjpcb_smoke.project.jsonc"
+        if not config.exists():
+            raise SystemExit(f"Missing no-argument prjpcb config: {config}")
+        if (prjpcb_dir / "prjpcb_smoke.PrjPcb").exists():
+            raise SystemExit("First no-argument prjpcb run should only write config")
+        _run(["acr", "prjpcb"], cwd=prjpcb_dir, env=env)
+        for output in (
+            "prjpcb_smoke.PrjPcb",
+            "prjpcb_smoke.SchDoc",
+            "prjpcb_smoke.PcbDoc",
+        ):
+            if not (prjpcb_dir / output).exists():
+                raise SystemExit(f"Missing no-argument prjpcb output: {output}")
         sys.stdout.write("Installed-console test passed.\n")
 
 
