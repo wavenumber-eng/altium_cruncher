@@ -1,0 +1,26 @@
+{
+  "schema": "wn.altium_cruncher.mco.v1",
+  "operations": [
+    {
+      "op": "pcblib.create",
+      "id": "create_pcblib",
+      "message": "Create PcbLib",
+      "args": {
+        "file": "tests\\assets\\synthetic\\pcblib_blank_footprint\\blank_footprint.PcbLib",
+        "overwrite": true
+      }
+    },
+    {
+      "op": "pcblib.add_footprint",
+      "id": "add_footprint",
+      "message": "Add initial footprint",
+      "args": {
+        "file": "tests\\assets\\synthetic\\pcblib_blank_footprint\\blank_footprint.PcbLib",
+        "name": "BLANK_FOOTPRINT",
+        "height": "0mil",
+        "description": "",
+        "overwrite": true
+      }
+    }
+  ]
+}

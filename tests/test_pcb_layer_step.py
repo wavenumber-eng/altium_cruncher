@@ -103,7 +103,7 @@ def test_pcb_layer_step_config_auto_created_next_to_input(tmp_path) -> None:
     assert config_path.exists()
     assert config_by_input[input_file.resolve()].layer == "bottom"
     config_text = config_path.read_text(encoding="utf-8")
-    assert "/* pcb-layer-step creates compact fixture-alignment models" in config_text
+    assert "// pcb-layer-step creates compact fixture-alignment models" in config_text
     config = load_pcb_layer_step_config(config_path)
     assert config.schema == PCB_LAYER_STEP_CONFIG_SCHEMA_V2
     assert len(config.outputs) == 1

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.6.13
+
+- Consume pinned `altium-monkey==2026.6.13`, including the SchDoc
+  near-crossing netlist fix, noncanonical `SheetNumber` design-JSON fix, and
+  PcbDoc/PcbLib DXP parameter-list escape handling for `PrimitiveParameters`.
+- Ship the initial minimal `pcblib create` command, backed by generated
+  `pcblib.create` and `pcblib.add_footprint` MCO operations, for one-footprint
+  PcbLib authoring.
+- Keep generated JSONC config/comment rendering and the PcbLib create command
+  docs aligned for the public release boundary.
+
 ## 2026.6.11
 
 - Consume pinned `altium-monkey==2026.6.11` and `wn-geometer==2026.6.10`
@@ -15,6 +26,8 @@
   policies, and yellow board outline/cutout bodies.
 - Align `mate` generated PCB layer STEP artifacts with the standalone
   `pcb-layer-step --init-config` defaults.
+- Add `pcblib create`, backed by generated `pcblib.create` and
+  `pcblib.add_footprint` MCO operations, for one-footprint PcbLib authoring.
 - Route generated editable configs through the shared JSONC comment renderer
   and add ADR-0007: string/enum fields in generated config comments must list
   accepted options.
