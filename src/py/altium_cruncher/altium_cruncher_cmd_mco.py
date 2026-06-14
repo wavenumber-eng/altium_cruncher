@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import logging
 import os
@@ -12,14 +13,40 @@ import sys
 from colorama import Fore, Style, just_fix_windows_console
 
 from altium_cruncher.altium_cruncher_mco import (
+    JsonObject,
+    McoExecutionContext,
     McoExecutionResult,
     McoOperationResult,
+    execute_mco,
     execute_mco_file,
     mco_operation_catalog,
     write_mco_template,
 )
 
 log = logging.getLogger(__name__)
+
+
+def execute_mco_for_cli(
+    payload: JsonObject,
+    context: McoExecutionContext,
+    *,
+    json_stdout: bool = False,
+) -> McoExecutionResult:
+    """Execute an MCO payload while preserving clean machine-readable stdout."""
+    if json_stdout:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        saved_stdout_fd = os.dup(sys.stdout.fileno())
+        try:
+            os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
+            with contextlib.redirect_stdout(sys.stderr):
+                return execute_mco(payload, context)
+        finally:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os.dup2(saved_stdout_fd, sys.stdout.fileno())
+            os.close(saved_stdout_fd)
+    return execute_mco(payload, context)
 
 
 def cmd_mco(args: argparse.Namespace) -> int:

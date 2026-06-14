@@ -345,6 +345,87 @@ def test_pcblib_primitives_create_library_with_footprint(tmp_path: Path) -> None
     assert footprint.footprint_primitive_parameters["Value"] == "A|B=C"
 
 
+def test_document_create_primitives_roundtrip_generated_assets(tmp_path: Path) -> None:
+    from altium_cruncher.altium_cruncher_project_profiles import (
+        generated_rigid_stack_config,
+    )
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "schdoc",
+                    "op": "schdoc.create",
+                    "args": {
+                        "file": "generated/demo.SchDoc",
+                        "overwrite": False,
+                    },
+                },
+                {
+                    "id": "schlib",
+                    "op": "schlib.create",
+                    "args": {
+                        "file": "generated/demo.SchLib",
+                        "overwrite": False,
+                    },
+                },
+                {
+                    "id": "symbol",
+                    "op": "schlib.add_symbol",
+                    "args": {
+                        "file": "generated/demo.SchLib",
+                        "name": "DEMO_SYMBOL",
+                        "description": "Demo symbol",
+                    },
+                },
+                {
+                    "id": "pcbdoc",
+                    "op": "pcbdoc.create",
+                    "args": {
+                        "file": "generated/demo.PcbDoc",
+                        "rigid_stack": generated_rigid_stack_config(4),
+                        "mechanical_layer_profile": "standard_component_pairs",
+                        "overwrite": False,
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import (
+        AltiumPcbDoc,
+        AltiumSchDoc,
+        AltiumSchLib,
+        MechanicalLayerKind,
+    )
+    from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
+    from altium_monkey.altium_record_sch__sheet import SheetStyle
+
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "demo.SchDoc")
+    assert schdoc.sheet is not None
+    assert schdoc.sheet.sheet_style == SheetStyle.D
+
+    schlib = AltiumSchLib(tmp_path / "generated" / "demo.SchLib")
+    assert [symbol.name for symbol in schlib.symbols] == ["DEMO_SYMBOL"]
+    assert schlib.symbols[0].description == "Demo symbol"
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "demo.PcbDoc")
+    stack = AltiumLayerStackDocument.from_pcbdoc(pcbdoc)
+    assert [
+        layer.display_name
+        for layer in stack.physical_stacks[0].layers
+        if layer.family == "copper"
+    ] == ["Top Layer", "Mid-Layer 1", "Mid-Layer 2", "Bottom Layer"]
+    assert (
+        pcbdoc.get_mechanical_layer_kind("MECHANICAL10")
+        == MechanicalLayerKind.BODY_3D_TOP
+    )
+
+
 def test_project_variant_mco_operations_roundtrip(tmp_path: Path) -> None:
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
 

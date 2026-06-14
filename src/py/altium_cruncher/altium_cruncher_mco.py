@@ -916,9 +916,23 @@ def _op_schdoc_create(
 
     context.invalidate_documents([file_path])
     schdoc = AltiumSchDoc()
+    template_path = _optional_path(spec.args, "template", context)
+    if template_path is not None:
+        schdoc.apply_template(
+            template_path,
+            apply_visual_sheet_settings=_optional_bool(
+                spec.args,
+                "apply_template_visual_sheet_settings",
+                False,
+            ),
+        )
     _apply_project_skeleton_schematic_sheet_style(
         schdoc,
-        _optional_string(spec.args, "sheet_style", None),
+        _optional_string(spec.args, "sheet_style", "D"),
+    )
+    _apply_schematic_custom_sheet_size(
+        schdoc,
+        _optional_number_object(spec.args, "custom_sheet_mils", ("width", "height")),
     )
     file_path.parent.mkdir(parents=True, exist_ok=True)
     schdoc.save(file_path)
@@ -926,6 +940,67 @@ def _op_schdoc_create(
     return McoOperationResult.succeeded(
         spec,
         spec.message or "created schematic",
+        outputs=outputs,
+    )
+
+
+def _op_schlib_create(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    file_path = _required_path(spec.args, "file", context)
+    overwrite = _optional_bool(spec.args, "overwrite", False)
+    if file_path.exists() and not overwrite:
+        return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
+    outputs = {"library": str(file_path.resolve())}
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or "schematic library create dry run",
+            outputs=outputs,
+        )
+
+    from altium_monkey import AltiumSchLib
+
+    context.invalidate_documents([file_path])
+    schlib = AltiumSchLib()
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    schlib.save(file_path)
+    context.invalidate_documents([file_path])
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or "created schematic library",
+        outputs=outputs,
+    )
+
+
+def _op_schlib_add_symbol(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    file_path = _required_path(spec.args, "file", context)
+    name = _required_string(spec.args, "name", spec.op)
+    description = _optional_string(spec.args, "description", "") or ""
+    outputs = {"library": str(file_path.resolve()), "symbol": name}
+    if context.dry_run:
+        return McoOperationResult.succeeded(
+            spec,
+            spec.message or "schematic symbol add dry run",
+            outputs=outputs,
+        )
+
+    schlib = _open_schlib_for_mutation(file_path, context)
+    existing = getattr(schlib, "get_symbol", lambda _name: None)(name)
+    if existing is not None:
+        return McoOperationResult.failed(
+            spec,
+            f"Symbol already exists in {file_path}: {name}",
+        )
+    schlib.add_symbol(name, description=description)
+    context.mark_document_dirty("schlib", file_path)
+    return McoOperationResult.succeeded(
+        spec,
+        spec.message or f"added schematic symbol {name}",
         outputs=outputs,
     )
 
@@ -950,38 +1025,74 @@ def _op_pcbdoc_create(
 
     context.invalidate_documents([file_path])
     builder = PcbDocBuilder()
-    layer_stack_template = _optional_string(spec.args, "layer_stack_template", None)
-    if layer_stack_template is not None:
-        builder.set_layer_stack_template(layer_stack_template)
-    board_outline_mils = _optional_number_object(
-        spec.args,
-        "board_outline_mils",
-        ("left", "bottom", "right", "top"),
-    )
-    if board_outline_mils is not None:
-        builder.set_outline_rectangle_mils(*board_outline_mils)
-    sheet_frame_mils = _optional_number_object(
-        spec.args,
-        "sheet_frame_mils",
-        ("x", "y", "width", "height"),
-    )
-    if sheet_frame_mils is not None:
-        builder.set_sheet_frame_mils(*sheet_frame_mils)
-    board_origin_mils = _optional_number_object(
-        spec.args, "board_origin_mils", ("x", "y")
-    )
-    if board_origin_mils is not None:
-        builder.set_origin_mils(*board_origin_mils)
-    else:
-        builder.set_origin_to_outline_lower_left()
-    builder.set_current_view_state("2D")
-    builder.set_2d_current_layer("TOP")
+    _configure_pcbdoc_builder(builder, spec.args)
     builder.save(file_path)
     context.invalidate_documents([file_path])
     return McoOperationResult.succeeded(
         spec,
         spec.message or "created board",
         outputs=outputs,
+    )
+
+
+def _configure_pcbdoc_builder(builder: object, args: Mapping[str, object]) -> None:
+    _apply_pcbdoc_layer_stack_args(builder, args)
+    _apply_pcbdoc_mechanical_layer_args(builder, args)
+    _apply_pcbdoc_geometry_args(builder, args)
+    builder.set_current_view_state("2D")
+    builder.set_2d_current_layer("TOP")
+
+
+def _apply_pcbdoc_layer_stack_args(
+    builder: object,
+    args: Mapping[str, object],
+) -> None:
+    layer_stack_template = _optional_string(args, "layer_stack_template", None)
+    rigid_stack = args.get("rigid_stack")
+    if layer_stack_template is not None and rigid_stack is not None:
+        raise ValueError("Use either layer_stack_template or rigid_stack, not both")
+    if rigid_stack is not None:
+        builder.set_layer_stack_document(_rigid_stack_document(rigid_stack))
+    elif layer_stack_template is not None:
+        builder.set_layer_stack_template(layer_stack_template)
+
+
+def _apply_pcbdoc_geometry_args(builder: object, args: Mapping[str, object]) -> None:
+    board_outline_mils = _optional_number_object(
+        args,
+        "board_outline_mils",
+        ("left", "bottom", "right", "top"),
+    )
+    if board_outline_mils is not None:
+        builder.set_outline_rectangle_mils(*board_outline_mils)
+    sheet_frame_mils = _optional_number_object(
+        args,
+        "sheet_frame_mils",
+        ("x", "y", "width", "height"),
+    )
+    if sheet_frame_mils is not None:
+        builder.set_sheet_frame_mils(*sheet_frame_mils)
+    board_origin_mils = _optional_number_object(
+        args, "board_origin_mils", ("x", "y")
+    )
+    if board_origin_mils is not None:
+        builder.set_origin_mils(*board_origin_mils)
+    else:
+        builder.set_origin_to_outline_lower_left()
+
+
+def _open_schlib_for_mutation(
+    library_file: Path,
+    context: McoExecutionContext,
+) -> object:
+    from altium_monkey import AltiumSchLib
+
+    return context.open_document_for_mutation(
+        "schlib",
+        library_file,
+        library_file,
+        load=lambda path: AltiumSchLib(path),
+        save=lambda document, path: document.save(path),
     )
 
 
@@ -1031,6 +1142,147 @@ def _apply_project_skeleton_schematic_sheet_style(
         style = SheetStyle(int(sheet_style))
     sheet.sheet_style = int(style)
     sheet.use_custom_sheet = False
+
+
+def _apply_schematic_custom_sheet_size(
+    schdoc: object,
+    custom_sheet_mils: tuple[float, ...] | None,
+) -> None:
+    if custom_sheet_mils is None:
+        return
+    sheet = getattr(schdoc, "sheet", None)
+    if sheet is None:
+        raise ValueError("Schematic document has no sheet record")
+    width_mils, height_mils = custom_sheet_mils
+    sheet.use_custom_sheet = True
+    sheet.custom_x = int(round(width_mils / 10.0))
+    sheet.custom_y = int(round(height_mils / 10.0))
+
+
+def _rigid_stack_document(raw_value: object) -> object:
+    raw = _json_object(raw_value, "rigid_stack")
+    mode = _optional_string(raw, "mode", "generated_rigid")
+    if mode != "generated_rigid":
+        raise ValueError(f"Unsupported rigid_stack.mode: {mode!r}")
+    name = _optional_string(raw, "name", "generated-rigid") or "generated-rigid"
+    copper_rows = _json_object_list(raw.get("copper_layers"), "rigid_stack.copper_layers")
+    dielectric_rows = _json_object_list(
+        raw.get("dielectrics_between"),
+        "rigid_stack.dielectrics_between",
+    )
+
+    from altium_monkey.altium_layer_stack_document import (
+        AltiumLayerStackDocument,
+        AltiumRigidCopperLayerSpec,
+        AltiumRigidDielectricLayerSpec,
+    )
+
+    return AltiumLayerStackDocument.from_rigid_stack(
+        name=name,
+        copper_layers=tuple(
+            AltiumRigidCopperLayerSpec(
+                _required_string(row, "name", "rigid_stack.copper_layers[]"),
+                copper_thickness_mils=_optional_number(
+                    row,
+                    "copper_thickness_mils",
+                    1.4,
+                ),
+                component_placement=_optional_int(row, "component_placement", None),
+                copper_orientation=_optional_int(row, "copper_orientation", None),
+            )
+            for row in copper_rows
+        ),
+        dielectrics_between=tuple(
+            AltiumRigidDielectricLayerSpec(
+                _required_string(row, "name", "rigid_stack.dielectrics_between[]"),
+                thickness_mils=_required_number(row, "thickness_mils"),
+                dielectric_constant=_required_number(row, "dielectric_constant"),
+                material=_required_string(
+                    row,
+                    "material",
+                    "rigid_stack.dielectrics_between[]",
+                ),
+                dielectric_type=_optional_int(row, "dielectric_type", 0) or 0,
+                loss_tangent=_optional_number_or_none(row, "loss_tangent"),
+            )
+            for row in dielectric_rows
+        ),
+    )
+
+
+def _apply_pcbdoc_mechanical_layer_args(
+    builder: object,
+    args: Mapping[str, object],
+) -> None:
+    profile = _optional_string(args, "mechanical_layer_profile", None)
+    if profile:
+        normalized_profile = profile.strip().lower().replace("-", "_")
+        if normalized_profile != "standard_component_pairs":
+            raise ValueError(f"Unsupported mechanical layer profile: {profile!r}")
+        from altium_cruncher.altium_cruncher_project_profiles import (
+            standard_mechanical_profile_args,
+        )
+
+        profile_args = standard_mechanical_profile_args()
+        _apply_mechanical_layers(builder, profile_args.get("mechanical_layers"))
+        _apply_mechanical_layer_pairs(
+            builder,
+            profile_args.get("mechanical_layer_pairs"),
+        )
+        _apply_mechanical_layer_kinds(
+            builder,
+            profile_args.get("mechanical_layer_kinds"),
+        )
+    _apply_mechanical_layers(builder, args.get("mechanical_layers"))
+    _apply_mechanical_layer_pairs(builder, args.get("mechanical_layer_pairs"))
+    _apply_mechanical_layer_kinds(builder, args.get("mechanical_layer_kinds"))
+
+
+def _apply_mechanical_layers(builder: object, value: object) -> None:
+    if value is None:
+        return
+    for row in _json_object_list(value, "mechanical_layers"):
+        layer = _required_string(row, "layer", "mechanical_layers[]")
+        builder.set_mechanical_layer(
+            layer,
+            name=_optional_string(row, "name", None),
+            enabled=_optional_bool(row, "enabled", True),
+        )
+
+
+def _apply_mechanical_layer_pairs(builder: object, value: object) -> None:
+    if value is None:
+        return
+    for index, row in enumerate(_json_object_list(value, "mechanical_layer_pairs")):
+        layer_1 = _required_string(row, "layer_1", "mechanical_layer_pairs[]")
+        layer_2 = _required_string(row, "layer_2", "mechanical_layer_pairs[]")
+        builder.set_mechanical_layer_pair(
+            layer_1,
+            layer_2,
+            pair_index=_optional_int(row, "pair_index", index),
+        )
+
+
+def _apply_mechanical_layer_kinds(builder: object, value: object) -> None:
+    if value is None:
+        return
+    for row in _json_object_list(value, "mechanical_layer_kinds"):
+        layer = _required_string(row, "layer", "mechanical_layer_kinds[]")
+        builder.set_mechanical_layer_kind(
+            layer,
+            _mechanical_layer_kind(row.get("kind")),
+        )
+
+
+def _mechanical_layer_kind(value: object) -> object:
+    from altium_monkey import MechanicalLayerKind
+
+    if isinstance(value, int):
+        return MechanicalLayerKind(value)
+    if not isinstance(value, str) or not value:
+        raise ValueError("mechanical layer kind must be a non-empty string or integer")
+    normalized = value.strip().replace("-", "_").replace(" ", "_").upper()
+    return MechanicalLayerKind[normalized]
 
 
 def _op_copy_file(
@@ -1121,12 +1373,73 @@ def _optional_bool_or_none(
     return value
 
 
+def _optional_int(
+    args: Mapping[str, object],
+    name: str,
+    default: int | None,
+) -> int | None:
+    value = args.get(name)
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"Field {name!r} must be an integer")
+    return value
+
+
+def _required_number(args: Mapping[str, object], name: str) -> float:
+    value = args.get(name)
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ValueError(f"Field {name!r} must be numeric")
+    return float(value)
+
+
+def _optional_number(
+    args: Mapping[str, object],
+    name: str,
+    default: float,
+) -> float:
+    value = args.get(name)
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ValueError(f"Field {name!r} must be numeric")
+    return float(value)
+
+
+def _optional_number_or_none(
+    args: Mapping[str, object],
+    name: str,
+) -> float | None:
+    value = args.get(name)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ValueError(f"Field {name!r} must be numeric")
+    return float(value)
+
+
 def _required_path(
     args: Mapping[str, object],
     name: str,
     context: McoExecutionContext,
 ) -> Path:
     raw_path = Path(_required_string(args, name, "file.copy"))
+    if raw_path.is_absolute():
+        return raw_path.resolve()
+    return (context.work_dir / raw_path).resolve()
+
+
+def _optional_path(
+    args: Mapping[str, object],
+    name: str,
+    context: McoExecutionContext,
+) -> Path | None:
+    value = args.get(name)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"Field {name!r} must be a non-empty path string")
+    raw_path = Path(value)
     if raw_path.is_absolute():
         return raw_path.resolve()
     return (context.work_dir / raw_path).resolve()
@@ -1148,6 +1461,12 @@ def _optional_number_object(
             raise ValueError(f"Field {name}.{field_name} must be numeric")
         numbers.append(float(field_value))
     return tuple(numbers)
+
+
+def _json_object_list(value: object, label: str) -> list[JsonObject]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be a list")
+    return [_json_object(item, label) for item in value]
 
 
 def _mco_template_text() -> str:
@@ -1253,10 +1572,19 @@ def _mco_template_key_comments() -> dict[str, str | tuple[str, ...]]:
         "sheet_style": (
             "Schematic sheet style. Options: Altium SheetStyle enum name or native enum id."
         ),
+        "custom_sheet_mils": "Custom schematic sheet size object with width and height in mils.",
+        "template": "Optional .SchDot template path for SchDoc creation.",
         "layer_stack_template": (
             "Layer stack template id. Options are supplied by altium-monkey; "
             "the generated default uses 2-layer."
         ),
+        "rigid_stack": "Generated rigid layer-stack object for new PcbDoc creation.",
+        "mechanical_layer_profile": (
+            "Mechanical layer profile. Options: standard_component_pairs."
+        ),
+        "mechanical_layers": "Editable mechanical layer display-name/enabled rows.",
+        "mechanical_layer_pairs": "Editable mechanical layer top/bottom pair rows.",
+        "mechanical_layer_kinds": "Editable mechanical layer kind assignment rows.",
         "left": "Rectangle left coordinate in mils.",
         "bottom": "Rectangle bottom coordinate in mils.",
         "right": "Rectangle right coordinate in mils.",
@@ -1373,7 +1701,29 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             "schdoc",
             "Create an empty schematic document.",
             required_args=("file",),
-            optional_args=("sheet_style", "overwrite"),
+            optional_args=(
+                "sheet_style",
+                "template",
+                "apply_template_visual_sheet_settings",
+                "custom_sheet_mils",
+                "overwrite",
+            ),
+        ),
+        McoOperationInfo(
+            "schlib.create",
+            _op_schlib_create,
+            "schlib",
+            "Create an empty schematic library.",
+            required_args=("file",),
+            optional_args=("overwrite",),
+        ),
+        McoOperationInfo(
+            "schlib.add_symbol",
+            _op_schlib_add_symbol,
+            "schlib",
+            "Add one empty schematic symbol to a SchLib.",
+            required_args=("file", "name"),
+            optional_args=("description",),
         ),
         McoOperationInfo(
             "pcbdoc.create",
@@ -1383,9 +1733,14 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             required_args=("file",),
             optional_args=(
                 "layer_stack_template",
+                "rigid_stack",
                 "board_outline_mils",
                 "board_origin_mils",
                 "sheet_frame_mils",
+                "mechanical_layer_profile",
+                "mechanical_layers",
+                "mechanical_layer_pairs",
+                "mechanical_layer_kinds",
                 "overwrite",
             ),
         ),

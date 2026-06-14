@@ -7,7 +7,10 @@ import json
 import logging
 from pathlib import Path
 
-from altium_cruncher.altium_cruncher_cmd_mco import print_mco_execution_result
+from altium_cruncher.altium_cruncher_cmd_mco import (
+    execute_mco_for_cli,
+    print_mco_execution_result,
+)
 from altium_cruncher.altium_cruncher_mco import (
     MCO_SCHEMA,
     JsonObject,
@@ -117,9 +120,10 @@ def _cmd_pcblib_create(args: argparse.Namespace) -> int:
         )
         if args.emit_mco is not None:
             _write_json(args.emit_mco, payload, overwrite=bool(args.force))
-        result = execute_mco(
+        result = execute_mco_for_cli(
             payload,
             McoExecutionContext(work_dir=Path.cwd(), dry_run=bool(args.dry_run)),
+            json_stdout=bool(args.json),
         )
     except Exception as exc:
         log.error("Failed creating PcbLib: %s", exc)

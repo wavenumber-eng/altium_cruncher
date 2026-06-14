@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>pcbdoc command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="pcbdoc" data-config-contract="none">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>pcbdoc</h1><p class="lede">Authors PCB documents through generated MCO operations.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>pcbdoc</code> creates small blank board files for fixtures and generated projects. The initial release supports simple rigid boards, rectangular board outlines, generated copper/dielectric layer stacks, and optional standard mechanical layer kind initialization.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher pcbdoc create board.PcbDoc
+altium-cruncher pcbdoc create board.PcbDoc --layers 4 --width-mils 3000 --height-mils 2000
+altium-cruncher pcbdoc create board.PcbDoc --mechanical-layer-profile standard_component_pairs --json
+altium-cruncher pcbdoc create board.PcbDoc --layer-stack-template 2-layer</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><table><tr><th>Argument</th><th>Contract</th></tr>
+    <tr><td><code>create file</code></td><td>Destination <code>.PcbDoc</code>. Paths are passed into generated MCO as <code>file</code>.</td></tr>
+    <tr><td><code>--layers</code></td><td>Generated rigid copper layer count when no <code>--layer-stack-template</code> is supplied. The default is two copper layers.</td></tr>
+    <tr><td><code>--layer-stack-template</code></td><td>Uses an Altium Monkey built-in layer-stack template instead of generated rigid stack rows.</td></tr>
+    <tr><td><code>--width-mils</code>, <code>--height-mils</code></td><td>Rectangular board outline size in mils.</td></tr>
+    <tr><td><code>--mechanical-layer-profile</code></td><td><code>none</code> or <code>standard_component_pairs</code>. The standard profile expands into explicit mechanical layer names, enabled states, layer pairs, and layer kinds in the generated MCO.</td></tr>
+    <tr><td><code>--emit-mco</code>, <code>--force</code>, <code>--dry-run</code>, <code>--json</code>, <code>--json-output</code></td><td>Follow the shared MCO command semantics for operation emission, overwrite, non-mutating planning, stdout JSON, and sidecar JSON report output.</td></tr>
+  </table></section>
+
+  <section id="mco"><h2>MCO Shape</h2><p><code>pcbdoc create</code> compiles to one <code>pcbdoc.create</code> operation. Generated rigid stacks are passed as <code>rigid_stack</code>. The standard mechanical profile is expanded into <code>mechanical_layers</code>, <code>mechanical_layer_pairs</code>, and <code>mechanical_layer_kinds</code> rather than stored as an opaque profile token.</p></section>
+
+  <section id="stackup"><h2>Stackup Scope</h2><p>This release does not import <code>.stackup</code> or <code>.stackupx</code> files into new PcbDoc files. Existing Altium Monkey samples prove typed layer-stack model authoring and stackup export/readback, while direct stackup-file to PcbDoc replacement entries remain future Altium Monkey work.</p></section>
+
+  <section id="output"><h2>Output</h2><p>The command writes the requested <code>.PcbDoc</code> unless <code>--dry-run</code> is used. Tests reparse generated boards and verify copper layer names plus mechanical layer kind readback.</p></section>
+
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_mco.py</code> and <code>tests/test_document_create_commands.py</code>. It verifies generated rigid stack creation, standard mechanical layer-kind profile expansion, command JSON output, and Altium Monkey reparse of generated boards.</p></section>
+</main>
+</body>
+</html>

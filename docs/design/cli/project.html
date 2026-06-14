@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>project command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="project" data-config-contract="docs/contracts/project_skeleton_config.v1.schema.json">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>project</h1><p class="lede">Creates PrjPcb skeletons from editable JSONC configs through generated MCO operations.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>project</code> is the public seed workflow for new Altium project fixtures and simple generated designs. The config is the editable source of truth; generated MCO operations perform the actual PrjPcb, SchDoc, and PcbDoc writes.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher project init demo.project.jsonc --project-name demo --layers 4
+altium-cruncher project create demo.project.jsonc --emit-mco demo.mco.json --json
+altium-cruncher project create demo.project.jsonc --defaults --project-name demo --force
+altium-cruncher project add-sheet demo.PrjPcb Power.SchDoc --sheet-style D</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><table><tr><th>Argument</th><th>Contract</th></tr>
+    <tr><td><code>init config</code></td><td>Writes a commented JSONC config using schema <code>wn.altium_cruncher.project_skeleton.v1</code>.</td></tr>
+    <tr><td><code>create config</code></td><td>Loads a JSONC config, writes a normalized config copy next to the generated PrjPcb unless overridden, compiles the config to MCO, and executes it.</td></tr>
+    <tr><td><code>add-sheet project sheet</code></td><td>Creates one new <code>.SchDoc</code> and adds it to an existing <code>.PrjPcb</code>.</td></tr>
+    <tr><td><code>--defaults</code></td><td>For <code>create</code>, writes and uses a default config if the requested config path does not exist.</td></tr>
+    <tr><td><code>--project-name</code>, <code>--layers</code></td><td>Seed values used by <code>init</code> and by <code>create --defaults</code>.</td></tr>
+    <tr><td><code>--write-config</code>, <code>--emit-mco</code></td><td>Write the normalized config copy and generated operation payload to explicit paths.</td></tr>
+    <tr><td><code>--force</code>, <code>--dry-run</code>, <code>--json</code>, <code>--json-output</code></td><td>Follow the shared MCO command semantics for overwrite, non-mutating planning, stdout JSON, and sidecar JSON report output.</td></tr>
+  </table></section>
+
+  <section id="config"><h2>Config Shape</h2><p>The V1 config contains <code>project</code>, <code>schematics</code>, and optional <code>pcb</code> sections. <code>project.parameters</code> writes PrjPcb parameters. Each schematic row writes a SchDoc and defaults <code>sheet_style</code> to <code>D</code>. The PCB section can set a rectangular board outline, generated rigid layer stack, and <code>standard_component_pairs</code> mechanical layer profile.</p></section>
+
+  <section id="mco"><h2>MCO Shape</h2><p><code>project create</code> compiles to <code>project.create</code>, zero or more <code>project.add_parameter</code> operations, one <code>schdoc.create</code> per schematic, an optional <code>pcbdoc.create</code>, and one <code>project.add_document</code> per generated document. <code>project add-sheet</code> compiles to <code>schdoc.create</code> followed by <code>project.add_document</code>.</p></section>
+
+  <section id="stackup"><h2>Stackup Scope</h2><p>The project config supports generated rigid stacks in this release. It deliberately does not accept <code>.stackup</code> or <code>.stackupx</code> imports until Altium Monkey exposes stackup-file to PcbDoc authoring as a supported writer path.</p></section>
+
+  <section id="output"><h2>Output</h2><p><code>project init</code> writes a JSONC config. <code>project create</code> writes the normalized config copy, optional emitted MCO, PrjPcb, configured schematic sheets, optional PcbDoc, and a JSON or human-readable MCO execution report. <code>project add-sheet</code> writes the new SchDoc and updates the existing PrjPcb document list.</p></section>
+
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_project_command.py</code>. It validates generated config schema conformance, MCO shape, clean JSON stdout, PrjPcb parameter/document links, SchDoc default D sheets, generated PcbDoc stack readback, and mechanical layer kind readback.</p></section>
+</main>
+</body>
+</html>

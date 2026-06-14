@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026.6.14
+
+- Consume pinned `altium-monkey==2026.6.14`, including the public mechanical
+  layer-kind authoring and readback surface.
+- Add MCO-backed `schdoc create`, `schlib create`, and `pcbdoc create`
+  commands for blank schematic documents, one-symbol schematic libraries, and
+  generated rigid PCB documents.
+- Add `project init`, `project create`, and `project add-sheet` workflows for
+  JSONC-driven PrjPcb skeleton generation with project parameters, multiple
+  schematic sheets, generated rigid board stacks, board outlines, and the
+  standard mechanical layer-kind profile.
+- Keep generated project/PcbDoc stack authoring scoped to generated rigid
+  layer stacks; `.stackup` and `.stackupx` import into new PcbDoc files is
+  tracked as future Altium Monkey work.
+- Preserve clean JSON stdout for MCO-backed creation commands by redirecting
+  lower-level document save messages to stderr in `--json` mode.
+
 ## 2026.6.13
 
 - Consume pinned `altium-monkey==2026.6.13`, including the SchDoc

@@ -16,3 +16,5 @@ Current contracts:
 - `pcb_layer_step_config.v2.schema.json`: fixture-alignment PCB layer STEP
   config schema.
 - `pcb_svg_config.a0.schema.json`: experimental explicit PCB SVG config schema.
+- `project_skeleton_config.v1.schema.json`: JSONC PrjPcb skeleton creation
+  config schema.
