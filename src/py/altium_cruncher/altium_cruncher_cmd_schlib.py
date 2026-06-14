@@ -80,6 +80,10 @@ def cmd_schlib(args: argparse.Namespace) -> int:
     """Dispatch SchLib subcommands."""
     if getattr(args, "schlib_action", None) == "create":
         return _cmd_schlib_create(args)
+    help_parser = getattr(args, "_schlib_parser", None)
+    if help_parser is not None:
+        help_parser.print_help()
+        return 0
     log.error("No SchLib subcommand specified")
     return 1
 
@@ -137,6 +141,7 @@ def register_parser(
         dest="schlib_action",
         metavar="<schlib-action>",
     )
+    parser.set_defaults(handler=cmd_schlib, _schlib_parser=parser)
 
     create_parser = action_subparsers.add_parser(
         "create",

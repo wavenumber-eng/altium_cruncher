@@ -13,7 +13,7 @@ from altium_cruncher.config_json import load_json_config
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_project_init_and_create_cli_writes_config_mco_and_project(
+def test_prjpcb_init_and_create_cli_writes_config_mco_and_project(
     tmp_path: Path,
 ) -> None:
     config_file = tmp_path / "demo.project.jsonc"
@@ -24,7 +24,7 @@ def test_project_init_and_create_cli_writes_config_mco_and_project(
             sys.executable,
             "-m",
             "altium_cruncher",
-            "project",
+            "prjpcb",
             "init",
             str(config_file),
             "--project-name",
@@ -54,7 +54,7 @@ def test_project_init_and_create_cli_writes_config_mco_and_project(
             sys.executable,
             "-m",
             "altium_cruncher",
-            "project",
+            "prjpcb",
             "create",
             str(config_file),
             "--emit-mco",
@@ -111,14 +111,14 @@ def test_project_init_and_create_cli_writes_config_mco_and_project(
     )
 
 
-def test_project_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) -> None:
+def test_prjpcb_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) -> None:
     config_file = tmp_path / "demo.project.jsonc"
     subprocess.run(
         [
             sys.executable,
             "-m",
             "altium_cruncher",
-            "project",
+            "prjpcb",
             "create",
             str(config_file),
             "--defaults",
@@ -138,7 +138,7 @@ def test_project_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) -
             sys.executable,
             "-m",
             "altium_cruncher",
-            "project",
+            "prjpcb",
             "add-sheet",
             str(tmp_path / "demo.PrjPcb"),
             str(tmp_path / "Power.SchDoc"),
@@ -160,3 +160,24 @@ def test_project_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) -
         "demo.PcbDoc",
         "Power.SchDoc",
     ]
+
+
+def test_prjpcb_parent_and_subcommand_help_start() -> None:
+    for args in (
+        ("prjpcb",),
+        ("prjpcb", "--help"),
+        ("prjpcb", "init", "--help"),
+        ("prjpcb", "create", "--help"),
+        ("prjpcb", "add-sheet", "--help"),
+    ):
+        completed = subprocess.run(
+            [sys.executable, "-m", "altium_cruncher", *args],
+            cwd=PACKAGE_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        assert completed.returncode == 0, completed.stderr
+        assert "usage:" in completed.stdout
+        assert "prjpcb" in completed.stdout

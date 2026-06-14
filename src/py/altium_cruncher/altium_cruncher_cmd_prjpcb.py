@@ -1,4 +1,4 @@
-"""Project skeleton commands backed by MCO operations."""
+"""PrjPcb skeleton commands backed by MCO operations."""
 
 from __future__ import annotations
 
@@ -321,20 +321,24 @@ def execute_project_create_mco(
     )
 
 
-def cmd_project(args: argparse.Namespace) -> int:
-    """Dispatch project subcommands."""
-    action = getattr(args, "project_action", None)
+def cmd_prjpcb(args: argparse.Namespace) -> int:
+    """Dispatch PrjPcb subcommands."""
+    action = getattr(args, "prjpcb_action", None)
     if action == "init":
-        return _cmd_project_init(args)
+        return _cmd_prjpcb_init(args)
     if action == "create":
-        return _cmd_project_create(args)
+        return _cmd_prjpcb_create(args)
     if action == "add-sheet":
-        return _cmd_project_add_sheet(args)
-    log.error("No project subcommand specified")
+        return _cmd_prjpcb_add_sheet(args)
+    help_parser = getattr(args, "_prjpcb_parser", None)
+    if help_parser is not None:
+        help_parser.print_help()
+        return 0
+    log.error("No prjpcb subcommand specified")
     return 1
 
 
-def _cmd_project_init(args: argparse.Namespace) -> int:
+def _cmd_prjpcb_init(args: argparse.Namespace) -> int:
     try:
         config = default_project_config(
             project_name=args.project_name,
@@ -348,7 +352,7 @@ def _cmd_project_init(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_project_create(args: argparse.Namespace) -> int:
+def _cmd_prjpcb_create(args: argparse.Namespace) -> int:
     try:
         config_path = Path(args.config)
         if not config_path.exists():
@@ -379,7 +383,7 @@ def _cmd_project_create(args: argparse.Namespace) -> int:
             json_stdout=bool(args.json),
         )
     except Exception as exc:
-        log.error("Failed creating project: %s", exc)
+        log.error("Failed creating PrjPcb project: %s", exc)
         return 1
 
     if args.json_output is not None:
@@ -389,16 +393,16 @@ def _cmd_project_create(args: argparse.Namespace) -> int:
     else:
         print_mco_execution_result(
             result,
-            title="project",
+            title="prjpcb",
             color=not bool(args.no_color),
         )
         log.info("Config: %s", written_config)
     return 0 if result.ok else 1
 
 
-def _cmd_project_add_sheet(args: argparse.Namespace) -> int:
+def _cmd_prjpcb_add_sheet(args: argparse.Namespace) -> int:
     try:
-        project_file = Path(args.project)
+        project_file = Path(args.prjpcb)
         sheet_file = Path(args.sheet)
         payload = {
             "schema": MCO_SCHEMA,
@@ -435,7 +439,7 @@ def _cmd_project_add_sheet(args: argparse.Namespace) -> int:
             json_stdout=bool(args.json),
         )
     except Exception as exc:
-        log.error("Failed adding sheet: %s", exc)
+        log.error("Failed adding sheet to PrjPcb: %s", exc)
         return 1
 
     if args.json_output is not None:
@@ -445,7 +449,7 @@ def _cmd_project_add_sheet(args: argparse.Namespace) -> int:
     else:
         print_mco_execution_result(
             result,
-            title="project",
+            title="prjpcb",
             color=not bool(args.no_color),
         )
     return 0 if result.ok else 1
@@ -505,16 +509,17 @@ def _write_json(path: Path, payload: JsonObject, *, overwrite: bool) -> Path:
 def register_parser(
     subparsers: argparse._SubParsersAction,
 ) -> argparse.ArgumentParser:
-    """Register the project command parser."""
+    """Register the prjpcb command parser."""
     parser = subparsers.add_parser(
-        "project",
-        help="create Altium project skeletons",
+        "prjpcb",
+        help="create Altium PrjPcb skeletons",
         description="Create .PrjPcb project skeletons through JSONC config and MCO operations.",
     )
     action_subparsers = parser.add_subparsers(
-        dest="project_action",
-        metavar="<project-action>",
+        dest="prjpcb_action",
+        metavar="<prjpcb-action>",
     )
+    parser.set_defaults(handler=cmd_prjpcb, _prjpcb_parser=parser)
 
     init_parser = action_subparsers.add_parser(
         "init",
@@ -537,7 +542,7 @@ def register_parser(
         action="store_true",
         help="overwrite an existing config",
     )
-    init_parser.set_defaults(handler=cmd_project)
+    init_parser.set_defaults(handler=cmd_prjpcb)
 
     create_parser = action_subparsers.add_parser(
         "create",
@@ -595,13 +600,13 @@ def register_parser(
         action="store_true",
         help="disable terminal color in human output",
     )
-    create_parser.set_defaults(handler=cmd_project)
+    create_parser.set_defaults(handler=cmd_prjpcb)
 
     add_sheet_parser = action_subparsers.add_parser(
         "add-sheet",
         help="create a new sheet and add it to an existing PrjPcb",
     )
-    add_sheet_parser.add_argument("project", type=Path, help="target .PrjPcb path")
+    add_sheet_parser.add_argument("prjpcb", type=Path, help="target .PrjPcb path")
     add_sheet_parser.add_argument("sheet", type=Path, help="new .SchDoc path")
     add_sheet_parser.add_argument(
         "--sheet-style",
@@ -638,5 +643,5 @@ def register_parser(
         action="store_true",
         help="disable terminal color in human output",
     )
-    add_sheet_parser.set_defaults(handler=cmd_project)
+    add_sheet_parser.set_defaults(handler=cmd_prjpcb)
     return parser

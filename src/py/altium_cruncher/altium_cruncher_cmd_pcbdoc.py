@@ -98,6 +98,10 @@ def cmd_pcbdoc(args: argparse.Namespace) -> int:
     """Dispatch PcbDoc subcommands."""
     if getattr(args, "pcbdoc_action", None) == "create":
         return _cmd_pcbdoc_create(args)
+    help_parser = getattr(args, "_pcbdoc_parser", None)
+    if help_parser is not None:
+        help_parser.print_help()
+        return 0
     log.error("No PcbDoc subcommand specified")
     return 1
 
@@ -170,6 +174,7 @@ def register_parser(
         dest="pcbdoc_action",
         metavar="<pcbdoc-action>",
     )
+    parser.set_defaults(handler=cmd_pcbdoc, _pcbdoc_parser=parser)
 
     create_parser = action_subparsers.add_parser(
         "create",

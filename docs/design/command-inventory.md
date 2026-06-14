@@ -26,7 +26,7 @@ This inventory records the command set migrated from the private
 | `schdoc` | public | unit/CLI | Creates blank SchDoc files by compiling to `schdoc.create`. Default sheets are D size; optional template and custom sheet-size inputs are supported. |
 | `schlib` | public | unit/CLI | Creates SchLib files with one empty symbol by compiling to `schlib.create` plus `schlib.add_symbol`. |
 | `pcbdoc` | public | unit/CLI | Creates simple rigid PcbDoc files by compiling to `pcbdoc.create`, including generated rigid stack rows, rectangular board outlines, and optional standard mechanical layer-kind profile. |
-| `project` | public | unit/CLI | Creates JSONC-driven PrjPcb skeletons by compiling config rows to project, SchDoc, PcbDoc, parameter, and document-link MCO operations. |
+| `prjpcb` | public | unit/CLI | Creates JSONC-driven PrjPcb skeletons by compiling config rows to project, SchDoc, PcbDoc, parameter, and document-link MCO operations. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM/PnP, netlist, manifest, document/library JSON, notes, and embedded assets. |

@@ -28,6 +28,10 @@ def cmd_pcblib(args: argparse.Namespace) -> int:
     action = getattr(args, "pcblib_action", None)
     if action == "create":
         return _cmd_pcblib_create(args)
+    help_parser = getattr(args, "_pcblib_parser", None)
+    if help_parser is not None:
+        help_parser.print_help()
+        return 0
     log.error("No PcbLib subcommand specified")
     return 1
 
@@ -178,6 +182,7 @@ def register_parser(
         dest="pcblib_action",
         metavar="<pcblib-action>",
     )
+    parser.set_defaults(handler=cmd_pcblib, _pcblib_parser=parser)
 
     create_parser = action_subparsers.add_parser(
         "create",

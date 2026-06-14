@@ -89,6 +89,10 @@ def cmd_schdoc(args: argparse.Namespace) -> int:
     """Dispatch SchDoc subcommands."""
     if getattr(args, "schdoc_action", None) == "create":
         return _cmd_schdoc_create(args)
+    help_parser = getattr(args, "_schdoc_parser", None)
+    if help_parser is not None:
+        help_parser.print_help()
+        return 0
     log.error("No SchDoc subcommand specified")
     return 1
 
@@ -157,6 +161,7 @@ def register_parser(
         dest="schdoc_action",
         metavar="<schdoc-action>",
     )
+    parser.set_defaults(handler=cmd_schdoc, _schdoc_parser=parser)
 
     create_parser = action_subparsers.add_parser(
         "create",

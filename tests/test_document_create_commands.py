@@ -9,6 +9,26 @@ from pathlib import Path
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_document_authoring_parent_and_subcommand_help_start() -> None:
+    for command in ("schdoc", "schlib", "pcbdoc", "pcblib"):
+        for args in (
+            (command,),
+            (command, "--help"),
+            (command, "create", "--help"),
+        ):
+            completed = subprocess.run(
+                [sys.executable, "-m", "altium_cruncher", *args],
+                cwd=PACKAGE_ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            assert completed.returncode == 0, completed.stderr
+            assert "usage:" in completed.stdout
+            assert command in completed.stdout
+
+
 def test_schdoc_create_cli_defaults_to_d_sheet(tmp_path: Path) -> None:
     output_file = tmp_path / "fixture.SchDoc"
     completed = subprocess.run(

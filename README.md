@@ -95,7 +95,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `schlib` | Create one-symbol schematic libraries through MCO operations. | Public |
 | `pcbdoc` | Create generated rigid PCB documents through MCO operations. | Public |
 | `pcblib` | Create PcbLib footprint libraries through MCO operations. | Public |
-| `project` | Create JSONC-driven PrjPcb project skeletons through MCO operations. | Public |
+| `prjpcb` | Create JSONC-driven PrjPcb project skeletons through MCO operations. | Public |
 | `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
 | `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |
