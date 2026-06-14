@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.6.13
+
+- Consume pinned `altium-monkey==2026.6.13`, including the SchDoc
+  near-crossing netlist fix, noncanonical `SheetNumber` design-JSON fix, and
+  PcbDoc/PcbLib DXP parameter-list escape handling for `PrimitiveParameters`.
+- Ship the initial minimal `pcblib create` command, backed by generated
+  `pcblib.create` and `pcblib.add_footprint` MCO operations, for one-footprint
+  PcbLib authoring.
+- Keep generated JSONC config/comment rendering and the PcbLib create command
+  docs aligned for the public release boundary.
+
 ## 2026.6.11
 
 - Consume pinned `altium-monkey==2026.6.11` and `wn-geometer==2026.6.10`

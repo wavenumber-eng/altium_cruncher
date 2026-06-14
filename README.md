@@ -174,7 +174,7 @@ release workflow is GitHub Actions plus PyPI Trusted Publishing/OIDC. Local
 Twine upload is fallback only.
 
 Current release notes are available in
-`docs/releases/2026-06-11.md`.
+`docs/releases/2026-06-13.md`.
 
 `altium-cruncher` remains AGPL-3.0-or-later because it imports and depends on
 the AGPL `altium-monkey` package for normal operation.
