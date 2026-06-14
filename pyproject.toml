@@ -9,7 +9,7 @@ authors = [
     { name = "Wavenumber LLC" },
 ]
 dependencies = [
-    "altium-monkey==2026.6.13",
+    "altium-monkey==2026.6.14",
     "colorama>=0.4.6",
     "easyeda-monkey>=2026.5.26",
     "json-with-comments>=1.2.10",
