@@ -21,7 +21,10 @@ _MATE_CONFIG_COMMENT_BY_PATH = {
     ("source",): "DUT source board input and load policy.",
     ("source", "board"): "Path to the DUT .PrjPcb or .PcbDoc.",
     ("source", "project_context"): enum_help(
-        "Project loading mode.",
+        (
+            "Project loading mode. auto/schematic loads source SchDocs for "
+            "power-port detection."
+        ),
         ("auto", "none", "schematic"),
     ),
     ("output",): "Generated mate project output settings.",

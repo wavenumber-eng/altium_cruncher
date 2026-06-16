@@ -16,8 +16,10 @@
     contract is <a href="mco.html">mco.html</a>. Current implementation covers
     config initialization, selector resolution, name-based library lookup,
     mate component placement, PCB labels, board outline/cutout graphics and
-    regions, STEP artifact insertion, PCB designator arrangement, and
-    source-side validation. Some future projection actions remain draft.
+    regions, STEP artifact insertion, PCB designator arrangement, source-side
+    validation, free-pad selectors, destination-pad reference outlines, and
+    schematic power-port projection. Some future projection actions remain
+    draft.
   </p>
 
   <h2 data-key="mate-config.goal">Goal</h2>
@@ -142,7 +144,7 @@
       </tr>
       <tr>
         <td><code>reference_graphics</code></td>
-        <td>Add mechanical or silkscreen reference geometry, such as source-pad outlines, bounding boxes, or future pin-1 markers. The current implemented subset supports <code>source_pad_outline</code> from inspected source pad geometry, with one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>. The outline follows the effective source-layer pad body for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads. <code>clearance_mils</code> is the visible gap from the source pad edge to the inside edge of the outline stroke, so zero clearance makes the outline touch the pad edge. Filled source-pad graphics are a planned reference mode but are not part of this subset.</td>
+        <td>Add mechanical or silkscreen reference geometry, such as pad outlines, bounding boxes, or future pin-1 markers. The implemented subset supports <code>source_pad_outline</code> from inspected DUT pad geometry and <code>destination_pad_outline</code> from the inserted mate footprint pad geometry. Both modes use one expanded outline by default and optional multiple outlines via <code>outline_count</code> or <code>double_outline</code>. The outline follows the effective pad body for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads. For drilled free pads, source outline graphics use the hole body as the reference feature. <code>clearance_mils</code> is the visible gap from the pad edge to the inside edge of the outline stroke, so zero clearance makes the outline touch the pad edge. Filled source-pad graphics are a planned reference mode but are not part of this subset.</td>
       </tr>
       <tr>
         <td><code>label</code></td>
@@ -185,14 +187,15 @@
   <ul>
     <li>Select cricket-node test points by explicit designator, range, or pattern such as <code>TP*</code>.</li>
     <li>Select mount features and allow node-test-array <code>M5-M8</code> normalization to output <code>M1-M4</code> where needed.</li>
-    <li>Select free NPTH alignment holes as source free-pad/drill objects; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
+    <li>Select plated or unplated free-pad/drill objects with optional <code>hole_size_mils</code> ranges; free pads are identified by physical location and geometry because multiple source pads may share the same serialized designator.</li>
     <li>Project mate components from public SchLib/PcbLib files resolved by name from <code>mating_parts/</code>.</li>
     <li>Place generated schematic symbols on a roomy sheet, currently ANSI <code>D</code> by default, grouped by symbol type. Route each netted symbol with a wire that leaves the symbol in the resolved mate symbol signal pin orientation. The schematic net label is placed on that wire, rotated with the wire direction, and the wire is long enough to sit under the estimated full label text.</li>
     <li>Add configurable right or left side PCB net labels for source nets, including board-edge columns such as <code>board_right</code> and <code>board_left</code>. Board-edge labels are loose text outside <code>MATE_FEATURES</code> so they can be manually moved after generation.</li>
     <li>Normalize generated PCB component designators to compact editable TrueType text above the mate component.</li>
-    <li>Add optional source-pad outline reference graphics on a configurable mechanical layer for source pad alignment. The default is one outline larger than the source pad, using the source pad's effective layer shape for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads.</li>
+    <li>Add optional source-pad or destination-pad outline reference graphics on a configurable mechanical layer. The default is one outline larger than the selected pad, using the effective layer shape for circular, obround, rectangular/square, octagonal/chamfered, and rounded-rectangle pads.</li>
     <li>Project the source board outline to a configurable graphics layer such as silkscreen or a mechanical layer.</li>
-    <li>Detect and project internal board cutouts as Mechanical 1 graphics, actual output board-cutout regions, or both.</li>
+    <li>Detect and project internal board cutouts as Mechanical 1 graphics, actual output board-cutout regions, or both. <code>board_projection.cutouts.scope</code> may be <code>all</code> or <code>interior</code> when DUT outline-adjacent routing cutouts should be ignored.</li>
+    <li>When <code>source.project_context</code> is <code>auto</code> or <code>schematic</code>, read source SchDocs for power symbols. Generated schematic wiring emits a matching power port instead of a net label for those nets.</li>
     <li>Generate a bottom-layer <code>pcb-layer-step</code> artifact for visual/mechanical alignment and optionally insert the generated STEP into the output PcbDoc at a configurable Z height.</li>
     <li>Group generated PCB-side features into <code>MATE_FEATURES</code>, excluding movable PCB net-label text.</li>
   </ul>
@@ -207,7 +210,7 @@
   "schema": "wn.pcb_cruncher.mate_config.a0",
   "source": {
     "board": "path/to/cricket-node.PrjPcb",
-    "pcbdoc": null
+    "project_context": "auto"
   },
   "output": {
     "backend": "altium",
@@ -335,6 +338,7 @@
         "layer": "MECHANICAL_1",
         "stroke_width_mils": 8
       },
+      "scope": "all",
       "actual_cutouts": true
     }
   },
@@ -436,15 +440,18 @@
   <p>
     Generated schematic placement is intentionally simple but collision-aware:
     mate symbols are placed on a coarse grid grouped by symbol type and sorted
-    in natural designator order within each group, the default sheet style is
-    <code>D</code>, schematic designators are centered just above their symbols,
-    wires extend away from each symbol in the selected signal pin orientation,
-    and schematic net labels sit along those wires with matching orientation.
-    Wire length is estimated from the label text so it remains visible beneath
-    the label, and the grid leaves room before the next symbol column. This
-    keeps the first generated schematic reviewable while leaving
-    connector-specific and breakout-specific schematic organization for later
-    slices.
+    in natural designator order within each group, with lower-numbered
+    single-pin designators near the top of each group. The default sheet style
+    is <code>D</code>. Single-pin mate symbols are rotated so the pin hotspot
+    faces right, the visible designator is placed to the left, and the comment
+    field is hidden by default. Wires extend right from each single-pin symbol
+    and are normalized to a shared 100 mil grid length based on the longest net
+    label in that group. Net labels use right-lower justification at the wire
+    end. If the resolved source schematic uses a power symbol for the same net,
+    the generated schematic emits a matching power port at the wire end instead
+    of a net label. Multi-pin symbols still use the selected signal-pin
+    orientation and will get richer connector-specific layout heuristics in
+    later slices.
   </p>
   <p>
     <code>pcb_designators</code> is a post-placement PCB text normalization

@@ -13,6 +13,7 @@ from altium_cruncher.altium_cruncher_cmd_libraries import print_library_scan_res
 from altium_cruncher.altium_cruncher_mate import (
     LEGACY_MATE_CONFIG_SCHEMA,
     MATE_CONFIG_SCHEMA,
+    _source_power_ports_by_net,
     build_mate_mco,
     build_mate_seed_config,
     execute_mate_config,
@@ -28,6 +29,7 @@ from altium_cruncher.altium_cruncher_mate_graphics import (
 from altium_cruncher.altium_cruncher_mate_schematic import (
     schematic_grouped_positions,
 )
+from altium_cruncher.altium_cruncher_mate_templates import mate_template_text
 from altium_cruncher.altium_cruncher_mate_parts import (
     MATE_PARTS_CACHE_FILENAME,
     build_node_test_array_parts_manifest,
@@ -231,6 +233,27 @@ def test_mate_template_writes_editable_a0_config(tmp_path: Path) -> None:
     )
 
 
+def test_mate_template_documents_recent_config_knobs() -> None:
+    text = mate_template_text(schema=MATE_CONFIG_SCHEMA)
+
+    for expected in [
+        (
+            "/* Project loading mode. auto/schematic loads source SchDocs for "
+            "power-port detection. Options: auto, none, schematic. */"
+        ),
+        "/* Source object kind. Options: component, free_pad. */",
+        "/* Free-pad hole-size filter in mils. */",
+        "/* Free-pad plating filter. */",
+        (
+            "/* Reference graphics shape mode. Options: source_pad_outline, "
+            "destination_pad_outline. */"
+        ),
+        "/* Board-cutout projection filter. Options: all, interior. */",
+        "/* Create actual board cutouts when true; otherwise graphics only. */",
+    ]:
+        assert expected in text
+
+
 def test_mate_run_creates_project_and_marker(tmp_path: Path) -> None:
     config_path = tmp_path / "mate.jsonc"
     config_path.write_text(
@@ -350,6 +373,96 @@ def test_mate_inspection_classifies_components_and_free_pads() -> None:
     assert payload["free_pads"][0]["kind"] == "free_npth"
     assert payload["free_pads"][0]["hole_size_mils"] == 40.0
     assert payload["free_pads"][0]["net_name"] == "ALIGN_NET"
+
+
+def test_mate_source_power_ports_emit_schematic_power_ports(tmp_path: Path) -> None:
+    from altium_monkey import AltiumPcbDoc, PadShape, PcbLayer
+    from altium_monkey.altium_pcb_component import AltiumPcbComponent
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 700)
+    pcbdoc.components.append(
+        AltiumPcbComponent(
+            designator="TP1",
+            footprint="TEST_POINT",
+            layer="BOTTOM",
+            x="250mil",
+            y="300mil",
+        )
+    )
+    pad = pcbdoc.add_pad(
+        designator="1",
+        position_mils=(250, 300),
+        width_mils=80,
+        height_mils=80,
+        layer=PcbLayer.BOTTOM,
+        shape=PadShape.CIRCLE,
+        net="GND",
+    )
+    pad.component_index = 0
+    design = SimpleNamespace(
+        schdocs=[
+            SimpleNamespace(
+                power_ports=[
+                    SimpleNamespace(
+                        text="GND",
+                        style=SimpleNamespace(name="BAR"),
+                        show_net_name=False,
+                    )
+                ]
+            )
+        ]
+    )
+    inspection = inspect_pcbdoc_for_mate(
+        "fixture",
+        pcbdoc,
+        "fixture.PcbDoc",
+        source_power_ports=_source_power_ports_by_net(design),
+    )
+    selection_board = inspection.to_dict()
+
+    assert selection_board["components"][0]["source_power_port"] == {
+        "text": "GND",
+        "style": "BAR",
+        "show_net_name": False,
+    }
+
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    config = load_mate_config(
+        _write_json(
+            tmp_path / "mate.jsonc",
+            {
+                "schema": LEGACY_MATE_CONFIG_SCHEMA,
+                "output": {
+                    "output_dir": "generated",
+                    "project_name": "mate",
+                    "overwrite": True,
+                },
+                "known_parts": {
+                    "manifest": str(manifest_path),
+                },
+                "marker": {"enabled": False},
+                "selection": {"boards": [selection_board]},
+            },
+        )
+    )
+
+    operations = build_mate_mco(config)["operations"]
+    schematic_ops = [
+        operation
+        for operation in operations
+        if str(operation["op"]).startswith("schdoc.")
+        and operation["op"] != "schdoc.create"
+    ]
+    power_port = next(
+        operation for operation in schematic_ops if operation["op"] == "schdoc.add_power_port"
+    )
+
+    assert "schdoc.add_net_label" not in {operation["op"] for operation in schematic_ops}
+    assert power_port["args"]["text"] == "GND"
+    assert power_port["args"]["style"] == "BAR"
+    assert power_port["args"]["orientation"] == "DEGREES_0"
+    assert power_port["args"]["show_net_name"] is False
 
 
 def test_mate_inspection_uses_effective_layer_pad_shape() -> None:
@@ -756,13 +869,22 @@ def test_mate_mco_places_known_parts_from_selection(tmp_path: Path) -> None:
     assert m1_symbol["args"]["library"] == (
         "generated/libraries/schlib/9774080360R.SchLib"
     )
-    assert m1_symbol["args"]["position_mils"] == [1200.0, 1200.0]
+    assert m1_symbol["args"]["position_mils"] == [12000.0, 18000.0]
+    assert m1_symbol["args"]["orientation"] == 1
     assert m1_symbol["args"]["designator_style"] == {
-        "position_mils": [1200.0, 1380.0],
+        "position_mils": [11750.0, 17950.0],
         "justification": "BOTTOM_CENTER",
         "font_name": "Arial",
         "font_size": 10,
         "bold": True,
+    }
+    assert m1_symbol["args"]["comment_style"] == {
+        "position_mils": [11750.0, 17900.0],
+        "justification": "BOTTOM_CENTER",
+        "font_name": "Arial",
+        "font_size": 10,
+        "bold": False,
+        "hidden": True,
     }
     assert m1_footprint["args"]["footprint"] == "9774080360R-YIYUAN"
     assert m1_footprint["args"]["library"] == (
@@ -771,15 +893,21 @@ def test_mate_mco_places_known_parts_from_selection(tmp_path: Path) -> None:
     assert m1_footprint["args"]["position_mils"] == [1910.0, 220.0]
     assert p1_symbol["args"]["designator"] == "P1"
     assert p1_symbol["args"]["parameters"]["MateSourceNet"] == "ALIGN_NET"
-    assert p1_symbol["args"]["position_mils"] == [1200.0, 3000.0]
+    assert p1_symbol["args"]["position_mils"] == [17000.0, 18000.0]
+    assert p1_symbol["args"]["orientation"] == 1
     assert p1_symbol["args"]["designator_style"]["position_mils"] == [
-        1200.0,
-        3180.0,
+        16750.0,
+        17950.0,
     ]
-    assert wire["args"]["points_mils"] == [[1200.0, 2880.0], [1200.0, 1925.0]]
+    assert p1_symbol["args"]["comment_style"]["hidden"] is True
+    assert wire["args"]["points_mils"] == [
+        [17120.0, 18000.0],
+        [18120.0, 18000.0],
+    ]
     assert net_label["args"]["text"] == "ALIGN_NET"
-    assert net_label["args"]["location_mils"] == [1200.0, 2720.0]
-    assert net_label["args"]["orientation"] == 3
+    assert net_label["args"]["location_mils"] == [18120.0, 18000.0]
+    assert net_label["args"]["orientation"] == 0
+    assert net_label["args"]["justification"] == "BOTTOM_RIGHT"
     assert p1_footprint["args"]["footprint"] == "H2184-05"
     assert p1_footprint["args"]["position_mils"] == [1710.0, 420.0]
     assert p1_footprint["args"]["pad_nets"] == {"1": "ALIGN_NET"}
@@ -871,7 +999,15 @@ def test_mate_known_part_operations_use_natural_designator_order(
     ]
     assert [
         operation["args"]["position_mils"] for operation in schematic_components
-    ] == [[1200.0, 1200.0], [3600.0, 1200.0]]
+    ] == [[12000.0, 18000.0], [12000.0, 17900.0]]
+    assert [
+        operation["args"]["designator_style"]["position_mils"]
+        for operation in schematic_components
+    ] == [[11750.0, 17950.0], [11750.0, 17850.0]]
+    assert [
+        operation["args"]["comment_style"]["hidden"]
+        for operation in schematic_components
+    ] == [True, True]
 
 
 def test_cricket_node_mate_example_config_is_planable(tmp_path: Path) -> None:
@@ -1281,6 +1417,112 @@ def test_mate_reference_graphics_trace_pad_shape() -> None:
     assert [operation["op"] for operation in octagon_ops] == ["pcbdoc.add_track"] * 8
     assert octagon_ops[0]["args"]["start_mils"] == [147.0, 186.5]
     assert octagon_ops[0]["args"]["end_mils"] == [147.0, 213.5]
+
+
+def test_mate_destination_pad_outline_uses_inserted_footprint_geometry(
+    tmp_path: Path,
+) -> None:
+    from altium_monkey import AltiumPcbLib, AltiumSchLib, PadShape, PcbLayer
+    from altium_monkey.altium_record_sch__pin import AltiumSchPin
+
+    source_path = _write_mate_source_pcbdoc(tmp_path / "dut.PcbDoc")
+    manifest_path = _write_minimal_known_part_cache(tmp_path)
+    cache_dir = manifest_path.parent
+
+    schlib_path = cache_dir / "schlib" / "LARGE_DEST.SchLib"
+    schlib = AltiumSchLib()
+    symbol = schlib.add_symbol("LARGE_DEST")
+    symbol.add_pin(AltiumSchPin("1", "SIG", 0, 0, orientation=0, length=100))
+    schlib.save(schlib_path)
+
+    pcblib_path = cache_dir / "pcblib" / "split" / "LARGE_DEST.PcbLib"
+    pcblib = AltiumPcbLib()
+    footprint = pcblib.add_footprint("LARGE_DEST")
+    footprint.add_pad(
+        designator="1",
+        position_mils=(0.0, 0.0),
+        width_mils=140.0,
+        height_mils=140.0,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+    )
+    pcblib.save(pcblib_path)
+
+    manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_payload["parts"].append(
+        {
+            "role": "large_destination_pad",
+            "description": "Fixture part with a larger destination pad.",
+            "symbol_name": "LARGE_DEST",
+            "symbol_library": "schlib/LARGE_DEST.SchLib",
+            "footprint_name": "LARGE_DEST",
+            "footprint_library": "pcblib/split/LARGE_DEST.PcbLib",
+            "target_kinds": ["test_point"],
+            "designator_prefix": "TP",
+            "signal_pad_designator": "1",
+        }
+    )
+    _write_json(manifest_path, manifest_payload)
+    config = load_mate_config(
+        _write_json(
+            tmp_path / "mate.a0.jsonc",
+            {
+                "schema": MATE_CONFIG_SCHEMA,
+                "source": {
+                    "board": str(source_path),
+                    "project_context": "none",
+                },
+                "output": {
+                    "backend": "altium",
+                    "output_dir": "generated",
+                    "project_name": "mate",
+                    "overwrite": True,
+                },
+                "known_parts": {
+                    "manifest": str(manifest_path),
+                },
+                "projections": [
+                    {
+                        "id": "test_points",
+                        "source": {
+                            "object": "component",
+                            "designators": "TP1",
+                        },
+                        "actions": [
+                            {
+                                "kind": "mate_component",
+                                "part": "large_destination_pad",
+                            },
+                            {
+                                "kind": "reference_graphics",
+                                "shape": "destination_pad_outline",
+                                "layer": "MECHANICAL_2",
+                                "style": {
+                                    "mode": "outline",
+                                    "clearance_mils": 0,
+                                    "stroke_width_mils": 4,
+                                },
+                            },
+                        ],
+                    }
+                ],
+                "board_projection": {},
+                "artifacts": {},
+            },
+        )
+    )
+
+    operations = build_mate_mco(config)["operations"]
+    reference_arcs = [
+        operation for operation in operations if operation["op"] == "pcbdoc.add_arc"
+    ]
+
+    assert [operation["args"]["center_mils"] for operation in reference_arcs] == [
+        [200.0, 300.0]
+    ]
+    assert reference_arcs[0]["args"]["radius_mils"] == 72.0
+    assert reference_arcs[0]["args"]["layer"] == "MECHANICAL_2"
+    assert reference_arcs[0]["args"]["width_mils"] == 4.0
 
 
 def test_mate_board_projection_projects_cutout_graphics_and_regions() -> None:
@@ -1826,6 +2068,107 @@ def test_mate_config_resolves_source_selectors(tmp_path: Path) -> None:
     }
 
 
+def test_mate_selects_plated_free_pads_by_hole_size_for_reference_graphics(
+    tmp_path: Path,
+) -> None:
+    from altium_monkey import AltiumPcbDoc, PadShape, PcbLayer
+
+    source_path = tmp_path / "dut.PcbDoc"
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 700)
+    pcbdoc.add_pad(
+        designator="PL1",
+        position_mils=(100, 120),
+        width_mils=140,
+        height_mils=140,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=94.488,
+        plated=True,
+        net="MOUNT_REF",
+    )
+    pcbdoc.add_pad(
+        designator="NP1",
+        position_mils=(200, 220),
+        width_mils=140,
+        height_mils=140,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=94.488,
+        plated=False,
+        net="NPTH_REF",
+    )
+    pcbdoc.add_pad(
+        designator="PL2",
+        position_mils=(300, 320),
+        width_mils=80,
+        height_mils=80,
+        layer=PcbLayer.MULTI_LAYER,
+        shape=PadShape.CIRCLE,
+        hole_size_mils=35,
+        plated=True,
+        net="SMALL_REF",
+    )
+    pcbdoc.save(source_path)
+    config = load_mate_config(
+        _write_json(
+            tmp_path / "mate.a0.jsonc",
+            {
+                "schema": MATE_CONFIG_SCHEMA,
+                "source": {
+                    "board": str(source_path),
+                    "project_context": "none",
+                },
+                "output": {
+                    "backend": "altium",
+                    "output_dir": "generated",
+                    "project_name": "mate",
+                    "overwrite": True,
+                },
+                "projections": [
+                    {
+                        "id": "plated_holes",
+                        "source": {
+                            "object": "free_pad",
+                            "plated": True,
+                            "hole_size_mils": {"min": 90, "max": 100},
+                        },
+                        "actions": [
+                            {
+                                "kind": "reference_graphics",
+                                "shape": "source_pad_outline",
+                                "layer": "MECHANICAL_1",
+                                "style": {
+                                    "mode": "outline",
+                                    "clearance_mils": 5,
+                                    "stroke_width_mils": 6,
+                                },
+                            }
+                        ],
+                    }
+                ],
+                "board_projection": {},
+                "artifacts": {},
+            },
+        )
+    )
+
+    board = config.selection.boards[0]
+    operations = build_mate_mco(config)["operations"]
+    reference_arcs = [
+        operation for operation in operations if operation["op"] == "pcbdoc.add_arc"
+    ]
+
+    assert [pad.designator for pad in board.free_pads] == ["PL1"]
+    assert board.free_pads[0].source_pad_geometries[0]["width_mils"] == 140.0
+    assert board.free_pads[0].kind == "free_pad"
+    assert [operation["args"]["center_mils"] for operation in reference_arcs] == [
+        [100.0, 120.0]
+    ]
+    assert reference_arcs[0]["args"]["radius_mils"] == pytest.approx(78.0)
+    assert reference_arcs[0]["args"]["layer"] == "MECHANICAL_1"
+
+
 def test_mate_config_keeps_duplicate_free_pad_designators(
     tmp_path: Path,
 ) -> None:
@@ -2076,8 +2419,8 @@ def test_mate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None:
         for parameter in component.parameters
         if isinstance(parameter, AltiumSchDesignator)
     }
-    assert schematic_designator_records["TP1"].location.x_mils == 1200.0
-    assert schematic_designator_records["TP1"].location.y_mils == 1380.0
+    assert schematic_designator_records["TP1"].location.x_mils == 11750.0
+    assert schematic_designator_records["TP1"].location.y_mils == 17950.0
     assert (
         schematic_designator_records["TP1"].justification
         == TextJustification.BOTTOM_CENTER
@@ -2088,10 +2431,14 @@ def test_mate_run_writes_known_part_and_pcb_label(tmp_path: Path) -> None:
         [(point.x_mils, point.y_mils) for point in wire.points_mils]
         for wire in schdoc.wires
     ] == [
-        [(1300.0, 1200.0), (1930.0, 1200.0)],
-        [(1200.0, 4680.0), (1200.0, 3725.0)],
+        [(12100.0, 18000.0), (13100.0, 18000.0)],
+        [(22120.0, 18000.0), (23120.0, 18000.0)],
     ]
-    assert [int(label.orientation) for label in schdoc.net_labels] == [0, 3]
+    assert [int(label.orientation) for label in schdoc.net_labels] == [0, 0]
+    assert [label.justification for label in schdoc.net_labels] == [
+        TextJustification.BOTTOM_RIGHT,
+        TextJustification.BOTTOM_RIGHT,
+    ]
     assert [component.designator for component in pcbdoc.components] == [
         "TP1",
         "M1",
