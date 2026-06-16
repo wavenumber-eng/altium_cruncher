@@ -96,7 +96,7 @@ def test_loads_jsonc_preserves_comment_markers_inside_strings() -> None:
         """
         {
           // line comment
-          "schema": "wn.altium_cruncher.mco.v1",
+          "schema": "altium_cruncher.mco.a0",
           "url": "https://example.test/a//b",
           "operations": [
             {
@@ -119,7 +119,7 @@ def test_loads_jsonc_preserves_comment_markers_inside_strings() -> None:
 def test_load_jsonc_file_accepts_utf8_bom(tmp_path: Path) -> None:
     jsonc_path = tmp_path / "bom.mco.jsonc"
     jsonc_path.write_text(
-        '{"schema":"wn.altium_cruncher.mco.v1","operations":[]}',
+        '{"schema":"altium_cruncher.mco.a0","operations":[]}',
         encoding="utf-8-sig",
     )
 

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from altium_cruncher.config_json import render_commented_jsonc
 
-MCO_SCHEMA = "wn.altium_cruncher.mco.v1"
+MCO_SCHEMA = "altium_cruncher.mco.a0"
 JsonObject = dict[str, object]
 
 

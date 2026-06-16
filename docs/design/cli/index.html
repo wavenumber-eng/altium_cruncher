@@ -17,7 +17,7 @@
     <p class="status">CLI command design index</p>
     <h1>Altium Cruncher CLI</h1>
     <p class="lede">
-      Public commands are listed in <code>docs/contracts/command_manifest.v0.json</code>
+      Public commands are listed in <code>docs/contracts/command_manifest.a0.json</code>
       and must have matching design documents. This index is the human-readable
       command map and the signoff anchor for command documentation.
     </p>
@@ -50,16 +50,16 @@
         <td><code>docs/contracts/pcb_svg_config.a0.schema.json</code></td>
         <td>Render explicit PCB layer outputs and composed SVG views.</td>
       </tr>
-      <tr data-command="pcb-layer-step" data-design-doc="cli/pcb-layer-step.html" data-config-contract="docs/contracts/pcb_layer_step_config.v2.schema.json">
+      <tr data-command="pcb-layer-step" data-design-doc="cli/pcb-layer-step.html" data-config-contract="docs/contracts/pcb_layer_step_config.a0.schema.json">
         <td><code>pcb-layer-step</code></td>
         <td><a href="pcb-layer-step.html">pcb-layer-step.html</a></td>
-        <td><code>docs/contracts/pcb_layer_step_config.v2.schema.json</code></td>
+        <td><code>docs/contracts/pcb_layer_step_config.a0.schema.json</code></td>
         <td>Generate STEP geometry from PCB layer data.</td>
       </tr>
-      <tr data-command="pcbdoc" data-design-doc="cli/pcbdoc.html" data-config-contract="none">
+      <tr data-command="pcbdoc" data-design-doc="cli/pcbdoc.html" data-config-contract="docs/contracts/pcbdoc_create_config.a0.schema.json">
         <td><code>pcbdoc</code></td>
         <td><a href="pcbdoc.html">pcbdoc.html</a></td>
-        <td>None</td>
+        <td><code>docs/contracts/pcbdoc_create_config.a0.schema.json</code></td>
         <td>Create generated rigid PCB documents through MCO operations.</td>
       </tr>
       <tr data-command="svg" data-design-doc="cli/svg.html" data-config-contract="none">
@@ -68,19 +68,19 @@
         <td>None</td>
         <td>Combined SVG wrapper for schematic/project workflows.</td>
       </tr>
-      <tr data-command="bom" data-design-doc="cli/bom.html" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
+      <tr data-command="bom" data-design-doc="cli/bom.html" data-config-contract="docs/contracts/bom_pnp_config.a0.schema.json">
         <td><code>bom</code></td>
         <td><a href="bom.html">bom.html</a></td>
         <td>Shared BOM/PnP config contract</td>
         <td>Export bill-of-materials data.</td>
       </tr>
-      <tr data-command="pnp" data-design-doc="cli/pnp.html" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
+      <tr data-command="pnp" data-design-doc="cli/pnp.html" data-config-contract="docs/contracts/bom_pnp_config.a0.schema.json">
         <td><code>pnp</code></td>
         <td><a href="pnp.html">pnp.html</a></td>
         <td>Shared BOM/PnP config contract</td>
         <td>Export pick-and-place data.</td>
       </tr>
-      <tr data-command="jlc" data-design-doc="cli/jlc.html" data-config-contract="docs/contracts/bom_pnp_config.v1.schema.json">
+      <tr data-command="jlc" data-design-doc="cli/jlc.html" data-config-contract="docs/contracts/bom_pnp_config.a0.schema.json">
         <td><code>jlc</code></td>
         <td><a href="jlc.html">jlc.html</a></td>
         <td>Shared BOM/PnP config contract</td>
@@ -122,10 +122,10 @@
         <td>None</td>
         <td>List symbol and footprint names in Altium library files.</td>
       </tr>
-      <tr data-command="schdoc" data-design-doc="cli/schdoc.html" data-config-contract="none">
+      <tr data-command="schdoc" data-design-doc="cli/schdoc.html" data-config-contract="docs/contracts/schdoc_create_config.a0.schema.json">
         <td><code>schdoc</code></td>
         <td><a href="schdoc.html">schdoc.html</a></td>
-        <td>None</td>
+        <td><code>docs/contracts/schdoc_create_config.a0.schema.json</code></td>
         <td>Create schematic documents through MCO operations.</td>
       </tr>
       <tr data-command="schlib" data-design-doc="cli/schlib.html" data-config-contract="none">
@@ -140,10 +140,10 @@
         <td>None</td>
         <td>Create PCB footprint libraries through generated MCO operations.</td>
       </tr>
-      <tr data-command="prjpcb" data-design-doc="cli/prjpcb.html" data-config-contract="docs/contracts/project_skeleton_config.v1.schema.json">
+      <tr data-command="prjpcb" data-design-doc="cli/prjpcb.html" data-config-contract="docs/contracts/project_skeleton_config.a0.schema.json">
         <td><code>prjpcb</code></td>
         <td><a href="prjpcb.html">prjpcb.html</a></td>
-        <td><code>docs/contracts/project_skeleton_config.v1.schema.json</code></td>
+        <td><code>docs/contracts/project_skeleton_config.a0.schema.json</code></td>
         <td>Create PrjPcb skeletons from editable JSONC configs.</td>
       </tr>
       <tr data-command="split" data-design-doc="cli/split.html" data-config-contract="none">
@@ -182,10 +182,10 @@
         <td>None</td>
         <td>Inspect and edit project variants in PrjPcb files.</td>
       </tr>
-      <tr data-command="clean" data-design-doc="cli/clean.html" data-config-contract="docs/contracts/clean_config.v1.schema.json">
+      <tr data-command="clean" data-design-doc="cli/clean.html" data-config-contract="docs/contracts/clean_config.a0.schema.json">
         <td><code>clean</code></td>
         <td><a href="clean.html">clean.html</a></td>
-        <td><code>docs/contracts/clean_config.v1.schema.json</code></td>
+        <td><code>docs/contracts/clean_config.a0.schema.json</code></td>
         <td>Normalize schematic and library style details.</td>
       </tr>
       <tr data-command="profiles" data-design-doc="cli/profiles.html" data-config-contract="none">

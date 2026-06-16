@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026.6.14
+## 2026.6.15
 
 - Consume pinned `altium-monkey==2026.6.14`, including the public mechanical
   layer-kind authoring and readback surface.
@@ -14,6 +14,10 @@
 - Make `prjpcb` with no subcommand bootstrap `<cwd-name>.project.jsonc` on the
   first run and use that config on later runs; bare project names passed to
   `prjpcb init` and `prjpcb create` resolve to `NAME.project.jsonc`.
+- Start the new project skeleton config contract at
+  `wn.altium_cruncher.project_skeleton.a0` and expand standard mechanical
+  rows in generated configs so users can edit single layers and grouped
+  top/bottom layer pairs directly.
 - Keep generated PrjPcb/PcbDoc stack authoring scoped to generated rigid
   layer stacks; `.stackup` and `.stackupx` import into new PcbDoc files is
   tracked as future Altium Monkey work.

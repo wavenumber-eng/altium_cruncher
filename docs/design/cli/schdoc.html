@@ -1,20 +1,24 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>schdoc command</title><link rel="stylesheet" href="../styles.css"></head>
-<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="schdoc" data-config-contract="none">
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="schdoc" data-config-contract="docs/contracts/schdoc_create_config.a0.schema.json">
 <main>
   <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
   <header><p class="status">CLI command design</p><h1>schdoc</h1><p class="lede">Authors schematic documents through generated MCO operations.</p></header>
 
   <section id="purpose"><h2>Purpose</h2><p><code>schdoc</code> provides a small public authoring surface for Altium <code>.SchDoc</code> files. The command compiles to MCO so schematic creation uses the same document-session, dry-run, and reporting behavior as generated workflows.</p></section>
 
-  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher schdoc create generated.SchDoc
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher schdoc create
+altium-cruncher schdoc create schdoc_create.jsonc
+altium-cruncher schdoc create generated.SchDoc
 altium-cruncher schdoc create generated.SchDoc --sheet-style D --json
 altium-cruncher schdoc create generated.SchDoc --template titleblock.SchDot --apply-template-visual-sheet-settings
 altium-cruncher schdoc create generated.SchDoc --custom-width-mils 34000 --custom-height-mils 22000</code></pre></section>
 
   <section id="arguments"><h2>Arguments</h2><table><tr><th>Argument</th><th>Contract</th></tr>
-    <tr><td><code>create file</code></td><td>Destination <code>.SchDoc</code>. Paths are passed into generated MCO as <code>file</code>.</td></tr>
+    <tr><td><code>create</code></td><td>With no target, writes <code>schdoc_create.jsonc</code> when no config exists. A later no-target run loads that config and creates the schematic document.</td></tr>
+    <tr><td><code>create config.jsonc</code></td><td>Loads or initializes a SchDoc create config using schema <code>altium_cruncher.schdoc.create.config.a0</code>.</td></tr>
+    <tr><td><code>create file</code></td><td>Legacy direct mode. Destination <code>.SchDoc</code>. Paths are passed into generated MCO as <code>file</code>.</td></tr>
     <tr><td><code>--sheet-style</code></td><td>Altium <code>SheetStyle</code> enum name or native integer. The default is <code>D</code>.</td></tr>
     <tr><td><code>--template</code></td><td>Optional <code>.SchDot</code> template applied by the underlying Altium Monkey API.</td></tr>
     <tr><td><code>--apply-template-visual-sheet-settings</code></td><td>When a template is used, also copies supported visual sheet settings.</td></tr>
@@ -22,9 +26,11 @@ altium-cruncher schdoc create generated.SchDoc --custom-width-mils 34000 --custo
     <tr><td><code>--emit-mco</code>, <code>--force</code>, <code>--dry-run</code>, <code>--json</code>, <code>--json-output</code></td><td>Follow the shared MCO command semantics for operation emission, overwrite, non-mutating planning, stdout JSON, and sidecar JSON report output.</td></tr>
   </table></section>
 
+  <section id="config"><h2>Config Shape</h2><p>The A0 config is the same child object shape used by <code>prjpcb.schematics[]</code>, with a top-level <code>schema</code> field. It contains <code>file</code>, optional <code>sheet_style</code>, optional <code>template</code>, optional <code>apply_template_visual_sheet_settings</code>, and optional <code>custom_sheet_mils</code>.</p></section>
+
   <section id="mco"><h2>MCO Shape</h2><p><code>schdoc create</code> compiles to one <code>schdoc.create</code> operation. The operation accepts <code>file</code>, optional <code>sheet_style</code>, optional <code>template</code>, optional <code>apply_template_visual_sheet_settings</code>, optional <code>custom_sheet_mils</code>, and <code>overwrite</code>.</p></section>
 
-  <section id="output"><h2>Output</h2><p>The command writes the requested <code>.SchDoc</code> unless <code>--dry-run</code> is used. Human output is the standard MCO execution summary. In <code>--json</code> mode, lower-level save progress is redirected to stderr so stdout is only the execution report JSON.</p></section>
+  <section id="output"><h2>Output</h2><p>The first config-first run writes the sample JSONC config only; the next run uses that config to write the requested <code>.SchDoc</code> unless <code>--dry-run</code> is used. Human output is the standard MCO execution summary. In <code>--json</code> mode, lower-level save progress is redirected to stderr so stdout is only the execution report JSON.</p></section>
 
   <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_mco.py</code> and <code>tests/test_document_create_commands.py</code>. It verifies default D-size creation, command JSON output, and reparsing the generated SchDoc through Altium Monkey.</p></section>
 </main>

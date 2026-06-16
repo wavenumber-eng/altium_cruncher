@@ -2675,7 +2675,7 @@ def test_mate_inspect_cli_reports_free_npth(tmp_path: Path) -> None:
 
     payload = inspect_mate_source(pcb_path, project_context="none")
 
-    assert payload["schema"].endswith(".inspect.v1")
+    assert payload["schema"].endswith(".inspect.a0")
     board = payload["boards"][0]
     assert board["board_key"] == "dut"
     assert board["free_pads"][0]["kind"] == "free_npth"

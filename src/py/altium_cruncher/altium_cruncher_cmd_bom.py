@@ -412,7 +412,7 @@ def _generic_bom_payload(
     ]
     normalized_components = normalize_bom_components(bom)
     return {
-        "schema": "wn.altium_cruncher.bom.v1",
+        "schema": "altium_cruncher.bom.a0",
         "source": {
             "path": str(source),
             "name": source.name,

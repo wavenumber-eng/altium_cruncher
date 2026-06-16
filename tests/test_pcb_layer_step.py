@@ -201,7 +201,7 @@ def test_pcb_layer_step_config_loader_accepts_jsonc(tmp_path) -> None:
     config_path.write_text(
         """
         {
-          "schema": "wn.altium_cruncher.pcb_layer_step.config.v1",
+          "schema": "altium_cruncher.pcb_layer_step.config.a0",
           "layer": "top", // temporarily switch layer while inspecting output
         }
         """,
@@ -219,7 +219,7 @@ def test_pcb_layer_step_v2_config_parses_fixture_outputs(tmp_path) -> None:
     config_path.write_text(
         """
         {
-          "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
+          "schema": "altium_cruncher.pcb_layer_step.config.a0",
           "defaults": {
             "layer": "bottom",
             "board_outline": {
@@ -433,7 +433,7 @@ def test_export_pcb_layer_step_writes_step_and_manifest(tmp_path) -> None:
         "ISO-10303-21;"
     )
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
-    assert manifest["schema"] == "wn.altium_cruncher.pcb_layer_step.v1"
+    assert manifest["schema"] == "altium_cruncher.pcb_layer_step.a0"
     assert manifest["backend"] == "geometer.planar_step"
     assert manifest["layer"]["json_name"] == "BOTTOM"
     assert manifest["counts"]["copper_bodies"] >= 1
@@ -705,7 +705,7 @@ def test_export_pcb_layer_step_filters_designators_and_renders_drill_rings(
 
     config = PcbLayerStepConfig.from_dict(
         {
-            "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
+            "schema": "altium_cruncher.pcb_layer_step.config.a0",
             "outputs": [
                 {
                     "features": {

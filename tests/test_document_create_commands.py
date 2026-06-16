@@ -58,6 +58,47 @@ def test_schdoc_create_cli_defaults_to_d_sheet(tmp_path: Path) -> None:
     assert schdoc.sheet.sheet_style == SheetStyle.D
 
 
+def test_schdoc_create_config_first_flow(tmp_path: Path) -> None:
+    first_completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "schdoc",
+            "create",
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert first_completed.returncode == 0, first_completed.stderr
+    assert first_completed.stdout.startswith("\n")
+    assert "Writing SchDoc create config template:" in first_completed.stdout
+    assert "Please edit it, then rerun `acr schdoc create`" in first_completed.stdout
+
+    config_file = tmp_path / "schdoc_create.jsonc"
+    assert config_file.exists()
+    assert not (tmp_path / f"{tmp_path.name}.SchDoc").exists()
+
+    second_completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "schdoc",
+            "create",
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert second_completed.returncode == 0, second_completed.stderr
+    assert "Using SchDoc create config:" in second_completed.stdout
+    assert (tmp_path / f"{tmp_path.name}.SchDoc").exists()
+
+
 def test_schlib_create_cli_writes_one_empty_symbol(tmp_path: Path) -> None:
     output_file = tmp_path / "fixture.SchLib"
     mco_file = tmp_path / "fixture.mco.json"
@@ -146,3 +187,47 @@ def test_pcbdoc_create_cli_writes_generated_stack_and_mechanical_kinds(
         pcbdoc.get_mechanical_layer_kind("MECHANICAL20")
         == MechanicalLayerKind.COURTYARD_TOP
     )
+
+
+def test_pcbdoc_create_config_first_flow(tmp_path: Path) -> None:
+    first_completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "pcbdoc",
+            "create",
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert first_completed.returncode == 0, first_completed.stderr
+    assert first_completed.stdout.startswith("\n")
+    assert "Writing PcbDoc create config template:" in first_completed.stdout
+    assert "Please edit it, then rerun `acr pcbdoc create`" in first_completed.stdout
+
+    config_file = tmp_path / "pcbdoc_create.jsonc"
+    assert config_file.exists()
+    config_text = config_file.read_text(encoding="utf-8")
+    assert '"schema": "altium_cruncher.pcbdoc.create.config.a0"' in config_text
+    assert "Valid mechanical layer ids/indexes/default names:" in config_text
+    assert not (tmp_path / f"{tmp_path.name}.PcbDoc").exists()
+
+    second_completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "pcbdoc",
+            "create",
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert second_completed.returncode == 0, second_completed.stderr
+    assert "Using PcbDoc create config:" in second_completed.stdout
+    assert (tmp_path / f"{tmp_path.name}.PcbDoc").exists()

@@ -99,13 +99,48 @@ def standard_mechanical_profile_args() -> JsonObject:
             for layer, name, enabled in STANDARD_MECHANICAL_LAYERS
         ],
         "mechanical_layer_pairs": [
-            {"layer_1": layer_1, "layer_2": layer_2, "pair_index": index}
-            for index, (layer_1, layer_2) in enumerate(STANDARD_MECHANICAL_LAYER_PAIRS)
+            {"layer_1": layer_1, "layer_2": layer_2}
+            for layer_1, layer_2 in STANDARD_MECHANICAL_LAYER_PAIRS
         ],
         "mechanical_layer_kinds": [
             {"layer": layer, "kind": kind}
             for layer, kind in STANDARD_MECHANICAL_LAYER_KINDS
         ],
+    }
+
+
+def standard_mechanical_project_config() -> JsonObject:
+    """Return grouped project-config rows for standard mechanical layers."""
+    layers_by_id = {
+        layer: {"layer": layer, "name": name, "enabled": enabled}
+        for layer, name, enabled in STANDARD_MECHANICAL_LAYERS
+    }
+    kinds_by_id = dict(STANDARD_MECHANICAL_LAYER_KINDS)
+    paired_layers = {
+        layer
+        for layer_pair in STANDARD_MECHANICAL_LAYER_PAIRS
+        for layer in layer_pair
+    }
+    single_rows: list[JsonObject] = []
+    for layer, row in layers_by_id.items():
+        if layer in paired_layers:
+            continue
+        row = dict(row)
+        if layer in kinds_by_id:
+            row["kind"] = kinds_by_id[layer]
+        single_rows.append(row)
+
+    pair_rows: list[JsonObject] = []
+    for top_layer, bottom_layer in STANDARD_MECHANICAL_LAYER_PAIRS:
+        top = dict(layers_by_id[top_layer])
+        bottom = dict(layers_by_id[bottom_layer])
+        top["kind"] = kinds_by_id[top_layer]
+        bottom["kind"] = kinds_by_id[bottom_layer]
+        pair_rows.append({"top": top, "bottom": bottom})
+
+    return {
+        "mechanical_layers": single_rows,
+        "mechanical_layer_pairs": pair_rows,
     }
 
 

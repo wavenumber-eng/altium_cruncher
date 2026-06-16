@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/clean_config.v1.schema.json",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/clean_config.a0.schema.json",
   "title": "Altium Cruncher Clean Config",
   "description": "JSON/JSONC configuration contract for schematic, schematic-library, and PCB-library clean workflows.",
   "oneOf": [
@@ -84,7 +84,7 @@
       "required": ["schema"],
       "properties": {
         "schema": {
-          "const": "wn.altium.clean.config.v1"
+          "const": "altium_cruncher.clean.config.a0"
         },
         "normalize_pin_fonts": {
           "$ref": "#/$defs/pinFonts"
@@ -355,7 +355,7 @@
       "required": ["schema"],
       "properties": {
         "schema": {
-          "const": "wn.altium.pcblib.clean.config.v1"
+          "const": "altium_cruncher.pcblib.clean.config.a0"
         },
         "profile": {
           "enum": ["default", "raw"]

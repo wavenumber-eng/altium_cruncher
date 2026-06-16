@@ -241,7 +241,7 @@ PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT = """{
          altium-cruncher pcb-layer-step --help
 
   */
-  "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
+  "schema": "altium_cruncher.pcb_layer_step.config.a0",
   "defaults": {
     "pcbdoc": null, /* optional PcbDoc selector when a PrjPcb contains more than one board */
     "layer": "bottom", /* layer selector: bottom, top, native layer name, or layer id */

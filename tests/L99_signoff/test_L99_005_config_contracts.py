@@ -19,6 +19,16 @@ from altium_cruncher.altium_cruncher_cmd_clean import (
 )
 from altium_cruncher.altium_cruncher_mate_templates import mate_template_text
 from altium_cruncher.altium_cruncher_mco import _mco_template_text
+from altium_cruncher.altium_cruncher_cmd_prjpcb import (
+    default_project_config,
+    render_project_config,
+)
+from altium_cruncher.altium_cruncher_document_configs import (
+    default_pcbdoc_create_config,
+    default_schdoc_create_config,
+    render_pcbdoc_create_config,
+    render_schdoc_create_config,
+)
 from altium_cruncher.altium_cruncher_pcb_layer_step_config import (
     pcb_layer_step_default_config_text,
 )
@@ -42,7 +52,7 @@ PACKAGE_ROOT = _project_root()
 CONTRACTS_ROOT = PACKAGE_ROOT / "docs" / "contracts"
 DESIGN_ROOT = PACKAGE_ROOT / "docs" / "design"
 CLI_DESIGN_ROOT = DESIGN_ROOT / "cli"
-COMMAND_MANIFEST = CONTRACTS_ROOT / "command_manifest.v0.json"
+COMMAND_MANIFEST = CONTRACTS_ROOT / "command_manifest.a0.json"
 
 
 class _DataAttrParser(HTMLParser):
@@ -64,7 +74,7 @@ class _DataAttrParser(HTMLParser):
 
 def _manifest_commands() -> list[str]:
     payload = json.loads(COMMAND_MANIFEST.read_text(encoding="utf-8"))
-    assert payload["schema"] == "altium_cruncher.command_manifest.v0"
+    assert payload["schema"] == "altium_cruncher.command_manifest.a0"
     commands = payload["commands"]
     assert isinstance(commands, list)
     return [str(command["name"]) for command in commands]
@@ -117,7 +127,7 @@ def _config_cases() -> list[tuple[str, str, Any]]:
     return [
         (
             "bom/pnp generated default",
-            "bom_pnp_config.v1.schema.json",
+            "bom_pnp_config.a0.schema.json",
             jsonc.loads(bom_pnp_config_text()),
         ),
         (
@@ -127,23 +137,48 @@ def _config_cases() -> list[tuple[str, str, Any]]:
         ),
         (
             "pcb-layer-step generated template",
-            "pcb_layer_step_config.v2.schema.json",
+            "pcb_layer_step_config.a0.schema.json",
             jsonc.loads(pcb_layer_step_default_config_text()),
         ),
         (
             "mate generated template",
             "mate_config.a0.schema.json",
-            jsonc.loads(mate_template_text(schema="wn.pcb_cruncher.mate_config.a0")),
+            jsonc.loads(
+                mate_template_text(schema="altium_cruncher.mate.config.a0")
+            ),
         ),
         (
             "schematic clean generated template",
-            "clean_config.v1.schema.json",
+            "clean_config.a0.schema.json",
             AltiumCleanConfig.template().to_dict(),
         ),
         (
             "PcbLib clean generated template",
-            "clean_config.v1.schema.json",
+            "clean_config.a0.schema.json",
             PcbLibCleanConfig.template().to_dict(),
+        ),
+        (
+            "project skeleton generated template",
+            "project_skeleton_config.a0.schema.json",
+            jsonc.loads(render_project_config(default_project_config())),
+        ),
+        (
+            "SchDoc create generated template",
+            "schdoc_create_config.a0.schema.json",
+            jsonc.loads(
+                render_schdoc_create_config(
+                    default_schdoc_create_config(document_name="generated")
+                )
+            ),
+        ),
+        (
+            "PcbDoc create generated template",
+            "pcbdoc_create_config.a0.schema.json",
+            jsonc.loads(
+                render_pcbdoc_create_config(
+                    default_pcbdoc_create_config(document_name="generated")
+                )
+            ),
         ),
     ]
 
@@ -179,7 +214,7 @@ def _generated_template_comment_cases() -> list[tuple[str, str, list[str]]]:
         ),
         (
             "mate",
-            mate_template_text(schema="wn.pcb_cruncher.mate_config.a0"),
+            mate_template_text(schema="altium_cruncher.mate.config.a0"),
             [
                 (
                     "/* Project loading mode. auto/schematic loads source SchDocs "
@@ -224,6 +259,35 @@ def _generated_template_comment_cases() -> list[tuple[str, str, list[str]]]:
                 "/* MCO operation name. Options: */",
                 "project.create",
                 "/* Schematic sheet style. Options: Altium SheetStyle enum name or native enum id. */",
+            ],
+        ),
+        (
+            "project skeleton",
+            render_project_config(default_project_config()),
+            [
+                "/* Layer-stack generation mode. Options: generated_rigid. */",
+                "/* Editable grouped top/bottom mechanical layer pair rows. */",
+                "/* Top-side mechanical layer kind enum name; see valid kind names in the header. */",
+            ],
+        ),
+        (
+            "SchDoc create",
+            render_schdoc_create_config(
+                default_schdoc_create_config(document_name="generated")
+            ),
+            [
+                "/* Schematic sheet style. Options: Altium SheetStyle enum name or native enum id. */",
+            ],
+        ),
+        (
+            "PcbDoc create",
+            render_pcbdoc_create_config(
+                default_pcbdoc_create_config(document_name="generated")
+            ),
+            [
+                "/* Layer-stack generation mode. Options: generated_rigid. */",
+                "/* Editable grouped top/bottom mechanical layer pair rows. */",
+                "/* Top-side mechanical layer kind enum name; see valid kind names in the header. */",
             ],
         ),
     ]

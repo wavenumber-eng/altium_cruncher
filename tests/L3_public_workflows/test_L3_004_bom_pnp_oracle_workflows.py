@@ -275,7 +275,7 @@ def test_pnp_json_matches_altium_metric_oracle_core_geometry(tmp_path: Path) -> 
             "json",
         )
         payload = json.loads(payload_path.read_text(encoding="utf-8"))
-        assert payload["schema"] == "wn.altium_cruncher.pnp.v1"
+        assert payload["schema"] == "altium_cruncher.pnp.a0"
         assert payload["units"] == "mm"
         assert payload["position_mode"] == "altium-pick-place"
 

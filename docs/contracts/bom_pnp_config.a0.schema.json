@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/bom_pnp_config.v1.schema.json",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/bom_pnp_config.a0.schema.json",
   "title": "Altium Cruncher BOM/PnP Config",
   "type": "object",
   "required": ["schema"],
   "properties": {
     "schema": {
-      "const": "wn.altium_cruncher.bom.config.v1"
+      "const": "altium_cruncher.bom.config.a0"
     },
     "field_aliases": {
       "type": "object",

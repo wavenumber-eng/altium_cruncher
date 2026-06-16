@@ -38,7 +38,7 @@ This inventory records the command set migrated from the private
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
 | `profiles` | public | unit/CLI | Lists Altium ProgramData profiles and can clean selected extension module state with explicit targeting and dry-run support. |
 
-The command manifest lives at `docs/contracts/command_manifest.v0.json`. `L99` should
+The command manifest lives at `docs/contracts/command_manifest.a0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
 test ownership.
 
@@ -287,8 +287,8 @@ Clean notes:
 
 - `clean` stays in the first public command set;
 - release docs must explain both config schemas:
-  `wn.altium.clean.config.v1` for `SchDoc`/`SchLib`/`PrjPcb`, and
-  `wn.altium.pcblib.clean.config.v1` for `PcbLib`;
+  `altium_cruncher.clean.config.a0` for `SchDoc`/`SchLib`/`PrjPcb`, and
+  `altium_cruncher.pcblib.clean.config.a0` for `PcbLib`;
 - docs cover explicit `--init-config`, config auto-generation, output path behavior, backup
   behavior, color/font/line-width/no-ERC value formats, every schematic
   normalization section, and every PcbLib removal section;

@@ -260,7 +260,7 @@ def _write_3d_model_artifacts(
     model_dir = case_dir / "3d_models"
     model_dir.mkdir(parents=True, exist_ok=True)
     manifest: dict[str, object] = {
-        "schema": "wn.altium_cruncher.easyeda.3d_models.v1",
+        "schema": "altium_cruncher.easyeda.3d_models.a0",
         "lcsc_id": _safe_part_id(lcsc_id),
         "placement_implemented": False,
         "placement_note": (

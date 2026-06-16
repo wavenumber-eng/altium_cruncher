@@ -182,7 +182,7 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
     assert any(str(path).endswith("_base.csv") for path in pnp_artifacts)
     pnp_json = next(path for path in pnp_artifacts if str(path).endswith("_base.json"))
     pnp_payload = json.loads((output_dir / pnp_json).read_text())
-    assert pnp_payload["schema"] == "wn.altium_cruncher.pnp.v1"
+    assert pnp_payload["schema"] == "altium_cruncher.pnp.a0"
 
     assert manifest["embedded_assets"]["model_file_count"] == 29
     assert manifest["sch_images"]["image_file_count"] == 7

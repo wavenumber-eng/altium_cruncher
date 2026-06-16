@@ -19,6 +19,13 @@ from altium_cruncher.altium_cruncher_mco import (
     execute_mco,
     mco_operation,
 )
+from altium_cruncher.altium_cruncher_document_configs import (
+    PCBDOC_AUTO_CONFIG_NAME,
+    PCBDOC_CREATE_CONFIG_SCHEMA,
+    default_pcbdoc_create_config,
+    load_object_config,
+    render_pcbdoc_create_config,
+)
 from altium_cruncher.altium_cruncher_project_profiles import (
     STANDARD_MECHANICAL_LAYER_PROFILE,
     generated_rigid_stack_config,
@@ -35,7 +42,7 @@ def build_pcbdoc_create_mco(
     layer_stack_template: str | None = None,
     width_mils: float = 3000.0,
     height_mils: float = 2000.0,
-    mechanical_layer_profile: str | None = None,
+    mechanical_layer_profile: str | None = STANDARD_MECHANICAL_LAYER_PROFILE,
     overwrite: bool = False,
 ) -> JsonObject:
     """Build the MCO payload for creating a PcbDoc."""
@@ -63,6 +70,28 @@ def build_pcbdoc_create_mco(
                 "create_pcbdoc",
                 "Create PcbDoc",
                 args,
+            )
+        ],
+    }
+
+
+def build_pcbdoc_create_mco_from_config(
+    config: JsonObject,
+    *,
+    overwrite: bool = False,
+) -> JsonObject:
+    """Build the MCO payload for creating a PcbDoc from config."""
+    from altium_cruncher.altium_cruncher_cmd_prjpcb import _pcb_create_args, _string
+
+    pcb_file = _string(config.get("file"), "file")
+    return {
+        "schema": MCO_SCHEMA,
+        "operations": [
+            mco_operation(
+                "pcbdoc.create",
+                "create_pcbdoc",
+                "Create PcbDoc",
+                _pcb_create_args(config, pcb_file, overwrite),
             )
         ],
     }
@@ -108,13 +137,16 @@ def cmd_pcbdoc(args: argparse.Namespace) -> int:
 
 def _cmd_pcbdoc_create(args: argparse.Namespace) -> int:
     try:
+        target = getattr(args, "target", None)
+        if target is None or _is_config_path(target):
+            return _cmd_pcbdoc_create_from_config(args, target)
         profile = (
             None
             if args.mechanical_layer_profile == "none"
             else args.mechanical_layer_profile
         )
         payload = build_pcbdoc_create_mco(
-            args.file,
+            target,
             layers=args.layers,
             layer_stack_template=args.layer_stack_template,
             width_mils=args.width_mils,
@@ -146,11 +178,93 @@ def _cmd_pcbdoc_create(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def _cmd_pcbdoc_create_from_config(
+    args: argparse.Namespace,
+    target: Path | None,
+) -> int:
+    config_path = target or Path.cwd() / PCBDOC_AUTO_CONFIG_NAME
+    try:
+        if not config_path.exists():
+            output_path = write_pcbdoc_create_config(
+                config_path,
+                default_pcbdoc_create_config(
+                    document_name=_default_document_name_from_cwd(Path.cwd()),
+                    layer_count=args.layers,
+                ),
+                overwrite=bool(args.force),
+            )
+            log.info("")
+            log.info("Writing PcbDoc create config template: %s", output_path)
+            log.info("Please edit it, then rerun `acr pcbdoc create` to create the document.")
+            return 0
+
+        config = load_pcbdoc_create_config(config_path)
+        log.info("")
+        log.info("Using PcbDoc create config: %s", config_path.resolve())
+        payload = build_pcbdoc_create_mco_from_config(
+            config,
+            overwrite=bool(args.force),
+        )
+        if args.emit_mco is not None:
+            _write_json(args.emit_mco, payload, overwrite=bool(args.force))
+        result = execute_mco_for_cli(
+            payload,
+            McoExecutionContext(work_dir=config_path.resolve().parent, dry_run=bool(args.dry_run)),
+            json_stdout=bool(args.json),
+        )
+    except Exception as exc:
+        log.error("Failed creating PcbDoc: %s", exc)
+        return 1
+
+    if args.json_output is not None:
+        _write_json(args.json_output, result.to_dict(), overwrite=True)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2))
+    else:
+        print_mco_execution_result(
+            result,
+            title="pcbdoc",
+            color=not bool(args.no_color),
+        )
+        log.info("Config: %s", config_path.resolve())
+    return 0 if result.ok else 1
+
+
 def _merge_mechanical_profile_args(args: JsonObject, profile: str) -> None:
     normalized = profile.strip().lower().replace("-", "_")
     if normalized != STANDARD_MECHANICAL_LAYER_PROFILE:
         raise ValueError(f"Unsupported mechanical layer profile: {profile!r}")
     args.update(standard_mechanical_profile_args())
+
+
+def write_pcbdoc_create_config(
+    path: Path | str,
+    config: JsonObject,
+    *,
+    overwrite: bool = False,
+) -> Path:
+    output_path = Path(path)
+    if output_path.exists() and not overwrite:
+        raise FileExistsError(f"Config already exists: {output_path}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(render_pcbdoc_create_config(config), encoding="utf-8")
+    return output_path.resolve()
+
+
+def load_pcbdoc_create_config(path: Path | str) -> JsonObject:
+    return load_object_config(
+        path,
+        schema=PCBDOC_CREATE_CONFIG_SCHEMA,
+        label="PcbDoc create",
+    )
+
+
+def _is_config_path(path: Path) -> bool:
+    return path.suffix.lower() in {".json", ".jsonc"}
+
+
+def _default_document_name_from_cwd(cwd: Path) -> str:
+    return cwd.name or "generated_board"
 
 
 def _write_json(path: Path, payload: JsonObject, *, overwrite: bool) -> Path:
@@ -180,7 +294,15 @@ def register_parser(
         "create",
         help="create a new PCB document",
     )
-    create_parser.add_argument("file", type=Path, help="output .PcbDoc path")
+    create_parser.add_argument(
+        "target",
+        type=Path,
+        nargs="?",
+        help=(
+            "output .PcbDoc path, PcbDoc create config path, or omitted to "
+            f"write/use {PCBDOC_AUTO_CONFIG_NAME}"
+        ),
+    )
     create_parser.add_argument(
         "--layers",
         type=int,
@@ -206,7 +328,7 @@ def register_parser(
     create_parser.add_argument(
         "--mechanical-layer-profile",
         choices=("none", STANDARD_MECHANICAL_LAYER_PROFILE),
-        default="none",
+        default=STANDARD_MECHANICAL_LAYER_PROFILE,
         help="optional mechanical layer/kind initialization profile",
     )
     create_parser.add_argument(

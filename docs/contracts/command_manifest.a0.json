@@ -1,5 +1,5 @@
 {
-  "schema": "altium_cruncher.command_manifest.v0",
+  "schema": "altium_cruncher.command_manifest.a0",
   "commands": [
     {"name": "bom", "status": "public", "requires_extra": null},
     {"name": "clean", "status": "public", "requires_extra": null},

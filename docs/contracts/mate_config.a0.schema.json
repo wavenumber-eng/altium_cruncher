@@ -119,7 +119,7 @@
   },
   "properties": {
     "schema": {
-      "const": "wn.pcb_cruncher.mate_config.a0"
+      "const": "altium_cruncher.mate.config.a0"
     },
     "source": {
       "type": "object",

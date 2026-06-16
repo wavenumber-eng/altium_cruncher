@@ -8,6 +8,10 @@ from pathlib import Path
 
 import jsonschema
 
+from altium_cruncher.altium_cruncher_cmd_prjpcb import (
+    default_project_config,
+    render_project_config,
+)
 from altium_cruncher.config_json import load_json_config
 
 
@@ -57,7 +61,7 @@ def test_prjpcb_init_and_create_cli_writes_config_mco_and_project(
             PACKAGE_ROOT
             / "docs"
             / "contracts"
-            / "project_skeleton_config.v1.schema.json"
+            / "project_skeleton_config.a0.schema.json"
         ).read_text(encoding="utf-8")
     )
     jsonschema.validate(load_json_config(config_file), schema)
@@ -94,7 +98,10 @@ def test_prjpcb_init_and_create_cli_writes_config_mco_and_project(
     ]
     board_args = generated_mco["operations"][3]["args"]
     assert board_args["rigid_stack"]["mode"] == "generated_rigid"
+    assert "mechanical_layer_profile" not in board_args
+    assert len(board_args["mechanical_layers"]) == 32
     assert len(board_args["mechanical_layer_pairs"]) == 11
+    assert len(board_args["mechanical_layer_kinds"]) == 30
 
     from altium_monkey import AltiumPcbDoc, AltiumSchDoc, MechanicalLayerKind
     from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
@@ -155,6 +162,47 @@ def test_prjpcb_init_bare_name_writes_named_project_config(tmp_path: Path) -> No
     assert config["schematics"][0]["file"] == "test.SchDoc"
     assert config["pcb"]["file"] == "test.PcbDoc"
     assert len(config["pcb"]["layer_stack"]["copper_layers"]) == 4
+    assert "mechanical_layer_profile" not in config["pcb"]
+    assert len(config["pcb"]["mechanical_layers"]) == 10
+    assert len(config["pcb"]["mechanical_layer_pairs"]) == 11
+    assert "mechanical_layer_kinds" not in config["pcb"]
+    first_pair = config["pcb"]["mechanical_layer_pairs"][0]
+    assert first_pair == {
+        "top": {
+            "layer": "MECHANICAL10",
+            "name": "Top 3D Body",
+            "enabled": True,
+            "kind": "BODY_3D_TOP",
+        },
+        "bottom": {
+            "layer": "MECHANICAL11",
+            "name": "Bottom 3D Body",
+            "enabled": True,
+            "kind": "BODY_3D_BOTTOM",
+        },
+    }
+
+
+def test_prjpcb_generated_config_comments_every_field() -> None:
+    text = render_project_config(default_project_config(project_name="demo"))
+    assert "Valid mechanical layer ids/indexes/default names:" in text
+    assert "//   MECHANICAL1=index 1: Mechanical 1" in text
+    assert "//   MECHANICAL32=index 32: Mechanical 32" in text
+    assert "Valid mechanical layer kind enum names:" in text
+    assert "//   BODY_3D_TOP" in text
+    assert "//   WIREBONDING_BOTTOM" in text
+
+    missing_comments: list[str] = []
+    previous_content = ""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith('"') and '":' in stripped:
+            if not previous_content.startswith("/*"):
+                missing_comments.append(stripped)
+        if stripped:
+            previous_content = stripped
+
+    assert missing_comments == []
 
 
 def test_prjpcb_no_args_writes_then_uses_auto_config(tmp_path: Path) -> None:
@@ -162,7 +210,7 @@ def test_prjpcb_no_args_writes_then_uses_auto_config(tmp_path: Path) -> None:
     work_dir.mkdir()
 
     first_completed = subprocess.run(
-        [sys.executable, "-m", "altium_cruncher", "prjpcb"],
+        [sys.executable, "-m", "altium_cruncher", "prjpcb", "create"],
         cwd=work_dir,
         env=_cli_env(),
         check=False,
@@ -171,14 +219,17 @@ def test_prjpcb_no_args_writes_then_uses_auto_config(tmp_path: Path) -> None:
     )
     assert first_completed.returncode == 0, first_completed.stderr
 
-    config_file = work_dir / "auto_project.project.jsonc"
+    assert first_completed.stdout.startswith("\n")
+    assert "Writing project init config template:" in first_completed.stdout
+    assert "Please edit it, then rerun `acr prjpcb create`" in first_completed.stdout
+    config_file = work_dir / "prjpcb_init.jsonc"
     assert config_file.exists()
     assert not (work_dir / "auto_project.PrjPcb").exists()
     config = load_json_config(config_file)
     assert config["project"]["name"] == "auto_project"
 
     second_completed = subprocess.run(
-        [sys.executable, "-m", "altium_cruncher", "prjpcb"],
+        [sys.executable, "-m", "altium_cruncher", "prjpcb", "create"],
         cwd=work_dir,
         env=_cli_env(),
         check=False,
@@ -186,6 +237,8 @@ def test_prjpcb_no_args_writes_then_uses_auto_config(tmp_path: Path) -> None:
         text=True,
     )
     assert second_completed.returncode == 0, second_completed.stderr
+    assert second_completed.stdout.startswith("\n")
+    assert "Using project init config:" in second_completed.stdout
     assert (work_dir / "auto_project.PrjPcb").exists()
     assert (work_dir / "auto_project.SchDoc").exists()
     assert (work_dir / "auto_project.PcbDoc").exists()
@@ -254,9 +307,10 @@ def test_prjpcb_add_sheet_cli_creates_sheet_and_adds_document(tmp_path: Path) ->
 
 def test_prjpcb_parent_and_subcommand_help_start() -> None:
     for args in (
+        ("prjpcb",),
         ("prjpcb", "--help"),
-        ("prjpcb", "init", "--help"),
         ("prjpcb", "create", "--help"),
+        ("prjpcb", "init", "--help"),
         ("prjpcb", "add-sheet", "--help"),
     ):
         completed = subprocess.run(

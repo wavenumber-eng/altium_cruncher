@@ -16,7 +16,7 @@ altium-cruncher mco run mate.mco.jsonc --json-output output/mco-result.json
 altium-cruncher mco run mate.mco.jsonc --json</code></pre></section>
 
   <section id="arguments"><h2>Arguments</h2><table><tr><th>Area</th><th>Contract</th></tr>
-    <tr><td><code>schema</code></td><td>MCO files use <code>wn.altium_cruncher.mco.v1</code>. JSONC comments, trailing commas, and UTF-8 BOM are accepted. <code>mco init</code> writes a commented JSONC starter file through the shared renderer. Generated comments follow ADR-0007 and list options for string/enum-style fields such as <code>op</code> and <code>sheet_style</code>.</td></tr>
+    <tr><td><code>schema</code></td><td>MCO files use <code>altium_cruncher.mco.a0</code>. JSONC comments, trailing commas, and UTF-8 BOM are accepted. <code>mco init</code> writes a commented JSONC starter file through the shared renderer. Generated comments follow ADR-0007 and list options for string/enum-style fields such as <code>op</code> and <code>sheet_style</code>.</td></tr>
     <tr><td><code>operations[]</code></td><td>Ordered operation objects with required <code>op</code> then <code>id</code>, optional human <code>message</code>, required-or-empty <code>args</code>, and optional <code>on_fail</code> branch target. Generated files write keys in that order for reviewability.</td></tr>
     <tr><td>Core ops</td><td><code>mco.message</code>, <code>mco.fail</code>, and <code>file.copy</code>.</td></tr>
     <tr><td>Project ops</td><td><code>project.create</code>, <code>project.add_document</code>, <code>project.add_parameter</code>, <code>project.add_variant</code>, <code>project.list_variants</code>, <code>project.delete_variant</code>, <code>project.rename_variant</code>, <code>project.clone_variant</code>, <code>project.add_variant_dnp</code>, and <code>project.toggle_variant_dnp</code>. Project skeletons are intentionally composed from these small operations plus document creation operations instead of a bundled project op.</td></tr>
@@ -29,7 +29,7 @@ altium-cruncher mco run mate.mco.jsonc --json</code></pre></section>
   </table></section>
 
   <section id="output"><h2>Output</h2><p><code>run</code> prints a colorized human-readable summary by default, including operation count, error count, and one message-first block per operation with the internal <code>op</code> and <code>id</code> shown as secondary detail. Use <code>--json</code> for machine-readable stdout or <code>--json-output</code> to write the structured result while keeping human output on the terminal. Mutation operations return output paths and operation-specific fields in JSON mode. On a normal run, dirty CAD documents are saved after operation execution completes.</p><pre><code>{
-  "schema": "wn.altium_cruncher.mco.v1",
+  "schema": "altium_cruncher.mco.a0",
   "ok": true,
   "dry_run": false,
   "results": []

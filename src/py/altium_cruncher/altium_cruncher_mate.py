@@ -86,9 +86,9 @@ from altium_cruncher.altium_cruncher_mate_defaults import (
     mate_known_parts_payload as _mate_known_parts_payload,
 )
 
-LEGACY_MATE_CONFIG_SCHEMA = "wn.altium_cruncher.mate.v1"
-MATE_CONFIG_SCHEMA = "wn.pcb_cruncher.mate_config.a0"
-MATE_INSPECTION_SCHEMA = "wn.altium_cruncher.mate.inspect.v1"
+LEGACY_MATE_CONFIG_SCHEMA = "altium_cruncher.mate.legacy.a0"
+MATE_CONFIG_SCHEMA = "altium_cruncher.mate.config.a0"
+MATE_INSPECTION_SCHEMA = "altium_cruncher.mate.inspect.a0"
 _SCHEMATIC_SINGLE_PIN_ORIGIN_MILS = (12000.0, 18000.0)
 _SCHEMATIC_SINGLE_PIN_ROW_SPACING_MILS = 100.0
 _SCHEMATIC_SINGLE_PIN_BOTTOM_MILS = 1200.0

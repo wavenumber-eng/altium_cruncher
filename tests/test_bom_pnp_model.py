@@ -57,7 +57,7 @@ def test_bom_alias_resolution_tracks_parameter_sources(tmp_path) -> None:
     assert component.canonical_fields["manufacturer_part_number"] == "RC0603FR-0710KL"
     assert component.canonical_fields["jlcpcb_part_number"] == "C25804"
     assert component.field_sources["manufacturer"] == "parameter:Mfr"
-    assert payload["schema"] == "wn.altium_cruncher.bom.raw.v1"
+    assert payload["schema"] == "altium_cruncher.bom.raw.a0"
     assert payload["component_count"] == len(component_list)
     assert json.loads(json.dumps(payload))["schema"] == payload["schema"]
 
@@ -182,7 +182,7 @@ def test_jlc_bom_rows_skip_dnp_by_default_and_preserve_columns() -> None:
             "JLCPCB Part #": "C14663",
         }
     ]
-    assert payload["schema"] == "wn.altium_cruncher.bom.grouped.v1"
+    assert payload["schema"] == "altium_cruncher.bom.grouped.a0"
     assert payload["dnp_line_count"] == 1
 
 
@@ -233,7 +233,7 @@ def test_pnp_normalization_and_jlc_cpl_rows_sort_top_before_bottom() -> None:
             "Rotation": "180",
         },
     ]
-    assert payload["schema"] == "wn.altium_cruncher.pnp.v1"
+    assert payload["schema"] == "altium_cruncher.pnp.a0"
     assert payload["position_mode"] == "altium-pick-place"
     assert payload["placement_count"] == 2
     payload_placements = cast(list[dict[str, object]], payload["placements"])
@@ -351,7 +351,7 @@ def test_bom_pnp_config_loader_accepts_utf8_bom(tmp_path: Path) -> None:
         """
         {
           // user notes are allowed in editable config files
-          "schema": "wn.altium_cruncher.bom.config.v1",
+          "schema": "altium_cruncher.bom.config.a0",
         }
         """,
         encoding="utf-8-sig",
