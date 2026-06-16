@@ -19,6 +19,7 @@ _SCHEMATIC_NET_LABEL_OFFSET_MILS = 160.0
 _SCHEMATIC_NET_LABEL_MIN_SPAN_MILS = 350.0
 _SCHEMATIC_NET_LABEL_CHAR_WIDTH_MILS = 75.0
 _SCHEMATIC_NET_LABEL_TRAILING_MARGIN_MILS = 120.0
+_SCHEMATIC_WIRE_LENGTH_GRID_MILS = 100.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +31,7 @@ class MateSchematicNetRoute:
     label_position_mils: tuple[float, float]
     pin_orientation: int
     label_orientation: int
+    label_justification: str | None = None
 
 
 def schematic_grouped_positions(group_keys: Sequence[str]) -> list[tuple[float, float]]:
@@ -76,6 +78,77 @@ def schematic_designator_style(
     }
 
 
+def schematic_left_designator_style(
+    designator: str,
+    component_position_mils: tuple[float, float],
+) -> JsonObject:
+    component_x, component_y = component_position_mils
+    return {
+        "position_mils": [
+            component_x - 250.0,
+            component_y - 50.0,
+        ],
+        "justification": "BOTTOM_CENTER",
+        "font_name": "Arial",
+        "font_size": _SCHEMATIC_DESIGNATOR_FONT_SIZE,
+        "bold": True,
+    }
+
+
+def schematic_hidden_comment_style(
+    component_position_mils: tuple[float, float],
+) -> JsonObject:
+    component_x, component_y = component_position_mils
+    return {
+        "position_mils": [
+            component_x - 250.0,
+            component_y - 100.0,
+        ],
+        "justification": "BOTTOM_CENTER",
+        "font_name": "Arial",
+        "font_size": _SCHEMATIC_DESIGNATOR_FONT_SIZE,
+        "bold": False,
+        "hidden": True,
+    }
+
+
+def schematic_symbol_pin_count(
+    *,
+    symbol_library_path: str,
+    symbol_name: str,
+) -> int:
+    symbol = _symbol(symbol_library_path=symbol_library_path, symbol_name=symbol_name)
+    return len(list(getattr(symbol, "pins", []) or [])) if symbol is not None else 0
+
+
+def schematic_component_orientation_for_signal_pin(
+    *,
+    symbol_library_path: str,
+    symbol_name: str,
+    signal_pin_designator: str | None,
+) -> int:
+    _pin_x, _pin_y, orientation, _pin_length = _signal_pin_layout(
+        symbol_library_path=symbol_library_path,
+        symbol_name=symbol_name,
+        signal_pin_designator=signal_pin_designator,
+    )
+    return (-orientation) % 4
+
+
+def schematic_normalized_wire_length_mils(net_names: Sequence[str]) -> float:
+    required = [
+        _net_label_wire_length_mils(net_name)
+        for net_name in net_names
+        if net_name
+    ]
+    if not required:
+        return _SCHEMATIC_NET_LABEL_MIN_SPAN_MILS
+    return (
+        ceil(max(required) / _SCHEMATIC_WIRE_LENGTH_GRID_MILS)
+        * _SCHEMATIC_WIRE_LENGTH_GRID_MILS
+    )
+
+
 def schematic_net_route(
     *,
     symbol_library_path: str,
@@ -83,6 +156,10 @@ def schematic_net_route(
     signal_pin_designator: str | None,
     component_position_mils: tuple[float, float],
     net_name: str | None,
+    component_orientation: int = 0,
+    wire_length_mils: float | None = None,
+    label_at_wire_end: bool = False,
+    label_justification: str | None = None,
 ) -> MateSchematicNetRoute | None:
     if not net_name:
         return None
@@ -92,26 +169,36 @@ def schematic_net_route(
         symbol_name=symbol_name,
         signal_pin_designator=signal_pin_designator,
     )
+    pin_x, pin_y = _rotate_local_point(pin_x, pin_y, component_orientation)
+    orientation = (orientation + component_orientation) % 4
     direction_x, direction_y = _pin_direction(orientation)
     wire_start = (
         component_x + pin_x + direction_x * pin_length,
         component_y + pin_y + direction_y * pin_length,
     )
-    wire_length = _net_label_wire_length_mils(net_name)
+    wire_length = (
+        wire_length_mils
+        if wire_length_mils is not None
+        else _net_label_wire_length_mils(net_name)
+    )
     wire_end = (
         wire_start[0] + direction_x * wire_length,
         wire_start[1] + direction_y * wire_length,
     )
-    label_position = (
-        wire_start[0] + direction_x * _SCHEMATIC_NET_LABEL_OFFSET_MILS,
-        wire_start[1] + direction_y * _SCHEMATIC_NET_LABEL_OFFSET_MILS,
-    )
+    if label_at_wire_end:
+        label_position = wire_end
+    else:
+        label_position = (
+            wire_start[0] + direction_x * _SCHEMATIC_NET_LABEL_OFFSET_MILS,
+            wire_start[1] + direction_y * _SCHEMATIC_NET_LABEL_OFFSET_MILS,
+        )
     return MateSchematicNetRoute(
         wire_start_mils=wire_start,
         wire_end_mils=wire_end,
         label_position_mils=label_position,
         pin_orientation=orientation,
         label_orientation=orientation % 4,
+        label_justification=label_justification,
     )
 
 
@@ -143,18 +230,51 @@ def schematic_net_label_operation(
     net_name: str,
     route: MateSchematicNetRoute,
 ) -> JsonObject:
+    args: JsonObject = {
+        "file": schematic_file,
+        "overwrite": True,
+        "text": net_name,
+        "location_mils": list(route.label_position_mils),
+        "orientation": route.label_orientation,
+    }
+    if route.label_justification is not None:
+        args["justification"] = route.label_justification
     return mco_operation(
         "schdoc.add_net_label",
         f"label_{_safe_id(designator)}_net",
         f"Add mate schematic net label for {designator}",
-        {
-            "file": schematic_file,
-            "overwrite": True,
-            "text": net_name,
-            "location_mils": list(route.label_position_mils),
-            "orientation": route.label_orientation,
-        },
+        args,
     )
+
+
+def schematic_power_port_operation(
+    *,
+    schematic_file: str,
+    designator: str,
+    net_name: str,
+    route: MateSchematicNetRoute,
+    source_power_port: JsonObject,
+) -> JsonObject:
+    power_text = str(source_power_port.get("text", "") or net_name)
+    args: JsonObject = {
+        "file": schematic_file,
+        "overwrite": True,
+        "text": power_text,
+        "location_mils": list(route.label_position_mils),
+        "style": str(source_power_port.get("style", "BAR") or "BAR"),
+        "orientation": _power_port_orientation_for_net(power_text),
+        "show_net_name": bool(source_power_port.get("show_net_name", True)),
+    }
+    return mco_operation(
+        "schdoc.add_power_port",
+        f"power_{_safe_id(designator)}_net",
+        f"Add mate schematic power port for {designator}",
+        args,
+    )
+
+
+def _power_port_orientation_for_net(net_name: str) -> str:
+    return "DEGREES_0"
 
 
 def _signal_pin_layout(
@@ -185,13 +305,7 @@ def _signal_pin(
     symbol_name: str,
     signal_pin_designator: str | None,
 ) -> object | None:
-    try:
-        from altium_monkey import AltiumSchLib
-
-        schlib = AltiumSchLib(symbol_library_path)
-        symbol = schlib.get_symbol(symbol_name)
-    except Exception:
-        return None
+    symbol = _symbol(symbol_library_path=symbol_library_path, symbol_name=symbol_name)
     pins = list(getattr(symbol, "pins", []) or []) if symbol is not None else []
     if not pins:
         return None
@@ -200,6 +314,20 @@ def _signal_pin(
             if str(getattr(pin, "designator", "") or "") == signal_pin_designator:
                 return pin
     return pins[0]
+
+
+def _symbol(
+    *,
+    symbol_library_path: str,
+    symbol_name: str,
+) -> object | None:
+    try:
+        from altium_monkey import AltiumSchLib
+
+        schlib = AltiumSchLib(symbol_library_path)
+        return schlib.get_symbol(symbol_name)
+    except Exception:
+        return None
 
 
 def _pin_direction(orientation: int) -> tuple[float, float]:
@@ -211,6 +339,21 @@ def _pin_direction(orientation: int) -> tuple[float, float]:
     if normalized == 3:
         return (0.0, -1.0)
     return (1.0, 0.0)
+
+
+def _rotate_local_point(
+    x_mils: float,
+    y_mils: float,
+    orientation: int,
+) -> tuple[float, float]:
+    normalized = int(orientation) % 4
+    if normalized == 1:
+        return (-y_mils, x_mils)
+    if normalized == 2:
+        return (-x_mils, -y_mils)
+    if normalized == 3:
+        return (y_mils, -x_mils)
+    return (x_mils, y_mils)
 
 
 def _net_label_wire_length_mils(net_name: str) -> float:

@@ -91,6 +91,7 @@ def default_mate_board_projection_payload() -> JsonObject:
                 "layer": "MECHANICAL_1",
                 "stroke_width_mils": 8,
             },
+            "scope": "all",
             "actual_cutouts": False,
         },
     }

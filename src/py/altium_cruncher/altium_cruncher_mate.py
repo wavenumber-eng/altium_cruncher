@@ -7,6 +7,7 @@ import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
+from math import ceil
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_mco import (
@@ -37,19 +38,27 @@ from altium_cruncher.altium_cruncher_mate_graphics import (
     build_pcb_board_projection_operations,
     build_pcb_reference_graphics_operations,
     component_pad_geometries,
+    footprint_pad_geometries,
     pad_height_mils,
     pad_width_mils,
     parse_selection_pad_geometries,
     parse_source_pad_geometries,
     single_inspection_board_origin,
     single_inspection_board_outline,
+    transform_destination_pad_geometries,
     transform_source_pad_geometries,
 )
 from altium_cruncher.altium_cruncher_mate_schematic import (
+    schematic_component_orientation_for_signal_pin,
     schematic_designator_style,
     schematic_grouped_positions,
+    schematic_hidden_comment_style,
+    schematic_left_designator_style,
     schematic_net_label_operation,
     schematic_net_route,
+    schematic_normalized_wire_length_mils,
+    schematic_power_port_operation,
+    schematic_symbol_pin_count,
     schematic_wire_operation,
 )
 from altium_cruncher.altium_cruncher_mate_artifacts import (
@@ -80,6 +89,12 @@ from altium_cruncher.altium_cruncher_mate_defaults import (
 LEGACY_MATE_CONFIG_SCHEMA = "wn.altium_cruncher.mate.v1"
 MATE_CONFIG_SCHEMA = "wn.pcb_cruncher.mate_config.a0"
 MATE_INSPECTION_SCHEMA = "wn.altium_cruncher.mate.inspect.v1"
+_SCHEMATIC_SINGLE_PIN_ORIGIN_MILS = (12000.0, 18000.0)
+_SCHEMATIC_SINGLE_PIN_ROW_SPACING_MILS = 100.0
+_SCHEMATIC_SINGLE_PIN_BOTTOM_MILS = 1200.0
+_SCHEMATIC_SINGLE_PIN_COLUMN_MARGIN_MILS = 1600.0
+_SCHEMATIC_SINGLE_PIN_MIN_COLUMN_SPACING_MILS = 5000.0
+_SCHEMATIC_SINGLE_PIN_LABEL_JUSTIFICATION = "BOTTOM_RIGHT"
 
 
 @dataclass(frozen=True, slots=True)
@@ -162,6 +177,7 @@ class MateSelectionComponent:
     mate_component: JsonObject | None = None
     mate_pcb_label: JsonObject | None = None
     mate_reference_graphics: JsonObject | None = None
+    source_power_port: JsonObject | None = None
     source_pad_geometries: tuple[JsonObject, ...] = ()
 
 
@@ -179,6 +195,7 @@ class MateSelectionPad:
     mate_component: JsonObject | None = None
     mate_pcb_label: JsonObject | None = None
     mate_reference_graphics: JsonObject | None = None
+    source_power_port: JsonObject | None = None
     source_pad_geometries: tuple[JsonObject, ...] = ()
 
 
@@ -205,6 +222,7 @@ class MateSelectionConfig:
 class MateConfig:
     """Parsed mate configuration."""
 
+    schema: str | None
     source_dut: str | None
     output: MateOutputConfig
     marker: MateMarkerConfig | None
@@ -227,8 +245,16 @@ class _KnownPartOperations:
 @dataclass(frozen=True, slots=True)
 class _ResolvedMatePartTarget:
     target: JsonObject
-    part: JsonObject
+    part: JsonObject | None
     designator: str
+
+
+@dataclass(frozen=True, slots=True)
+class _SchematicPlacement:
+    position_mils: tuple[float, float]
+    orientation: int = 0
+    wire_length_mils: float | None = None
+    single_pin: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,6 +268,7 @@ class MateComponentCandidate:
     x_mils: float
     y_mils: float
     net_name: str | None
+    source_power_port: JsonObject | None = None
     pad_geometries: tuple[JsonObject, ...] = ()
 
     def to_dict(self) -> JsonObject:
@@ -254,6 +281,8 @@ class MateComponentCandidate:
             "y_mils": self.y_mils,
         }
         _add_optional(payload, "net_name", self.net_name)
+        if self.source_power_port is not None:
+            payload["source_power_port"] = dict(self.source_power_port)
         if self.pad_geometries:
             payload["source_pad_geometries"] = [
                 dict(geometry) for geometry in self.pad_geometries
@@ -276,6 +305,7 @@ class MatePadCandidate:
     plated: bool
     shape: int
     net_name: str | None
+    source_power_port: JsonObject | None = None
 
     def to_dict(self) -> JsonObject:
         payload: JsonObject = {
@@ -291,6 +321,8 @@ class MatePadCandidate:
             "shape": self.shape,
         }
         _add_optional(payload, "net_name", self.net_name)
+        if self.source_power_port is not None:
+            payload["source_power_port"] = dict(self.source_power_port)
         return payload
 
 
@@ -340,6 +372,7 @@ def parse_mate_config(
         raise ValueError(f"Unsupported mate config schema: {schema!r}")
     source = _section(root, "source")
     return MateConfig(
+        schema=LEGACY_MATE_CONFIG_SCHEMA if schema is None else str(schema),
         source_dut=_optional_string(source, "dut", None),
         output=_parse_output_config(_section(root, "output")),
         marker=_parse_marker_config(_section(root, "marker")),
@@ -373,6 +406,7 @@ def _parse_mate_config(
     source_board = _optional_string(source, "board", None)
     inspection = _mate_source_inspection(root, base_dir=base_dir)
     return MateConfig(
+        schema=MATE_CONFIG_SCHEMA,
         source_dut=source_board,
         output=_parse_mate_output_config(_section(root, "output"), inspection),
         marker=None,
@@ -605,11 +639,13 @@ def inspect_mate_source(
         input_path,
         project_context=project_context,
     )
+    source_power_ports = _source_power_ports_by_net(design)
     boards = [
         inspect_pcbdoc_for_mate(
             render_input.board_key,
             render_input.pcbdoc,
             render_input.pcb_path,
+            source_power_ports=source_power_ports,
         )
         for render_input in iter_pcb_render_inputs(
             design,
@@ -628,16 +664,23 @@ def inspect_pcbdoc_for_mate(
     board_key: str,
     pcbdoc: object,
     pcb_path: Path | str,
+    *,
+    source_power_ports: Mapping[str, JsonObject] | None = None,
 ) -> MateBoardInspection:
     """Inspect one loaded PcbDoc object for likely mate candidates."""
+    source_power_ports = source_power_ports or {}
     return MateBoardInspection(
         board_key=board_key,
         pcb_path=str(Path(pcb_path)),
         board_outline_mils=board_outline_bounds_mils(pcbdoc),
         board_outline=board_outline_geometry(pcbdoc),
         board_origin_mils=board_origin_mils(pcbdoc),
-        components=tuple(_component_candidates(pcbdoc)),
-        free_pads=tuple(_free_pad_candidates(pcbdoc)),
+        components=tuple(
+            _component_candidates(pcbdoc, source_power_ports=source_power_ports)
+        ),
+        free_pads=tuple(
+            _free_pad_candidates(pcbdoc, source_power_ports=source_power_ports)
+        ),
     )
 
 
@@ -815,6 +858,49 @@ def _selection_board(board: Mapping[str, object]) -> JsonObject:
     }
 
 
+def _source_power_ports_by_net(design: object) -> dict[str, JsonObject]:
+    result: dict[str, JsonObject] = {}
+    for schdoc in list(getattr(design, "schdocs", []) or []):
+        for power_port in _schdoc_power_ports(schdoc):
+            net_name = str(getattr(power_port, "text", "") or "").strip()
+            if not net_name:
+                continue
+            result.setdefault(_normalized_net_name(net_name), _power_port_payload(power_port))
+    return result
+
+
+def _schdoc_power_ports(schdoc: object) -> list[object]:
+    try:
+        return list(getattr(schdoc, "get_power_ports")())
+    except Exception:
+        return list(getattr(schdoc, "power_ports", []) or [])
+
+
+def _power_port_payload(power_port: object) -> JsonObject:
+    style = getattr(power_port, "style", None)
+    style_name = getattr(style, "name", None)
+    text = str(getattr(power_port, "text", "") or "")
+    return {
+        "text": text,
+        "style": style_name or str(style or "BAR"),
+        "show_net_name": bool(getattr(power_port, "show_net_name", True)),
+    }
+
+
+def _normalized_net_name(net_name: str) -> str:
+    return net_name.strip().upper()
+
+
+def _source_power_port_for_net(
+    source_power_ports: Mapping[str, JsonObject],
+    net_name: str | None,
+) -> JsonObject | None:
+    if not net_name:
+        return None
+    payload = source_power_ports.get(_normalized_net_name(net_name))
+    return dict(payload) if payload is not None else None
+
+
 def _optional_dict_copy(payload: Mapping[str, object], name: str) -> JsonObject | None:
     value = payload.get(name)
     if isinstance(value, dict):
@@ -827,7 +913,11 @@ def _list_field(payload: Mapping[str, object], name: str) -> list[object]:
     return list(value) if isinstance(value, list) else []
 
 
-def _component_candidates(pcbdoc: object) -> list[MateComponentCandidate]:
+def _component_candidates(
+    pcbdoc: object,
+    *,
+    source_power_ports: Mapping[str, JsonObject],
+) -> list[MateComponentCandidate]:
     candidates: list[MateComponentCandidate] = []
     components = list(getattr(pcbdoc, "components", []) or [])
     for index, component in enumerate(components):
@@ -836,6 +926,7 @@ def _component_candidates(pcbdoc: object) -> list[MateComponentCandidate]:
         if kind is None:
             continue
         x_mils, y_mils = _component_position_mils(pcbdoc, index, component)
+        net_name = _component_net_name(pcbdoc, index)
         candidates.append(
             MateComponentCandidate(
                 designator=designator,
@@ -844,19 +935,29 @@ def _component_candidates(pcbdoc: object) -> list[MateComponentCandidate]:
                 footprint=str(getattr(component, "footprint", "") or ""),
                 x_mils=x_mils,
                 y_mils=y_mils,
-                net_name=_component_net_name(pcbdoc, index),
+                net_name=net_name,
+                source_power_port=_source_power_port_for_net(
+                    source_power_ports,
+                    net_name,
+                ),
                 pad_geometries=component_pad_geometries(pcbdoc, index),
             )
         )
     return candidates
 
 
-def _free_pad_candidates(pcbdoc: object) -> list[MatePadCandidate]:
+def _free_pad_candidates(
+    pcbdoc: object,
+    *,
+    source_power_ports: Mapping[str, JsonObject],
+) -> list[MatePadCandidate]:
     candidates: list[MatePadCandidate] = []
     for pad in list(getattr(pcbdoc, "pads", []) or []):
         if not _is_free_pad(pad):
             continue
-        candidates.append(_pad_candidate(pcbdoc, pad))
+        candidates.append(
+            _pad_candidate(pcbdoc, pad, source_power_ports=source_power_ports)
+        )
     return candidates
 
 
@@ -889,9 +990,15 @@ def _is_free_pad(pad: object) -> bool:
     return component_index is None or int(component_index) == 0xFFFF
 
 
-def _pad_candidate(pcbdoc: object, pad: object) -> MatePadCandidate:
+def _pad_candidate(
+    pcbdoc: object,
+    pad: object,
+    *,
+    source_power_ports: Mapping[str, JsonObject],
+) -> MatePadCandidate:
     hole_size = _float_attr(pad, "hole_size_mils")
     plated = _bool_attr(pad, "is_plated")
+    net_name = _pad_net_name(pcbdoc, pad)
     return MatePadCandidate(
         designator=_str_attr(pad, "designator"),
         kind="free_npth" if hole_size > 0.0 and not plated else "free_pad",
@@ -903,7 +1010,8 @@ def _pad_candidate(pcbdoc: object, pad: object) -> MatePadCandidate:
         hole_size_mils=hole_size,
         plated=plated,
         shape=_int_attr(pad, "shape"),
-        net_name=_pad_net_name(pcbdoc, pad),
+        net_name=net_name,
+        source_power_port=_source_power_port_for_net(source_power_ports, net_name),
     )
 
 
@@ -1132,7 +1240,7 @@ def _selection_from_mate_inspection(
     projection_items = [
         projection
         for projection in _mate_projection_items(root)
-        if _projection_requests_mate_component(projection)
+        if _projection_requests_target_operation(projection)
     ]
     boards: list[JsonObject] = []
     for board in _list_field(inspection, "boards"):
@@ -1242,6 +1350,15 @@ def _is_side_agnostic_component(
 def _projection_requests_mate_component(projection: Mapping[str, object]) -> bool:
     for action in _list_field(projection, "actions"):
         if isinstance(action, dict) and action.get("kind") == "mate_component":
+            return True
+    return False
+
+
+def _projection_requests_target_operation(projection: Mapping[str, object]) -> bool:
+    for action in _list_field(projection, "actions"):
+        if not isinstance(action, dict):
+            continue
+        if action.get("kind") in {"mate_component", "reference_graphics", "label"}:
             return True
     return False
 
@@ -1671,6 +1788,7 @@ def _parse_selection_component(
         mate_component=_optional_section(raw, "mate_component"),
         mate_pcb_label=_optional_section(raw, "mate_pcb_label"),
         mate_reference_graphics=_optional_section(raw, "mate_reference_graphics"),
+        source_power_port=_optional_section(raw, "source_power_port"),
         source_pad_geometries=parse_source_pad_geometries(raw),
     )
 
@@ -1687,6 +1805,7 @@ def _parse_selection_pad(raw: Mapping[str, object]) -> MateSelectionPad:
         mate_component=_optional_section(raw, "mate_component"),
         mate_pcb_label=_optional_section(raw, "mate_pcb_label"),
         mate_reference_graphics=_optional_section(raw, "mate_reference_graphics"),
+        source_power_port=_optional_section(raw, "source_power_port"),
         source_pad_geometries=parse_selection_pad_geometries(raw),
     )
 
@@ -1778,62 +1897,81 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
     board_label_column_indices: dict[str, int] = {}
     board_label_rows: dict[str, int] = {}
     placed_designators: list[str] = []
-    schematic_positions = schematic_grouped_positions(
-        [_part_string(resolved.part, "symbol_name") for resolved in resolved_targets]
-    )
-    for resolved, schematic_position in zip(
-        resolved_targets,
-        schematic_positions,
-        strict=True,
-    ):
+    destination_pad_cache: dict[tuple[str, str], tuple[JsonObject, ...]] = {}
+    schematic_placements = iter(_schematic_placements_for_targets(resolved_targets))
+    for resolved in resolved_targets:
         target = resolved.target
         part = resolved.part
         designator = resolved.designator
-        operations.append(
-            _schematic_part_operation(
-                config.output,
-                part,
-                target,
-                designator,
-                schematic_position,
-            )
-        )
-        schematic_file = _output_file(
-            config.output.output_dir, _schematic_filename(config.output)
-        )
-        net_name = _target_optional_string(target, "net_name")
-        net_route = schematic_net_route(
-            symbol_library_path=_part_source_file(part, "symbol_library"),
-            symbol_name=_part_string(part, "symbol_name"),
-            signal_pin_designator=_part_optional_string(part, "signal_pad_designator"),
-            component_position_mils=schematic_position,
-            net_name=net_name,
-        )
-        if net_route is not None:
+        if part is not None:
+            schematic_placement = next(schematic_placements)
             operations.append(
-                schematic_wire_operation(
-                    schematic_file=schematic_file,
-                    designator=designator,
-                    route=net_route,
+                _schematic_part_operation(
+                    config.output,
+                    part,
+                    target,
+                    designator,
+                    schematic_placement.position_mils,
+                    orientation=schematic_placement.orientation,
+                    single_pin=schematic_placement.single_pin,
                 )
             )
+            schematic_file = _output_file(
+                config.output.output_dir, _schematic_filename(config.output)
+            )
+            net_name = _target_optional_string(target, "net_name")
+            net_route = schematic_net_route(
+                symbol_library_path=_part_source_file(part, "symbol_library"),
+                symbol_name=_part_string(part, "symbol_name"),
+                signal_pin_designator=_part_optional_string(
+                    part,
+                    "signal_pad_designator",
+                ),
+                component_position_mils=schematic_placement.position_mils,
+                net_name=net_name,
+                component_orientation=schematic_placement.orientation,
+                wire_length_mils=schematic_placement.wire_length_mils,
+                label_at_wire_end=schematic_placement.single_pin,
+                label_justification=(
+                    _SCHEMATIC_SINGLE_PIN_LABEL_JUSTIFICATION
+                    if schematic_placement.single_pin
+                    else None
+                ),
+            )
+            if net_route is not None:
+                operations.append(
+                    schematic_wire_operation(
+                        schematic_file=schematic_file,
+                        designator=designator,
+                        route=net_route,
+                    )
+                )
+                operations.append(
+                    schematic_net_label_operation(
+                        schematic_file=schematic_file,
+                        designator=designator,
+                        net_name=str(net_name),
+                        route=net_route,
+                    )
+                )
+                source_power_port = _target_source_power_port(target)
+                if source_power_port is not None:
+                    operations[-1] = schematic_power_port_operation(
+                        schematic_file=schematic_file,
+                        designator=designator,
+                        net_name=str(net_name),
+                        route=net_route,
+                        source_power_port=source_power_port,
+                    )
             operations.append(
-                schematic_net_label_operation(
-                    schematic_file=schematic_file,
-                    designator=designator,
-                    net_name=str(net_name),
-                    route=net_route,
+                _pcb_part_operation(
+                    config.output,
+                    part,
+                    target,
+                    designator,
                 )
             )
-        operations.append(
-            _pcb_part_operation(
-                config.output,
-                part,
-                target,
-                designator,
-            )
-        )
-        placed_designators.append(designator)
+            placed_designators.append(designator)
         target_labels = _target_pcb_labels_config(config.pcb_labels, target)
         pcb_label_request = pcb_net_label_request(
             target_labels,
@@ -1844,11 +1982,16 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
         )
         if pcb_label_request is not None:
             pcb_label_requests.append(pcb_label_request)
+        graphics_target = _target_with_destination_pad_geometries(
+            target,
+            part,
+            destination_pad_cache,
+        )
         operations.extend(
             build_pcb_reference_graphics_operations(
                 output_dir=config.output.output_dir,
                 board_filename=_board_filename(config.output),
-                target=target,
+                target=graphics_target,
                 designator=designator,
             )
         )
@@ -1871,17 +2014,80 @@ def _known_part_operations(config: MateConfig) -> _KnownPartOperations:
     )
 
 
+def _target_with_destination_pad_geometries(
+    target: Mapping[str, object],
+    part: Mapping[str, object] | None,
+    cache: dict[tuple[str, str], tuple[JsonObject, ...]],
+) -> Mapping[str, object]:
+    if (
+        part is None
+        or _target_reference_graphics_shape(target) != "destination_pad_outline"
+    ):
+        return target
+    geometries = _destination_pad_geometries(part, target, cache)
+    if not geometries:
+        return target
+    updated = dict(target)
+    updated["destination_pad_geometries"] = [dict(geometry) for geometry in geometries]
+    return updated
+
+
+def _target_reference_graphics_shape(target: Mapping[str, object]) -> str | None:
+    raw = target.get("mate_reference_graphics")
+    if not isinstance(raw, dict):
+        return None
+    value = raw.get("shape")
+    return str(value) if value is not None else None
+
+
+def _destination_pad_geometries(
+    part: Mapping[str, object],
+    target: Mapping[str, object],
+    cache: dict[tuple[str, str], tuple[JsonObject, ...]],
+) -> tuple[JsonObject, ...]:
+    library = _part_source_file(part, "footprint_library")
+    footprint_name = _part_string(part, "footprint_name")
+    key = (library, footprint_name)
+    if key not in cache:
+        cache[key] = _load_destination_footprint_pad_geometries(library, footprint_name)
+    return transform_destination_pad_geometries(cache[key], target)
+
+
+def _load_destination_footprint_pad_geometries(
+    library: str,
+    footprint_name: str,
+) -> tuple[JsonObject, ...]:
+    from altium_monkey import AltiumPcbLib
+
+    pcblib = AltiumPcbLib.from_file(Path(library))
+    footprint = pcblib.find_footprint(footprint_name)
+    if footprint is None:
+        raise ValueError(
+            f"Mate destination_pad_outline could not find footprint "
+            f"{footprint_name!r} in {library}"
+        )
+    return footprint_pad_geometries(footprint)
+
+
 def _sort_known_part_targets_by_group_and_designator(
     resolved_targets: list[_ResolvedMatePartTarget],
 ) -> list[_ResolvedMatePartTarget]:
     group_order: dict[str, int] = {}
     for resolved in resolved_targets:
+        if resolved.part is None:
+            continue
         group_key = _part_string(resolved.part, "symbol_name")
         group_order.setdefault(group_key, len(group_order))
     return sorted(
         resolved_targets,
         key=lambda item: (
-            group_order[_part_string(item.part, "symbol_name")],
+            item.part is None,
+            group_order.get(
+                _part_string(item.part, "symbol_name")
+                if item.part is not None
+                else "",
+                len(group_order),
+            ),
             designator_sort_key(item.designator),
         ),
     )
@@ -1945,6 +2151,8 @@ def _known_part_library_references(config: MateConfig) -> list[dict[str, str]]:
     references: dict[str, str] = {}
     for resolved in _resolved_mate_targets(config):
         part = resolved.part
+        if part is None:
+            continue
         for field in ("symbol_library", "footprint_library"):
             project_path = _known_part_project_library_path(part, field)
             references[project_path] = _part_source_file(part, field)
@@ -1964,12 +2172,14 @@ def _resolved_mate_targets(config: MateConfig) -> list[_ResolvedMatePartTarget]:
     free_counts: dict[str, int] = {}
     resolved_targets: list[_ResolvedMatePartTarget] = []
     for target in targets:
-        part = _resolve_mate_part(
-            config,
-            target,
-            manifest=manifest,
-            library_scan=library_scan,
-        )
+        part = None
+        if _target_needs_mate_part(config, target):
+            part = _resolve_mate_part(
+                config,
+                target,
+                manifest=manifest,
+                library_scan=library_scan,
+            )
         designator = _projected_designator(
             target,
             part,
@@ -1985,6 +2195,15 @@ def _resolved_mate_targets(config: MateConfig) -> list[_ResolvedMatePartTarget]:
             )
         )
     return _sort_known_part_targets_by_group_and_designator(resolved_targets)
+
+
+def _target_needs_mate_part(
+    config: MateConfig,
+    target: Mapping[str, object],
+) -> bool:
+    if _target_mate_component_action(target) is not None:
+        return True
+    return config.schema != MATE_CONFIG_SCHEMA
 
 
 def _loaded_known_parts_manifest(config: MateConfig) -> JsonObject | None:
@@ -2139,6 +2358,7 @@ def _placement_targets(
                     "mate_component": component.mate_component,
                     "mate_pcb_label": component.mate_pcb_label,
                     "mate_reference_graphics": component.mate_reference_graphics,
+                    "source_power_port": component.source_power_port,
                     "source_pad_geometries": transform_source_pad_geometries(
                         component.source_pad_geometries,
                         placement,
@@ -2167,6 +2387,7 @@ def _placement_targets(
                     "mate_component": pad.mate_component,
                     "mate_pcb_label": pad.mate_pcb_label,
                     "mate_reference_graphics": pad.mate_reference_graphics,
+                    "source_power_port": pad.source_power_port,
                     "source_pad_geometries": transform_source_pad_geometries(
                         pad.source_pad_geometries,
                         placement,
@@ -2192,15 +2413,203 @@ def _transform_placement(
     return (transformed_x + offset_x, transformed_y + offset_y)
 
 
+def _schematic_placements_for_targets(
+    resolved_targets: Sequence[_ResolvedMatePartTarget],
+) -> list[_SchematicPlacement]:
+    part_targets = [
+        resolved for resolved in resolved_targets if resolved.part is not None
+    ]
+    if not part_targets:
+        return []
+    pin_count_cache: dict[tuple[str, str], int] = {}
+    single_pin_flags = [
+        _mate_part_symbol_pin_count(resolved.part, cache=pin_count_cache) == 1
+        for resolved in part_targets
+        if resolved.part is not None
+    ]
+    single_net_names = [
+        net_name
+        for resolved, single_pin in zip(part_targets, single_pin_flags)
+        for net_name in [_target_optional_string(resolved.target, "net_name")]
+        if single_pin and net_name
+    ]
+    single_wire_length = schematic_normalized_wire_length_mils(single_net_names)
+    single_pin_positions = _single_pin_positions_by_target_index(
+        part_targets,
+        single_pin_flags,
+        wire_length_mils=single_wire_length,
+    )
+    multi_positions = iter(
+        schematic_grouped_positions(
+            [
+                _part_string(resolved.part, "symbol_name")
+                for resolved, single_pin in zip(part_targets, single_pin_flags)
+                if resolved.part is not None and not single_pin
+            ]
+        )
+    )
+    placements: list[_SchematicPlacement] = []
+    for resolved, single_pin in zip(part_targets, single_pin_flags):
+        part = resolved.part
+        if part is None:
+            continue
+        if single_pin:
+            placements.append(
+                _SchematicPlacement(
+                    position_mils=single_pin_positions[resolved.designator],
+                    orientation=_schematic_signal_pin_right_orientation(part),
+                    wire_length_mils=single_wire_length,
+                    single_pin=True,
+                )
+            )
+            continue
+        placements.append(_SchematicPlacement(position_mils=next(multi_positions)))
+    return placements
+
+
+def _mate_part_symbol_pin_count(
+    part: Mapping[str, object],
+    *,
+    cache: dict[tuple[str, str], int] | None = None,
+) -> int:
+    key = (
+        _part_source_file(part, "symbol_library"),
+        _part_string(part, "symbol_name"),
+    )
+    if cache is not None and key in cache:
+        return cache[key]
+    count = schematic_symbol_pin_count(
+        symbol_library_path=key[0],
+        symbol_name=key[1],
+    )
+    if cache is not None:
+        cache[key] = count
+    return count
+
+
+def _schematic_signal_pin_right_orientation(part: Mapping[str, object]) -> int:
+    return schematic_component_orientation_for_signal_pin(
+        symbol_library_path=_part_source_file(part, "symbol_library"),
+        symbol_name=_part_string(part, "symbol_name"),
+        signal_pin_designator=_part_optional_string(part, "signal_pad_designator"),
+    )
+
+
+def _single_pin_positions_by_target_index(
+    part_targets: Sequence[_ResolvedMatePartTarget],
+    single_pin_flags: Sequence[bool],
+    *,
+    wire_length_mils: float,
+) -> dict[str, tuple[float, float]]:
+    projection_order: list[str] = []
+    projection_members: dict[str, list[_ResolvedMatePartTarget]] = {}
+    for resolved, single_pin in zip(part_targets, single_pin_flags):
+        if not single_pin:
+            continue
+        projection_id = _single_pin_projection_id(resolved)
+        if projection_id not in projection_members:
+            projection_order.append(projection_id)
+            projection_members[projection_id] = []
+        projection_members[projection_id].append(resolved)
+
+    positions: dict[str, tuple[float, float]] = {}
+    rows_per_column = _single_pin_rows_per_column()
+    column_start = 0
+    for projection_id in projection_order:
+        members = projection_members[projection_id]
+        member_positions = _single_pin_schematic_positions(
+            len(members),
+            wire_length_mils=wire_length_mils,
+            rows_per_column=rows_per_column,
+            start_column=column_start,
+        )
+        for member, position in zip(members, member_positions, strict=True):
+            positions[member.designator] = position
+        column_start += _single_pin_columns_used(
+            len(members),
+            rows_per_column=rows_per_column,
+        )
+    return positions
+
+
+def _single_pin_projection_id(resolved: _ResolvedMatePartTarget) -> str:
+    projection_id = _target_optional_string(resolved.target, "mate_projection_id")
+    if projection_id:
+        return projection_id
+    if resolved.part is not None:
+        return _part_string(resolved.part, "symbol_name")
+    return "single_pin"
+
+
+def _single_pin_schematic_positions(
+    count: int,
+    *,
+    wire_length_mils: float,
+    rows_per_column: int | None = None,
+    start_column: int = 0,
+) -> list[tuple[float, float]]:
+    origin_x, origin_y = _SCHEMATIC_SINGLE_PIN_ORIGIN_MILS
+    row_spacing = _SCHEMATIC_SINGLE_PIN_ROW_SPACING_MILS
+    if rows_per_column is None:
+        rows_per_column = _single_pin_rows_per_column()
+    column_spacing = _single_pin_column_spacing_mils(wire_length_mils)
+    return [
+        (
+            origin_x + (start_column + index // rows_per_column) * column_spacing,
+            origin_y - (index % rows_per_column) * row_spacing,
+        )
+        for index in range(max(0, count))
+    ]
+
+
+def _single_pin_columns_used(count: int, *, rows_per_column: int) -> int:
+    if count <= 0:
+        return 0
+    return max(1, ceil(count / rows_per_column))
+
+
+def _single_pin_rows_per_column() -> int:
+    _origin_x, origin_y = _SCHEMATIC_SINGLE_PIN_ORIGIN_MILS
+    if origin_y <= _SCHEMATIC_SINGLE_PIN_BOTTOM_MILS:
+        return 1
+    return max(
+        1,
+        int(
+            (origin_y - _SCHEMATIC_SINGLE_PIN_BOTTOM_MILS)
+            // _SCHEMATIC_SINGLE_PIN_ROW_SPACING_MILS
+        )
+        + 1,
+    )
+
+
+def _single_pin_column_spacing_mils(wire_length_mils: float) -> float:
+    content_spacing = (
+        ceil(
+            (wire_length_mils + _SCHEMATIC_SINGLE_PIN_COLUMN_MARGIN_MILS)
+            / _SCHEMATIC_SINGLE_PIN_ROW_SPACING_MILS
+        )
+        * _SCHEMATIC_SINGLE_PIN_ROW_SPACING_MILS
+    )
+    return max(content_spacing, _SCHEMATIC_SINGLE_PIN_MIN_COLUMN_SPACING_MILS)
+
+
 def _schematic_part_operation(
     output: MateOutputConfig,
     part: Mapping[str, object],
     target: Mapping[str, object],
     designator: str,
     position_mils: tuple[float, float],
+    *,
+    orientation: int = 0,
+    single_pin: bool = False,
 ) -> JsonObject:
     symbol_name = _part_string(part, "symbol_name")
     footprint_name = _part_string(part, "footprint_name")
+    designator_style = (
+        schematic_left_designator_style
+        if single_pin
+        else schematic_designator_style
+    )
     return mco_operation(
         "schdoc.add_component",
         f"add_{_safe_id(designator)}_symbol",
@@ -2213,14 +2622,16 @@ def _schematic_part_operation(
             "designator": designator,
             "unique_id": _component_link_unique_id(output, target, designator),
             "position_mils": list(position_mils),
+            "orientation": int(orientation) % 4,
             "design_item_id": symbol_name,
             "footprint_model": footprint_name,
             "footprint_library": footprint_name,
             "parameters": _mate_component_parameters(target, part),
-            "designator_style": schematic_designator_style(
+            "designator_style": designator_style(
                 designator,
                 position_mils,
             ),
+            "comment_style": schematic_hidden_comment_style(position_mils),
         },
     )
 
@@ -2273,6 +2684,11 @@ def _target_pcb_labels_config(
     if isinstance(raw, dict):
         return _parse_pcb_labels_config(raw)
     return default_labels
+
+
+def _target_source_power_port(target: Mapping[str, object]) -> JsonObject | None:
+    raw = target.get("source_power_port")
+    return dict(raw) if isinstance(raw, dict) else None
 
 
 def _pcb_designator_arrangement_operation(
@@ -2420,7 +2836,7 @@ def _mate_part_symbol_description(
 
 def _projected_designator(
     target: Mapping[str, object],
-    part: Mapping[str, object],
+    part: Mapping[str, object] | None,
     manifest: Mapping[str, object],
     *,
     used_designators: set[str],
@@ -2428,7 +2844,11 @@ def _projected_designator(
 ) -> str:
     kind = str(target.get("kind", "") or "")
     source = str(target.get("source_designator", "") or "")
-    prefix = _part_string(part, "designator_prefix")
+    prefix = (
+        _part_string(part, "designator_prefix")
+        if part is not None
+        else _default_mate_designator_prefix(target)
+    )
     if kind == "free_npth":
         base = _next_prefixed_designator(prefix, free_counts)
     else:

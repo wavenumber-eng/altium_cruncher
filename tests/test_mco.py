@@ -225,6 +225,76 @@ def test_execute_mco_caches_documents_and_flushes_on_exit(tmp_path: Path) -> Non
     assert document_path.read_text(encoding="utf-8") == "seedAB"
 
 
+def test_execute_mco_caches_created_pcbdoc_and_flushes_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from altium_monkey import AltiumPcbDoc
+
+    board_path = tmp_path / "generated" / "mate.PcbDoc"
+    saves: list[Path] = []
+    original_save = AltiumPcbDoc.save
+
+    def save_document(
+        document: AltiumPcbDoc,
+        path: Path | str,
+        *args: object,
+        **kwargs: object,
+    ) -> None:
+        saves.append(Path(path).resolve())
+        original_save(document, path, *args, **kwargs)
+
+    monkeypatch.setattr(AltiumPcbDoc, "save", save_document)
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "create",
+                    "op": "pcbdoc.create",
+                    "args": {
+                        "file": str(board_path),
+                        "overwrite": True,
+                        "board_outline_mils": {
+                            "left": 0,
+                            "bottom": 0,
+                            "right": 500,
+                            "top": 300,
+                        },
+                    },
+                },
+                {
+                    "id": "track",
+                    "op": "pcbdoc.add_track",
+                    "args": {
+                        "file": str(board_path),
+                        "overwrite": True,
+                        "start_mils": [50, 50],
+                        "end_mils": [200, 50],
+                        "width_mils": 8,
+                    },
+                },
+                {
+                    "id": "union",
+                    "op": "pcbdoc.create_user_union",
+                    "args": {
+                        "file": str(board_path),
+                        "overwrite": True,
+                        "name": "generated",
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+    assert saves == [board_path.resolve()]
+    pcbdoc = AltiumPcbDoc.from_file(board_path)
+    assert len(pcbdoc.tracks) == 1
+
+
 def test_project_primitive_dry_run_reports_outputs_without_writing(
     tmp_path: Path,
 ) -> None:

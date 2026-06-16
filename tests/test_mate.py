@@ -1002,6 +1002,7 @@ def test_cricket_node_draft_mate_config_is_parseable(tmp_path: Path) -> None:
         "layer": "MECHANICAL_1",
         "stroke_width_mils": 8,
     }
+    assert payload["board_projection"]["cutouts"]["scope"] == "all"
     assert payload["board_projection"]["cutouts"]["actual_cutouts"] is True
     assert payload["artifacts"]["pcb_layer_step"] == (
         default_pcb_layer_step_mate_artifact_payload()
@@ -1070,6 +1071,7 @@ def test_mate_seed_config_uses_selectors(tmp_path: Path) -> None:
             "layer": "MECHANICAL_1",
             "stroke_width_mils": 8,
         },
+        "scope": "all",
         "actual_cutouts": False,
     }
     assert payload["validation"]["source_side"] == "infer_single_side"
@@ -1338,6 +1340,78 @@ def test_mate_board_projection_projects_cutout_graphics_and_regions() -> None:
     assert {operation["args"]["width_mils"] for operation in cutout_tracks} == {6.0}
     assert cutout_regions[0]["args"]["layer"] == "MULTI_LAYER"
     assert cutout_regions[0]["args"]["is_board_cutout"] is True
+    assert cutout_regions[0]["args"]["outline_points_mils"] == [
+        [100.0, 100.0],
+        [250.0, 100.0],
+        [250.0, 220.0],
+        [100.0, 220.0],
+    ]
+
+
+def test_mate_board_projection_can_filter_to_interior_cutouts() -> None:
+    selection = SimpleNamespace(
+        boards=(
+            SimpleNamespace(
+                board_key="dut",
+                board_outline={
+                    "vertices": [
+                        {"x_mils": 0, "y_mils": 0},
+                        {"x_mils": 1000, "y_mils": 0},
+                        {"x_mils": 1000, "y_mils": 700},
+                        {"x_mils": 0, "y_mils": 700},
+                    ],
+                    "cutouts": [
+                        {
+                            "vertices": [
+                                {"x_mils": 100, "y_mils": 100},
+                                {"x_mils": 250, "y_mils": 100},
+                                {"x_mils": 250, "y_mils": 220},
+                                {"x_mils": 100, "y_mils": 220},
+                            ]
+                        },
+                        {
+                            "vertices": [
+                                {"x_mils": 0, "y_mils": 300},
+                                {"x_mils": 80, "y_mils": 300},
+                                {"x_mils": 80, "y_mils": 380},
+                                {"x_mils": 0, "y_mils": 380},
+                            ]
+                        },
+                        {
+                            "vertices": [
+                                {"x_mils": 1100, "y_mils": 300},
+                                {"x_mils": 1180, "y_mils": 300},
+                                {"x_mils": 1180, "y_mils": 380},
+                                {"x_mils": 1100, "y_mils": 380},
+                            ]
+                        },
+                    ],
+                },
+            ),
+        )
+    )
+
+    operations = build_pcb_board_projection_operations(
+        output_dir="generated",
+        board_filename="mate.PcbDoc",
+        board_projection={
+            "cutouts": {
+                "graphics": {"enabled": True},
+                "scope": "interior",
+                "actual_cutouts": True,
+            }
+        },
+        selection=selection,
+    )
+
+    cutout_tracks = [
+        operation for operation in operations if operation["op"] == "pcbdoc.add_track"
+    ]
+    cutout_regions = [
+        operation for operation in operations if operation["op"] == "pcbdoc.add_region"
+    ]
+    assert len(cutout_tracks) == 4
+    assert len(cutout_regions) == 1
     assert cutout_regions[0]["args"]["outline_points_mils"] == [
         [100.0, 100.0],
         [250.0, 100.0],
