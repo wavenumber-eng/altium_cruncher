@@ -64,6 +64,27 @@ class McoDocumentSession:
         )
         return document
 
+    def create_for_mutation(
+        self,
+        kind: str,
+        output_file: Path,
+        *,
+        document: object,
+        save: DocumentSaver,
+        dirty: bool = True,
+    ) -> object:
+        output_path = output_file.resolve()
+        for key in list(self._documents):
+            if key == (kind, output_path):
+                del self._documents[key]
+        self._documents[(kind, output_path)] = _CachedDocument(
+            document=document,
+            output_file=output_path,
+            save=save,
+            dirty=dirty,
+        )
+        return document
+
     def mark_dirty(self, kind: str, output_file: Path) -> None:
         key = (kind, output_file.resolve())
         cached = self._documents.get(key)
@@ -122,6 +143,24 @@ class McoExecutionContext:
             output_file,
             load=load,
             save=save,
+        )
+
+    def create_document_for_mutation(
+        self,
+        kind: str,
+        output_file: Path,
+        *,
+        document: object,
+        save: DocumentSaver,
+        dirty: bool = True,
+    ) -> object:
+        """Seed the run-scoped mutation cache with a newly-created document."""
+        return self.document_session.create_for_mutation(
+            kind,
+            output_file,
+            document=document,
+            save=save,
+            dirty=dirty,
         )
 
     def mark_document_dirty(self, kind: str, output_file: Path) -> None:
@@ -934,9 +973,13 @@ def _op_schdoc_create(
         schdoc,
         _optional_number_object(spec.args, "custom_sheet_mils", ("width", "height")),
     )
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    schdoc.save(file_path)
-    context.invalidate_documents([file_path])
+    context.create_document_for_mutation(
+        "schdoc",
+        file_path,
+        document=schdoc,
+        save=lambda document, path: getattr(document, "save")(path),
+        dirty=True,
+    )
     return McoOperationResult.succeeded(
         spec,
         spec.message or "created schematic",
@@ -1021,13 +1064,25 @@ def _op_pcbdoc_create(
             outputs=outputs,
         )
 
-    from altium_monkey import PcbDocBuilder
+    from tempfile import TemporaryDirectory
+
+    from altium_monkey import AltiumPcbDoc, PcbDocBuilder
 
     context.invalidate_documents([file_path])
     builder = PcbDocBuilder()
     _configure_pcbdoc_builder(builder, spec.args)
-    builder.save(file_path)
-    context.invalidate_documents([file_path])
+    with TemporaryDirectory(prefix="altium-cruncher-pcbdoc-") as temp_dir:
+        temp_file = Path(temp_dir) / file_path.name
+        builder.save(temp_file)
+        pcbdoc = AltiumPcbDoc.from_file(temp_file)
+    pcbdoc.filepath = file_path
+    context.create_document_for_mutation(
+        "pcbdoc",
+        file_path,
+        document=pcbdoc,
+        save=lambda document, path: getattr(document, "save")(path),
+        dirty=True,
+    )
     return McoOperationResult.succeeded(
         spec,
         spec.message or "created board",
@@ -1783,7 +1838,15 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             "schdoc",
             "Add a schematic net label.",
             required_args=("file", "text", "location_mils"),
-            optional_args=("orientation", "overwrite"),
+            optional_args=("orientation", "justification", "overwrite"),
+        ),
+        McoOperationInfo(
+            "schdoc.add_power_port",
+            cad["schdoc.add-power-port"],
+            "schdoc",
+            "Add a schematic power port.",
+            required_args=("file", "text", "location_mils"),
+            optional_args=("style", "orientation", "show_net_name", "overwrite"),
         ),
         McoOperationInfo(
             "schdoc.add_component",
@@ -1797,7 +1860,12 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
                 "footprint_model",
                 "footprint_library",
                 "parameters",
+                "orientation",
+                "mirrored",
+                "part_id",
+                "display_mode",
                 "designator_style",
+                "comment_style",
                 "overwrite",
             ),
         ),

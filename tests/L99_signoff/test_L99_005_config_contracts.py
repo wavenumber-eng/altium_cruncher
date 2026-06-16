@@ -131,6 +131,11 @@ def _config_cases() -> list[tuple[str, str, Any]]:
             jsonc.loads(pcb_layer_step_default_config_text()),
         ),
         (
+            "mate generated template",
+            "mate_config.a0.schema.json",
+            jsonc.loads(mate_template_text(schema="wn.pcb_cruncher.mate_config.a0")),
+        ),
+        (
             "schematic clean generated template",
             "clean_config.v1.schema.json",
             AltiumCleanConfig.template().to_dict(),
@@ -176,8 +181,16 @@ def _generated_template_comment_cases() -> list[tuple[str, str, list[str]]]:
             "mate",
             mate_template_text(schema="wn.pcb_cruncher.mate_config.a0"),
             [
-                "/* Project loading mode. Options: auto, none, schematic. */",
+                (
+                    "/* Project loading mode. auto/schematic loads source SchDocs "
+                    "for power-port detection. Options: auto, none, schematic. */"
+                ),
                 "/* Source object kind. Options: component, free_pad. */",
+                "/* Free-pad hole-size filter in mils. */",
+                "/* Free-pad plating filter. */",
+                "/* Reference graphics shape mode. Options: source_pad_outline, destination_pad_outline. */",
+                "/* Board-cutout projection filter. Options: all, interior. */",
+                "/* Create actual board cutouts when true; otherwise graphics only. */",
                 "/* Overlay shape. Options: solid, ring. */",
             ],
         ),

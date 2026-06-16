@@ -5,6 +5,118 @@
   "type": "object",
   "additionalProperties": true,
   "required": ["schema", "source", "output", "projections"],
+  "$defs": {
+    "numberArray": {
+      "type": "array",
+      "items": {"type": "number"}
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "milRange": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "min": {"type": "number"},
+        "max": {"type": "number"}
+      }
+    },
+    "graphics": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "layer": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+        "stroke_width_mils": {"type": "number"}
+      }
+    },
+    "textStyle": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "height_mils": {"type": "number"},
+        "layer": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+        "font_kind": {
+          "type": "string",
+          "enum": ["truetype", "stroke", "barcode"]
+        },
+        "font_name": {"type": "string"},
+        "bold": {"type": "boolean"},
+        "stroke_width_mils": {"type": "number"},
+        "text_justification": {"oneOf": [{"type": "string"}, {"type": "integer"}]}
+      }
+    },
+    "labelPlacement": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "side": {
+          "type": "string",
+          "enum": ["top", "bottom", "left", "right", "board_left", "board_right"]
+        },
+        "offset_mils": {"$ref": "#/$defs/numberArray"},
+        "box_size_mils": {"$ref": "#/$defs/numberArray"},
+        "row_spacing_mils": {"type": "number"},
+        "column_spacing_mils": {"type": "number"},
+        "auto_width_padding_mils": {"type": "number"}
+      }
+    },
+    "projectionSource": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["object"],
+      "properties": {
+        "object": {"type": "string", "enum": ["component", "free_pad"]},
+        "designators": {
+          "oneOf": [
+            {"type": "string"},
+            {"$ref": "#/$defs/stringArray"}
+          ]
+        },
+        "hole_size_mils": {"$ref": "#/$defs/milRange"},
+        "plated": {"type": "boolean"}
+      }
+    },
+    "projectionAction": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["mate_component", "reference_graphics", "label"]
+        },
+        "part": {"type": "string"},
+        "symbol_name": {"type": "string"},
+        "footprint_name": {"type": "string"},
+        "designator_prefix": {"type": "string"},
+        "signal_pad_designator": {"type": "string"},
+        "shape": {
+          "type": "string",
+          "enum": ["source_pad_outline", "destination_pad_outline"]
+        },
+        "layer": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+        "style": {"$ref": "#/$defs/textStyle"},
+        "text": {"type": "string"},
+        "value": {"type": "string"},
+        "placement": {"$ref": "#/$defs/labelPlacement"}
+      }
+    },
+    "projection": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "source", "actions"],
+      "properties": {
+        "id": {"type": "string"},
+        "source": {"$ref": "#/$defs/projectionSource"},
+        "actions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/projectionAction"}
+        }
+      }
+    }
+  },
   "properties": {
     "schema": {
       "const": "wn.pcb_cruncher.mate_config.a0"
@@ -15,61 +127,91 @@
       "required": ["board"],
       "properties": {
         "board": {"type": "string"},
-        "project_context": {"type": "string"}
+        "pcbdoc": {"type": ["string", "null"]},
+        "project_context": {
+          "type": "string",
+          "enum": ["auto", "none", "schematic"]
+        }
       }
     },
     "output": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "properties": {
+        "backend": {"type": "string", "enum": ["altium"]},
+        "output_dir": {"type": "string"},
+        "project_name": {"type": "string"},
+        "schematic_sheet_style": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+        "origin": {"type": "string"},
+        "overwrite": {"type": "boolean"},
+        "layer_stack_template": {"type": "string"},
+        "board_outline": {"type": "object", "additionalProperties": true}
+      }
     },
     "libraries": {
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "roots": {
-          "type": "array",
-          "items": {"type": "string"}
-        },
+        "roots": {"$ref": "#/$defs/stringArray"},
         "recursive": {"type": "boolean"}
+      }
+    },
+    "known_parts": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "manifest": {"type": "string"}
       }
     },
     "validation": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "properties": {
+        "source_side": {
+          "type": "string",
+          "enum": ["infer_single_side", "any", "none", "top", "bottom"]
+        },
+        "allow_side_agnostic_through_hole": {"type": "boolean"},
+        "side_agnostic_kinds": {"$ref": "#/$defs/stringArray"}
+      }
     },
     "projections": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": true,
-        "required": ["id", "source", "actions"],
-        "properties": {
-          "id": {"type": "string"},
-          "source": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "actions": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": true,
-              "required": ["kind"],
-              "properties": {
-                "kind": {"type": "string"}
-              }
-            }
-          }
-        }
-      }
+      "items": {"$ref": "#/$defs/projection"}
     },
     "pcb_designators": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "placement": {"type": "string", "enum": ["above_component"]},
+        "offset_mils": {"$ref": "#/$defs/numberArray"},
+        "width_factor": {"type": "number"},
+        "style": {"$ref": "#/$defs/textStyle"}
+      }
     },
     "board_projection": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "properties": {
+        "outline": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "graphics": {"$ref": "#/$defs/graphics"}
+          }
+        },
+        "cutouts": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "graphics": {"$ref": "#/$defs/graphics"},
+            "scope": {"type": "string", "enum": ["all", "interior"]},
+            "actual_cutouts": {"type": "boolean"},
+            "layer": {"oneOf": [{"type": "string"}, {"type": "integer"}]}
+          }
+        }
+      }
     },
     "artifacts": {
       "type": "object",

@@ -67,6 +67,9 @@ def _op_schdoc_add_net_label(
     text = _required_string(spec.args, "text")
     location = _required_point(spec.args, "location_mils")
     orientation = _sch_text_orientation(spec.args.get("orientation"))
+    justification = _sch_text_justification(
+        spec.args.get("justification", "BOTTOM_LEFT")
+    )
     if context.dry_run:
         return _dry_run_result(spec, paths, {"text": text})
 
@@ -78,6 +81,36 @@ def _op_schdoc_add_net_label(
             location_mils=SchPointMils.from_mils(*location),
             text=text,
             orientation=orientation,
+            justification=justification,
+        )
+    )
+    _mark_schdoc_dirty(context, paths)
+    return _success_result(spec, paths, {"text": text})
+
+
+def _op_schdoc_add_power_port(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    paths = _mutation_paths(spec.args, context)
+    text = _required_string(spec.args, "text")
+    location = _required_point(spec.args, "location_mils")
+    orientation = _sch_text_orientation(spec.args.get("orientation"))
+    style = _sch_power_object_style(spec.args.get("style", "BAR"))
+    show_net_name = _optional_bool(spec.args, "show_net_name", True)
+    if context.dry_run:
+        return _dry_run_result(spec, paths, {"text": text})
+
+    from altium_monkey import SchPointMils, make_sch_power_port
+
+    schdoc = _open_schdoc_for_mutation(paths, context)
+    schdoc.add_object(
+        make_sch_power_port(
+            location_mils=SchPointMils.from_mils(*location),
+            text=text,
+            style=style,
+            orientation=orientation,
+            show_net_name=show_net_name,
         )
     )
     _mark_schdoc_dirty(context, paths)
@@ -1348,6 +1381,16 @@ def _sch_text_justification(value: object) -> "TextJustification":
     )
 
 
+def _sch_power_object_style(value: object) -> object:
+    from altium_monkey import PowerObjectStyle
+
+    if isinstance(value, int) and not isinstance(value, bool):
+        return PowerObjectStyle(value)
+    if isinstance(value, str):
+        return _enum_by_label(PowerObjectStyle, value)
+    raise ValueError("Schematic power-port style must be a string name or native integer id")
+
+
 def _enum_by_label(enum_type: type[IntEnum], value: str) -> IntEnum:
     normalized = value.strip().replace(" ", "_").replace("-", "_").upper()
     layer_aliases = {"TOP_LAYER": "TOP", "BOTTOM_LAYER": "BOTTOM"}
@@ -1417,6 +1460,15 @@ def _apply_schematic_text_style(
         setattr(text_record, "justification", _sch_text_justification(justification))
         if hasattr(text_record, "_has_justification"):
             setattr(text_record, "_has_justification", True)
+    hidden: bool | None = None
+    if "hidden" in style:
+        hidden = _optional_bool(style, "hidden", False)
+    elif "visible" in style:
+        hidden = not _optional_bool(style, "visible", True)
+    if hidden is not None and hasattr(text_record, "is_hidden"):
+        setattr(text_record, "is_hidden", hidden)
+        if hasattr(text_record, "_has_is_hidden"):
+            setattr(text_record, "_has_is_hidden", True)
     if position is not None and hasattr(text_record, "auto_position"):
         setattr(text_record, "auto_position", False)
         if hasattr(text_record, "_has_auto_position"):
@@ -1862,6 +1914,7 @@ def _union_member_collections() -> tuple[str, ...]:
 CAD_MCO_OPERATIONS: dict[str, McoOperationHandler] = {
     "schdoc.add-wire": _op_schdoc_add_wire,
     "schdoc.add-net-label": _op_schdoc_add_net_label,
+    "schdoc.add-power-port": _op_schdoc_add_power_port,
     "schdoc.add-component": _op_schdoc_add_component,
     "pcblib.create": _op_pcblib_create,
     "pcblib.add-footprint": _op_pcblib_add_footprint,
