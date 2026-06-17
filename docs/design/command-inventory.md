@@ -1,7 +1,7 @@
 # Command Inventory
 
 Status: initial migration inventory
-Last updated: 2026-06-14
+Last updated: 2026-06-17
 
 This inventory records the command set migrated from the private
 `toolz/altium_cruncher` package into the standalone public repo.

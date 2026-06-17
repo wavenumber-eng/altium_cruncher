@@ -1436,18 +1436,8 @@ def _apply_schematic_text_style(
     style = _optional_mapping(args, field_name)
     if style is None:
         return
-    position = style.get("position_mils")
-    x: int | None = None
-    y: int | None = None
-    if position is not None:
-        point = _point_from_sequence(position, f"{field_name}.position_mils")
-        x = int(round(point[0]))
-        y = int(round(point[1]))
-    method_name = (
-        "set_designator_style"
-        if field_name == "designator_style"
-        else "set_comment_style"
-    )
+    x, y, has_position = _schematic_text_position(style, field_name)
+    method_name = _schematic_text_style_method_name(field_name)
     text_record = getattr(component, method_name)(
         x=x,
         y=y,
@@ -1455,24 +1445,65 @@ def _apply_schematic_text_style(
         font_size=int(_optional_float(style, "font_size", 12.0)),
         bold=_optional_bool(style, "bold", field_name == "designator_style"),
     )
+    _apply_schematic_text_justification(text_record, style)
+    _apply_schematic_text_hidden(text_record, style)
+    if has_position:
+        _set_optional_record_flag(text_record, "auto_position", False)
+
+
+def _schematic_text_position(
+    style: Mapping[str, object],
+    field_name: str,
+) -> tuple[int | None, int | None, bool]:
+    position = style.get("position_mils")
+    if position is None:
+        return (None, None, False)
+    point = _point_from_sequence(position, f"{field_name}.position_mils")
+    return (int(round(point[0])), int(round(point[1])), True)
+
+
+def _schematic_text_style_method_name(field_name: str) -> str:
+    if field_name == "designator_style":
+        return "set_designator_style"
+    return "set_comment_style"
+
+
+def _apply_schematic_text_justification(
+    text_record: object,
+    style: Mapping[str, object],
+) -> None:
     justification = style.get("justification")
-    if justification is not None:
-        setattr(text_record, "justification", _sch_text_justification(justification))
-        if hasattr(text_record, "_has_justification"):
-            setattr(text_record, "_has_justification", True)
+    if justification is None:
+        return
+    setattr(text_record, "justification", _sch_text_justification(justification))
+    if hasattr(text_record, "_has_justification"):
+        setattr(text_record, "_has_justification", True)
+
+
+def _apply_schematic_text_hidden(
+    text_record: object,
+    style: Mapping[str, object],
+) -> None:
     hidden: bool | None = None
     if "hidden" in style:
         hidden = _optional_bool(style, "hidden", False)
     elif "visible" in style:
         hidden = not _optional_bool(style, "visible", True)
-    if hidden is not None and hasattr(text_record, "is_hidden"):
-        setattr(text_record, "is_hidden", hidden)
-        if hasattr(text_record, "_has_is_hidden"):
-            setattr(text_record, "_has_is_hidden", True)
-    if position is not None and hasattr(text_record, "auto_position"):
-        setattr(text_record, "auto_position", False)
-        if hasattr(text_record, "_has_auto_position"):
-            setattr(text_record, "_has_auto_position", True)
+    if hidden is not None:
+        _set_optional_record_flag(text_record, "is_hidden", hidden)
+
+
+def _set_optional_record_flag(
+    record: object,
+    name: str,
+    value: bool,
+) -> None:
+    if not hasattr(record, name):
+        return
+    setattr(record, name, value)
+    presence_flag = f"_has_{name}"
+    if hasattr(record, presence_flag):
+        setattr(record, presence_flag, True)
 
 
 def _arrange_pcb_designators(

@@ -1,6 +1,6 @@
 # PrjPcb Skeleton Implementation Plan
 
-Status: active for the 2026.6.15 document/project skeleton config slice
+Status: active for the 2026.6.17 document/project skeleton release slice
 
 This plan tracks the `prjpcb` project-skeleton workflow in `altium_cruncher`.
 The stable public contracts live in `docs/contracts` and `docs/design`; this
@@ -40,7 +40,7 @@ and release exit criteria.
 
 ## Current State
 
-- Package version is locally bumped to `2026.6.15` for command-line testing.
+- Package version is locally bumped to `2026.6.17` for release testing.
 - `prjpcb`, `prjpcb init`, `prjpcb create`, and `prjpcb add-sheet` are backed by
   MCO operations.
 - `schdoc create` and `pcbdoc create` now support no-target config-first flows:
@@ -83,7 +83,7 @@ and release exit criteria.
 
 ## Validation Snapshot
 
-Passed on 2026-06-15:
+Focused checks passed before the final release-date bump:
 
 ```powershell
 uv run --extra test pytest tests\test_command_manifest.py tests\test_bom_pnp_model.py tests\test_bom_outputs.py tests\test_pcblib_clean_config.py tests\test_pcb_layer_step.py tests\test_mco.py tests\test_prjpcb_command.py tests\test_mate.py tests\test_pcb_svg_view_selection.py tests\L99_signoff\test_L99_001_release_signoff.py tests\L99_signoff\test_L99_002_design_docs.py tests\L99_signoff\test_L99_004_interface_design_docs.py tests\L99_signoff\test_L99_005_config_contracts.py

@@ -2416,23 +2416,12 @@ def _transform_placement(
 def _schematic_placements_for_targets(
     resolved_targets: Sequence[_ResolvedMatePartTarget],
 ) -> list[_SchematicPlacement]:
-    part_targets = [
-        resolved for resolved in resolved_targets if resolved.part is not None
-    ]
+    part_targets = _resolved_part_targets(resolved_targets)
     if not part_targets:
         return []
     pin_count_cache: dict[tuple[str, str], int] = {}
-    single_pin_flags = [
-        _mate_part_symbol_pin_count(resolved.part, cache=pin_count_cache) == 1
-        for resolved in part_targets
-        if resolved.part is not None
-    ]
-    single_net_names = [
-        net_name
-        for resolved, single_pin in zip(part_targets, single_pin_flags)
-        for net_name in [_target_optional_string(resolved.target, "net_name")]
-        if single_pin and net_name
-    ]
+    single_pin_flags = _schematic_single_pin_flags(part_targets, pin_count_cache)
+    single_net_names = _schematic_single_pin_net_names(part_targets, single_pin_flags)
     single_wire_length = schematic_normalized_wire_length_mils(single_net_names)
     single_pin_positions = _single_pin_positions_by_target_index(
         part_targets,
@@ -2444,15 +2433,14 @@ def _schematic_placements_for_targets(
             [
                 _part_string(resolved.part, "symbol_name")
                 for resolved, single_pin in zip(part_targets, single_pin_flags)
-                if resolved.part is not None and not single_pin
+                if not single_pin
             ]
         )
     )
     placements: list[_SchematicPlacement] = []
     for resolved, single_pin in zip(part_targets, single_pin_flags):
         part = resolved.part
-        if part is None:
-            continue
+        assert part is not None
         if single_pin:
             placements.append(
                 _SchematicPlacement(
@@ -2465,6 +2453,35 @@ def _schematic_placements_for_targets(
             continue
         placements.append(_SchematicPlacement(position_mils=next(multi_positions)))
     return placements
+
+
+def _resolved_part_targets(
+    resolved_targets: Sequence[_ResolvedMatePartTarget],
+) -> list[_ResolvedMatePartTarget]:
+    return [resolved for resolved in resolved_targets if resolved.part is not None]
+
+
+def _schematic_single_pin_flags(
+    part_targets: Sequence[_ResolvedMatePartTarget],
+    pin_count_cache: dict[tuple[str, str], int],
+) -> list[bool]:
+    flags: list[bool] = []
+    for resolved in part_targets:
+        assert resolved.part is not None
+        flags.append(_mate_part_symbol_pin_count(resolved.part, cache=pin_count_cache) == 1)
+    return flags
+
+
+def _schematic_single_pin_net_names(
+    part_targets: Sequence[_ResolvedMatePartTarget],
+    single_pin_flags: Sequence[bool],
+) -> list[str]:
+    net_names: list[str] = []
+    for resolved, single_pin in zip(part_targets, single_pin_flags):
+        net_name = _target_optional_string(resolved.target, "net_name")
+        if single_pin and net_name:
+            net_names.append(net_name)
+    return net_names
 
 
 def _mate_part_symbol_pin_count(
