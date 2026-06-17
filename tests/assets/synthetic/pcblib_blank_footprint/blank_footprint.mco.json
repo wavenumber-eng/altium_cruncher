@@ -1,5 +1,5 @@
 {
-  "schema": "wn.altium_cruncher.mco.v1",
+  "schema": "altium_cruncher.mco.a0",
   "operations": [
     {
       "op": "pcblib.create",

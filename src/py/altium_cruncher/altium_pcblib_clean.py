@@ -10,7 +10,7 @@ from typing import Literal
 
 from altium_cruncher.config_json import load_json_config
 
-PCBLIB_CLEAN_CONFIG_SCHEMA_V1 = "wn.altium.pcblib.clean.config.v1"
+PCBLIB_CLEAN_CONFIG_SCHEMA_V1 = "altium_cruncher.pcblib.clean.config.a0"
 DEFAULT_PCBLIB_CLEAN_CONFIG_FILENAME = "altium-pcblib-clean.json"
 PcbLibCleanProfile = Literal["raw", "default"]
 

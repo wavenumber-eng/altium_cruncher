@@ -1,5 +1,5 @@
 {
-  "schema": "altium_cruncher.command_manifest.v0",
+  "schema": "altium_cruncher.command_manifest.a0",
   "commands": [
     {"name": "bom", "status": "public", "requires_extra": null},
     {"name": "clean", "status": "public", "requires_extra": null},
@@ -18,10 +18,14 @@
     {"name": "notes", "status": "public", "requires_extra": null},
     {"name": "outjob", "status": "public", "requires_extra": null},
     {"name": "pcb-layer-step", "status": "public", "requires_extra": null},
+    {"name": "pcbdoc", "status": "public", "requires_extra": null},
     {"name": "pcblib", "status": "public", "requires_extra": null},
     {"name": "pcb-svg", "status": "public", "requires_extra": null},
     {"name": "pnp", "status": "public", "requires_extra": null},
+    {"name": "prjpcb", "status": "public", "requires_extra": null},
     {"name": "profiles", "status": "public", "requires_extra": null},
+    {"name": "schdoc", "status": "public", "requires_extra": null},
+    {"name": "schlib", "status": "public", "requires_extra": null},
     {"name": "sch-svg", "status": "public", "requires_extra": null},
     {"name": "split", "status": "public", "requires_extra": null},
     {"name": "svg", "status": "public", "requires_extra": null},

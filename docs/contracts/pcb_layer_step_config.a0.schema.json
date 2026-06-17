@@ -1,16 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/pcb_layer_step_config.v2.schema.json",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/pcb_layer_step_config.a0.schema.json",
   "title": "Altium Cruncher PCB Layer STEP Config",
   "description": "JSON/JSONC configuration contract for fixture-alignment PCB layer STEP exports.",
   "type": "object",
   "required": ["schema"],
   "properties": {
     "schema": {
-      "enum": [
-        "wn.altium_cruncher.pcb_layer_step.config.v1",
-        "wn.altium_cruncher.pcb_layer_step.config.v2"
-      ]
+      "const": "altium_cruncher.pcb_layer_step.config.a0"
     },
     "defaults": {
       "$ref": "#/$defs/outputOptions"
@@ -171,7 +168,7 @@
       "then": {
         "properties": {
           "schema": {
-            "const": "wn.altium_cruncher.pcb_layer_step.config.v2"
+            "const": "altium_cruncher.pcb_layer_step.config.a0"
           }
         }
       }

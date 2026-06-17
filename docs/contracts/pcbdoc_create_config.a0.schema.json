@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/pcbdoc_create_config.a0.schema.json",
+  "title": "Altium Cruncher PcbDoc Create Config A0",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "file"],
+  "properties": {
+    "schema": {
+      "const": "altium_cruncher.pcbdoc.create.config.a0"
+    },
+    "file": {"type": "string", "minLength": 1},
+    "board_outline_mils": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["left", "bottom", "right", "top"],
+      "properties": {
+        "left": {"type": "number"},
+        "bottom": {"type": "number"},
+        "right": {"type": "number"},
+        "top": {"type": "number"}
+      }
+    },
+    "layer_stack": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode", "copper_layers"],
+      "properties": {
+        "mode": {"const": "generated_rigid"},
+        "name": {"type": "string"},
+        "copper_layers": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["name"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "copper_thickness_mils": {"type": "number"},
+              "thickness_mils": {"type": "number"}
+            }
+          }
+        },
+        "dielectrics_between": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "name": {"type": "string"},
+              "material": {"type": "string"},
+              "thickness_mils": {"type": ["number", "null"]},
+              "dielectric_constant": {"type": ["number", "null"]},
+              "dk": {"type": ["number", "null"]},
+              "dielectric_type": {"type": ["integer", "null"]},
+              "type_code": {"type": ["integer", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "layer_stack_template": {"type": "string"},
+    "mechanical_layer_profile": {
+      "enum": ["none", "standard_component_pairs"]
+    },
+    "mechanical_layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["layer"],
+        "properties": {
+          "layer": {"type": "string", "minLength": 1},
+          "name": {"type": "string"},
+          "enabled": {"type": "boolean"},
+          "kind": {"type": "string"}
+        }
+      }
+    },
+    "mechanical_layer_pairs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["top", "bottom"],
+            "properties": {
+              "top": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["layer", "kind"],
+                "properties": {
+                  "layer": {"type": "string", "minLength": 1},
+                  "name": {"type": "string"},
+                  "enabled": {"type": "boolean"},
+                  "kind": {"type": "string", "minLength": 1}
+                }
+              },
+              "bottom": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["layer", "kind"],
+                "properties": {
+                  "layer": {"type": "string", "minLength": 1},
+                  "name": {"type": "string"},
+                  "enabled": {"type": "boolean"},
+                  "kind": {"type": "string", "minLength": 1}
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["layer_1", "layer_2"],
+            "properties": {
+              "layer_1": {"type": "string", "minLength": 1},
+              "layer_2": {"type": "string", "minLength": 1},
+              "pair_index": {"type": "integer", "minimum": 0}
+            }
+          }
+        ]
+      }
+    },
+    "mechanical_layer_kinds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["layer", "kind"],
+        "properties": {
+          "layer": {"type": "string", "minLength": 1},
+          "kind": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

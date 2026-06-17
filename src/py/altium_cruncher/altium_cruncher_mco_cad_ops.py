@@ -67,6 +67,9 @@ def _op_schdoc_add_net_label(
     text = _required_string(spec.args, "text")
     location = _required_point(spec.args, "location_mils")
     orientation = _sch_text_orientation(spec.args.get("orientation"))
+    justification = _sch_text_justification(
+        spec.args.get("justification", "BOTTOM_LEFT")
+    )
     if context.dry_run:
         return _dry_run_result(spec, paths, {"text": text})
 
@@ -78,6 +81,36 @@ def _op_schdoc_add_net_label(
             location_mils=SchPointMils.from_mils(*location),
             text=text,
             orientation=orientation,
+            justification=justification,
+        )
+    )
+    _mark_schdoc_dirty(context, paths)
+    return _success_result(spec, paths, {"text": text})
+
+
+def _op_schdoc_add_power_port(
+    spec: McoOperationSpec,
+    context: McoExecutionContext,
+) -> McoOperationResult:
+    paths = _mutation_paths(spec.args, context)
+    text = _required_string(spec.args, "text")
+    location = _required_point(spec.args, "location_mils")
+    orientation = _sch_text_orientation(spec.args.get("orientation"))
+    style = _sch_power_object_style(spec.args.get("style", "BAR"))
+    show_net_name = _optional_bool(spec.args, "show_net_name", True)
+    if context.dry_run:
+        return _dry_run_result(spec, paths, {"text": text})
+
+    from altium_monkey import SchPointMils, make_sch_power_port
+
+    schdoc = _open_schdoc_for_mutation(paths, context)
+    schdoc.add_object(
+        make_sch_power_port(
+            location_mils=SchPointMils.from_mils(*location),
+            text=text,
+            style=style,
+            orientation=orientation,
+            show_net_name=show_net_name,
         )
     )
     _mark_schdoc_dirty(context, paths)
@@ -1348,6 +1381,16 @@ def _sch_text_justification(value: object) -> "TextJustification":
     )
 
 
+def _sch_power_object_style(value: object) -> object:
+    from altium_monkey import PowerObjectStyle
+
+    if isinstance(value, int) and not isinstance(value, bool):
+        return PowerObjectStyle(value)
+    if isinstance(value, str):
+        return _enum_by_label(PowerObjectStyle, value)
+    raise ValueError("Schematic power-port style must be a string name or native integer id")
+
+
 def _enum_by_label(enum_type: type[IntEnum], value: str) -> IntEnum:
     normalized = value.strip().replace(" ", "_").replace("-", "_").upper()
     layer_aliases = {"TOP_LAYER": "TOP", "BOTTOM_LAYER": "BOTTOM"}
@@ -1393,18 +1436,8 @@ def _apply_schematic_text_style(
     style = _optional_mapping(args, field_name)
     if style is None:
         return
-    position = style.get("position_mils")
-    x: int | None = None
-    y: int | None = None
-    if position is not None:
-        point = _point_from_sequence(position, f"{field_name}.position_mils")
-        x = int(round(point[0]))
-        y = int(round(point[1]))
-    method_name = (
-        "set_designator_style"
-        if field_name == "designator_style"
-        else "set_comment_style"
-    )
+    x, y, has_position = _schematic_text_position(style, field_name)
+    method_name = _schematic_text_style_method_name(field_name)
     text_record = getattr(component, method_name)(
         x=x,
         y=y,
@@ -1412,15 +1445,65 @@ def _apply_schematic_text_style(
         font_size=int(_optional_float(style, "font_size", 12.0)),
         bold=_optional_bool(style, "bold", field_name == "designator_style"),
     )
+    _apply_schematic_text_justification(text_record, style)
+    _apply_schematic_text_hidden(text_record, style)
+    if has_position:
+        _set_optional_record_flag(text_record, "auto_position", False)
+
+
+def _schematic_text_position(
+    style: Mapping[str, object],
+    field_name: str,
+) -> tuple[int | None, int | None, bool]:
+    position = style.get("position_mils")
+    if position is None:
+        return (None, None, False)
+    point = _point_from_sequence(position, f"{field_name}.position_mils")
+    return (int(round(point[0])), int(round(point[1])), True)
+
+
+def _schematic_text_style_method_name(field_name: str) -> str:
+    if field_name == "designator_style":
+        return "set_designator_style"
+    return "set_comment_style"
+
+
+def _apply_schematic_text_justification(
+    text_record: object,
+    style: Mapping[str, object],
+) -> None:
     justification = style.get("justification")
-    if justification is not None:
-        setattr(text_record, "justification", _sch_text_justification(justification))
-        if hasattr(text_record, "_has_justification"):
-            setattr(text_record, "_has_justification", True)
-    if position is not None and hasattr(text_record, "auto_position"):
-        setattr(text_record, "auto_position", False)
-        if hasattr(text_record, "_has_auto_position"):
-            setattr(text_record, "_has_auto_position", True)
+    if justification is None:
+        return
+    setattr(text_record, "justification", _sch_text_justification(justification))
+    if hasattr(text_record, "_has_justification"):
+        setattr(text_record, "_has_justification", True)
+
+
+def _apply_schematic_text_hidden(
+    text_record: object,
+    style: Mapping[str, object],
+) -> None:
+    hidden: bool | None = None
+    if "hidden" in style:
+        hidden = _optional_bool(style, "hidden", False)
+    elif "visible" in style:
+        hidden = not _optional_bool(style, "visible", True)
+    if hidden is not None:
+        _set_optional_record_flag(text_record, "is_hidden", hidden)
+
+
+def _set_optional_record_flag(
+    record: object,
+    name: str,
+    value: bool,
+) -> None:
+    if not hasattr(record, name):
+        return
+    setattr(record, name, value)
+    presence_flag = f"_has_{name}"
+    if hasattr(record, presence_flag):
+        setattr(record, presence_flag, True)
 
 
 def _arrange_pcb_designators(
@@ -1862,6 +1945,7 @@ def _union_member_collections() -> tuple[str, ...]:
 CAD_MCO_OPERATIONS: dict[str, McoOperationHandler] = {
     "schdoc.add-wire": _op_schdoc_add_wire,
     "schdoc.add-net-label": _op_schdoc_add_net_label,
+    "schdoc.add-power-port": _op_schdoc_add_power_port,
     "schdoc.add-component": _op_schdoc_add_component,
     "pcblib.create": _op_pcblib_create,
     "pcblib.add-footprint": _op_pcblib_add_footprint,

@@ -71,7 +71,7 @@ def test_pcb_layer_step_cricket_bottom_layer_uses_configured_colors(
     assert step_files[0].read_text(encoding="utf-8").startswith("ISO-10303-21;")
 
     manifest = json.loads(manifest_files[0].read_text(encoding="utf-8"))
-    assert manifest["schema"] == "wn.altium_cruncher.pcb_layer_step.v1"
+    assert manifest["schema"] == "altium_cruncher.pcb_layer_step.a0"
     assert manifest["layer"]["json_name"] == "BOTTOM"
     assert manifest["options"]["copper_color"] == "#3D85C6"
     assert manifest["options"]["outline_color"] == "#CCCCCC"
@@ -114,7 +114,7 @@ def test_pcb_layer_step_cricket_fixture_variants_compare_request_sizes(
         """
         {
           /* Cricket Node fixture-alignment comparison. */
-          "schema": "wn.altium_cruncher.pcb_layer_step.config.v2",
+          "schema": "altium_cruncher.pcb_layer_step.config.a0",
           "defaults": {
             "layer": "bottom",
             "board_outline": {"color": "#CCCCCC", "fuse": true}

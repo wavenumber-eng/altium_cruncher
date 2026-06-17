@@ -23,7 +23,7 @@ from altium_monkey.altium_record_sch__rectangle import AltiumSchRectangle
 from altium_monkey.altium_record_sch__wire import AltiumSchWire
 from altium_monkey.altium_record_types import LineWidth, SchGraphicalObject, rgb_to_win32_color
 
-CLEAN_CONFIG_SCHEMA_V1 = "wn.altium.clean.config.v1"
+CLEAN_CONFIG_SCHEMA_V1 = "altium_cruncher.clean.config.a0"
 
 
 def _coerce_bool(value: Any, default: bool) -> bool:

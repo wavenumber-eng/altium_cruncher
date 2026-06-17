@@ -15,7 +15,7 @@ from altium_cruncher.altium_cruncher_pcblib_split import split_pcblib_filesystem
 
 log = logging.getLogger(__name__)
 
-INTLIB_EXTRACT_MANIFEST_SCHEMA = "wn.altium_cruncher.extract.intlib.v1"
+INTLIB_EXTRACT_MANIFEST_SCHEMA = "altium_cruncher.extract.intlib.a0"
 
 if TYPE_CHECKING:
     from altium_monkey.altium_intlib import AltiumIntLib, IntLibExtractionResult

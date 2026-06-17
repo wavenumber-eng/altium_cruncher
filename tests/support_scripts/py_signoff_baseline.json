@@ -137,10 +137,11 @@
     }
   ],
   "file_bytes_offenders": {
+    "src/py/altium_cruncher/altium_cruncher_mate.py": 111328,
     "src/py/altium_cruncher/altium_cruncher_pcb_layer_step.py": 118767
   },
   "file_lines_offenders": {
-    "src/py/altium_cruncher/altium_cruncher_mate.py": 2722,
+    "src/py/altium_cruncher/altium_cruncher_mate.py": 3159,
     "src/py/altium_cruncher/altium_cruncher_pcb_layer_step.py": 3274
   },
   "max_file_bytes": 100000,

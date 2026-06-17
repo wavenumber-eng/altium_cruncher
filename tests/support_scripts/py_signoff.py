@@ -401,7 +401,7 @@ def _analyze_file(path: Path, root: Path) -> FileRecord:
     return FileRecord(
         path=rel,
         line_count=line_count,
-        byte_count=path.stat().st_size,
+        byte_count=len(text.replace("\r\n", "\n").encode("utf-8")),
         any_count=any_count,
         functions=functions,
     )

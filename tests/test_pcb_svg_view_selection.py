@@ -1029,7 +1029,7 @@ def test_pcb_svg_hlr_component_style_override_builds_projection_options() -> Non
 
 def test_pcb_svg_rejects_v1_config() -> None:
     with pytest.raises(ValueError, match="Unsupported pcb-svg config schema"):
-        PcbSvgConfig.from_dict({"schema": "wn.pcb.svg.config.v1"})
+        PcbSvgConfig.from_dict({"schema": "pcb.svg.config.invalid"})
 
 
 def test_pcb_svg_config_loader_accepts_jsonc(tmp_path) -> None:

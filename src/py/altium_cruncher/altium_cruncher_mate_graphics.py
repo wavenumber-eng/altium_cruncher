@@ -23,6 +23,7 @@ class _BoardProjectionOptions:
     cutout_graphics_enabled: bool
     cutout_layer: str
     cutout_width_mils: float
+    cutout_scope: str
     actual_cutouts_enabled: bool
     actual_cutout_layer: str
 
@@ -50,6 +51,11 @@ def pad_geometry(pad: object) -> JsonObject | None:
     width_mils = pad_width_mils(pad)
     height_mils = pad_height_mils(pad)
     if width_mils <= 0.0 or height_mils <= 0.0:
+        hole_size_mils = _float_attr(pad, "hole_size_mils")
+        if hole_size_mils > 0.0:
+            width_mils = hole_size_mils
+            height_mils = hole_size_mils
+    if width_mils <= 0.0 or height_mils <= 0.0:
         return None
     layer = _int_attr(pad, "layer")
     shape = _pad_shape(pad)
@@ -69,6 +75,16 @@ def pad_geometry(pad: object) -> JsonObject | None:
             height_mils,
         )
     return geometry
+
+
+def footprint_pad_geometries(footprint: object) -> tuple[JsonObject, ...]:
+    """Return local pad geometries from a mate destination footprint."""
+    geometries: list[JsonObject] = []
+    for pad in list(getattr(footprint, "pads", []) or []):
+        geometry = pad_geometry(pad)
+        if geometry is not None:
+            geometries.append(geometry)
+    return tuple(geometries)
 
 
 def pad_width_mils(pad: object) -> float:
@@ -110,7 +126,8 @@ def build_pcb_reference_graphics_operations(
     config = target.get("mate_reference_graphics")
     if not isinstance(config, dict) or not _optional_bool(config, "enabled", True):
         return []
-    if str(config.get("shape", "") or "").strip() != "source_pad_outline":
+    shape = str(config.get("shape", "") or "").strip()
+    if shape not in {"source_pad_outline", "destination_pad_outline"}:
         return []
 
     style = _section(config, "style")
@@ -127,9 +144,7 @@ def build_pcb_reference_graphics_operations(
     )
 
     operations: list[JsonObject] = []
-    for pad_index, geometry in enumerate(
-        _target_source_pad_geometries(target), start=1
-    ):
+    for pad_index, geometry in enumerate(_target_pad_geometries(target, shape), start=1):
         operations.extend(
             _pad_outline_operations(
                 output_dir=output_dir,
@@ -220,6 +235,7 @@ def _board_projection_options(
             _optional_string(cutout_graphics, "layer", "MECHANICAL_1") or "MECHANICAL_1"
         ),
         cutout_width_mils=_mapping_number(cutout_graphics, "stroke_width_mils", 8.0),
+        cutout_scope=_board_cutout_scope(cutouts.get("scope")),
         actual_cutouts_enabled=_optional_bool(cutouts, "actual_cutouts", False),
         actual_cutout_layer=_optional_string(cutouts, "layer", "MULTI_LAYER")
         or "MULTI_LAYER",
@@ -293,10 +309,8 @@ def _board_cutout_projection_operations(
     options: _BoardProjectionOptions,
 ) -> list[JsonObject]:
     operations: list[JsonObject] = []
-    for cutout_index, cutout_outline in enumerate(
-        _outline_cutouts(board_outline),
-        start=1,
-    ):
+    cutouts = _filtered_outline_cutouts(board_outline, options)
+    for cutout_index, cutout_outline in enumerate(cutouts, start=1):
         operations.extend(
             _board_cutout_operations(
                 output_dir=output_dir,
@@ -308,6 +322,36 @@ def _board_cutout_projection_operations(
             )
         )
     return operations
+
+
+def _board_cutout_scope(value: object) -> str:
+    if value is None:
+        return "all"
+    if not isinstance(value, str):
+        raise ValueError("Mate board_projection.cutouts.scope must be a string")
+    normalized = value.strip().lower().replace("-", "_")
+    if normalized not in {"all", "interior"}:
+        raise ValueError(
+            "Mate board_projection.cutouts.scope must be 'all' or 'interior'"
+        )
+    return normalized
+
+
+def _filtered_outline_cutouts(
+    board_outline: Mapping[str, object],
+    options: _BoardProjectionOptions,
+) -> list[JsonObject]:
+    cutouts = _outline_cutouts(board_outline)
+    if options.cutout_scope == "all":
+        return cutouts
+    outline_points = _linearized_outline_points(board_outline)
+    if len(outline_points) < 3:
+        return []
+    return [
+        cutout
+        for cutout in cutouts
+        if _outline_is_strictly_inside_outline(cutout, outline_points)
+    ]
 
 
 def _board_cutout_operations(
@@ -477,15 +521,59 @@ def transform_source_pad_geometries(
     return transformed
 
 
+def transform_destination_pad_geometries(
+    geometries: tuple[JsonObject, ...],
+    target: Mapping[str, object],
+) -> tuple[JsonObject, ...]:
+    """Apply a mate component placement transform to local footprint pads."""
+    placed: list[JsonObject] = []
+    origin_x = _mapping_number(target, "x_mils", 0.0)
+    origin_y = _mapping_number(target, "y_mils", 0.0)
+    rotation = _mapping_number(target, "rotation_degrees", 0.0)
+    for geometry in geometries:
+        local_x = _mapping_number(geometry, "x_mils", 0.0)
+        local_y = _mapping_number(geometry, "y_mils", 0.0)
+        rotated_x, rotated_y = _rotate_point(local_x, local_y, rotation)
+        item = dict(geometry)
+        item["x_mils"] = origin_x + rotated_x
+        item["y_mils"] = origin_y + rotated_y
+        item["rotation_degrees"] = (
+            _mapping_number(geometry, "rotation_degrees", 0.0) + rotation
+        )
+        placed.append(item)
+    return tuple(placed)
+
+
+def _rotate_point(x_mils: float, y_mils: float, angle_degrees: float) -> tuple[float, float]:
+    if math.isclose(angle_degrees % 360.0, 0.0, abs_tol=1e-9):
+        return (x_mils, y_mils)
+    radians = math.radians(angle_degrees)
+    cos_a = math.cos(radians)
+    sin_a = math.sin(radians)
+    return (
+        (x_mils * cos_a) - (y_mils * sin_a),
+        (x_mils * sin_a) + (y_mils * cos_a),
+    )
+
+
 def _pad_geometry_from_selection(raw: Mapping[str, object]) -> JsonObject | None:
-    required = ("x_mils", "y_mils", "width_mils", "height_mils")
+    required = ("x_mils", "y_mils")
     if any(name not in raw for name in required):
+        return None
+    width_mils = _mapping_number(raw, "width_mils", 0.0)
+    height_mils = _mapping_number(raw, "height_mils", 0.0)
+    if width_mils <= 0.0 or height_mils <= 0.0:
+        hole_size_mils = _mapping_number(raw, "hole_size_mils", 0.0)
+        if hole_size_mils > 0.0:
+            width_mils = hole_size_mils
+            height_mils = hole_size_mils
+    if width_mils <= 0.0 or height_mils <= 0.0:
         return None
     return {
         "x_mils": _mapping_number(raw, "x_mils", 0.0),
         "y_mils": _mapping_number(raw, "y_mils", 0.0),
-        "width_mils": _mapping_number(raw, "width_mils", 0.0),
-        "height_mils": _mapping_number(raw, "height_mils", 0.0),
+        "width_mils": width_mils,
+        "height_mils": height_mils,
         "shape": int(_mapping_number(raw, "shape", 1.0)) if "shape" in raw else 1,
         "layer": int(_mapping_number(raw, "layer", 0.0)) if "layer" in raw else 0,
         "rotation_degrees": _mapping_number(raw, "rotation_degrees", 0.0)
@@ -668,9 +756,19 @@ def _outline_cutouts(outline: Mapping[str, object]) -> list[JsonObject]:
             vertices = [dict(vertex) for vertex in item if isinstance(vertex, dict)]
         else:
             continue
-        if len(vertices) >= 3:
+        if _outline_can_form_closed_shape(vertices):
             cutouts.append({"vertices": vertices, "closed": True})
     return cutouts
+
+
+def _outline_can_form_closed_shape(vertices: list[JsonObject]) -> bool:
+    if len(vertices) >= 3:
+        return True
+    return len(vertices) == 2 and any(_outline_vertex_is_arc(vertex) for vertex in vertices)
+
+
+def _outline_vertex_is_arc(vertex: Mapping[str, object]) -> bool:
+    return str(vertex.get("segment", "line") or "line").lower() == "arc"
 
 
 def _outline_point(vertex: Mapping[str, object]) -> list[float]:
@@ -682,7 +780,7 @@ def _outline_point(vertex: Mapping[str, object]) -> list[float]:
 
 def _linearized_outline_points(outline: Mapping[str, object]) -> list[list[float]]:
     vertices = _outline_vertices(outline)
-    if len(vertices) < 3:
+    if not _outline_can_form_closed_shape(vertices):
         return []
     points: list[list[float]] = []
     for index, current in enumerate(vertices):
@@ -690,11 +788,106 @@ def _linearized_outline_points(outline: Mapping[str, object]) -> list[list[float
         if not points or points[-1] != current_point:
             points.append(current_point)
         next_vertex = vertices[(index + 1) % len(vertices)]
-        if str(current.get("segment", "line") or "line").lower() == "arc":
+        if _outline_vertex_is_arc(current):
             points.extend(_sample_outline_arc_points(current, next_vertex)[1:])
     if len(points) > 1 and points[0] == points[-1]:
         points.pop()
     return points
+
+
+def _outline_is_strictly_inside_outline(
+    cutout: Mapping[str, object],
+    outline_points: list[list[float]],
+) -> bool:
+    cutout_points = _linearized_outline_points(cutout)
+    if not cutout_points:
+        return False
+    for x_mils, y_mils in _closed_polygon_check_points(cutout_points):
+        if _point_on_polygon_boundary(x_mils, y_mils, outline_points):
+            return False
+        if not _point_in_polygon(x_mils, y_mils, outline_points):
+            return False
+    return True
+
+
+def _closed_polygon_check_points(points: list[list[float]]) -> list[list[float]]:
+    check_points: list[list[float]] = []
+    count = len(points)
+    for index, point in enumerate(points):
+        check_points.append(point)
+        next_point = points[(index + 1) % count]
+        check_points.append(
+            [
+                (point[0] + next_point[0]) / 2.0,
+                (point[1] + next_point[1]) / 2.0,
+            ]
+        )
+    return check_points
+
+
+def _point_in_polygon(
+    x_mils: float,
+    y_mils: float,
+    polygon: list[list[float]],
+) -> bool:
+    inside = False
+    count = len(polygon)
+    for index in range(count):
+        x1, y1 = polygon[index]
+        x2, y2 = polygon[(index + 1) % count]
+        if (y1 > y_mils) == (y2 > y_mils):
+            continue
+        crossing_x = x1 + (y_mils - y1) * (x2 - x1) / (y2 - y1)
+        if crossing_x > x_mils:
+            inside = not inside
+    return inside
+
+
+def _point_on_polygon_boundary(
+    x_mils: float,
+    y_mils: float,
+    polygon: list[list[float]],
+    *,
+    tolerance_mils: float = 1.0e-3,
+) -> bool:
+    count = len(polygon)
+    for index in range(count):
+        x1, y1 = polygon[index]
+        x2, y2 = polygon[(index + 1) % count]
+        if _point_on_segment(
+            x_mils,
+            y_mils,
+            x1,
+            y1,
+            x2,
+            y2,
+            tolerance_mils=tolerance_mils,
+        ):
+            return True
+    return False
+
+
+def _point_on_segment(
+    px: float,
+    py: float,
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    *,
+    tolerance_mils: float,
+) -> bool:
+    dx = x2 - x1
+    dy = y2 - y1
+    segment_length_sq = dx * dx + dy * dy
+    if segment_length_sq <= tolerance_mils * tolerance_mils:
+        return math.hypot(px - x1, py - y1) <= tolerance_mils
+    t = ((px - x1) * dx + (py - y1) * dy) / segment_length_sq
+    if t < 0.0 or t > 1.0:
+        return False
+    closest_x = x1 + t * dx
+    closest_y = y1 + t * dy
+    return math.hypot(px - closest_x, py - closest_y) <= tolerance_mils
 
 
 def _sample_outline_arc_points(
@@ -1446,10 +1639,20 @@ def _pad_ring_operation(
     )
 
 
-def _target_source_pad_geometries(
+def _target_pad_geometries(
     target: Mapping[str, object],
+    shape: str,
 ) -> list[JsonObject]:
-    value = target.get("source_pad_geometries", [])
+    if shape == "destination_pad_outline":
+        return _target_named_pad_geometries(target, "destination_pad_geometries")
+    return _target_named_pad_geometries(target, "source_pad_geometries")
+
+
+def _target_named_pad_geometries(
+    target: Mapping[str, object],
+    name: str,
+) -> list[JsonObject]:
+    value = target.get(name, [])
     if not isinstance(value, list):
         return []
     return [dict(item) for item in value if isinstance(item, dict)]

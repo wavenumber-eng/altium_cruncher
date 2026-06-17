@@ -21,7 +21,10 @@ _MATE_CONFIG_COMMENT_BY_PATH = {
     ("source",): "DUT source board input and load policy.",
     ("source", "board"): "Path to the DUT .PrjPcb or .PcbDoc.",
     ("source", "project_context"): enum_help(
-        "Project loading mode.",
+        (
+            "Project loading mode. auto/schematic loads source SchDocs for "
+            "power-port detection."
+        ),
         ("auto", "none", "schematic"),
     ),
     ("output",): "Generated mate project output settings.",
@@ -109,8 +112,8 @@ _MATE_CONFIG_COMMENT_BY_PATH = {
         "Pad designator used for generated signal routing."
     ),
     ("projections", "actions", "shape"): enum_help(
-        "Reference graphics source shape mode.",
-        ("source_pad_outline",),
+        "Reference graphics shape mode.",
+        ("source_pad_outline", "destination_pad_outline"),
     ),
     ("projections", "actions", "layer"): "Target Altium layer for this action.",
     ("projections", "actions", "style"): "Action-specific display/text style.",
@@ -133,6 +136,10 @@ _MATE_CONFIG_COMMENT_BY_PATH = {
     ("board_projection", "cutouts"): "DUT board-cutout reference behavior.",
     ("board_projection", "cutouts", "graphics"): (
         "Board-cutout drawing operation settings."
+    ),
+    ("board_projection", "cutouts", "scope"): enum_help(
+        "Board-cutout projection filter.",
+        ("all", "interior"),
     ),
     ("board_projection", "cutouts", "actual_cutouts"): (
         "Create actual board cutouts when true; otherwise graphics only."

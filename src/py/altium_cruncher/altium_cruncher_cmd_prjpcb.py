@@ -1,0 +1,921 @@
+"""PrjPcb skeleton commands backed by MCO operations."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import os
+from pathlib import Path
+
+from altium_cruncher.altium_cruncher_cmd_mco import (
+    execute_mco_for_cli,
+    print_mco_execution_result,
+)
+from altium_cruncher.altium_cruncher_mco import (
+    MCO_SCHEMA,
+    JsonObject,
+    McoExecutionContext,
+    McoExecutionResult,
+    execute_mco,
+    mco_operation,
+)
+from altium_cruncher.altium_cruncher_document_configs import (
+    default_pcbdoc_child_config,
+    default_schdoc_child_config,
+    project_config_header_lines,
+    project_pcbdoc_comment_paths,
+)
+from altium_cruncher.altium_cruncher_project_profiles import (
+    STANDARD_MECHANICAL_LAYER_PROFILE,
+    standard_mechanical_profile_args,
+)
+from altium_cruncher.config_json import load_json_config, render_commented_jsonc
+
+PROJECT_CONFIG_SCHEMA = "altium_cruncher.project_skeleton.a0"
+PROJECT_CONFIG_SUFFIX = ".project.jsonc"
+PROJECT_AUTO_CONFIG_NAME = "prjpcb_init.jsonc"
+
+log = logging.getLogger(__name__)
+
+
+def default_project_config(
+    *,
+    project_name: str = "generated_project",
+    layer_count: int = 2,
+) -> JsonObject:
+    """Return the editable default project skeleton config."""
+    return {
+        "schema": PROJECT_CONFIG_SCHEMA,
+        "project": {
+            "file": f"{project_name}.PrjPcb",
+            "name": project_name,
+            "parameters": {
+                "ProjectName": project_name,
+            },
+        },
+        "schematics": [
+            default_schdoc_child_config(document_name=project_name)
+        ],
+        "pcb": default_pcbdoc_child_config(
+            document_name=project_name,
+            layer_count=layer_count,
+        ),
+    }
+
+
+def render_project_config(config: JsonObject) -> str:
+    """Render a project skeleton config as commented JSONC."""
+    return render_commented_jsonc(
+        config,
+        comments_by_path={
+            ("schema",): "Project skeleton config contract id.",
+            ("project",): "PrjPcb output and project-level parameters.",
+            ("project", "file"): "PrjPcb file to create, relative to this config file unless absolute.",
+            ("project", "name"): "Project display name written into the PrjPcb.",
+            ("project", "parameters"): "Project-level PrjPcb parameters.",
+            ("project", "parameters", "ProjectName"): "Default ProjectName parameter value.",
+            ("schematics",): "SchDoc sheets to create and add to the project.",
+            ("schematics", "file"): "SchDoc file to create, relative to this config file unless absolute.",
+            ("schematics", "sheet_style"): "Altium SheetStyle enum name or integer. Default sheets use D.",
+            ("schematics", "template"): "Optional SchDot template file to copy settings from.",
+            ("schematics", "apply_template_visual_sheet_settings"): (
+                "Whether to copy visual sheet settings from the template."
+            ),
+            ("schematics", "custom_sheet_mils"): "Optional explicit sheet size in mils.",
+            ("schematics", "custom_sheet_mils", "width"): "Custom sheet width in mils.",
+            ("schematics", "custom_sheet_mils", "height"): "Custom sheet height in mils.",
+            ("pcb",): "PcbDoc output, board outline, layer stack, and mechanical rows.",
+            **project_pcbdoc_comment_paths(prefix=("pcb",)),
+        },
+        comments_by_key={
+            "file": "Path relative to this config file unless absolute.",
+            "layer": "Mechanical layer id; see valid ids in the header.",
+            "kind": "Mechanical layer kind enum name; see valid kind names in the header.",
+            "enabled": "Whether this row is enabled.",
+        },
+        header_lines=project_config_header_lines(
+            title="altium-cruncher project skeleton config."
+        ),
+    )
+
+
+def write_project_config(
+    path: Path | str,
+    config: JsonObject,
+    *,
+    overwrite: bool = False,
+) -> Path:
+    """Write a project skeleton config file."""
+    output_path = Path(path)
+    if output_path.exists() and not overwrite:
+        raise FileExistsError(f"Config already exists: {output_path}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(render_project_config(config), encoding="utf-8")
+    return output_path.resolve()
+
+
+def load_project_config(path: Path | str) -> JsonObject:
+    """Load and validate a project skeleton config file."""
+    payload = load_json_config(Path(path))
+    if not isinstance(payload, dict):
+        raise ValueError("Project config root must be an object")
+    config = dict(payload)
+    schema = config.get("schema")
+    if schema != PROJECT_CONFIG_SCHEMA:
+        raise ValueError(f"Unsupported project config schema: {schema!r}")
+    return config
+
+
+def build_project_create_mco(config: JsonObject, *, overwrite: bool = False) -> JsonObject:
+    """Compile a project skeleton config to MCO operations."""
+    project = _object(config.get("project"), "project")
+    project_file = _string(project.get("file"), "project.file")
+    document_files, document_operations = _document_create_operations(config, overwrite)
+    operations = [
+        _project_create_operation(project, project_file, overwrite),
+        *_project_parameter_operations(project, project_file),
+        *document_operations,
+        *_project_document_operations(project_file, document_files),
+    ]
+    return {"schema": MCO_SCHEMA, "operations": operations}
+
+
+def _project_create_operation(
+    project: JsonObject,
+    project_file: str,
+    overwrite: bool,
+) -> JsonObject:
+    return mco_operation(
+        "project.create",
+        "create_project",
+        "Create project",
+        {
+            "file": project_file,
+            "name": str(project.get("name") or Path(project_file).stem),
+            "overwrite": overwrite,
+        },
+    )
+
+
+def _project_parameter_operations(
+    project: JsonObject,
+    project_file: str,
+) -> list[JsonObject]:
+    return [
+        mco_operation(
+            "project.add_parameter",
+            f"set_project_parameter_{index}",
+            f"Set project parameter {name}",
+            {"file": project_file, "name": name, "value": value},
+        )
+        for index, (name, value) in enumerate(_parameters(project).items(), start=1)
+    ]
+
+
+def _document_create_operations(
+    config: JsonObject,
+    overwrite: bool,
+) -> tuple[list[str], list[JsonObject]]:
+    document_files: list[str] = []
+    operations: list[JsonObject] = []
+    for index, sheet in enumerate(_object_list(config.get("schematics"), "schematics")):
+        sheet_file, operation = _schematic_create_operation(index, sheet, overwrite)
+        document_files.append(sheet_file)
+        operations.append(operation)
+
+    pcb_file, pcb_operation = _pcb_create_operation(config.get("pcb"), overwrite)
+    if pcb_file is not None and pcb_operation is not None:
+        document_files.append(pcb_file)
+        operations.append(pcb_operation)
+    return document_files, operations
+
+
+def _schematic_create_operation(
+    index: int,
+    sheet: JsonObject,
+    overwrite: bool,
+) -> tuple[str, JsonObject]:
+    sheet_file = _string(sheet.get("file"), "schematics[].file")
+    return sheet_file, mco_operation(
+        "schdoc.create",
+        f"create_schematic_{index + 1}",
+        f"Create schematic {Path(sheet_file).name}",
+        _schematic_create_args(sheet, sheet_file, overwrite),
+    )
+
+
+def _schematic_create_args(
+    sheet: JsonObject,
+    sheet_file: str,
+    overwrite: bool,
+) -> JsonObject:
+    args: JsonObject = {
+        "file": sheet_file,
+        "sheet_style": str(sheet.get("sheet_style") or "D"),
+        "overwrite": overwrite,
+    }
+    if sheet.get("template") is not None:
+        args["template"] = _string(sheet.get("template"), "schematics[].template")
+        args["apply_template_visual_sheet_settings"] = bool(
+            sheet.get("apply_template_visual_sheet_settings", False)
+        )
+    if sheet.get("custom_sheet_mils") is not None:
+        args["custom_sheet_mils"] = _object(
+            sheet.get("custom_sheet_mils"),
+            "schematics[].custom_sheet_mils",
+        )
+    return args
+
+
+def _pcb_create_operation(
+    raw_pcb: object,
+    overwrite: bool,
+) -> tuple[str | None, JsonObject | None]:
+    if raw_pcb is None:
+        return None, None
+    pcb_obj = _object(raw_pcb, "pcb")
+    pcb_file = _string(pcb_obj.get("file"), "pcb.file")
+    return pcb_file, mco_operation(
+        "pcbdoc.create",
+        "create_board",
+        f"Create board {Path(pcb_file).name}",
+        _pcb_create_args(pcb_obj, pcb_file, overwrite),
+    )
+
+
+def _pcb_create_args(
+    pcb_obj: JsonObject,
+    pcb_file: str,
+    overwrite: bool,
+) -> JsonObject:
+    pcb_args: JsonObject = {
+        "file": pcb_file,
+        "overwrite": overwrite,
+    }
+    if pcb_obj.get("board_outline_mils") is not None:
+        pcb_args["board_outline_mils"] = _object(
+            pcb_obj.get("board_outline_mils"),
+            "pcb.board_outline_mils",
+        )
+    _apply_pcb_layer_stack_args(pcb_args, pcb_obj)
+    _apply_pcb_mechanical_args(pcb_args, pcb_obj)
+    return pcb_args
+
+
+def _apply_pcb_layer_stack_args(pcb_args: JsonObject, pcb_obj: JsonObject) -> None:
+    layer_stack = pcb_obj.get("layer_stack")
+    if layer_stack is None:
+        pcb_args["layer_stack_template"] = str(
+            pcb_obj.get("layer_stack_template") or "2-layer"
+        )
+        return
+    layer_stack_obj = _object(layer_stack, "pcb.layer_stack")
+    mode = str(layer_stack_obj.get("mode") or "generated_rigid")
+    if mode != "generated_rigid":
+        raise ValueError(
+            "Only pcb.layer_stack.mode='generated_rigid' is supported in this release"
+        )
+    pcb_args["rigid_stack"] = layer_stack_obj
+
+
+def _apply_pcb_mechanical_args(
+    pcb_args: JsonObject,
+    pcb_obj: JsonObject,
+) -> None:
+    profile = str(pcb_obj.get("mechanical_layer_profile") or "none")
+    normalized = profile.strip().lower().replace("-", "_")
+    if normalized not in {"", "none"}:
+        if normalized != STANDARD_MECHANICAL_LAYER_PROFILE:
+            raise ValueError(f"Unsupported mechanical layer profile: {profile!r}")
+        pcb_args.update(standard_mechanical_profile_args())
+    _apply_explicit_project_mechanical_rows(pcb_args, pcb_obj)
+
+
+def _apply_explicit_project_mechanical_rows(
+    pcb_args: JsonObject,
+    pcb_obj: JsonObject,
+) -> None:
+    mechanical_layers: list[JsonObject] = []
+    mechanical_layer_pairs: list[JsonObject] = []
+    mechanical_layer_kinds: list[JsonObject] = []
+
+    _append_project_mechanical_layers(pcb_obj, mechanical_layers, mechanical_layer_kinds)
+    _append_project_mechanical_pairs(
+        pcb_obj,
+        mechanical_layers,
+        mechanical_layer_pairs,
+        mechanical_layer_kinds,
+    )
+
+    if pcb_obj.get("mechanical_layer_kinds") is not None:
+        mechanical_layer_kinds.extend(
+            _object_list(
+                pcb_obj.get("mechanical_layer_kinds"),
+                "pcb.mechanical_layer_kinds",
+            )
+        )
+
+    if mechanical_layers:
+        pcb_args["mechanical_layers"] = mechanical_layers
+    if mechanical_layer_pairs:
+        pcb_args["mechanical_layer_pairs"] = mechanical_layer_pairs
+    if mechanical_layer_kinds:
+        pcb_args["mechanical_layer_kinds"] = mechanical_layer_kinds
+
+
+def _append_project_mechanical_layers(
+    pcb_obj: JsonObject,
+    mechanical_layers: list[JsonObject],
+    mechanical_layer_kinds: list[JsonObject],
+) -> None:
+    rows = pcb_obj.get("mechanical_layers")
+    if rows is None:
+        return
+    for row in _object_list(rows, "pcb.mechanical_layers"):
+        layer_row = _mechanical_layer_row(row, "pcb.mechanical_layers[]")
+        mechanical_layers.append(layer_row)
+        if row.get("kind") is not None:
+            mechanical_layer_kinds.append(
+                {
+                    "layer": layer_row["layer"],
+                    "kind": _string(row.get("kind"), "pcb.mechanical_layers[].kind"),
+                }
+            )
+
+
+def _append_project_mechanical_pairs(
+    pcb_obj: JsonObject,
+    mechanical_layers: list[JsonObject],
+    mechanical_layer_pairs: list[JsonObject],
+    mechanical_layer_kinds: list[JsonObject],
+) -> None:
+    rows = pcb_obj.get("mechanical_layer_pairs")
+    if rows is None:
+        return
+    for row in _object_list(rows, "pcb.mechanical_layer_pairs"):
+        _append_project_mechanical_pair(
+            row,
+            mechanical_layers,
+            mechanical_layer_pairs,
+            mechanical_layer_kinds,
+        )
+
+
+def _append_project_mechanical_pair(
+    row: JsonObject,
+    mechanical_layers: list[JsonObject],
+    mechanical_layer_pairs: list[JsonObject],
+    mechanical_layer_kinds: list[JsonObject],
+) -> None:
+    if "top" not in row and "bottom" not in row:
+        mechanical_layer_pairs.append(row)
+        return
+
+    top = _mechanical_pair_side(row.get("top"), "pcb.mechanical_layer_pairs[].top")
+    bottom = _mechanical_pair_side(row.get("bottom"), "pcb.mechanical_layer_pairs[].bottom")
+    mechanical_layers.extend(
+        [
+            _mechanical_layer_row(top, "pcb.mechanical_layer_pairs[].top"),
+            _mechanical_layer_row(bottom, "pcb.mechanical_layer_pairs[].bottom"),
+        ]
+    )
+    mechanical_layer_pairs.append({"layer_1": top["layer"], "layer_2": bottom["layer"]})
+    mechanical_layer_kinds.extend(
+        [
+            {"layer": top["layer"], "kind": top["kind"]},
+            {"layer": bottom["layer"], "kind": bottom["kind"]},
+        ]
+    )
+
+
+def _mechanical_pair_side(value: object, label: str) -> JsonObject:
+    row = _object(value, label)
+    _string(row.get("layer"), f"{label}.layer")
+    _string(row.get("kind"), f"{label}.kind")
+    return row
+
+
+def _mechanical_layer_row(row: JsonObject, label: str) -> JsonObject:
+    layer_row: JsonObject = {
+        "layer": _string(row.get("layer"), f"{label}.layer"),
+    }
+    if row.get("name") is not None:
+        layer_row["name"] = _string(row.get("name"), f"{label}.name")
+    if row.get("enabled") is not None:
+        layer_row["enabled"] = bool(row.get("enabled"))
+    return layer_row
+
+
+def _project_document_operations(
+    project_file: str,
+    document_files: list[str],
+) -> list[JsonObject]:
+    return [
+        mco_operation(
+            "project.add_document",
+            f"add_document_{index}",
+            f"Add {Path(document_file).name} to project",
+            {
+                "file": project_file,
+                "document": _project_relative_document(project_file, document_file),
+            },
+        )
+        for index, document_file in enumerate(document_files, start=1)
+    ]
+
+
+def execute_project_create_mco(
+    config: JsonObject,
+    *,
+    config_dir: Path,
+    overwrite: bool = False,
+    dry_run: bool = False,
+) -> McoExecutionResult:
+    """Execute a project skeleton config through generated MCO operations."""
+    return execute_mco(
+        build_project_create_mco(config, overwrite=overwrite),
+        McoExecutionContext(work_dir=config_dir, dry_run=dry_run),
+    )
+
+
+def cmd_prjpcb(args: argparse.Namespace) -> int:
+    """Dispatch PrjPcb subcommands."""
+    action = getattr(args, "prjpcb_action", None)
+    if action == "init":
+        return _cmd_prjpcb_init(args)
+    if action == "create":
+        return _cmd_prjpcb_create(args)
+    if action == "add-sheet":
+        return _cmd_prjpcb_add_sheet(args)
+    help_parser = getattr(args, "_prjpcb_parser", None)
+    if help_parser is not None:
+        help_parser.print_help()
+        return 0
+    log.error("No prjpcb subcommand specified")
+    return 1
+
+
+def _cmd_prjpcb_auto_create(args: argparse.Namespace) -> int:
+    try:
+        cwd = Path.cwd()
+        config_path = _auto_config_path(cwd)
+        if not config_path.exists():
+            project_name = _default_project_name_from_cwd(cwd)
+            output_path = write_project_config(
+                config_path,
+                default_project_config(project_name=project_name),
+                overwrite=False,
+            )
+            log.info("")
+            log.info("Writing project init config template: %s", output_path)
+            log.info(
+                "Please edit it, then rerun `acr prjpcb create` to create "
+                "the project skeleton."
+            )
+            return 0
+
+        config = load_project_config(config_path)
+        log.info("")
+        log.info("Using project init config: %s", config_path.resolve())
+        result = execute_project_create_mco(
+            config,
+            config_dir=config_path.resolve().parent,
+            overwrite=bool(args.force),
+            dry_run=bool(args.dry_run),
+        )
+    except Exception as exc:
+        log.error("Failed running default PrjPcb workflow: %s", exc)
+        return 1
+
+    if args.json_output is not None:
+        _write_json(args.json_output, result.to_dict(), overwrite=True)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2))
+        return 0 if result.ok else 1
+    print_mco_execution_result(
+        result,
+        title="prjpcb",
+        color=not bool(args.no_color),
+    )
+    log.info("Config: %s", config_path.resolve())
+    return 0 if result.ok else 1
+
+
+def _cmd_prjpcb_init(args: argparse.Namespace) -> int:
+    try:
+        config_path, project_name = _resolve_config_path_and_project_name(
+            args.config,
+            project_name=args.project_name,
+        )
+        config = default_project_config(
+            project_name=project_name,
+            layer_count=args.layers,
+        )
+        output_path = write_project_config(config_path, config, overwrite=bool(args.force))
+    except Exception as exc:
+        log.error("Failed writing project config: %s", exc)
+        return 1
+    log.info("Wrote %s", output_path)
+    return 0
+
+
+def _cmd_prjpcb_create(args: argparse.Namespace) -> int:
+    try:
+        if args.config is None:
+            return _cmd_prjpcb_auto_create(args)
+        config_path, written_config, payload = _prepare_project_create_payload(args)
+        if args.emit_mco is not None:
+            _write_json(args.emit_mco, payload, overwrite=bool(args.force))
+        result = execute_mco_for_cli(
+            payload,
+            McoExecutionContext(work_dir=config_path.resolve().parent, dry_run=bool(args.dry_run)),
+            json_stdout=bool(args.json),
+        )
+    except Exception as exc:
+        log.error("Failed creating PrjPcb project: %s", exc)
+        return 1
+
+    if args.json_output is not None:
+        _write_json(args.json_output, result.to_dict(), overwrite=True)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2))
+    else:
+        print_mco_execution_result(
+            result,
+            title="prjpcb",
+            color=not bool(args.no_color),
+        )
+        log.info("Config: %s", written_config)
+    return 0 if result.ok else 1
+
+
+def _prepare_project_create_payload(
+    args: argparse.Namespace,
+) -> tuple[Path, Path, JsonObject]:
+    config_path, project_name = _resolve_config_path_and_project_name(
+        args.config,
+        project_name=args.project_name,
+    )
+    if not config_path.exists():
+        _write_default_project_config_for_create(args, config_path, project_name)
+    config = load_project_config(config_path)
+    written_config = _resolved_written_config_path(args, config_path, config, project_name)
+    if written_config.resolve() == config_path.resolve():
+        written_config = config_path.resolve()
+    else:
+        write_project_config(written_config, config, overwrite=bool(args.force))
+    return config_path, written_config, build_project_create_mco(
+        config,
+        overwrite=bool(args.force),
+    )
+
+
+def _write_default_project_config_for_create(
+    args: argparse.Namespace,
+    config_path: Path,
+    project_name: str,
+) -> None:
+    if not bool(args.defaults):
+        raise FileNotFoundError(
+            f"Config not found: {config_path}. Use --defaults to create one."
+        )
+    write_project_config(
+        config_path,
+        default_project_config(
+            project_name=project_name,
+            layer_count=args.layers,
+        ),
+        overwrite=bool(args.force),
+    )
+
+
+def _resolved_written_config_path(
+    args: argparse.Namespace,
+    config_path: Path,
+    config: JsonObject,
+    project_name: str,
+) -> Path:
+    if args.write_config:
+        written_config, _unused_name = _resolve_config_path_and_project_name(
+            args.write_config,
+            project_name=project_name,
+        )
+        return written_config
+    return _config_copy_path(config_path, config)
+
+
+def _cmd_prjpcb_add_sheet(args: argparse.Namespace) -> int:
+    try:
+        project_file = Path(args.prjpcb)
+        sheet_file = Path(args.sheet)
+        payload = {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                mco_operation(
+                    "schdoc.create",
+                    "create_schematic",
+                    "Create schematic",
+                    {
+                        "file": str(sheet_file),
+                        "sheet_style": args.sheet_style,
+                        "overwrite": bool(args.force),
+                    },
+                ),
+                mco_operation(
+                    "project.add_document",
+                    "add_schematic_to_project",
+                    "Add schematic to project",
+                    {
+                        "file": str(project_file),
+                        "document": _project_relative_document(
+                            str(project_file),
+                            str(sheet_file),
+                        ),
+                    },
+                ),
+            ],
+        }
+        if args.emit_mco is not None:
+            _write_json(args.emit_mco, payload, overwrite=bool(args.force))
+        result = execute_mco_for_cli(
+            payload,
+            McoExecutionContext(work_dir=Path.cwd(), dry_run=bool(args.dry_run)),
+            json_stdout=bool(args.json),
+        )
+    except Exception as exc:
+        log.error("Failed adding sheet to PrjPcb: %s", exc)
+        return 1
+
+    if args.json_output is not None:
+        _write_json(args.json_output, result.to_dict(), overwrite=True)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2))
+    else:
+        print_mco_execution_result(
+            result,
+            title="prjpcb",
+            color=not bool(args.no_color),
+        )
+    return 0 if result.ok else 1
+
+
+def _resolve_config_path_and_project_name(
+    config_arg: Path | str,
+    *,
+    project_name: str | None,
+) -> tuple[Path, str]:
+    config_path = Path(config_arg)
+    resolved_project_name = project_name or _infer_project_name_from_config_arg(
+        config_path
+    )
+    if config_path.suffix:
+        return config_path, resolved_project_name
+    return (
+        config_path.with_name(f"{config_path.name}{PROJECT_CONFIG_SUFFIX}"),
+        resolved_project_name,
+    )
+
+
+def _infer_project_name_from_config_arg(config_path: Path) -> str:
+    name = config_path.stem if config_path.suffix else config_path.name
+    suffix_stem = PROJECT_CONFIG_SUFFIX.removesuffix(".jsonc")
+    if name.endswith(suffix_stem):
+        name = name[: -len(suffix_stem)]
+    if not name or name in {".", ".."}:
+        raise ValueError(
+            "Could not infer a project name; pass a config filename or --project-name"
+        )
+    return name
+
+
+def _auto_config_path(cwd: Path) -> Path:
+    preferred = cwd / PROJECT_AUTO_CONFIG_NAME
+    if preferred.exists():
+        return preferred
+
+    existing_configs = sorted(cwd.glob(f"*{PROJECT_CONFIG_SUFFIX}"))
+    if len(existing_configs) == 1:
+        return existing_configs[0]
+    if len(existing_configs) > 1:
+        names = ", ".join(path.name for path in existing_configs)
+        raise ValueError(
+            "Multiple project config files found; pass `prjpcb create CONFIG`: "
+            f"{names}"
+        )
+    return preferred
+
+
+def _default_project_name_from_cwd(cwd: Path) -> str:
+    return cwd.name or "generated_project"
+
+
+def _config_copy_path(config_path: Path, config: JsonObject) -> Path:
+    project = _object(config.get("project"), "project")
+    project_file = Path(_string(project.get("file"), "project.file"))
+    if not project_file.is_absolute():
+        project_file = config_path.resolve().parent / project_file
+    return project_file.with_suffix(".project.jsonc")
+
+
+def _project_relative_document(project_file: str, document_file: str) -> str:
+    project_path = Path(project_file)
+    document_path = Path(document_file)
+    if project_path.is_absolute() and document_path.is_absolute():
+        return os.path.relpath(document_path, project_path.parent)
+    if project_path.parent != Path(".") and document_path.parent != Path("."):
+        return os.path.relpath(document_path, project_path.parent)
+    return str(document_path)
+
+
+def _parameters(project: JsonObject) -> dict[str, str]:
+    raw = project.get("parameters", {})
+    if not isinstance(raw, dict):
+        raise ValueError("project.parameters must be an object")
+    return {str(name): str(value) for name, value in raw.items()}
+
+
+def _object(value: object, label: str) -> JsonObject:
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be an object")
+    return dict(value)
+
+
+def _object_list(value: object, label: str) -> list[JsonObject]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be a list")
+    return [_object(item, label) for item in value]
+
+
+def _string(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{label} must be a non-empty string")
+    return value
+
+
+def _write_json(path: Path, payload: JsonObject, *, overwrite: bool) -> Path:
+    if path.exists() and not overwrite:
+        raise FileExistsError(f"Output already exists: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path.resolve()
+
+
+def register_parser(
+    subparsers: argparse._SubParsersAction,
+) -> argparse.ArgumentParser:
+    """Register the prjpcb command parser."""
+    parser = subparsers.add_parser(
+        "prjpcb",
+        help="create Altium PrjPcb skeletons",
+        description=(
+            "Create .PrjPcb project skeletons through JSONC config and MCO "
+            "operations. The create subcommand writes a sample config when none "
+            "exists, or runs the existing config when one is present."
+        ),
+    )
+    action_subparsers = parser.add_subparsers(
+        dest="prjpcb_action",
+        metavar="<prjpcb-action>",
+    )
+    parser.set_defaults(handler=cmd_prjpcb, _prjpcb_parser=parser)
+
+    create_parser = action_subparsers.add_parser(
+        "create",
+        help="create a project skeleton from JSONC config",
+    )
+    create_parser.add_argument(
+        "config",
+        type=Path,
+        nargs="?",
+        help="project config path or bare project name",
+    )
+    create_parser.add_argument(
+        "--defaults",
+        action="store_true",
+        help="write and use a default config if the config path does not exist",
+    )
+    create_parser.add_argument(
+        "--project-name",
+        default=None,
+        help=(
+            "default project name used with --defaults "
+            "(default: infer from config path or bare name)"
+        ),
+    )
+    create_parser.add_argument(
+        "--layers",
+        type=int,
+        default=2,
+        help="default rigid copper layer count used with --defaults",
+    )
+    create_parser.add_argument(
+        "--write-config",
+        type=Path,
+        help="write the normalized config used to this path",
+    )
+    create_parser.add_argument(
+        "--emit-mco",
+        type=Path,
+        help="write the generated MCO JSON file before execution",
+    )
+    create_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite generated project outputs and emitted files",
+    )
+    create_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate and report planned outputs without writing CAD files",
+    )
+    create_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="write the MCO execution report JSON to stdout",
+    )
+    create_parser.add_argument(
+        "--json-output",
+        type=Path,
+        help="write the MCO execution report JSON to this file",
+    )
+    create_parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="disable terminal color in human output",
+    )
+    create_parser.set_defaults(handler=cmd_prjpcb)
+
+    init_parser = action_subparsers.add_parser(
+        "init",
+        help="write a project skeleton JSONC config",
+    )
+    init_parser.add_argument(
+        "config",
+        type=Path,
+        help=(
+            "output project config path or bare project name; bare names write "
+            "NAME.project.jsonc"
+        ),
+    )
+    init_parser.add_argument(
+        "--project-name",
+        default=None,
+        help="default project name (default: infer from config path or bare name)",
+    )
+    init_parser.add_argument(
+        "--layers",
+        type=int,
+        default=2,
+        help="default rigid copper layer count",
+    )
+    init_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite an existing config",
+    )
+    init_parser.set_defaults(handler=cmd_prjpcb)
+
+    add_sheet_parser = action_subparsers.add_parser(
+        "add-sheet",
+        help="create a new sheet and add it to an existing PrjPcb",
+    )
+    add_sheet_parser.add_argument("prjpcb", type=Path, help="target .PrjPcb path")
+    add_sheet_parser.add_argument("sheet", type=Path, help="new .SchDoc path")
+    add_sheet_parser.add_argument(
+        "--sheet-style",
+        default="D",
+        help="Altium SheetStyle enum name or integer (default: D)",
+    )
+    add_sheet_parser.add_argument(
+        "--emit-mco",
+        type=Path,
+        help="write the generated MCO JSON file before execution",
+    )
+    add_sheet_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite the SchDoc if it already exists",
+    )
+    add_sheet_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate and report planned outputs without writing files",
+    )
+    add_sheet_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="write the MCO execution report JSON to stdout",
+    )
+    add_sheet_parser.add_argument(
+        "--json-output",
+        type=Path,
+        help="write the MCO execution report JSON to this file",
+    )
+    add_sheet_parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="disable terminal color in human output",
+    )
+    add_sheet_parser.set_defaults(handler=cmd_prjpcb)
+    return parser

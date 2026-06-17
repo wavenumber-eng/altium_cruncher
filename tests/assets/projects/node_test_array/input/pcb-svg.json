@@ -1,5 +1,5 @@
 {
-  "schema": "wn.pcb.svg.config.v1",
+  "schema": "pcb.svg.config.a0",
   "global": {
     "pcbdoc": null,
     "mono_color": "#000000",

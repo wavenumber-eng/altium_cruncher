@@ -33,7 +33,7 @@ PACKAGE_ROOT = _project_root()
 SOURCE_ROOT = PACKAGE_ROOT / "src" / "py" / "altium_cruncher"
 DESIGN_ROOT = PACKAGE_ROOT / "docs" / "design"
 INTERFACE_MANIFEST = (
-    PACKAGE_ROOT / "docs" / "contracts" / "interface_design_manifest.v0.json"
+    PACKAGE_ROOT / "docs" / "contracts" / "interface_design_manifest.a0.json"
 )
 
 
@@ -66,7 +66,7 @@ def _public_dataclasses() -> set[str]:
 def _major_interfaces() -> set[str]:
     """Return explicitly listed major interfaces that require design docs."""
     payload = json.loads(INTERFACE_MANIFEST.read_text(encoding="utf-8"))
-    assert payload["schema"] == "altium_cruncher.interface_design_manifest.v0"
+    assert payload["schema"] == "altium_cruncher.interface_design_manifest.a0"
     entries = payload["major_interfaces"]
     assert isinstance(entries, list)
     names: set[str] = set()

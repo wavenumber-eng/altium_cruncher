@@ -46,8 +46,8 @@ DEFAULT_DRILL_HOLE_COLOR = "#FFFFFF"
 DEFAULT_MAX_BOOLEAN_DRILL_CUTS = 128
 PCB_LAYER_STEP_CONFIG_FILENAME = "pcb-layer-step.jsonc"
 PCB_LAYER_STEP_LEGACY_CONFIG_FILENAME = "pcb-layer-step.json"
-PCB_LAYER_STEP_CONFIG_SCHEMA = "wn.altium_cruncher.pcb_layer_step.config.v1"
-PCB_LAYER_STEP_CONFIG_SCHEMA_V2 = "wn.altium_cruncher.pcb_layer_step.config.v2"
+PCB_LAYER_STEP_CONFIG_SCHEMA = "altium_cruncher.pcb_layer_step.config.a0"
+PCB_LAYER_STEP_CONFIG_SCHEMA_V2 = "altium_cruncher.pcb_layer_step.config.a0"
 DEFAULT_PAD_THICKNESS_BIAS_MM = 0.010
 DEFAULT_VIA_THICKNESS_BIAS_MM = 0.006
 DEFAULT_POLYGON_THICKNESS_BIAS_MM = 0.003
@@ -1441,7 +1441,7 @@ def _build_manifest(
     coordinate_origin: dict[str, object],
 ) -> dict[str, Any]:
     return {
-        "schema": "wn.altium_cruncher.pcb_layer_step.v1",
+        "schema": "altium_cruncher.pcb_layer_step.a0",
         "backend": "geometer.planar_step",
         "board": board_name,
         "source_input": source_input,

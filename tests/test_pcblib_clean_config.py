@@ -70,7 +70,7 @@ def test_pcblib_clean_config_loader_accepts_jsonc(tmp_path: Path) -> None:
     config_path.write_text(
         """
         {
-          "schema": "wn.altium.pcblib.clean.config.v1",
+          "schema": "altium_cruncher.pcblib.clean.config.a0",
           "profile": "default",
           // comment out sections while tuning cleanup rules
         }
@@ -108,7 +108,7 @@ def test_clean_config_templates_are_commented_jsonc(tmp_path: Path) -> None:
     assert "/* Keep regions used to represent custom pads. */" in pcblib_text
     _assert_jsonc_properties_are_commented(schematic_text)
     _assert_jsonc_properties_are_commented(pcblib_text)
-    assert load_json_config(schematic_config)["schema"] == "wn.altium.clean.config.v1"
+    assert load_json_config(schematic_config)["schema"] == "altium_cruncher.clean.config.a0"
     assert (
-        load_json_config(pcblib_config)["schema"] == "wn.altium.pcblib.clean.config.v1"
+        load_json_config(pcblib_config)["schema"] == "altium_cruncher.pcblib.clean.config.a0"
     )

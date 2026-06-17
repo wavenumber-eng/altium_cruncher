@@ -1,7 +1,7 @@
 # Command Inventory
 
 Status: initial migration inventory
-Last updated: 2026-06-09
+Last updated: 2026-06-17
 
 This inventory records the command set migrated from the private
 `toolz/altium_cruncher` package into the standalone public repo.
@@ -23,6 +23,10 @@ This inventory records the command set migrated from the private
 | `installs` | public | unit/CLI | Lists discovered Altium Designer `X2.exe` paths from Program Files, environment overrides, and registry rows. |
 | `launch` | public | unit/CLI/install smoke | Launches the selected Altium Designer install, optionally opening a file. The `ad` console script is a shortcut for this command. |
 | `pcblib` | public | unit/CLI | Creates PcbLib footprint libraries by compiling the workflow to small MCO operations. Initial surface creates a one-footprint library; pad/text/body insertion remains a future MCO extension. |
+| `schdoc` | public | unit/CLI | Creates blank SchDoc files by compiling to `schdoc.create`. Default sheets are D size; optional template and custom sheet-size inputs are supported. |
+| `schlib` | public | unit/CLI | Creates SchLib files with one empty symbol by compiling to `schlib.create` plus `schlib.add_symbol`. |
+| `pcbdoc` | public | unit/CLI | Creates simple rigid PcbDoc files by compiling to `pcbdoc.create`, including generated rigid stack rows, rectangular board outlines, and optional standard mechanical layer-kind profile. |
+| `prjpcb` | public | unit/CLI | Creates JSONC-driven PrjPcb skeletons by compiling config rows to project, SchDoc, PcbDoc, parameter, and document-link MCO operations. |
 | `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
 | `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
 | `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM/PnP, netlist, manifest, document/library JSON, notes, and embedded assets. |
@@ -34,7 +38,7 @@ This inventory records the command set migrated from the private
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
 | `profiles` | public | unit/CLI | Lists Altium ProgramData profiles and can clean selected extension module state with explicit targeting and dry-run support. |
 
-The command manifest lives at `docs/contracts/command_manifest.v0.json`. `L99` should
+The command manifest lives at `docs/contracts/command_manifest.a0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
 test ownership.
 
@@ -283,8 +287,8 @@ Clean notes:
 
 - `clean` stays in the first public command set;
 - release docs must explain both config schemas:
-  `wn.altium.clean.config.v1` for `SchDoc`/`SchLib`/`PrjPcb`, and
-  `wn.altium.pcblib.clean.config.v1` for `PcbLib`;
+  `altium_cruncher.clean.config.a0` for `SchDoc`/`SchLib`/`PrjPcb`, and
+  `altium_cruncher.pcblib.clean.config.a0` for `PcbLib`;
 - docs cover explicit `--init-config`, config auto-generation, output path behavior, backup
   behavior, color/font/line-width/no-ERC value formats, every schematic
   normalization section, and every PcbLib removal section;

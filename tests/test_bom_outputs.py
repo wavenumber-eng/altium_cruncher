@@ -18,7 +18,7 @@ def _sample_bom() -> list[dict]:
     return [
         {
             "designator": "R1",
-            "value": "330Ω",
+            "value": "330Î©",
             "footprint": "R0603",
             "library_ref": "RES",
             "description": "resistor",
@@ -45,7 +45,7 @@ def test_generic_bom_payload_has_stable_schema(tmp_path) -> None:
 
     payload = _generic_bom_payload(_sample_bom(), source=source, variant="V1")
 
-    assert payload["schema"] == "wn.altium_cruncher.bom.v1"
+    assert payload["schema"] == "altium_cruncher.bom.a0"
     assert payload["variant"] == "V1"
     assert payload["component_count"] == 2
     assert payload["dnp_count"] == 1
@@ -153,10 +153,10 @@ def test_write_bom_output_supports_grouped_json_and_jlc_csv(tmp_path) -> None:
     assert "canonical_fields" not in raw_payload[0]
 
     assert bom_csv.read_bytes().startswith(b"\xef\xbb\xbf")
-    assert "330Ω" in bom_csv.read_text(encoding="utf-8-sig")
+    assert "330Î©" in bom_csv.read_text(encoding="utf-8-sig")
 
     grouped_payload = json.loads(grouped_json.read_text(encoding="utf-8"))
-    assert grouped_payload["schema"] == "wn.altium_cruncher.bom.grouped.v1"
+    assert grouped_payload["schema"] == "altium_cruncher.bom.grouped.a0"
     assert grouped_payload["component_count"] == 2
 
     jlc_text = jlc_csv.read_text(encoding="utf-8")

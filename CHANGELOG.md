@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026.6.17
+
+- Consume pinned `altium-monkey==2026.6.16`, including the public mechanical
+  layer-kind authoring/readback surface and the SchLib-to-SchDoc insertion
+  order fix used by generated schematic workflows.
+- Add MCO-backed `schdoc create`, `schlib create`, and `pcbdoc create`
+  commands for blank schematic documents, one-symbol schematic libraries, and
+  generated rigid PCB documents.
+- Add `prjpcb init`, `prjpcb create`, and `prjpcb add-sheet` workflows for
+  JSONC-driven PrjPcb skeleton generation with project parameters, multiple
+  schematic sheets, generated rigid board stacks, board outlines, and the
+  standard mechanical layer-kind profile.
+- Make `prjpcb create` with no config target bootstrap `prjpcb_init.jsonc` on
+  the first run and use that config on later runs; bare project names passed to
+  `prjpcb init` and `prjpcb create` resolve to `NAME.project.jsonc`.
+- Start the new project skeleton config contract at
+  `altium_cruncher.project_skeleton.a0` and expand standard mechanical
+  rows in generated configs so users can edit single layers and grouped
+  top/bottom layer pairs directly.
+- Normalize `altium-cruncher` owned public contract identifiers to
+  `altium_cruncher.*.a0`, leaving separately owned contracts such as
+  `pcb.svg.config.a0`, `pcb.svg.manifest.a0`, and
+  `geometry.planar_step.request.a0` unchanged.
+- Improve `mate` fixture generation with free-pad selectors, destination-pad
+  reference outlines, source schematic power-port projection, board-cutout
+  scope controls, and cleaner single-pin schematic placement.
+- Keep generated PrjPcb/PcbDoc stack authoring scoped to generated rigid
+  layer stacks; `.stackup` and `.stackupx` import into new PcbDoc files is
+  tracked as future Altium Monkey work.
+- Preserve clean JSON stdout for MCO-backed creation commands by redirecting
+  lower-level document save messages to stderr in `--json` mode.
+
 ## 2026.6.13
 
 - Consume pinned `altium-monkey==2026.6.13`, including the SchDoc

@@ -96,7 +96,7 @@ def test_loads_jsonc_preserves_comment_markers_inside_strings() -> None:
         """
         {
           // line comment
-          "schema": "wn.altium_cruncher.mco.v1",
+          "schema": "altium_cruncher.mco.a0",
           "url": "https://example.test/a//b",
           "operations": [
             {
@@ -119,7 +119,7 @@ def test_loads_jsonc_preserves_comment_markers_inside_strings() -> None:
 def test_load_jsonc_file_accepts_utf8_bom(tmp_path: Path) -> None:
     jsonc_path = tmp_path / "bom.mco.jsonc"
     jsonc_path.write_text(
-        '{"schema":"wn.altium_cruncher.mco.v1","operations":[]}',
+        '{"schema":"altium_cruncher.mco.a0","operations":[]}',
         encoding="utf-8-sig",
     )
 
@@ -223,6 +223,76 @@ def test_execute_mco_caches_documents_and_flushes_on_exit(tmp_path: Path) -> Non
     assert loads == [document_path.resolve()]
     assert saves == [document_path.resolve()]
     assert document_path.read_text(encoding="utf-8") == "seedAB"
+
+
+def test_execute_mco_caches_created_pcbdoc_and_flushes_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from altium_monkey import AltiumPcbDoc
+
+    board_path = tmp_path / "generated" / "mate.PcbDoc"
+    saves: list[Path] = []
+    original_save = AltiumPcbDoc.save
+
+    def save_document(
+        document: AltiumPcbDoc,
+        path: Path | str,
+        *args: object,
+        **kwargs: object,
+    ) -> None:
+        saves.append(Path(path).resolve())
+        original_save(document, path, *args, **kwargs)
+
+    monkeypatch.setattr(AltiumPcbDoc, "save", save_document)
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "create",
+                    "op": "pcbdoc.create",
+                    "args": {
+                        "file": str(board_path),
+                        "overwrite": True,
+                        "board_outline_mils": {
+                            "left": 0,
+                            "bottom": 0,
+                            "right": 500,
+                            "top": 300,
+                        },
+                    },
+                },
+                {
+                    "id": "track",
+                    "op": "pcbdoc.add_track",
+                    "args": {
+                        "file": str(board_path),
+                        "overwrite": True,
+                        "start_mils": [50, 50],
+                        "end_mils": [200, 50],
+                        "width_mils": 8,
+                    },
+                },
+                {
+                    "id": "union",
+                    "op": "pcbdoc.create_user_union",
+                    "args": {
+                        "file": str(board_path),
+                        "overwrite": True,
+                        "name": "generated",
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+    assert saves == [board_path.resolve()]
+    pcbdoc = AltiumPcbDoc.from_file(board_path)
+    assert len(pcbdoc.tracks) == 1
 
 
 def test_project_primitive_dry_run_reports_outputs_without_writing(
@@ -343,6 +413,87 @@ def test_pcblib_primitives_create_library_with_footprint(tmp_path: Path) -> None
     assert footprint.parameters["AREA"] == "1mil^2"
     assert footprint.footprint_primitive_parameters["FixtureRole"] == "contact"
     assert footprint.footprint_primitive_parameters["Value"] == "A|B=C"
+
+
+def test_document_create_primitives_roundtrip_generated_assets(tmp_path: Path) -> None:
+    from altium_cruncher.altium_cruncher_project_profiles import (
+        generated_rigid_stack_config,
+    )
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "schdoc",
+                    "op": "schdoc.create",
+                    "args": {
+                        "file": "generated/demo.SchDoc",
+                        "overwrite": False,
+                    },
+                },
+                {
+                    "id": "schlib",
+                    "op": "schlib.create",
+                    "args": {
+                        "file": "generated/demo.SchLib",
+                        "overwrite": False,
+                    },
+                },
+                {
+                    "id": "symbol",
+                    "op": "schlib.add_symbol",
+                    "args": {
+                        "file": "generated/demo.SchLib",
+                        "name": "DEMO_SYMBOL",
+                        "description": "Demo symbol",
+                    },
+                },
+                {
+                    "id": "pcbdoc",
+                    "op": "pcbdoc.create",
+                    "args": {
+                        "file": "generated/demo.PcbDoc",
+                        "rigid_stack": generated_rigid_stack_config(4),
+                        "mechanical_layer_profile": "standard_component_pairs",
+                        "overwrite": False,
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import (
+        AltiumPcbDoc,
+        AltiumSchDoc,
+        AltiumSchLib,
+        MechanicalLayerKind,
+    )
+    from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
+    from altium_monkey.altium_record_sch__sheet import SheetStyle
+
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "demo.SchDoc")
+    assert schdoc.sheet is not None
+    assert schdoc.sheet.sheet_style == SheetStyle.D
+
+    schlib = AltiumSchLib(tmp_path / "generated" / "demo.SchLib")
+    assert [symbol.name for symbol in schlib.symbols] == ["DEMO_SYMBOL"]
+    assert schlib.symbols[0].description == "Demo symbol"
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "demo.PcbDoc")
+    stack = AltiumLayerStackDocument.from_pcbdoc(pcbdoc)
+    assert [
+        layer.display_name
+        for layer in stack.physical_stacks[0].layers
+        if layer.family == "copper"
+    ] == ["Top Layer", "Mid-Layer 1", "Mid-Layer 2", "Bottom Layer"]
+    assert (
+        pcbdoc.get_mechanical_layer_kind("MECHANICAL10")
+        == MechanicalLayerKind.BODY_3D_TOP
+    )
 
 
 def test_project_variant_mco_operations_roundtrip(tmp_path: Path) -> None:
@@ -840,6 +991,103 @@ def test_pcbdoc_add_embedded_3d_model_operation_dry_run(tmp_path: Path) -> None:
     assert result.results[0].outputs["z_mils"] == pytest.approx(62.992126)
 
 
+def test_created_pcbdoc_inserts_step_model_once(tmp_path: Path) -> None:
+    (tmp_path / "generated").mkdir()
+    (tmp_path / "generated" / "bottom.step").write_text(
+        "ISO-10303-21;\n",
+        encoding="utf-8",
+    )
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                *_mco_create_project_ops(
+                    board_outline_mils={
+                        "left": 0,
+                        "bottom": 0,
+                        "right": 1000,
+                        "top": 700,
+                    },
+                ),
+                {
+                    "id": "insert_step",
+                    "op": "pcbdoc.add_embedded_3d_model",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "model_file": "generated/bottom.step",
+                        "model_name": "bottom.step",
+                        "name": "DUT bottom layer",
+                        "location_mils": [0, 0],
+                        "z_mm": 1.6,
+                        "bounds_mils": {
+                            "left": 0,
+                            "bottom": 0,
+                            "right": 1000,
+                            "top": 700,
+                        },
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumPcbDoc
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
+    model_names = [model.name for model in pcbdoc.models]
+    model_body_names = [
+        body.name
+        for body in pcbdoc.component_bodies
+        if getattr(body, "model_name", None) == "bottom.step"
+    ]
+    assert model_names.count("bottom.step") == 1
+    assert model_body_names == ["DUT bottom layer"]
+
+
+def test_schdoc_add_power_port_operation_writes_power_symbol(
+    tmp_path: Path,
+) -> None:
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                *_mco_create_project_ops(),
+                {
+                    "id": "power",
+                    "op": "schdoc.add_power_port",
+                    "args": {
+                        "file": "generated/mate.SchDoc",
+                        "overwrite": True,
+                        "text": "GND",
+                        "location_mils": [500, 700],
+                        "style": "BAR",
+                        "orientation": "DEGREES_0",
+                        "show_net_name": False,
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumSchDoc
+
+    schdoc = AltiumSchDoc(tmp_path / "generated" / "mate.SchDoc")
+    power_ports = schdoc.get_power_ports()
+    assert len(power_ports) == 1
+    assert power_ports[0].text == "GND"
+    assert power_ports[0].record.location_mils.x_mils == 500.0
+    assert power_ports[0].record.location_mils.y_mils == 700.0
+    assert power_ports[0].record.show_net_name is False
+
+
 def test_library_component_operations_place_schematic_and_pcb_parts(
     tmp_path: Path,
 ) -> None:
@@ -1046,8 +1294,11 @@ def test_mco_cli_init_list_and_run(tmp_path: Path) -> None:
         "project.toggle_variant_dnp",
         "schdoc.add_component",
         "schdoc.add_net_label",
+        "schdoc.add_power_port",
         "schdoc.add_wire",
         "schdoc.create",
+        "schlib.add_symbol",
+        "schlib.create",
     ]
     human_catalog = subprocess.run(
         [

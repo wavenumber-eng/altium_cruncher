@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>prjpcb command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="prjpcb" data-config-contract="docs/contracts/project_skeleton_config.a0.schema.json">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>prjpcb</h1><p class="lede">Creates PrjPcb skeletons from editable JSONC configs through generated MCO operations.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>prjpcb</code> is the public seed workflow for new Altium PrjPcb fixtures and simple generated designs. The config is the editable source of truth; generated MCO operations perform the actual PrjPcb, SchDoc, and PcbDoc writes.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher prjpcb
+altium-cruncher prjpcb create
+altium-cruncher prjpcb init demo --layers 4
+altium-cruncher prjpcb init demo.project.jsonc --project-name demo --layers 4
+altium-cruncher prjpcb create demo.project.jsonc --emit-mco demo.mco.json --json
+altium-cruncher prjpcb create demo.project.jsonc --defaults --project-name demo --force
+altium-cruncher prjpcb add-sheet demo.PrjPcb Power.SchDoc --sheet-style D</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><table><tr><th>Argument</th><th>Contract</th></tr>
+    <tr><td><code>prjpcb</code></td><td>Command group entry point. With no subcommand, prints command help.</td></tr>
+    <tr><td><code>create</code></td><td>With no config target, writes <code>prjpcb_init.jsonc</code> when no project config exists in the current directory. A subsequent no-target run loads the existing config and creates the project skeleton.</td></tr>
+    <tr><td><code>init config</code></td><td>Writes a commented JSONC config using schema <code>altium_cruncher.project_skeleton.a0</code>. A bare name such as <code>demo</code> writes <code>demo.project.jsonc</code> and infers project name <code>demo</code>.</td></tr>
+    <tr><td><code>create config</code></td><td>Loads a JSONC config, writes a normalized config copy next to the generated PrjPcb unless overridden, compiles the config to MCO, and executes it. Bare names resolve to <code>NAME.project.jsonc</code>.</td></tr>
+    <tr><td><code>add-sheet prjpcb sheet</code></td><td>Creates one new <code>.SchDoc</code> and adds it to an existing <code>.PrjPcb</code>.</td></tr>
+    <tr><td><code>--defaults</code></td><td>For <code>create</code>, writes and uses a default config if the requested config path does not exist.</td></tr>
+    <tr><td><code>--project-name</code>, <code>--layers</code></td><td>Seed values used by <code>init</code> and by <code>create --defaults</code>.</td></tr>
+    <tr><td><code>--write-config</code>, <code>--emit-mco</code></td><td>Write the normalized config copy and generated operation payload to explicit paths.</td></tr>
+    <tr><td><code>--force</code>, <code>--dry-run</code>, <code>--json</code>, <code>--json-output</code></td><td>Follow the shared MCO command semantics for overwrite, non-mutating planning, stdout JSON, and sidecar JSON report output.</td></tr>
+  </table></section>
+
+  <section id="config"><h2>Config Shape</h2><p>The A0 config contains <code>project</code>, <code>schematics</code>, and optional <code>pcb</code> sections. <code>project.parameters</code> writes PrjPcb parameters. Each schematic row writes a SchDoc and defaults <code>sheet_style</code> to <code>D</code>. The PCB section can set a rectangular board outline, generated rigid layer stack, editable single <code>mechanical_layers</code>, and grouped <code>mechanical_layer_pairs</code> with <code>top</code> and <code>bottom</code> layer rows. Generated JSONC templates document valid mechanical layer ids, indexes, default names, and mechanical layer kind enum values. <code>mechanical_layer_profile</code> remains an optional shorthand for <code>standard_component_pairs</code>, but generated configs expand the rows so users can edit them directly.</p></section>
+
+  <section id="mco"><h2>MCO Shape</h2><p><code>prjpcb create</code> compiles to <code>project.create</code>, zero or more <code>project.add_parameter</code> operations, one <code>schdoc.create</code> per schematic, an optional <code>pcbdoc.create</code>, and one <code>project.add_document</code> per generated document. <code>prjpcb add-sheet</code> compiles to <code>schdoc.create</code> followed by <code>project.add_document</code>.</p></section>
+
+  <section id="stackup"><h2>Stackup Scope</h2><p>The project config supports generated rigid stacks in this release. It deliberately does not accept <code>.stackup</code> or <code>.stackupx</code> imports until Altium Monkey exposes stackup-file to PcbDoc authoring as a supported writer path.</p></section>
+
+  <section id="output"><h2>Output</h2><p>A first no-target <code>prjpcb create</code> run writes the sample JSONC config only; the next no-target run uses that config to write the PrjPcb, configured schematic sheets, and optional PcbDoc. <code>prjpcb init</code> writes a JSONC config. <code>prjpcb create CONFIG</code> writes the normalized config copy, optional emitted MCO, PrjPcb, configured schematic sheets, optional PcbDoc, and a JSON or human-readable MCO execution report. <code>prjpcb add-sheet</code> writes the new SchDoc and updates the existing PrjPcb document list.</p></section>
+
+  <section id="tests"><h2>Tests</h2><p>Coverage lives in <code>tests/test_prjpcb_command.py</code>. It validates generated config schema conformance, bare-name config creation, no-target <code>create</code> config bootstrap and reuse, MCO shape, clean JSON stdout, PrjPcb parameter/document links, SchDoc default D sheets, generated PcbDoc stack readback, and mechanical layer kind readback.</p></section>
+</main>
+</body>
+</html>

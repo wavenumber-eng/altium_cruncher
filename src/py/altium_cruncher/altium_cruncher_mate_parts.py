@@ -9,7 +9,7 @@ from pathlib import Path
 
 from altium_cruncher.altium_cruncher_mco import JsonObject, load_jsonc_file
 
-MATE_PARTS_CACHE_SCHEMA = "wn.altium_cruncher.mate.parts_cache.v1"
+MATE_PARTS_CACHE_SCHEMA = "altium_cruncher.mate.parts_cache.a0"
 MATE_PARTS_CACHE_FILENAME = "mate-known-parts.json"
 
 

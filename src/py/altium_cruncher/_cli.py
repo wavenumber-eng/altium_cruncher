@@ -77,11 +77,14 @@ from altium_cruncher.altium_cruncher_cmd_notes import (
 from altium_cruncher.altium_cruncher_cmd_outjob import (
     register_parser as register_outjob_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_pcb_layer_step import (
+    register_parser as register_pcb_layer_step_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     register_parser as register_pcb_svg_parser,
 )
-from altium_cruncher.altium_cruncher_cmd_pcb_layer_step import (
-    register_parser as register_pcb_layer_step_parser,
+from altium_cruncher.altium_cruncher_cmd_pcbdoc import (
+    register_parser as register_pcbdoc_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_pcblib import (
     register_parser as register_pcblib_parser,
@@ -92,8 +95,17 @@ from altium_cruncher.altium_cruncher_cmd_pnp import (
 from altium_cruncher.altium_cruncher_cmd_profiles import (
     register_parser as register_profiles_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_prjpcb import (
+    register_parser as register_prjpcb_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_sch_svg import (
     register_parser as register_sch_svg_parser,
+)
+from altium_cruncher.altium_cruncher_cmd_schdoc import (
+    register_parser as register_schdoc_parser,
+)
+from altium_cruncher.altium_cruncher_cmd_schlib import (
+    register_parser as register_schlib_parser,
 )
 from altium_cruncher.altium_cruncher_cmd_split import (
     register_parser as register_split_parser,
@@ -288,10 +300,14 @@ def main() -> None:
     register_outjob_parser(command_subparsers)
     register_pcb_layer_step_parser(command_subparsers)
     register_pcb_svg_parser(command_subparsers)
+    register_pcbdoc_parser(command_subparsers)
     register_pcblib_parser(command_subparsers)
     register_pnp_parser(command_subparsers)
+    register_prjpcb_parser(command_subparsers)
     register_profiles_parser(command_subparsers)
     register_sch_svg_parser(command_subparsers)
+    register_schdoc_parser(command_subparsers)
+    register_schlib_parser(command_subparsers)
     register_split_parser(command_subparsers)
     register_svg_parser(command_subparsers)
     register_variants_parser(command_subparsers)

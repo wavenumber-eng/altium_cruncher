@@ -7,12 +7,12 @@ import sys
 from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = PACKAGE_ROOT / "docs" / "contracts" / "command_manifest.v0.json"
+MANIFEST = PACKAGE_ROOT / "docs" / "contracts" / "command_manifest.a0.json"
 
 
 def _manifest_commands() -> list[str]:
     payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    assert payload["schema"] == "altium_cruncher.command_manifest.v0"
+    assert payload["schema"] == "altium_cruncher.command_manifest.a0"
     commands = payload["commands"]
     assert isinstance(commands, list)
     names = [str(command["name"]) for command in commands]

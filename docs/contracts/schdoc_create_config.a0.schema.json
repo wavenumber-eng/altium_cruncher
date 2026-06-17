@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/schdoc_create_config.a0.schema.json",
+  "title": "Altium Cruncher SchDoc Create Config A0",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "file"],
+  "properties": {
+    "schema": {
+      "const": "altium_cruncher.schdoc.create.config.a0"
+    },
+    "file": {"type": "string", "minLength": 1},
+    "sheet_style": {"type": ["string", "integer"]},
+    "template": {"type": "string"},
+    "apply_template_visual_sheet_settings": {"type": "boolean"},
+    "custom_sheet_mils": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["width", "height"],
+      "properties": {
+        "width": {"type": "number", "exclusiveMinimum": 0},
+        "height": {"type": "number", "exclusiveMinimum": 0}
+      }
+    }
+  }
+}
