@@ -4,6 +4,9 @@ Describe the change and the public behavior it affects.
 
 Linked issue:
 
+PR title must use Conventional Commit form, such as `fix: handle missing board
+outline` or `ci: tighten pull request hygiene`.
+
 Design agreement summary:
 
 ## Scope

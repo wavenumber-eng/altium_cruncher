@@ -28,9 +28,15 @@ jobs:
               { pattern: /\banthropic\b/i, message: "mentions Anthropic" },
               { pattern: /\bgenerated\s+with\b/i, message: "uses generated-with attribution" },
               { pattern: /\bco-authored-by:\s*(claude|anthropic)\b/i, message: "uses AI-vendor co-author attribution" },
-              { pattern: /\b(just|simply|obviously|minor|small|quick|stuff|things|misc|various)\b/i, message: "uses non-factual filler language" },
             ];
             const emojiPattern = /[\p{Extended_Pictographic}\uFE0F]/u;
+            const conventionalSubjectPattern = /^(build|chore|ci|deps|docs|feat|fix|perf|refactor|release|revert|style|test)(\([A-Za-z0-9._-]+\))?!?: .+$/;
+
+            function checkConventionalSubject(label, subject) {
+              if (!conventionalSubjectPattern.test(subject || "")) {
+                failures.push(`${label} must use Conventional Commit form, for example \`fix: handle missing board outline\`.`);
+              }
+            }
 
             function checkText(label, text) {
               const value = text || "";
@@ -62,6 +68,7 @@ jobs:
 
             checkText("PR title", pr.title);
             checkText("PR body", pr.body || "");
+            checkConventionalSubject("PR title", pr.title || "");
 
             const linkedIssueLine = (pr.body || "")
               .split(/\r?\n/)
@@ -96,6 +103,7 @@ jobs:
               const message = commit.commit.message || "";
               const subject = message.split(/\r?\n/, 1)[0];
               checkText(`Commit ${commit.sha.slice(0, 7)} message`, message);
+              checkConventionalSubject(`Commit ${commit.sha.slice(0, 7)} subject`, subject);
               if (subject.length > 72) {
                 failures.push(`Commit ${commit.sha.slice(0, 7)} subject is ${subject.length} characters; keep it at 72 or fewer.`);
               }

@@ -25,9 +25,12 @@ and test updates.
 
 ## Commit Messages And Human Signoff
 
-Commit messages, PR summaries, and signoff notes should be concise, factual,
-and limited to what changed, why it changed, and how it was validated. Do not
-use emojis, decorative prefixes, or marketing-style language.
+Commit message subjects and PR titles must use Conventional Commit form:
+`type(optional-scope): description`. Allowed types are `build`, `chore`, `ci`,
+`deps`, `docs`, `feat`, `fix`, `perf`, `refactor`, `release`, `revert`,
+`style`, and `test`. Commit messages, PR summaries, and signoff notes should be
+concise, factual, and limited to what changed, why it changed, and how it was
+validated. Do not use emojis, decorative prefixes, or marketing-style language.
 
 Every PR signoff should identify the responsible human by name or GitHub user
 ID. If Claude or another AI coding agent materially assisted with the change,
