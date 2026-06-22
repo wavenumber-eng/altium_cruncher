@@ -36,6 +36,8 @@ jobs:
             $errors | Format-List | Out-String | Write-Error
             exit 1
           }
+      - name: Check Wavenumber development standard
+        run: uvx --from git+https://github.com/wavenumber-eng/wn-dev-std.git wn-dev-std check . --format text
       - name: Run Rack suite
         run: uv run --extra test rack run --all
       - name: Build package
