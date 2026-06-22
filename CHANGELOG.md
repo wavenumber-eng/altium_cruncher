@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.6.22
+
+- Consume pinned `altium-monkey==2026.6.21`, including the corrected rounded
+  rectangle pad corner-ratio projection and updated PcbLib cavity-region
+  authoring/readback behavior.
+- Add a GitHub PR hygiene gate that requires public pull requests to link an
+  existing same-repo issue and rejects emoji, AI-vendor attribution, and common
+  non-factual filler in PR metadata and commit messages.
+- Run the Wavenumber development-standard check in CI so public pull requests
+  exercise the same repo-shape gate documented for local development.
+
 ## 2026.6.17
 
 - Consume pinned `altium-monkey==2026.6.16`, including the public mechanical

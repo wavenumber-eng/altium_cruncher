@@ -1,0 +1,109 @@
+name: PR Hygiene
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  hygiene:
+    name: metadata and commit hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR metadata and commits
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const failures = [];
+
+            const bannedPatterns = [
+              { pattern: /\bclaude\b/i, message: "mentions Claude" },
+              { pattern: /\banthropic\b/i, message: "mentions Anthropic" },
+              { pattern: /\bgenerated\s+with\b/i, message: "uses generated-with attribution" },
+              { pattern: /\bco-authored-by:\s*(claude|anthropic)\b/i, message: "uses AI-vendor co-author attribution" },
+              { pattern: /\b(just|simply|obviously|minor|small|quick|stuff|things|misc|various)\b/i, message: "uses non-factual filler language" },
+            ];
+            const emojiPattern = /[\p{Extended_Pictographic}\uFE0F]/u;
+
+            function checkText(label, text) {
+              const value = text || "";
+              if (emojiPattern.test(value)) {
+                failures.push(`${label} contains emoji or pictographic symbols.`);
+              }
+              for (const { pattern, message } of bannedPatterns) {
+                if (pattern.test(value)) {
+                  failures.push(`${label} ${message}.`);
+                }
+              }
+            }
+
+            function issueNumbersFrom(text) {
+              const value = text || "";
+              const numbers = new Set();
+              const sameRepoIssueUrl = new RegExp(
+                `https://github\\.com/${owner}/${repo}/issues/(\\d+)`,
+                "gi",
+              );
+              for (const match of value.matchAll(sameRepoIssueUrl)) {
+                numbers.add(Number(match[1]));
+              }
+              for (const match of value.matchAll(/(^|[^\w/])#(\d+)\b/g)) {
+                numbers.add(Number(match[2]));
+              }
+              return [...numbers];
+            }
+
+            checkText("PR title", pr.title);
+            checkText("PR body", pr.body || "");
+
+            const linkedIssueLine = (pr.body || "")
+              .split(/\r?\n/)
+              .find((line) => /^Linked issue:/i.test(line));
+            const issueNumbers = issueNumbersFrom(linkedIssueLine || "");
+            if (!linkedIssueLine || issueNumbers.length === 0) {
+              failures.push("PR body must fill in `Linked issue:` with an existing same-repo issue such as `#123`.");
+            }
+
+            for (const issueNumber of issueNumbers) {
+              try {
+                const response = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                });
+                if (response.data.pull_request) {
+                  failures.push(`#${issueNumber} is a pull request, not an issue.`);
+                }
+              } catch (error) {
+                failures.push(`Linked issue #${issueNumber} does not exist or is not readable.`);
+              }
+            }
+
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner,
+              repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+            for (const commit of commits) {
+              const message = commit.commit.message || "";
+              const subject = message.split(/\r?\n/, 1)[0];
+              checkText(`Commit ${commit.sha.slice(0, 7)} message`, message);
+              if (subject.length > 72) {
+                failures.push(`Commit ${commit.sha.slice(0, 7)} subject is ${subject.length} characters; keep it at 72 or fewer.`);
+              }
+              if (/^wip\b/i.test(subject)) {
+                failures.push(`Commit ${commit.sha.slice(0, 7)} subject starts with WIP.`);
+              }
+            }
+
+            if (failures.length > 0) {
+              core.setFailed(`PR hygiene failed:\n- ${failures.join("\n- ")}`);
+            }

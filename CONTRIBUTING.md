@@ -11,8 +11,7 @@ be shared publicly.
 
 ## Contribution Workflow
 
-Open an issue or GitHub Discussion before starting a public PR, unless the
-change is a small documentation typo or an obviously isolated bug fix.
+Open a GitHub issue before starting a public PR.
 
 For any public command, config, JSON, generated artifact, API, dependency, or
 workflow change, contributors should agree on the design first. That discussion
@@ -20,9 +19,9 @@ should settle the intended command behavior, config shape and defaults, expected
 outputs, compatibility impact, docs updates, and required tests before a PR is
 considered ready for review.
 
-PRs that change public behavior should link the issue or discussion where the
-design was agreed and include the matching design-doc, contract, and test
-updates.
+PRs should link the issue where the design or bug report was recorded. PRs that
+change public behavior should also include the matching design-doc, contract,
+and test updates.
 
 ## Commit Messages And Human Signoff
 

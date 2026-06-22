@@ -2,7 +2,7 @@
 
 Describe the change and the public behavior it affects.
 
-Linked issue or discussion:
+Linked issue:
 
 Design agreement summary:
 
