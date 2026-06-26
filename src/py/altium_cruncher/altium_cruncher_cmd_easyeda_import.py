@@ -19,6 +19,7 @@ from altium_cruncher.easyeda_altium_symbol import (
     load_easyeda_symbol_input,
 )
 from altium_cruncher.easyeda_altium_footprint import (
+    EasyEda3DModelPlacement,
     build_altium_pcblib_from_easyeda_footprint,
     load_easyeda_footprint_input,
     render_easyeda_footprint_source_svg,
@@ -97,17 +98,32 @@ def cmd_easyeda_import(args: argparse.Namespace) -> int:
             )
 
         if _should_write_footprint_artifacts(args):
+            prefetched_step: dict[str, bytes] = {}
+            placement: EasyEda3DModelPlacement | None = None
+            attached_uuid: str | None = None
+            if _should_place_3d_model(args):
+                resolved = _resolve_primary_3d_model(source_data)
+                if resolved is not None:
+                    model_ref, step_bytes = resolved
+                    prefetched_step[model_ref.uuid] = step_bytes
+                    placement = _placement_from_model(model_ref, step_bytes)
+                    if placement is not None:
+                        attached_uuid = model_ref.uuid
+
             _write_footprint_artifacts(
                 args=args,
                 case_dir=case_dir,
                 preview_dir=preview_dir,
                 source_data=source_data,
+                model_placement=placement,
             )
             if _should_download_3d_model_artifacts(args):
                 _write_3d_model_artifacts(
                     case_dir=case_dir,
                     source_data=source_data,
                     lcsc_id=args.lcsc_id,
+                    prefetched_step=prefetched_step,
+                    attached_uuid=attached_uuid,
                 )
 
         return 0
@@ -133,6 +149,70 @@ def _should_download_3d_model_artifacts(args: argparse.Namespace) -> bool:
         args,
         "no_3d_model_download",
         False,
+    )
+
+
+def _should_place_3d_model(args: argparse.Namespace) -> bool:
+    return _should_download_3d_model_artifacts(args) and not getattr(
+        args,
+        "no_3d_model_placement",
+        False,
+    )
+
+
+def _parse_float_list(text: str) -> list[float]:
+    values: list[float] = []
+    for part in str(text or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            values.append(float(part))
+        except ValueError:
+            return []
+    return values
+
+
+def _resolve_primary_3d_model(
+    source_data: dict[str, object] | None,
+) -> tuple[_EasyEda3DModelRef, bytes] | None:
+    """Return the first EasyEDA 3D model with a downloadable STEP, plus its bytes."""
+    for model_ref in _extract_3d_model_refs(source_data):
+        if not model_ref.uuid:
+            continue
+        try:
+            step_bytes = _download_easyeda_model_bytes(
+                _EASYEDA_3D_MODEL_STEP_URL.format(uuid=model_ref.uuid)
+            )
+        except Exception as exc:
+            log.warning(
+                "Could not download EasyEDA STEP for 3D placement (%s): %s",
+                model_ref.uuid,
+                exc,
+            )
+            continue
+        return model_ref, step_bytes
+    return None
+
+
+def _placement_from_model(
+    model_ref: _EasyEda3DModelRef, step_data: bytes
+) -> EasyEda3DModelPlacement | None:
+    origin = _parse_float_list(model_ref.origin)
+    if len(origin) < 2:
+        log.warning("EasyEDA 3D model %s has no usable origin; skipping placement", model_ref.uuid)
+        return None
+    rotation = (_parse_float_list(model_ref.rotation) + [0.0, 0.0, 0.0])[:3]
+    z_values = _parse_float_list(model_ref.z)
+    return EasyEda3DModelPlacement(
+        name=f"{_safe_artifact_stem(model_ref.title or model_ref.uuid)}.step",
+        step_data=step_data,
+        origin_x=origin[0],
+        origin_y=origin[1],
+        z_offset=z_values[0] if z_values else 0.0,
+        rotation_x=rotation[0],
+        rotation_y=rotation[1],
+        rotation_z=rotation[2],
     )
 
 
@@ -164,13 +244,23 @@ def _write_footprint_artifacts(
     case_dir: Path,
     preview_dir: Path | None,
     source_data: dict[str, object] | None,
+    model_placement: EasyEda3DModelPlacement | None = None,
 ) -> None:
     easyeda_footprint, footprint_source_data = _load_footprint_data(args, source_data)
     footprint_result = build_altium_pcblib_from_easyeda_footprint(
         easyeda_footprint,
         source_data=footprint_source_data,
         footprint_name=getattr(args, "footprint_name", None),
+        model_placement=model_placement,
     )
+    if model_placement is not None:
+        if footprint_result.report.model_3d_attached:
+            log.info(
+                "Attached 3D model to footprint at %s mils",
+                footprint_result.report.model_3d.get("location_mils"),
+            )
+        else:
+            log.warning("3D model placement requested but the model was not attached")
 
     pcblib_name = getattr(args, "pcblib_name", None) or f"{_safe_part_id(args.lcsc_id)}.PcbLib"
     pcblib_path = case_dir / pcblib_name
@@ -251,7 +341,10 @@ def _write_3d_model_artifacts(
     case_dir: Path,
     source_data: dict[str, object] | None,
     lcsc_id: str,
+    prefetched_step: dict[str, bytes] | None = None,
+    attached_uuid: str | None = None,
 ) -> None:
+    prefetched_step = prefetched_step or {}
     model_refs = _extract_3d_model_refs(source_data)
     if not model_refs:
         log.info("No EasyEDA 3D model reference found")
@@ -259,56 +352,83 @@ def _write_3d_model_artifacts(
 
     model_dir = case_dir / "3d_models"
     model_dir.mkdir(parents=True, exist_ok=True)
+    models = [
+        _build_3d_model_manifest_entry(
+            model_ref,
+            index=index,
+            model_dir=model_dir,
+            case_dir=case_dir,
+            prefetched_step=prefetched_step,
+            attached_uuid=attached_uuid,
+        )
+        for index, model_ref in enumerate(model_refs, start=1)
+    ]
+    placed = attached_uuid is not None
     manifest: dict[str, object] = {
         "schema": "altium_cruncher.easyeda.3d_models.a0",
         "lcsc_id": _safe_part_id(lcsc_id),
-        "placement_implemented": False,
+        "placement_implemented": placed,
         "placement_note": (
-            "3D model download is implemented, but placement/attachment into "
-            "the generated Altium PcbLib footprint is not implemented."
+            "3D model is downloaded and attached into the generated Altium "
+            "PcbLib footprint as a 3D body."
+            if placed
+            else "3D model download is implemented; placement was not performed "
+            "for this run (no usable model placement or placement disabled)."
         ),
-        "models": [],
+        "models": models,
     }
-
-    for index, model_ref in enumerate(model_refs, start=1):
-        stem = _safe_artifact_stem(model_ref.title or model_ref.uuid or f"model_{index}")
-        files: dict[str, str] = {}
-        errors: dict[str, str] = {}
-        for file_kind, url_template, suffix in (
-            ("obj", _EASYEDA_3D_MODEL_OBJ_URL, ".obj"),
-            ("step", _EASYEDA_3D_MODEL_STEP_URL, ".step"),
-        ):
-            output_path = model_dir / f"{stem}{suffix}"
-            try:
-                payload = _download_easyeda_model_bytes(
-                    url_template.format(uuid=model_ref.uuid)
-                )
-                output_path.write_bytes(payload)
-                files[file_kind] = str(output_path.relative_to(case_dir))
-                log.info("Downloaded EasyEDA 3D %s model: %s", file_kind.upper(), output_path)
-            except Exception as exc:
-                errors[file_kind] = str(exc)
-                log.warning(
-                    "Could not download EasyEDA 3D %s model for %s: %s",
-                    file_kind.upper(),
-                    model_ref.uuid,
-                    exc,
-                )
-
-        model_entry: dict[str, object] = asdict(model_ref)
-        model_entry.update(
-            {
-                "files": files,
-                "errors": errors,
-                "placement_status": "downloaded_not_attached" if files else "not_downloaded",
-            }
-        )
-        cast_models = manifest["models"]
-        if isinstance(cast_models, list):
-            cast_models.append(model_entry)
-
     manifest_path = case_dir / "easyeda-3d-models.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+
+def _build_3d_model_manifest_entry(
+    model_ref: _EasyEda3DModelRef,
+    *,
+    index: int,
+    model_dir: Path,
+    case_dir: Path,
+    prefetched_step: dict[str, bytes],
+    attached_uuid: str | None,
+) -> dict[str, object]:
+    """Download a model's OBJ/STEP files and return its manifest entry."""
+    stem = _safe_artifact_stem(model_ref.title or model_ref.uuid or f"model_{index}")
+    files: dict[str, str] = {}
+    errors: dict[str, str] = {}
+    for file_kind, url_template, suffix in (
+        ("obj", _EASYEDA_3D_MODEL_OBJ_URL, ".obj"),
+        ("step", _EASYEDA_3D_MODEL_STEP_URL, ".step"),
+    ):
+        output_path = model_dir / f"{stem}{suffix}"
+        cached = prefetched_step.get(model_ref.uuid) if file_kind == "step" else None
+        try:
+            payload = cached if cached is not None else _download_easyeda_model_bytes(
+                url_template.format(uuid=model_ref.uuid)
+            )
+            output_path.write_bytes(payload)
+            files[file_kind] = str(output_path.relative_to(case_dir))
+            log.info("Downloaded EasyEDA 3D %s model: %s", file_kind.upper(), output_path)
+        except Exception as exc:
+            errors[file_kind] = str(exc)
+            log.warning(
+                "Could not download EasyEDA 3D %s model for %s: %s",
+                file_kind.upper(),
+                model_ref.uuid,
+                exc,
+            )
+
+    entry: dict[str, object] = asdict(model_ref)
+    entry["files"] = files
+    entry["errors"] = errors
+    entry["placement_status"] = _model_placement_status(model_ref, attached_uuid, files)
+    return entry
+
+
+def _model_placement_status(
+    model_ref: _EasyEda3DModelRef, attached_uuid: str | None, files: dict[str, str]
+) -> str:
+    if model_ref.uuid == attached_uuid:
+        return "attached"
+    return "downloaded_not_attached" if files else "not_downloaded"
 
 
 def _download_easyeda_model_bytes(url: str) -> bytes:
@@ -442,8 +562,8 @@ def register_parser(subparsers):
             "Generate Altium schematic-library and PCB-library artifacts from "
             "EasyEDA/LCSC component data by default. If an EasyEDA 3D model is "
             "referenced and network fetches are enabled, the command downloads "
-            "OBJ and STEP assets. 3D model placement/attachment into the "
-            "generated Altium PcbLib is not implemented."
+            "OBJ and STEP assets and attaches the STEP model into the generated "
+            "Altium PcbLib footprint as a 3D body (see --no-3d-model-placement)."
         ),
         epilog=(
             "Examples:\n"
@@ -514,9 +634,14 @@ def register_parser(subparsers):
     easyeda_parser.add_argument(
         "--no-3d-model-download",
         action="store_true",
+        help="skip EasyEDA 3D model asset download (also skips PcbLib placement)",
+    )
+    easyeda_parser.add_argument(
+        "--no-3d-model-placement",
+        action="store_true",
         help=(
-            "skip EasyEDA 3D model asset download; placement into PcbLib is "
-            "not implemented either way"
+            "still download 3D model assets, but do not attach the STEP model "
+            "into the generated PcbLib footprint"
         ),
     )
     easyeda_parser.add_argument(

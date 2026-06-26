@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from altium_monkey.altium_pcb_enums import PadShape, PcbRegionKind
-from altium_monkey.altium_pcblib import AltiumPcbLib
+from altium_monkey.altium_pcblib import AltiumPcbFootprint, AltiumPcbLib
 from altium_monkey.altium_record_pcb__shapebased_region import (
     AltiumPcbShapeBasedRegion,
     PcbExtendedVertex,
@@ -47,6 +47,28 @@ class EasyEdaFootprintImportPolicy:
 
 
 @dataclass(frozen=True)
+class EasyEda3DModelPlacement:
+    """An EasyEDA STEP model plus its raw EasyEDA placement.
+
+    ``origin_x``/``origin_y`` are EasyEDA canvas coordinates in the same space
+    and units as the footprint pads, so they pass through the footprint
+    transform (anchor, scale, Y-flip) like any other geometry. ``z_offset`` is
+    the EasyEDA ``z`` attribute and ``rotation_*`` are the ``c_rotation``
+    degrees. The STEP projection outline and height are inferred from the model
+    payload by ``altium_monkey`` (via ``wn-geometer``).
+    """
+
+    name: str
+    step_data: bytes
+    origin_x: float
+    origin_y: float
+    z_offset: float = 0.0
+    rotation_x: float = 0.0
+    rotation_y: float = 0.0
+    rotation_z: float = 0.0
+
+
+@dataclass(frozen=True)
 class EasyEdaFootprintImportResult:
     """Generated PcbLib and report for a footprint import."""
 
@@ -78,6 +100,9 @@ class EasyEdaFootprintMappingReport:
     layers: dict[str, int] = field(default_factory=dict)
     policy: dict[str, Any] = field(default_factory=dict)
     transform: dict[str, float | bool] = field(default_factory=dict)
+    model_3d_attached: bool = False
+    model_3d_centered_fallback: bool = False
+    model_3d: dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -157,8 +182,13 @@ def build_altium_pcblib_from_easyeda_footprint(
     source_data: dict[str, Any] | None = None,
     footprint_name: str | None = None,
     policy: EasyEdaFootprintImportPolicy | None = None,
+    model_placement: EasyEda3DModelPlacement | None = None,
 ) -> EasyEdaFootprintImportResult:
-    """Build a one-footprint Altium PcbLib from an EasyEDA footprint."""
+    """Build a one-footprint Altium PcbLib from an EasyEDA footprint.
+
+    When ``model_placement`` is given, its STEP payload is embedded and attached
+    to the footprint as a 3D body at the transformed EasyEDA placement.
+    """
 
     policy = policy or EasyEdaFootprintImportPolicy()
     name = (footprint_name or easyeda_footprint.info.name or easyeda_footprint.info.lcsc_id or "EasyEDA_Footprint").strip()
@@ -187,10 +217,99 @@ def build_altium_pcblib_from_easyeda_footprint(
         _add_raw_graphics(footprint, source_data, transform, policy, report)
     if policy.include_source_text:
         _add_texts(footprint, easyeda_footprint, transform, report)
+    if model_placement is not None:
+        bounds = _source_bounds(easyeda_footprint, source_data)
+        extent_mils = max(
+            (bounds[2] - bounds[0]) * transform.scale,
+            (bounds[3] - bounds[1]) * transform.scale,
+        )
+        _attach_3d_model(
+            library, footprint, model_placement, transform, report, extent_mils
+        )
 
     if library._authoring_builder is not None:
         library._sync_from_authored_library(library._authoring_builder.build())
     return EasyEdaFootprintImportResult(library=library, report=report)
+
+
+def _sane_model_location(
+    location: _MilsPoint, limit_mils: float
+) -> tuple[_MilsPoint, bool]:
+    """Snap a grossly off-footprint model origin to centered.
+
+    Some EasyEDA footprints store the model ``c_origin`` in a coarser unit than
+    the pads (e.g. ~(400,300) instead of ~(4000,3000)), or with junk
+    coordinates, so the transformed offset lands far off the part. Real models
+    sit on their footprint, so an offset beyond the footprint's own size is
+    treated as unreliable and the model is centered on the footprint instead.
+    Returns the location to use and whether it was snapped.
+    """
+    if abs(location.x) <= limit_mils and abs(location.y) <= limit_mils:
+        return location, False
+    return _MilsPoint(0.0, 0.0), True
+
+
+def _attach_3d_model(
+    library: AltiumPcbLib,
+    footprint: AltiumPcbFootprint,
+    placement: EasyEda3DModelPlacement,
+    transform: _FootprintTransform,
+    report: EasyEdaFootprintMappingReport,
+    footprint_extent_mils: float,
+) -> None:
+    """Embed the STEP payload and attach it to the footprint as a 3D body.
+
+    EasyEDA gives the model origin in canvas coordinates, so it goes through the
+    same transform as the pads. An origin that maps far off the footprint (a
+    coarser-unit or junk ``c_origin``) is snapped to centered. The STEP
+    projection outline and overall height are inferred from the model payload by
+    ``altium_monkey``; we only supply the placement (location, rotation, z
+    standoff). The in-plane Z rotation is Y-flipped with the rest of the
+    geometry; X/Y tilt pass through unchanged (validate against a rotated part
+    before relying on tilt).
+    """
+    raw = transform.point(_EePoint(placement.origin_x, placement.origin_y))
+    location, centered = _sane_model_location(raw, max(footprint_extent_mils, 100.0))
+    report.model_3d_centered_fallback = centered
+    if centered:
+        report.warnings.append(
+            f"3D model origin {placement.origin_x},{placement.origin_y} maps to "
+            f"{raw.x:.0f},{raw.y:.0f} mils, off the footprint; centering the model"
+        )
+    try:
+        model = library.add_embedded_model(
+            name=placement.name,
+            model_data=placement.step_data,
+        )
+        body = footprint.add_embedded_3d_model(
+            model,
+            location_mils=(location.x, location.y),
+            rotation_x_degrees=placement.rotation_x,
+            rotation_y_degrees=placement.rotation_y,
+            rotation_z_degrees=transform.rotation(placement.rotation_z),
+            standoff_height_mils=transform.scalar(placement.z_offset),
+            name=placement.name,
+        )
+    except Exception as exc:  # pragma: no cover - host-dependent model tooling
+        report.warnings.append(f"3D model attach failed: {exc}")
+        report.model_3d_attached = False
+        report.model_3d = {"name": placement.name, "error": str(exc)}
+        return
+
+    report.model_3d_attached = True
+    report.model_3d = {
+        "name": placement.name,
+        "location_mils": [location.x, location.y],
+        "raw_location_mils": [raw.x, raw.y],
+        "centered_fallback": centered,
+        "rotation_degrees": [
+            placement.rotation_x,
+            placement.rotation_y,
+            transform.rotation(placement.rotation_z),
+        ],
+        "standoff_mils": transform.scalar(placement.z_offset),
+        "identifier": getattr(body, "identifier", ""),
+    }
 
 
 def render_easyeda_footprint_source_svg(
