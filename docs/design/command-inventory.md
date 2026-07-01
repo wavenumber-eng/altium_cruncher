@@ -192,7 +192,9 @@ Extract notes:
 - PcbDoc extraction should cover split and combined `PcbLib` output from
   cleared PcbDoc extraction fixtures;
 - `.PrjPcb` extraction should prove both `schlib/` and `pcblib/` fanout when a
-  project contains both source types;
+  project contains both source types, including per-SchDoc split `SchLib`
+  namespaces under `schlib/<SchDocStem>/` so duplicate symbols cannot overwrite
+  each other;
 - `.IntLib` extraction should expose the existing `AltiumIntLib.extract_sources`
   behavior from the command line, writing individual source libraries, a
   manifest, and the generated `.LibPkg`;
