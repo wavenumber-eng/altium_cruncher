@@ -1,3 +1,15 @@
++++
+type = "plan"
+id = "prjpcb"
+status = "active"
+created = "2026-06-17"
+
+[[exit_criteria]]
+id = "release-review"
+title = "Public contract diff reviewed for the document/project skeleton release slice"
+status = "pending"
++++
+
 # PrjPcb Skeleton Implementation Plan
 
 Status: active for the 2026.6.17 document/project skeleton release slice

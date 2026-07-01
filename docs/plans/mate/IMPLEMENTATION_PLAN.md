@@ -1,3 +1,15 @@
++++
+type = "plan"
+id = "mate"
+status = "pending"
+created = "2026-06-07"
+
+[[exit_criteria]]
+id = "initial-beta"
+title = "Initial beta completed and future modes deferred"
+status = "met"
++++
+
 # Mate Implementation Plan
 
 Status: complete for the 2026.6.7 initial beta; future modes deferred

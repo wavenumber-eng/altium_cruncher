@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.7.1
+
+- Consume pinned `altium-monkey==2026.7.1` so the public CLI tracks the latest
+  Altium Monkey public release.
+- Add release notes for the dependency refresh and native executable packaging
+  evaluation.
+
 ## 2026.6.22
 
 - Consume pinned `altium-monkey==2026.6.21`, including the corrected rounded

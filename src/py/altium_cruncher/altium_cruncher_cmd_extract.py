@@ -90,6 +90,34 @@ def _extract_pcbdocs_to_output(
     return successful, failed
 
 
+def _schdoc_extract_output_dir(
+    output_dir: Path,
+    schdoc_path: Path,
+    *,
+    split: bool,
+    multi_schdoc: bool,
+) -> Path:
+    return output_dir / schdoc_path.stem if split and multi_schdoc else output_dir
+
+
+def _move_multi_schdoc_combined_output(
+    output_dir: Path,
+    schdoc_output_dir: Path,
+    schdoc_path: Path,
+    *,
+    split: bool,
+    combined: bool,
+    multi_schdoc: bool,
+) -> None:
+    if not (combined and split and multi_schdoc):
+        return
+
+    nested_combined = schdoc_output_dir / f"{schdoc_path.stem}.SchLib"
+    root_combined = output_dir / nested_combined.name
+    if nested_combined.exists():
+        nested_combined.replace(root_combined)
+
+
 def _extract_schdocs_to_output(
     schdoc_files: list[Path],
     output_dir: Path,
@@ -103,17 +131,32 @@ def _extract_schdocs_to_output(
     total_successful = 0
     total_failed = 0
     all_results: dict[str, bool] = {}
+    multi_schdoc = len(schdoc_files) > 1
 
     for schdoc_path in schdoc_files:
         log.info(f"Extracting symbols from: {schdoc_path.name}")
 
         try:
             schdoc = AltiumSchDoc(schdoc_path)
+            schdoc_output_dir = _schdoc_extract_output_dir(
+                output_dir,
+                schdoc_path,
+                split=split,
+                multi_schdoc=multi_schdoc,
+            )
             results = schdoc.extract_symbols(
-                output_dir=output_dir,
+                output_dir=schdoc_output_dir,
                 combined_schlib=combined,
                 split_schlibs=split,
                 debug=debug,
+            )
+            _move_multi_schdoc_combined_output(
+                output_dir,
+                schdoc_output_dir,
+                schdoc_path,
+                split=split,
+                combined=combined,
+                multi_schdoc=multi_schdoc,
             )
 
             successful = sum(1 for value in results.values() if value)
