@@ -612,8 +612,9 @@ def test_easyeda_import_cli_places_3d_model_by_default(
     assert manifest["placement_implemented"] is True
     assert manifest["models"][0]["placement_status"] == "attached"
     # The fake STEP payload has no computable bounds, so the placement check
-    # reports unknown rather than guessing from fallback pad bounds.
-    assert manifest["placement_verdict"] == "unknown"
+    # reports ok-but-unchecked rather than guessing from fallback pad bounds.
+    assert manifest["placement_verdict"] == "ok"
+    assert manifest["placement_check"]["checked"] is False
     assert manifest["placement_check"]["reason"] == "STEP bounds unavailable"
 
     reloaded = AltiumPcbLib.from_file(case_dir / "C21190.PcbLib")
@@ -646,35 +647,36 @@ def test_easyeda_import_centers_model_with_off_footprint_origin() -> None:
     assert len(result.library.footprints[0].component_bodies) == 1
 
 
-def test_assess_model_placement_grades_ok_suspect_and_misplaced() -> None:
-    """The placement check grades aligned, grazing, and far-off model bounds."""
-    pad_bounds = (0.0, 0.0, 100.0, 100.0)
+def test_assess_model_placement_flags_only_far_from_origin() -> None:
+    """The binary check flags model bounds significantly far from the origin."""
+    pad_bounds = (-50.0, -50.0, 50.0, 50.0)
 
-    aligned = easyeda_footprint_mod._assess_model_placement(
-        (-10.0, -10.0, 110.0, 110.0), pad_bounds
+    centered = easyeda_footprint_mod._assess_model_placement(
+        (-60.0, -60.0, 60.0, 60.0), pad_bounds
     )
-    assert aligned["verdict"] == "ok"
-    assert aligned["overlap_fraction"] == pytest.approx(1.0)
+    assert centered["verdict"] == "ok"
+    assert centered["checked"] is True
+    assert centered["distance_ratio"] == pytest.approx(0.0)
 
-    grazing = easyeda_footprint_mod._assess_model_placement(
-        (85.0, 85.0, 185.0, 185.0), pad_bounds
+    # Offset by less than one bounding-box diagonal: still ok.
+    nearby = easyeda_footprint_mod._assess_model_placement(
+        (0.0, 0.0, 100.0, 100.0), pad_bounds
     )
-    assert grazing["verdict"] == "suspect"
-    assert 0.0 < grazing["overlap_fraction"] < 0.25
+    assert nearby["verdict"] == "ok"
 
     far = easyeda_footprint_mod._assess_model_placement(
         (1000.0, 1000.0, 1100.0, 1100.0), pad_bounds
     )
-    assert far["verdict"] == "misplaced"
-    assert far["overlap_fraction"] == 0.0
+    assert far["verdict"] == "needs_checking"
     assert far["distance_ratio"] > 1.0
 
 
-def test_model_placement_check_is_unknown_without_step_bounds() -> None:
-    """Junk STEP bytes cannot be bounds-checked, so the verdict is unknown.
+def test_model_placement_check_is_unchecked_without_step_bounds() -> None:
+    """Junk STEP bytes cannot be bounds-checked: ok verdict, checked=False.
 
     altium_monkey falls back to pad-derived body bounds in this case, which
-    would make a comparison self-confirming; the check must refuse to guess.
+    would make a measurement self-confirming; the check must refuse to guess
+    and must not flag the part.
     """
     easyeda_footprint, source_data = load_easyeda_footprint_input(
         _fixture_path("C2040__mcu_rp2040.json")
@@ -691,15 +693,16 @@ def test_model_placement_check_is_unknown_without_step_bounds() -> None:
     )
 
     assert result.report.model_3d_attached is True
-    assert result.report.model_3d_placement_verdict == "unknown"
+    assert result.report.model_3d_placement_verdict == "ok"
     check = result.report.model_3d["placement_check"]
+    assert check["checked"] is False
     assert check["reason"] == "STEP bounds unavailable"
 
 
 def test_model_placement_check_flags_far_away_model(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A model whose placed bounds land far off the pads is flagged misplaced."""
+    """A model whose placed bounds land far from the origin needs checking."""
     easyeda_footprint, source_data = load_easyeda_footprint_input(
         _fixture_path("C2040__mcu_rp2040.json")
     )
@@ -729,12 +732,12 @@ def test_model_placement_check_flags_far_away_model(
     )
 
     assert result.report.model_3d_attached is True
-    assert result.report.model_3d_placement_verdict == "misplaced"
+    assert result.report.model_3d_placement_verdict == "needs_checking"
     check = result.report.model_3d["placement_check"]
-    assert check["overlap_fraction"] == 0.0
+    assert check["checked"] is True
     assert check["distance_ratio"] > 1.0
     assert any(
-        "3D model placement misplaced" in warning
+        "3D model placement needs checking" in warning
         for warning in result.report.warnings
     )
 
@@ -775,6 +778,7 @@ def test_model_placement_check_passes_model_on_the_pads(
     )
 
     assert result.report.model_3d_placement_verdict == "ok"
+    assert result.report.model_3d["placement_check"]["checked"] is True
     assert not any(
         "3D model placement" in warning for warning in result.report.warnings
     )

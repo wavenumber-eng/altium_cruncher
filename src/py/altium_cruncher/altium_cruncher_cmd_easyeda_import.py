@@ -262,16 +262,14 @@ def _write_footprint_artifacts(
                 footprint_result.report.model_3d.get("location_mils"),
             )
             verdict = footprint_result.report.model_3d_placement_verdict
-            if verdict in ("suspect", "misplaced"):
+            if verdict == "needs_checking":
                 check = footprint_result.report.model_3d.get("placement_check") or {}
                 log.warning(
-                    "3D model placement %s: model bounds center is %s mils from "
-                    "the pad bounds center (distance ratio %s, pad overlap %s); "
-                    "review the model placement manually",
-                    verdict,
+                    "3D model placement needs checking: model bounds center is "
+                    "%s mils from the footprint origin (distance ratio %s); the "
+                    "model geometry may be imported wrong — review manually",
                     check.get("center_distance_mils"),
                     check.get("distance_ratio"),
-                    check.get("overlap_fraction"),
                 )
         else:
             log.warning("3D model placement requested but the model was not attached")

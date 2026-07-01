@@ -257,15 +257,14 @@ def _sane_model_location(
     return _MilsPoint(0.0, 0.0), True
 
 
-# Placement-check verdict thresholds. The distance ratio is the model-to-pad
-# center distance normalized by the larger of the two bounding-box diagonals;
-# the overlap fraction is the intersection area over the smaller box's area.
-# Real EasyEDA placement errors are gross (unit/negation/rotation mixups throw
-# the body several footprint-widths away), so the tiers only need to separate
-# "clearly on the part" from "clearly not".
-_PLACEMENT_SUSPECT_DISTANCE_RATIO = 0.5
-_PLACEMENT_MISPLACED_DISTANCE_RATIO = 1.0
-_PLACEMENT_SUSPECT_OVERLAP_FRACTION = 0.25
+# Placement-check threshold. The distance ratio is the placed model bounds
+# center's distance from the footprint origin, normalized by the larger of the
+# model/pad bounding-box diagonals. Real EasyEDA placement errors are gross
+# (unit/negation/rotation mixups throw the body many footprint-widths away, a
+# mm-vs-inch error alone is 25x), so one diagonal of drift cleanly separates
+# "on the part" from "needs checking": the known-good validation corpus peaks
+# at ~0.3 while real unit errors measure 100+.
+_PLACEMENT_NEEDS_CHECKING_DISTANCE_RATIO = 1.0
 
 
 def _pad_bounds_mils(
@@ -320,48 +319,33 @@ def _assess_model_placement(
     model_bounds_mils: tuple[float, float, float, float],
     pad_bounds_mils: tuple[float, float, float, float],
 ) -> dict[str, object]:
-    """Score how plausibly a placed model projection sits on the pad field.
+    """Binary check: is the placed model significantly far from the origin?
 
-    Both boxes are footprint-local mils. The verdict is graded: the normalized
-    center distance catches bodies thrown far off the part, and the overlap
-    fraction catches bodies that merely graze the pads.
+    Both boxes are footprint-local mils; the footprint anchor is the origin.
+    Catches wrongly imported model geometry (a STEP whose contents sit far
+    from its own origin, unit/negation errors) by measuring how far the
+    placed bounds center drifted from the footprint origin, relative to the
+    part's own size.
     """
     model_left, model_bottom, model_right, model_top = model_bounds_mils
     pad_left, pad_bottom, pad_right, pad_top = pad_bounds_mils
     model_center_x = (model_left + model_right) / 2.0
     model_center_y = (model_bottom + model_top) / 2.0
-    pad_center_x = (pad_left + pad_right) / 2.0
-    pad_center_y = (pad_bottom + pad_top) / 2.0
-    center_distance = math.hypot(
-        model_center_x - pad_center_x, model_center_y - pad_center_y
-    )
+    center_distance = math.hypot(model_center_x, model_center_y)
     model_diagonal = math.hypot(model_right - model_left, model_top - model_bottom)
     pad_diagonal = math.hypot(pad_right - pad_left, pad_top - pad_bottom)
     distance_ratio = center_distance / max(model_diagonal, pad_diagonal, 1.0)
 
-    overlap_width = min(model_right, pad_right) - max(model_left, pad_left)
-    overlap_height = min(model_top, pad_top) - max(model_bottom, pad_bottom)
-    overlap_area = max(overlap_width, 0.0) * max(overlap_height, 0.0)
-    smaller_area = min(
-        (model_right - model_left) * (model_top - model_bottom),
-        (pad_right - pad_left) * (pad_top - pad_bottom),
+    verdict = (
+        "needs_checking"
+        if distance_ratio > _PLACEMENT_NEEDS_CHECKING_DISTANCE_RATIO
+        else "ok"
     )
-    overlap_fraction = overlap_area / smaller_area if smaller_area > 0.0 else 0.0
-
-    if overlap_fraction <= 0.0 and distance_ratio >= _PLACEMENT_MISPLACED_DISTANCE_RATIO:
-        verdict = "misplaced"
-    elif (
-        overlap_fraction < _PLACEMENT_SUSPECT_OVERLAP_FRACTION
-        or distance_ratio > _PLACEMENT_SUSPECT_DISTANCE_RATIO
-    ):
-        verdict = "suspect"
-    else:
-        verdict = "ok"
     return {
         "verdict": verdict,
+        "checked": True,
         "center_distance_mils": round(center_distance, 1),
         "distance_ratio": round(distance_ratio, 3),
-        "overlap_fraction": round(overlap_fraction, 3),
     }
 
 
@@ -371,17 +355,17 @@ def _model_placement_check(
     location: _MilsPoint,
     pad_bounds_mils: tuple[float, float, float, float] | None,
 ) -> dict[str, object]:
-    """Autodetect a model placed off its footprint; detect and report only.
+    """Autodetect wrongly imported model geometry; detect and report only.
 
     Recomputes the placed STEP projection bounds with the same transform
-    arguments the 3D body was attached with, then compares them against the
-    pad bounds. When the STEP bounds cannot be inferred (no geometer on the
-    host, junk payload) the verdict is "unknown" rather than a guess —
-    altium_monkey falls back to pad-derived bounds in that case, which would
-    make any comparison self-confirming.
+    arguments the 3D body was attached with, then measures the drift from the
+    footprint origin. When the STEP bounds cannot be inferred (no geometer on
+    the host, junk payload) the check reports ok-but-unchecked rather than a
+    guess — altium_monkey falls back to pad-derived bounds in that case,
+    which would make any measurement self-confirming.
     """
     if pad_bounds_mils is None:
-        return {"verdict": "unknown", "reason": "no pads to compare against"}
+        return {"verdict": "ok", "checked": False, "reason": "no pads to scale against"}
     try:
         model_bounds = compute_step_model_bounds_mils(
             placement.step_data,
@@ -393,7 +377,7 @@ def _model_placement_check(
             z_offset_mils=transform.scalar(placement.z_offset),
         )
     except Exception:
-        return {"verdict": "unknown", "reason": "STEP bounds unavailable"}
+        return {"verdict": "ok", "checked": False, "reason": "STEP bounds unavailable"}
     check = _assess_model_placement(model_bounds.bounds_mils, pad_bounds_mils)
     check["model_bounds_mils"] = [round(value, 1) for value in model_bounds.bounds_mils]
     check["pad_bounds_mils"] = [round(value, 1) for value in pad_bounds_mils]
@@ -420,10 +404,10 @@ def _attach_3d_model(
     geometry; X/Y tilt pass through unchanged (validate against a rotated part
     before relying on tilt).
 
-    After a successful attach, the placed model bounds are compared against
-    ``pad_bounds_mils`` and the graded verdict lands in
-    ``report.model_3d_placement_verdict`` plus
-    ``report.model_3d["placement_check"]``; a suspect or misplaced model adds a
+    After a successful attach, the placed model bounds' drift from the
+    footprint origin is measured and the binary verdict (ok or
+    needs_checking) lands in ``report.model_3d_placement_verdict`` plus
+    ``report.model_3d["placement_check"]``; a needs_checking model adds a
     report warning. Detection only — the placement is never altered.
     """
     raw = transform.point(_EePoint(placement.origin_x, placement.origin_y))
@@ -472,12 +456,12 @@ def _attach_3d_model(
     check = _model_placement_check(placement, transform, location, pad_bounds_mils)
     report.model_3d["placement_check"] = check
     report.model_3d_placement_verdict = str(check["verdict"])
-    if check["verdict"] in ("suspect", "misplaced"):
+    if check["verdict"] == "needs_checking":
         report.warnings.append(
-            f"3D model placement {check['verdict']}: model bounds center is "
-            f"{check['center_distance_mils']} mils from the pad bounds center "
-            f"(distance ratio {check['distance_ratio']}, pad overlap "
-            f"{check['overlap_fraction']}); review the model placement manually"
+            "3D model placement needs checking: model bounds center is "
+            f"{check['center_distance_mils']} mils from the footprint origin "
+            f"(distance ratio {check['distance_ratio']}); the model geometry "
+            "may be imported wrong — review manually"
         )
 
 
