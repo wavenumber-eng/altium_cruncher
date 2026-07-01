@@ -20,6 +20,7 @@ from altium_cruncher.easyeda_altium_symbol import (
 )
 from altium_cruncher.easyeda_altium_footprint import (
     EasyEda3DModelPlacement,
+    EasyEdaFootprintMappingReport,
     build_altium_pcblib_from_easyeda_footprint,
     load_easyeda_footprint_input,
     render_easyeda_footprint_source_svg,
@@ -110,7 +111,7 @@ def cmd_easyeda_import(args: argparse.Namespace) -> int:
                     if placement is not None:
                         attached_uuid = model_ref.uuid
 
-            _write_footprint_artifacts(
+            footprint_report = _write_footprint_artifacts(
                 args=args,
                 case_dir=case_dir,
                 preview_dir=preview_dir,
@@ -124,6 +125,7 @@ def cmd_easyeda_import(args: argparse.Namespace) -> int:
                     lcsc_id=args.lcsc_id,
                     prefetched_step=prefetched_step,
                     attached_uuid=attached_uuid,
+                    footprint_report=footprint_report,
                 )
 
         return 0
@@ -245,7 +247,7 @@ def _write_footprint_artifacts(
     preview_dir: Path | None,
     source_data: dict[str, object] | None,
     model_placement: EasyEda3DModelPlacement | None = None,
-) -> None:
+) -> EasyEdaFootprintMappingReport:
     easyeda_footprint, footprint_source_data = _load_footprint_data(args, source_data)
     footprint_result = build_altium_pcblib_from_easyeda_footprint(
         easyeda_footprint,
@@ -259,6 +261,18 @@ def _write_footprint_artifacts(
                 "Attached 3D model to footprint at %s mils",
                 footprint_result.report.model_3d.get("location_mils"),
             )
+            verdict = footprint_result.report.model_3d_placement_verdict
+            if verdict in ("suspect", "misplaced"):
+                check = footprint_result.report.model_3d.get("placement_check") or {}
+                log.warning(
+                    "3D model placement %s: model bounds center is %s mils from "
+                    "the pad bounds center (distance ratio %s, pad overlap %s); "
+                    "review the model placement manually",
+                    verdict,
+                    check.get("center_distance_mils"),
+                    check.get("distance_ratio"),
+                    check.get("overlap_fraction"),
+                )
         else:
             log.warning("3D model placement requested but the model was not attached")
 
@@ -284,7 +298,7 @@ def _write_footprint_artifacts(
     )
 
     if preview_dir is None:
-        return
+        return footprint_result.report
 
     source_svg = render_easyeda_footprint_source_svg(
         easyeda_footprint,
@@ -305,6 +319,7 @@ def _write_footprint_artifacts(
     compare_svg_path = preview_dir / "footprint-compare.svg"
     compare_svg_path.write_text(compare_svg, encoding="utf-8")
     log.info("Generated footprint preview SVGs: %s", preview_dir)
+    return footprint_result.report
 
 
 def _write_schematic_preview_artifacts(
@@ -343,6 +358,7 @@ def _write_3d_model_artifacts(
     lcsc_id: str,
     prefetched_step: dict[str, bytes] | None = None,
     attached_uuid: str | None = None,
+    footprint_report: EasyEdaFootprintMappingReport | None = None,
 ) -> None:
     prefetched_step = prefetched_step or {}
     model_refs = _extract_3d_model_refs(source_data)
@@ -377,6 +393,13 @@ def _write_3d_model_artifacts(
         ),
         "models": models,
     }
+    if placed and footprint_report is not None and footprint_report.model_3d_attached:
+        # Downstream library tooling sorts and flags parts by this graded
+        # verdict; keep the raw metrics beside it.
+        manifest["placement_verdict"] = footprint_report.model_3d_placement_verdict
+        manifest["placement_check"] = footprint_report.model_3d.get(
+            "placement_check", {}
+        )
     manifest_path = case_dir / "easyeda-3d-models.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 

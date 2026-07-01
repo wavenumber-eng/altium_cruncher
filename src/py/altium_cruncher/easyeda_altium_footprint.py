@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from altium_monkey.altium_pcb_enums import PadShape, PcbRegionKind
+from altium_monkey.altium_pcb_step_bounds import compute_step_model_bounds_mils
 from altium_monkey.altium_pcblib import AltiumPcbFootprint, AltiumPcbLib
 from altium_monkey.altium_record_pcb__shapebased_region import (
     AltiumPcbShapeBasedRegion,
@@ -102,6 +103,7 @@ class EasyEdaFootprintMappingReport:
     transform: dict[str, float | bool] = field(default_factory=dict)
     model_3d_attached: bool = False
     model_3d_centered_fallback: bool = False
+    model_3d_placement_verdict: str = ""
     model_3d: dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -224,7 +226,13 @@ def build_altium_pcblib_from_easyeda_footprint(
             (bounds[3] - bounds[1]) * transform.scale,
         )
         _attach_3d_model(
-            library, footprint, model_placement, transform, report, extent_mils
+            library,
+            footprint,
+            model_placement,
+            transform,
+            report,
+            extent_mils,
+            pad_bounds_mils=_pad_bounds_mils(easyeda_footprint, transform),
         )
 
     if library._authoring_builder is not None:
@@ -249,6 +257,149 @@ def _sane_model_location(
     return _MilsPoint(0.0, 0.0), True
 
 
+# Placement-check verdict thresholds. The distance ratio is the model-to-pad
+# center distance normalized by the larger of the two bounding-box diagonals;
+# the overlap fraction is the intersection area over the smaller box's area.
+# Real EasyEDA placement errors are gross (unit/negation/rotation mixups throw
+# the body several footprint-widths away), so the tiers only need to separate
+# "clearly on the part" from "clearly not".
+_PLACEMENT_SUSPECT_DISTANCE_RATIO = 0.5
+_PLACEMENT_MISPLACED_DISTANCE_RATIO = 1.0
+_PLACEMENT_SUSPECT_OVERLAP_FRACTION = 0.25
+
+
+def _pad_bounds_mils(
+    easyeda_footprint: EasyEdaFootprint, transform: _FootprintTransform
+) -> tuple[float, float, float, float] | None:
+    """Axis-aligned bounds around the mapped pads, in footprint-local mils.
+
+    Mirrors the pad geometry `_add_pads` generates (position, rotated extents,
+    polygon outlines) without touching the built library's internal units.
+    Returns None when no pad contributes usable geometry.
+    """
+    bounds: list[tuple[float, float, float, float]] = []
+    for pad in easyeda_footprint.pads:
+        if _map_layer(pad.layer_id) is None:
+            continue
+        if pad.shape.upper() == "POLYGON" and pad.points_str.strip():
+            points = [
+                _transform_tuple(transform, point)
+                for point in _parse_points(pad.points_str)
+            ]
+            if len(points) >= 3:
+                bounds.append((
+                    min(x for x, _ in points),
+                    min(y for _, y in points),
+                    max(x for x, _ in points),
+                    max(y for _, y in points),
+                ))
+                continue
+        position = transform.point(_EePoint(pad.x, pad.y))
+        half_width = max(transform.scalar(pad.width), 0.1) / 2.0
+        half_height = max(transform.scalar(pad.height), 0.1) / 2.0
+        angle = math.radians(transform.rotation(pad.rotation))
+        x_extent = abs(math.cos(angle)) * half_width + abs(math.sin(angle)) * half_height
+        y_extent = abs(math.sin(angle)) * half_width + abs(math.cos(angle)) * half_height
+        bounds.append((
+            position.x - x_extent,
+            position.y - y_extent,
+            position.x + x_extent,
+            position.y + y_extent,
+        ))
+    if not bounds:
+        return None
+    return (
+        min(item[0] for item in bounds),
+        min(item[1] for item in bounds),
+        max(item[2] for item in bounds),
+        max(item[3] for item in bounds),
+    )
+
+
+def _assess_model_placement(
+    model_bounds_mils: tuple[float, float, float, float],
+    pad_bounds_mils: tuple[float, float, float, float],
+) -> dict[str, object]:
+    """Score how plausibly a placed model projection sits on the pad field.
+
+    Both boxes are footprint-local mils. The verdict is graded: the normalized
+    center distance catches bodies thrown far off the part, and the overlap
+    fraction catches bodies that merely graze the pads.
+    """
+    model_left, model_bottom, model_right, model_top = model_bounds_mils
+    pad_left, pad_bottom, pad_right, pad_top = pad_bounds_mils
+    model_center_x = (model_left + model_right) / 2.0
+    model_center_y = (model_bottom + model_top) / 2.0
+    pad_center_x = (pad_left + pad_right) / 2.0
+    pad_center_y = (pad_bottom + pad_top) / 2.0
+    center_distance = math.hypot(
+        model_center_x - pad_center_x, model_center_y - pad_center_y
+    )
+    model_diagonal = math.hypot(model_right - model_left, model_top - model_bottom)
+    pad_diagonal = math.hypot(pad_right - pad_left, pad_top - pad_bottom)
+    distance_ratio = center_distance / max(model_diagonal, pad_diagonal, 1.0)
+
+    overlap_width = min(model_right, pad_right) - max(model_left, pad_left)
+    overlap_height = min(model_top, pad_top) - max(model_bottom, pad_bottom)
+    overlap_area = max(overlap_width, 0.0) * max(overlap_height, 0.0)
+    smaller_area = min(
+        (model_right - model_left) * (model_top - model_bottom),
+        (pad_right - pad_left) * (pad_top - pad_bottom),
+    )
+    overlap_fraction = overlap_area / smaller_area if smaller_area > 0.0 else 0.0
+
+    if overlap_fraction <= 0.0 and distance_ratio >= _PLACEMENT_MISPLACED_DISTANCE_RATIO:
+        verdict = "misplaced"
+    elif (
+        overlap_fraction < _PLACEMENT_SUSPECT_OVERLAP_FRACTION
+        or distance_ratio > _PLACEMENT_SUSPECT_DISTANCE_RATIO
+    ):
+        verdict = "suspect"
+    else:
+        verdict = "ok"
+    return {
+        "verdict": verdict,
+        "center_distance_mils": round(center_distance, 1),
+        "distance_ratio": round(distance_ratio, 3),
+        "overlap_fraction": round(overlap_fraction, 3),
+    }
+
+
+def _model_placement_check(
+    placement: EasyEda3DModelPlacement,
+    transform: _FootprintTransform,
+    location: _MilsPoint,
+    pad_bounds_mils: tuple[float, float, float, float] | None,
+) -> dict[str, object]:
+    """Autodetect a model placed off its footprint; detect and report only.
+
+    Recomputes the placed STEP projection bounds with the same transform
+    arguments the 3D body was attached with, then compares them against the
+    pad bounds. When the STEP bounds cannot be inferred (no geometer on the
+    host, junk payload) the verdict is "unknown" rather than a guess —
+    altium_monkey falls back to pad-derived bounds in that case, which would
+    make any comparison self-confirming.
+    """
+    if pad_bounds_mils is None:
+        return {"verdict": "unknown", "reason": "no pads to compare against"}
+    try:
+        model_bounds = compute_step_model_bounds_mils(
+            placement.step_data,
+            filename_hint=placement.name,
+            rotation_x_degrees=placement.rotation_x,
+            rotation_y_degrees=placement.rotation_y,
+            rotation_z_degrees=transform.rotation(placement.rotation_z),
+            location_mils=(location.x, location.y),
+            z_offset_mils=transform.scalar(placement.z_offset),
+        )
+    except Exception:
+        return {"verdict": "unknown", "reason": "STEP bounds unavailable"}
+    check = _assess_model_placement(model_bounds.bounds_mils, pad_bounds_mils)
+    check["model_bounds_mils"] = [round(value, 1) for value in model_bounds.bounds_mils]
+    check["pad_bounds_mils"] = [round(value, 1) for value in pad_bounds_mils]
+    return check
+
+
 def _attach_3d_model(
     library: AltiumPcbLib,
     footprint: AltiumPcbFootprint,
@@ -256,6 +407,7 @@ def _attach_3d_model(
     transform: _FootprintTransform,
     report: EasyEdaFootprintMappingReport,
     footprint_extent_mils: float,
+    pad_bounds_mils: tuple[float, float, float, float] | None = None,
 ) -> None:
     """Embed the STEP payload and attach it to the footprint as a 3D body.
 
@@ -267,6 +419,12 @@ def _attach_3d_model(
     standoff). The in-plane Z rotation is Y-flipped with the rest of the
     geometry; X/Y tilt pass through unchanged (validate against a rotated part
     before relying on tilt).
+
+    After a successful attach, the placed model bounds are compared against
+    ``pad_bounds_mils`` and the graded verdict lands in
+    ``report.model_3d_placement_verdict`` plus
+    ``report.model_3d["placement_check"]``; a suspect or misplaced model adds a
+    report warning. Detection only — the placement is never altered.
     """
     raw = transform.point(_EePoint(placement.origin_x, placement.origin_y))
     location, centered = _sane_model_location(raw, max(footprint_extent_mils, 100.0))
@@ -310,6 +468,17 @@ def _attach_3d_model(
         "standoff_mils": transform.scalar(placement.z_offset),
         "identifier": getattr(body, "identifier", ""),
     }
+
+    check = _model_placement_check(placement, transform, location, pad_bounds_mils)
+    report.model_3d["placement_check"] = check
+    report.model_3d_placement_verdict = str(check["verdict"])
+    if check["verdict"] in ("suspect", "misplaced"):
+        report.warnings.append(
+            f"3D model placement {check['verdict']}: model bounds center is "
+            f"{check['center_distance_mils']} mils from the pad bounds center "
+            f"(distance ratio {check['distance_ratio']}, pad overlap "
+            f"{check['overlap_fraction']}); review the model placement manually"
+        )
 
 
 def render_easyeda_footprint_source_svg(

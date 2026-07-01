@@ -14,6 +14,7 @@ from altium_cruncher.altium_cruncher_cmd_easyeda_footprint_review import (
 )
 import altium_cruncher.altium_cruncher_cmd_easyeda_import as easyeda_import_cmd
 from altium_cruncher.altium_cruncher_cmd_easyeda_import import cmd_easyeda_import
+import altium_cruncher.easyeda_altium_footprint as easyeda_footprint_mod
 from altium_cruncher.easyeda_altium_footprint import (
     EasyEda3DModelPlacement,
     EasyEdaFootprintImportPolicy,
@@ -22,6 +23,7 @@ from altium_cruncher.easyeda_altium_footprint import (
     render_easyeda_footprint_source_svg,
 )
 from altium_monkey.altium_pcb_enums import PadShape
+from altium_monkey.altium_pcb_step_bounds import PcbStepModelBounds
 from altium_monkey.altium_pcblib import AltiumPcbLib
 from altium_monkey.altium_record_pcb__region import AltiumPcbRegion
 from altium_monkey.altium_record_pcb__shapebased_region import AltiumPcbShapeBasedRegion
@@ -609,6 +611,10 @@ def test_easyeda_import_cli_places_3d_model_by_default(
     manifest = json.loads((case_dir / "easyeda-3d-models.json").read_text(encoding="utf-8"))
     assert manifest["placement_implemented"] is True
     assert manifest["models"][0]["placement_status"] == "attached"
+    # The fake STEP payload has no computable bounds, so the placement check
+    # reports unknown rather than guessing from fallback pad bounds.
+    assert manifest["placement_verdict"] == "unknown"
+    assert manifest["placement_check"]["reason"] == "STEP bounds unavailable"
 
     reloaded = AltiumPcbLib.from_file(case_dir / "C21190.PcbLib")
     assert len(reloaded.footprints[0].component_bodies) == 1
@@ -638,3 +644,137 @@ def test_easyeda_import_centers_model_with_off_footprint_origin() -> None:
     assert result.report.model_3d_centered_fallback is True
     assert result.report.model_3d["location_mils"] == [0.0, 0.0]
     assert len(result.library.footprints[0].component_bodies) == 1
+
+
+def test_assess_model_placement_grades_ok_suspect_and_misplaced() -> None:
+    """The placement check grades aligned, grazing, and far-off model bounds."""
+    pad_bounds = (0.0, 0.0, 100.0, 100.0)
+
+    aligned = easyeda_footprint_mod._assess_model_placement(
+        (-10.0, -10.0, 110.0, 110.0), pad_bounds
+    )
+    assert aligned["verdict"] == "ok"
+    assert aligned["overlap_fraction"] == pytest.approx(1.0)
+
+    grazing = easyeda_footprint_mod._assess_model_placement(
+        (85.0, 85.0, 185.0, 185.0), pad_bounds
+    )
+    assert grazing["verdict"] == "suspect"
+    assert 0.0 < grazing["overlap_fraction"] < 0.25
+
+    far = easyeda_footprint_mod._assess_model_placement(
+        (1000.0, 1000.0, 1100.0, 1100.0), pad_bounds
+    )
+    assert far["verdict"] == "misplaced"
+    assert far["overlap_fraction"] == 0.0
+    assert far["distance_ratio"] > 1.0
+
+
+def test_model_placement_check_is_unknown_without_step_bounds() -> None:
+    """Junk STEP bytes cannot be bounds-checked, so the verdict is unknown.
+
+    altium_monkey falls back to pad-derived body bounds in this case, which
+    would make a comparison self-confirming; the check must refuse to guess.
+    """
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step",
+        step_data=b"dummy-step-bytes",
+        origin_x=3984.252,
+        origin_y=3012.9925,
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data, model_placement=placement
+    )
+
+    assert result.report.model_3d_attached is True
+    assert result.report.model_3d_placement_verdict == "unknown"
+    check = result.report.model_3d["placement_check"]
+    assert check["reason"] == "STEP bounds unavailable"
+
+
+def test_model_placement_check_flags_far_away_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A model whose placed bounds land far off the pads is flagged misplaced."""
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step",
+        step_data=b"dummy-step-bytes",
+        origin_x=3984.252,
+        origin_y=3012.9925,
+    )
+
+    def fake_bounds(*_args: object, **_kwargs: object) -> PcbStepModelBounds:
+        # Simulates the unit/negation error class: bounds several footprint
+        # widths away from the pad field.
+        return PcbStepModelBounds(
+            bounds_mils=(10000.0, 10000.0, 10300.0, 10300.0),
+            overall_height_mils=40.0,
+            min_z_mils=0.0,
+            max_z_mils=40.0,
+        )
+
+    monkeypatch.setattr(
+        easyeda_footprint_mod, "compute_step_model_bounds_mils", fake_bounds
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data, model_placement=placement
+    )
+
+    assert result.report.model_3d_attached is True
+    assert result.report.model_3d_placement_verdict == "misplaced"
+    check = result.report.model_3d["placement_check"]
+    assert check["overlap_fraction"] == 0.0
+    assert check["distance_ratio"] > 1.0
+    assert any(
+        "3D model placement misplaced" in warning
+        for warning in result.report.warnings
+    )
+
+
+def test_model_placement_check_passes_model_on_the_pads(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A model whose placed bounds sit on the pad field is graded ok."""
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step",
+        step_data=b"dummy-step-bytes",
+        origin_x=3984.252,
+        origin_y=3012.9925,
+    )
+    transform = easyeda_footprint_mod._build_transform(
+        easyeda_footprint, source_data, EasyEdaFootprintImportPolicy()
+    )
+    pad_bounds = easyeda_footprint_mod._pad_bounds_mils(easyeda_footprint, transform)
+    assert pad_bounds is not None
+
+    def fake_bounds(*_args: object, **_kwargs: object) -> PcbStepModelBounds:
+        return PcbStepModelBounds(
+            bounds_mils=pad_bounds,
+            overall_height_mils=40.0,
+            min_z_mils=0.0,
+            max_z_mils=40.0,
+        )
+
+    monkeypatch.setattr(
+        easyeda_footprint_mod, "compute_step_model_bounds_mils", fake_bounds
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data, model_placement=placement
+    )
+
+    assert result.report.model_3d_placement_verdict == "ok"
+    assert not any(
+        "3D model placement" in warning for warning in result.report.warnings
+    )
