@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/impedance_doc.config.a0.schema.json",
+  "title": "Altium Cruncher Impedance Documentation Config",
+  "description": "JSON/JSONC configuration contract for the impedance-doc command: per-copper-layer controlled-impedance routing documentation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema"],
+  "properties": {
+    "schema": {
+      "const": "altium_cruncher.impedance_doc.config.a0"
+    },
+    "source_pcbdoc": {
+      "type": "string",
+      "description": "Board this config was generated from (informational)."
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "formats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["svg", "html", "png", "pdf"]
+          }
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "min_routing_length_mils": {
+          "type": "number",
+          "minimum": 0
+        },
+        "png_zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "context_copper": { "type": "string" },
+        "pad_via": { "type": "string" },
+        "board_outline": { "type": "string" },
+        "drill_knockout": { "type": "string" },
+        "background": { "type": "string" },
+        "font_family": { "type": "string" },
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "watermark": { "type": "string" },
+        "watermark_color": { "type": "string" },
+        "logo_path": { "type": "string" },
+        "logo_width_px": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["impedance"],
+        "properties": {
+          "impedance": { "type": "string" },
+          "title": { "type": "string" },
+          "color": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["differential", "single-ended", "diff + single-ended"]
+          },
+          "classes": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

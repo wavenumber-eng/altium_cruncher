@@ -1,35 +1,160 @@
 {
   "schema": "altium_cruncher.command_manifest.a0",
   "commands": [
-    {"name": "bom", "status": "public", "requires_extra": null},
-    {"name": "clean", "status": "public", "requires_extra": null},
-    {"name": "design", "status": "public", "requires_extra": null},
-    {"name": "easyeda-import", "status": "public", "requires_extra": null},
-    {"name": "extract", "status": "public", "requires_extra": null},
-    {"name": "installs", "status": "public", "requires_extra": null},
-    {"name": "jlc", "status": "public", "requires_extra": null},
-    {"name": "json-dump", "status": "experimental", "requires_extra": null},
-    {"name": "launch", "status": "public", "requires_extra": null},
-    {"name": "libraries", "status": "public", "requires_extra": null},
-    {"name": "mate", "status": "experimental", "requires_extra": null},
-    {"name": "mco", "status": "experimental", "requires_extra": null},
-    {"name": "megamaid", "status": "public", "requires_extra": null},
-    {"name": "merge", "status": "public", "requires_extra": null},
-    {"name": "notes", "status": "public", "requires_extra": null},
-    {"name": "outjob", "status": "public", "requires_extra": null},
-    {"name": "pcb-layer-step", "status": "public", "requires_extra": null},
-    {"name": "pcbdoc", "status": "public", "requires_extra": null},
-    {"name": "pcblib", "status": "public", "requires_extra": null},
-    {"name": "pcb-svg", "status": "public", "requires_extra": null},
-    {"name": "pnp", "status": "public", "requires_extra": null},
-    {"name": "prjpcb", "status": "public", "requires_extra": null},
-    {"name": "profiles", "status": "public", "requires_extra": null},
-    {"name": "schdoc", "status": "public", "requires_extra": null},
-    {"name": "schlib", "status": "public", "requires_extra": null},
-    {"name": "sch-svg", "status": "public", "requires_extra": null},
-    {"name": "split", "status": "public", "requires_extra": null},
-    {"name": "svg", "status": "public", "requires_extra": null},
-    {"name": "variants", "status": "public", "requires_extra": null},
-    {"name": "version", "status": "public", "requires_extra": null}
+    {
+      "name": "bom",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "clean",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "design",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "easyeda-import",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "extract",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "impedance-doc",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "installs",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "jlc",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "json-dump",
+      "status": "experimental",
+      "requires_extra": null
+    },
+    {
+      "name": "launch",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "libraries",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "mate",
+      "status": "experimental",
+      "requires_extra": null
+    },
+    {
+      "name": "mco",
+      "status": "experimental",
+      "requires_extra": null
+    },
+    {
+      "name": "megamaid",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "merge",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "notes",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "outjob",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "pcb-layer-step",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "pcb-svg",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "pcbdoc",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "pcblib",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "pnp",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "prjpcb",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "profiles",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "sch-svg",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "schdoc",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "schlib",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "split",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "svg",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "variants",
+      "status": "public",
+      "requires_extra": null
+    },
+    {
+      "name": "version",
+      "status": "public",
+      "requires_extra": null
+    }
   ]
 }

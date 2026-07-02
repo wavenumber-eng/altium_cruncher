@@ -86,6 +86,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `pnp` | Generate pick-and-place output as CSV, JSON, XLSX, or JLC CPL. | Public |
 | `jlc` | Generate JLCPCB BOM and CPL outputs from an Altium project. | Public |
 | `design` / `design-review` / `dr` | Generate an agent-facing design review bundle with design JSON, document JSON, notes JSONC, schematic SVGs, and PCB copper-layer review SVGs. | Public |
+| `impedance-doc` | Render per-copper-layer controlled-impedance routing documentation (differential + single-ended) to SVG/HTML/PNG/PDF, driven by a commented JSONC config. | Public |
 | `json-dump` | Dump parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to JSON for inspection. | Experimental |
 | `extract` | Extract symbols, footprints, or IntLib sources from Altium design documents. | Public |
 | `installs` | List discovered Altium Designer install paths. | Public |

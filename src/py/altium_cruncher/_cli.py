@@ -44,6 +44,9 @@ from altium_cruncher.altium_cruncher_cmd_easyeda_import import (
 from altium_cruncher.altium_cruncher_cmd_extract import (
     register_parser as register_extract_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_impedance_doc import (
+    register_parser as register_impedance_doc_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_installs import (
     register_parser as register_installs_parser,
 )
@@ -287,6 +290,7 @@ def main() -> None:
     register_design_parser(command_subparsers)
     register_easyeda_import_parser(command_subparsers)
     register_extract_parser(command_subparsers)
+    register_impedance_doc_parser(command_subparsers)
     register_installs_parser(command_subparsers)
     register_jlc_parser(command_subparsers)
     register_json_dump_parser(command_subparsers)
