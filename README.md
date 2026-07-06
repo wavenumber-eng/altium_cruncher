@@ -101,6 +101,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
 | `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |
 | `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
+| `query` | Query design data as compact JSON on stdout: project summary, filtered components, nets, and pin-level connectivity. | Experimental |
 | `outjob` | Run project OutJob files through Altium Designer. | Public |
 | `variants` | Inspect and edit PrjPcb project variants. | Public |
 | `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
@@ -134,6 +135,16 @@ parser setup and behavior belong in command modules, including simple commands.
 New commands, features, and external dependencies need explicit justification in
 the commit, PR, or linked plan. Minimize dependencies unless there is a clear
 install, licensing, and maintenance case.
+
+## Claude Code Skill
+
+`.claude/skills/altium-schematic/` is a project-local Claude Code skill that
+teaches Claude to answer questions about Altium designs (components, nets,
+pin-level connectivity, BOM, sheet hierarchy) by driving the `query`, `bom`,
+`notes`, `variants`, and `design` commands. Claude Code loads it automatically
+when a user asks about an Altium design in this workspace; it also works in
+other workspaces where `altium-cruncher` is installed if copied into that
+project's `.claude/skills/` directory.
 
 ## Tests
 

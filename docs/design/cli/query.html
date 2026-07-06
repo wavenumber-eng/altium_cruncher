@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>query command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="query" data-config-contract="none">
+<main>
+  <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+  <header><p class="status">CLI command design</p><h1>query</h1><p class="lede">Queries Altium design data and prints compact JSON to stdout for scripts and agent workflows.</p></header>
+
+  <section id="purpose"><h2>Purpose</h2><p><code>query</code> answers targeted design questions without generating artifact files. Where <code>design</code> writes a full review bundle to disk, <code>query</code> returns the smallest JSON payload that answers one question — a project overview, a filtered component list, a net list, per-pin connectivity for one designator, or a single-sheet inspection — so scripted consumers and AI agents can load only the relevant slice of design data. The command backs the repository's <code>altium-schematic</code> Claude Code skill and is experimental while its JSON field shapes track the underlying <code>altium-monkey</code> design and netlist JSON.</p></section>
+
+  <section id="usage"><h2>Usage</h2><pre><code>altium-cruncher query summary project.PrjPcb
+altium-cruncher query components --sheet Codec.SchDoc --type ic
+altium-cruncher query components --value-contains 10k --full
+altium-cruncher query nets --contains P5V
+altium-cruncher query nets --name SDA
+altium-cruncher query connections U7 --pin C9
+altium-cruncher query sheet Codec.SchDoc</code></pre></section>
+
+  <section id="arguments"><h2>Arguments</h2><p>Project subcommands (<code>summary</code>, <code>components</code>, <code>nets</code>, <code>connections</code>) accept an optional positional <code>.PrjPcb</code> path or <code>--project</code>; when neither is passed, exactly one <code>.PrjPcb</code> must exist in the current directory, otherwise the command lists candidates and exits nonzero. <code>components</code> filters with <code>--designator</code>, <code>--sheet</code> (full hierarchy path or bare filename), <code>--type</code> (classification type such as <code>ic</code> or <code>resistor</code>), and <code>--value-contains</code>; rows are brief summary fields unless <code>--full</code> is passed. <code>nets</code> lists all nets, narrows with <code>--contains</code>, or returns one net's full terminal detail with <code>--name</code> (case-insensitive exact match). <code>connections</code> takes a required positional designator and an optional <code>--pin</code> identifier; pin identifiers may be alphanumeric (<code>C9</code>) and unknown designators fail with a sample-designator hint. <code>sheet</code> takes one <code>.SchDoc</code> path and needs no project; bare sheets report library references rather than project-annotated designators.</p></section>
+
+  <section id="output"><h2>Output</h2><p>Every subcommand prints exactly one JSON document to stdout and returns exit code 0, or prints a one-line error to stderr and returns exit code 1. Payload schema ids are <code>altium_cruncher.query.summary.a0</code>, <code>altium_cruncher.query.components.a0</code>, <code>altium_cruncher.query.nets.a0</code>, <code>altium_cruncher.query.net_detail.a0</code>, <code>altium_cruncher.query.connections.a0</code>, and <code>altium_cruncher.query.sheet.a0</code>. Component, net, and terminal field shapes come from <code>altium-monkey</code> <code>AltiumDesign.to_json()</code> and netlist JSON and are experimental until promoted. The summary's <code>power_and_ground_nets</code> list is heuristic: named nets with POWER-typed pins plus GND/VSS name matches. Because stdout is a machine-readable payload, the command routes CLI logging handlers to stderr for its duration; <code>--quiet</code>/<code>--verbose</code> still control log verbosity.</p></section>
+
+  <section id="tests"><h2>Tests</h2><p><code>L3_public_workflows</code> runs every subcommand against the Hydroscope fixture project and validates payload schemas, component filtering, net terminal detail, designator connectivity rows, stdout JSON purity, and unknown-designator/net error exits.</p></section>
+</main>
+</body>
+</html>

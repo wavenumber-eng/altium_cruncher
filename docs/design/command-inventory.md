@@ -38,6 +38,7 @@ This inventory records the command set migrated from the private
 | `mate` | beta | unit/CLI/example | Initial beta for Cricket Node-style fixture and debug mating-board workflows. Broader mate modes remain future work. |
 | `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
 | `profiles` | public | unit/CLI | Lists Altium ProgramData profiles and can clean selected extension module state with explicit targeting and dry-run support. |
+| `query` | experimental | `L3_public_workflows` | Prints compact design JSON to stdout for scripts and agent workflows: project summary, filtered component lists, net lists, per-pin connectivity, and single-sheet inspection. Backs the repo `altium-schematic` Claude Code skill. |
 
 The command manifest lives at `docs/contracts/command_manifest.a0.json`. `L99` should
 eventually enforce that every manifest command has help, docs, and behavioral
