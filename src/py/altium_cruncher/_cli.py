@@ -98,6 +98,9 @@ from altium_cruncher.altium_cruncher_cmd_profiles import (
 from altium_cruncher.altium_cruncher_cmd_prjpcb import (
     register_parser as register_prjpcb_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_sch_ir import (
+    register_parser as register_sch_ir_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_sch_svg import (
     register_parser as register_sch_svg_parser,
 )
@@ -209,7 +212,9 @@ def _configure_root_help_color(
     subparsers: argparse._SubParsersAction,
 ) -> None:
     """Attach root command names used for colorized terminal help."""
-    parser.command_names_for_help_color = tuple(str(command) for command in subparsers.choices)
+    parser.command_names_for_help_color = tuple(
+        str(command) for command in subparsers.choices
+    )
     _configure_nested_help_color(parser)
 
 
@@ -305,6 +310,7 @@ def main() -> None:
     register_pnp_parser(command_subparsers)
     register_prjpcb_parser(command_subparsers)
     register_profiles_parser(command_subparsers)
+    register_sch_ir_parser(command_subparsers)
     register_sch_svg_parser(command_subparsers)
     register_schdoc_parser(command_subparsers)
     register_schlib_parser(command_subparsers)
