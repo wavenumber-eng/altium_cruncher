@@ -4,7 +4,13 @@ import argparse
 import logging
 from pathlib import Path
 
-from altium_cruncher.altium_cruncher_common import _resolve_output_dir, find_prjpcb_in_cwd
+from altium_cruncher.altium_cruncher_common import (
+    _resolve_output_dir,
+    find_prjpcb_in_cwd,
+)
+from altium_cruncher.altium_cruncher_cmd_sch_ir import (
+    log_current_font_resolution_diagnostics,
+)
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +33,9 @@ def cmd_sch_svg(args) -> int:
         input_file = find_prjpcb_in_cwd()
         if not input_file:
             log.error("No file specified and no .PrjPcb found in current directory")
-            log.info("Usage: altium-cruncher sch-svg [file.SchDoc | project.PrjPcb | library.SchLib]")
+            log.info(
+                "Usage: altium-cruncher sch-svg [file.SchDoc | project.PrjPcb | library.SchLib]"
+            )
             return 1
         log.info(f"Auto-detected project: {input_file.name}")
 
@@ -83,7 +91,10 @@ def cmd_sch_svg(args) -> int:
         log.info(f"Processing: {schdoc_path.name}")
         try:
             schdoc = AltiumSchDoc(schdoc_path)
-            svg_content = schdoc.to_svg(project_parameters=project_parameters, wrap_components=True)
+            svg_content = schdoc.to_svg(
+                project_parameters=project_parameters, wrap_components=True
+            )
+            log_current_font_resolution_diagnostics()
             output_file.write_text(svg_content, encoding="utf-8")
             log.info(f"  -> {output_file.name}")
             success_count += 1
@@ -104,11 +115,11 @@ def register_parser(subparsers):
         help="generate schematic SVG from Altium SchDoc/PrjPcb/SchLib",
         description="Generate SVG files from Altium SchDoc, PrjPcb, or SchLib inputs.",
         epilog="Examples:\n"
-               "  altium-cruncher sch-svg schematic.SchDoc\n"
-               "  altium-cruncher sch-svg project.PrjPcb\n"
-               "  altium-cruncher sch-svg library.SchLib\n"
-               "  altium-cruncher sch-svg                             # Auto-detect PrjPcb in CWD\n"
-               "  altium-cruncher sch-svg project.PrjPcb -o output_dir/",
+        "  altium-cruncher sch-svg schematic.SchDoc\n"
+        "  altium-cruncher sch-svg project.PrjPcb\n"
+        "  altium-cruncher sch-svg library.SchLib\n"
+        "  altium-cruncher sch-svg                             # Auto-detect PrjPcb in CWD\n"
+        "  altium-cruncher sch-svg project.PrjPcb -o output_dir/",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     sch_svg_parser.add_argument(

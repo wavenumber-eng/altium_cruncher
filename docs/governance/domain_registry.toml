@@ -1,0 +1,19 @@
+[domain_governance]
+owned_roots = [
+  "docs/governance",
+  "docs/public_package",
+]
+
+[[domains]]
+id = "public_package"
+title = "Public Package"
+status = "active"
+purpose = "Owns the public altium-cruncher CLI package surface, release metadata, and governed package requirements."
+html = "docs/public_package/index.html"
+
+[[file_groups]]
+primary_domain = "public_package"
+paths = [
+  "docs/governance/**",
+  "docs/public_package/**",
+]

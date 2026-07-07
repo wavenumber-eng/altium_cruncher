@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>sch-ir command</title><link rel="stylesheet" href="../styles.css"></head>
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="sch-ir" data-config-contract="none">
+<main>
+<nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
+<header><p class="status">CLI command design</p><h1>sch-ir</h1><p class="lede">Exports Altium schematic documents or project schematics as gotIR JSON artifacts.</p></header>
+<section id="usage"><h2>Usage</h2><pre><code>altium-cruncher sch-ir CPU.SchDoc -o output/sch-ir
+altium-cruncher sch-ir Hydroscope.PrjPcb
+altium-cruncher sch-ir ./project-folder</code></pre></section>
+<section id="arguments"><h2>Arguments</h2><p><code>file</code> accepts <code>.SchDoc</code>, <code>.PrjPcb</code>, or a directory containing exactly one <code>.PrjPcb</code>. When omitted, the command attempts project auto-detection from the current working directory. <code>-o</code> selects the output directory. The default output directory is <code>./output/sch-ir</code>.</p></section>
+<section id="output"><h2>Output</h2><p>The command writes one <code>.gotir.json</code> file per schematic document under the output directory. It calls the same default <code>to_ir(profile="onscreen")</code> path used by schematic SVG rendering and the interactive schematic viewer. The payload includes <code>render_hints.font_resolution</code> diagnostics when the underlying <code>altium-monkey</code> renderer reports font substitutions or fallbacks, and the CLI logs warning messages for those diagnostics.</p></section>
+<section id="tests"><h2>Tests</h2><p>Unit coverage verifies single-document, project, current-working-directory auto-detected project, and directory-argument auto-detected project export. CLI coverage verifies help registration through the public command manifest.</p></section>
+</main>
+</body>
+</html>

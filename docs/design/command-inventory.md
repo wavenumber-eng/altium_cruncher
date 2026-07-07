@@ -1,7 +1,7 @@
 # Command Inventory
 
 Status: initial migration inventory
-Last updated: 2026-06-17
+Last updated: 2026-07-06
 
 This inventory records the command set migrated from the private
 `toolz/altium_cruncher` package into the standalone public repo.
@@ -9,7 +9,8 @@ This inventory records the command set migrated from the private
 | Command | Initial status | Public test coverage | Notes |
 | --- | --- | --- | --- |
 | `version` | public | `L0_public_cli` | Package/CLI version reporting, including controlled runtime dependency versions for `altium-monkey` and `wn-geometer`. |
-| `sch-svg` | public | `L3_public_workflows` | Schematic SVG export. |
+| `sch-svg` | public | `L3_public_workflows` | Schematic SVG export with font substitution/fallback warnings from Altium Monkey. |
+| `sch-ir` | public | unit/CLI | Schematic gotIR JSON export for SchDoc, PrjPcb, and project-directory inputs using the onscreen IR profile. |
 | `pcb-svg` | public | `L3_public_workflows` | PCB SVG export and board-view generation. |
 | `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
 | `svg` | public | help only | Combined schematic/project SVG wrapper. |

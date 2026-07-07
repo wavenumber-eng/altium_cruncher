@@ -79,6 +79,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | --- | --- | --- |
 | `version` | Print `altium-cruncher` and controlled dependency versions. | Public |
 | `sch-svg` | Generate schematic SVG from SchDoc, PrjPcb, or SchLib inputs. | Public |
+| `sch-ir` | Export schematic gotIR JSON from SchDoc or PrjPcb inputs. | Public |
 | `pcb-svg` | Generate PCB SVG views from PcbDoc or PrjPcb inputs. | Public, with beta HLR/pin-view areas |
 | `pcb-layer-step` | Generate a colored STEP model for one PCB layer, intended for fixture-alignment workflows. | Public |
 | `svg` | Run schematic SVG, PCB SVG, or both based on input. | Public |
@@ -178,7 +179,7 @@ release workflow is GitHub Actions plus PyPI Trusted Publishing/OIDC. Local
 Twine upload is fallback only.
 
 Current release notes are available in
-`docs/releases/2026-06-22.md`.
+`docs/releases/2026-07-06.md`.
 
 `altium-cruncher` remains AGPL-3.0-or-later because it imports and depends on
 the AGPL `altium-monkey` package for normal operation.

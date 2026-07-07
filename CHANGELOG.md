@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.7.6
+
+- Consume `altium-monkey>=2026.7.6`, including macOS-aware schematic font
+  resolution, bundled open-source fallback fonts, PCB/schematic special-string
+  substitution fixes, and the defensive schematic IR skip for invalid
+  parent-bound child records.
+- Add the public `sch-ir` command for exporting schematic gotIR JSON from
+  `.SchDoc`, `.PrjPcb`, or project-directory inputs using the same onscreen IR
+  path used by schematic SVG rendering and the interactive schematic viewer.
+- Surface schematic font substitution and fallback diagnostics from
+  `sch-svg` and `sch-ir` so CLI users can see when output used a system-font
+  match, open-source fallback, or hard metrics fallback.
+
 ## 2026.7.1
 
 - Consume pinned `altium-monkey==2026.7.1` so the public CLI tracks the latest

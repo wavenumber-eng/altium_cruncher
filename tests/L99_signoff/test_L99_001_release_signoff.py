@@ -11,7 +11,7 @@ from importlib.metadata import version as distribution_version
 from pathlib import Path
 
 import altium_cruncher
-from altium_cruncher._version import cli_version_report, cli_version_text
+from altium_cruncher._version import cli_version_report, cli_version_text, parse_version
 
 
 def _project_root() -> Path:
@@ -23,11 +23,17 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.7.1"
-EXPECTED_RELEASE_DATE = date(2026, 7, 1)
-EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-07-01.md"
-CONTROLLED_DEPENDENCIES = {
-    "altium-monkey": "2026.7.1",
+EXPECTED_VERSION = "2026.7.6"
+EXPECTED_RELEASE_DATE = date(2026, 7, 6)
+EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-07-06.md"
+CONTROLLED_DEPENDENCY_REQUIREMENTS = {
+    "altium-monkey": ">=2026.7.6",
+    "wn-geometer": "==2026.6.10",
+}
+MINIMUM_CONTROLLED_DEPENDENCIES = {
+    "altium-monkey": "2026.7.6",
+}
+EXACT_CONTROLLED_DEPENDENCIES = {
     "wn-geometer": "2026.6.10",
 }
 
@@ -43,7 +49,7 @@ def test_version_contract_matches_date_based_release() -> None:
     assert (version.major, version.minor, version.patch, version.build) == (
         2026,
         7,
-        1,
+        6,
         None,
     )
     assert version.release_date == EXPECTED_RELEASE_DATE
@@ -55,13 +61,23 @@ def test_version_contract_matches_date_based_release() -> None:
     }
 
 
-def test_controlled_dependency_pins_match_latest_release_versions() -> None:
-    """Verify controlled dependencies are pinned to audited release versions."""
+def test_controlled_dependency_requirements_match_latest_release_policy() -> None:
+    """Verify controlled dependencies match audited release requirements."""
     pyproject = tomllib.loads((PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     dependencies = set(pyproject["project"]["dependencies"])
 
-    for distribution_name, expected_version in CONTROLLED_DEPENDENCIES.items():
-        assert f"{distribution_name}=={expected_version}" in dependencies
+    for distribution_name, expected_requirement in CONTROLLED_DEPENDENCY_REQUIREMENTS.items():
+        assert f"{distribution_name}{expected_requirement}" in dependencies
+
+
+def _date_version_key(raw_version: str) -> tuple[int, int, int, int]:
+    version = parse_version(raw_version)
+    return (
+        version.major,
+        version.minor,
+        version.patch,
+        version.build if version.build is not None else 0,
+    )
 
 
 def test_cli_emits_package_version() -> None:
@@ -79,9 +95,16 @@ def test_cli_emits_package_version() -> None:
         assert completed.stdout.startswith("altium-cruncher ")
         assert completed.stdout.splitlines()[0] == cli_version_text()
 
-        for distribution_name, expected_version in CONTROLLED_DEPENDENCIES.items():
+        for distribution_name, expected_version in EXACT_CONTROLLED_DEPENDENCIES.items():
             assert f"{distribution_name} {expected_version}" in completed.stdout
             assert distribution_version(distribution_name) == expected_version
+
+        for distribution_name, minimum_version in MINIMUM_CONTROLLED_DEPENDENCIES.items():
+            installed_version = distribution_version(distribution_name)
+            assert f"{distribution_name} {installed_version}" in completed.stdout
+            assert _date_version_key(installed_version) >= _date_version_key(
+                minimum_version
+            )
 
 
 def test_release_notes_mention_package_version() -> None:

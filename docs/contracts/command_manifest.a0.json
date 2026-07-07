@@ -24,6 +24,7 @@
     {"name": "pnp", "status": "public", "requires_extra": null},
     {"name": "prjpcb", "status": "public", "requires_extra": null},
     {"name": "profiles", "status": "public", "requires_extra": null},
+    {"name": "sch-ir", "status": "public", "requires_extra": null},
     {"name": "schdoc", "status": "public", "requires_extra": null},
     {"name": "schlib", "status": "public", "requires_extra": null},
     {"name": "sch-svg", "status": "public", "requires_extra": null},
