@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026.7.7
+
+- Consume `altium-monkey>=2026.7.7`, including the schematic font resolution
+  result cache and Pillow-based embedded PNG fast path that make large
+  multi-sheet schematic SVG rendering roughly an order of magnitude faster.
+- Downstream schematic SVG output picks up the Altium Monkey text fidelity
+  fixes for styled font variants (bold/italic metrics from the base font
+  file) and missing font families (Microsoft Sans Serif metrics and family
+  emission, matching Altium behavior).
+- `easyeda-import` now attaches the primary EasyEDA STEP model to the
+  generated footprint as an embedded 3D body, snaps clearly off-footprint
+  model origins to a centered placement, and reports a per-footprint
+  placement verdict (`ok`/`needs_checking`) in the import manifest.
+- Add `--no-3d-model-placement` to `easyeda-import` to skip 3D model
+  attachment.
+
 ## 2026.7.6
 
 - Consume `altium-monkey>=2026.7.6`, including macOS-aware schematic font
