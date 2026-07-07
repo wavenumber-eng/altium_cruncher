@@ -11,7 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from altium_monkey.altium_pcb_enums import PadShape, PcbRegionKind
-from altium_monkey.altium_pcblib import AltiumPcbLib
+from altium_monkey.altium_pcb_step_bounds import compute_step_model_bounds_mils
+from altium_monkey.altium_pcblib import AltiumPcbFootprint, AltiumPcbLib
 from altium_monkey.altium_record_pcb__shapebased_region import (
     AltiumPcbShapeBasedRegion,
     PcbExtendedVertex,
@@ -47,6 +48,28 @@ class EasyEdaFootprintImportPolicy:
 
 
 @dataclass(frozen=True)
+class EasyEda3DModelPlacement:
+    """An EasyEDA STEP model plus its raw EasyEDA placement.
+
+    ``origin_x``/``origin_y`` are EasyEDA canvas coordinates in the same space
+    and units as the footprint pads, so they pass through the footprint
+    transform (anchor, scale, Y-flip) like any other geometry. ``z_offset`` is
+    the EasyEDA ``z`` attribute and ``rotation_*`` are the ``c_rotation``
+    degrees. The STEP projection outline and height are inferred from the model
+    payload by ``altium_monkey`` (via ``wn-geometer``).
+    """
+
+    name: str
+    step_data: bytes
+    origin_x: float
+    origin_y: float
+    z_offset: float = 0.0
+    rotation_x: float = 0.0
+    rotation_y: float = 0.0
+    rotation_z: float = 0.0
+
+
+@dataclass(frozen=True)
 class EasyEdaFootprintImportResult:
     """Generated PcbLib and report for a footprint import."""
 
@@ -78,6 +101,10 @@ class EasyEdaFootprintMappingReport:
     layers: dict[str, int] = field(default_factory=dict)
     policy: dict[str, Any] = field(default_factory=dict)
     transform: dict[str, float | bool] = field(default_factory=dict)
+    model_3d_attached: bool = False
+    model_3d_centered_fallback: bool = False
+    model_3d_placement_verdict: str = ""
+    model_3d: dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -157,8 +184,13 @@ def build_altium_pcblib_from_easyeda_footprint(
     source_data: dict[str, Any] | None = None,
     footprint_name: str | None = None,
     policy: EasyEdaFootprintImportPolicy | None = None,
+    model_placement: EasyEda3DModelPlacement | None = None,
 ) -> EasyEdaFootprintImportResult:
-    """Build a one-footprint Altium PcbLib from an EasyEDA footprint."""
+    """Build a one-footprint Altium PcbLib from an EasyEDA footprint.
+
+    When ``model_placement`` is given, its STEP payload is embedded and attached
+    to the footprint as a 3D body at the transformed EasyEDA placement.
+    """
 
     policy = policy or EasyEdaFootprintImportPolicy()
     name = (footprint_name or easyeda_footprint.info.name or easyeda_footprint.info.lcsc_id or "EasyEDA_Footprint").strip()
@@ -187,10 +219,250 @@ def build_altium_pcblib_from_easyeda_footprint(
         _add_raw_graphics(footprint, source_data, transform, policy, report)
     if policy.include_source_text:
         _add_texts(footprint, easyeda_footprint, transform, report)
+    if model_placement is not None:
+        bounds = _source_bounds(easyeda_footprint, source_data)
+        extent_mils = max(
+            (bounds[2] - bounds[0]) * transform.scale,
+            (bounds[3] - bounds[1]) * transform.scale,
+        )
+        _attach_3d_model(
+            library,
+            footprint,
+            model_placement,
+            transform,
+            report,
+            extent_mils,
+            pad_bounds_mils=_pad_bounds_mils(easyeda_footprint, transform),
+        )
 
     if library._authoring_builder is not None:
         library._sync_from_authored_library(library._authoring_builder.build())
     return EasyEdaFootprintImportResult(library=library, report=report)
+
+
+def _sane_model_location(
+    location: _MilsPoint, limit_mils: float
+) -> tuple[_MilsPoint, bool]:
+    """Snap a grossly off-footprint model origin to centered.
+
+    Some EasyEDA footprints store the model ``c_origin`` in a coarser unit than
+    the pads (e.g. ~(400,300) instead of ~(4000,3000)), or with junk
+    coordinates, so the transformed offset lands far off the part. Real models
+    sit on their footprint, so an offset beyond the footprint's own size is
+    treated as unreliable and the model is centered on the footprint instead.
+    Returns the location to use and whether it was snapped.
+    """
+    if abs(location.x) <= limit_mils and abs(location.y) <= limit_mils:
+        return location, False
+    return _MilsPoint(0.0, 0.0), True
+
+
+# Placement-check threshold. The distance ratio is the placed model bounds
+# center's distance from the footprint origin, normalized by the larger of the
+# model/pad bounding-box diagonals. Real EasyEDA placement errors are gross
+# (unit/negation/rotation mixups throw the body many footprint-widths away, a
+# mm-vs-inch error alone is 25x), so one diagonal of drift cleanly separates
+# "on the part" from "needs checking": the known-good validation corpus peaks
+# at ~0.3 while real unit errors measure 100+.
+_PLACEMENT_NEEDS_CHECKING_DISTANCE_RATIO = 1.0
+
+
+def _pad_bounds_mils(
+    easyeda_footprint: EasyEdaFootprint, transform: _FootprintTransform
+) -> tuple[float, float, float, float] | None:
+    """Axis-aligned bounds around the mapped pads, in footprint-local mils.
+
+    Mirrors the pad geometry `_add_pads` generates (position, rotated extents,
+    polygon outlines) without touching the built library's internal units.
+    Returns None when no pad contributes usable geometry.
+    """
+    bounds: list[tuple[float, float, float, float]] = []
+    for pad in easyeda_footprint.pads:
+        if _map_layer(pad.layer_id) is None:
+            continue
+        if pad.shape.upper() == "POLYGON" and pad.points_str.strip():
+            points = [
+                _transform_tuple(transform, point)
+                for point in _parse_points(pad.points_str)
+            ]
+            if len(points) >= 3:
+                bounds.append((
+                    min(x for x, _ in points),
+                    min(y for _, y in points),
+                    max(x for x, _ in points),
+                    max(y for _, y in points),
+                ))
+                continue
+        position = transform.point(_EePoint(pad.x, pad.y))
+        half_width = max(transform.scalar(pad.width), 0.1) / 2.0
+        half_height = max(transform.scalar(pad.height), 0.1) / 2.0
+        angle = math.radians(transform.rotation(pad.rotation))
+        x_extent = abs(math.cos(angle)) * half_width + abs(math.sin(angle)) * half_height
+        y_extent = abs(math.sin(angle)) * half_width + abs(math.cos(angle)) * half_height
+        bounds.append((
+            position.x - x_extent,
+            position.y - y_extent,
+            position.x + x_extent,
+            position.y + y_extent,
+        ))
+    if not bounds:
+        return None
+    return (
+        min(item[0] for item in bounds),
+        min(item[1] for item in bounds),
+        max(item[2] for item in bounds),
+        max(item[3] for item in bounds),
+    )
+
+
+def _assess_model_placement(
+    model_bounds_mils: tuple[float, float, float, float],
+    pad_bounds_mils: tuple[float, float, float, float],
+) -> dict[str, object]:
+    """Binary check: is the placed model significantly far from the origin?
+
+    Both boxes are footprint-local mils; the footprint anchor is the origin.
+    Catches wrongly imported model geometry (a STEP whose contents sit far
+    from its own origin, unit/negation errors) by measuring how far the
+    placed bounds center drifted from the footprint origin, relative to the
+    part's own size.
+    """
+    model_left, model_bottom, model_right, model_top = model_bounds_mils
+    pad_left, pad_bottom, pad_right, pad_top = pad_bounds_mils
+    model_center_x = (model_left + model_right) / 2.0
+    model_center_y = (model_bottom + model_top) / 2.0
+    center_distance = math.hypot(model_center_x, model_center_y)
+    model_diagonal = math.hypot(model_right - model_left, model_top - model_bottom)
+    pad_diagonal = math.hypot(pad_right - pad_left, pad_top - pad_bottom)
+    distance_ratio = center_distance / max(model_diagonal, pad_diagonal, 1.0)
+
+    verdict = (
+        "needs_checking"
+        if distance_ratio > _PLACEMENT_NEEDS_CHECKING_DISTANCE_RATIO
+        else "ok"
+    )
+    return {
+        "verdict": verdict,
+        "checked": True,
+        "center_distance_mils": round(center_distance, 1),
+        "distance_ratio": round(distance_ratio, 3),
+    }
+
+
+def _model_placement_check(
+    placement: EasyEda3DModelPlacement,
+    transform: _FootprintTransform,
+    location: _MilsPoint,
+    pad_bounds_mils: tuple[float, float, float, float] | None,
+) -> dict[str, object]:
+    """Autodetect wrongly imported model geometry; detect and report only.
+
+    Recomputes the placed STEP projection bounds with the same transform
+    arguments the 3D body was attached with, then measures the drift from the
+    footprint origin. When the STEP bounds cannot be inferred (no geometer on
+    the host, junk payload) the check reports ok-but-unchecked rather than a
+    guess — altium_monkey falls back to pad-derived bounds in that case,
+    which would make any measurement self-confirming.
+    """
+    if pad_bounds_mils is None:
+        return {"verdict": "ok", "checked": False, "reason": "no pads to scale against"}
+    try:
+        model_bounds = compute_step_model_bounds_mils(
+            placement.step_data,
+            filename_hint=placement.name,
+            rotation_x_degrees=placement.rotation_x,
+            rotation_y_degrees=placement.rotation_y,
+            rotation_z_degrees=transform.rotation(placement.rotation_z),
+            location_mils=(location.x, location.y),
+            z_offset_mils=transform.scalar(placement.z_offset),
+        )
+    except Exception:
+        return {"verdict": "ok", "checked": False, "reason": "STEP bounds unavailable"}
+    check = _assess_model_placement(model_bounds.bounds_mils, pad_bounds_mils)
+    check["model_bounds_mils"] = [round(value, 1) for value in model_bounds.bounds_mils]
+    check["pad_bounds_mils"] = [round(value, 1) for value in pad_bounds_mils]
+    return check
+
+
+def _attach_3d_model(
+    library: AltiumPcbLib,
+    footprint: AltiumPcbFootprint,
+    placement: EasyEda3DModelPlacement,
+    transform: _FootprintTransform,
+    report: EasyEdaFootprintMappingReport,
+    footprint_extent_mils: float,
+    pad_bounds_mils: tuple[float, float, float, float] | None = None,
+) -> None:
+    """Embed the STEP payload and attach it to the footprint as a 3D body.
+
+    EasyEDA gives the model origin in canvas coordinates, so it goes through the
+    same transform as the pads. An origin that maps far off the footprint (a
+    coarser-unit or junk ``c_origin``) is snapped to centered. The STEP
+    projection outline and overall height are inferred from the model payload by
+    ``altium_monkey``; we only supply the placement (location, rotation, z
+    standoff). The in-plane Z rotation is Y-flipped with the rest of the
+    geometry; X/Y tilt pass through unchanged (validate against a rotated part
+    before relying on tilt).
+
+    After a successful attach, the placed model bounds' drift from the
+    footprint origin is measured and the binary verdict (ok or
+    needs_checking) lands in ``report.model_3d_placement_verdict`` plus
+    ``report.model_3d["placement_check"]``; a needs_checking model adds a
+    report warning. Detection only — the placement is never altered.
+    """
+    raw = transform.point(_EePoint(placement.origin_x, placement.origin_y))
+    location, centered = _sane_model_location(raw, max(footprint_extent_mils, 100.0))
+    report.model_3d_centered_fallback = centered
+    if centered:
+        report.warnings.append(
+            f"3D model origin {placement.origin_x},{placement.origin_y} maps to "
+            f"{raw.x:.0f},{raw.y:.0f} mils, off the footprint; centering the model"
+        )
+    try:
+        model = library.add_embedded_model(
+            name=placement.name,
+            model_data=placement.step_data,
+        )
+        body = footprint.add_embedded_3d_model(
+            model,
+            location_mils=(location.x, location.y),
+            rotation_x_degrees=placement.rotation_x,
+            rotation_y_degrees=placement.rotation_y,
+            rotation_z_degrees=transform.rotation(placement.rotation_z),
+            standoff_height_mils=transform.scalar(placement.z_offset),
+            name=placement.name,
+        )
+    except Exception as exc:  # pragma: no cover - host-dependent model tooling
+        report.warnings.append(f"3D model attach failed: {exc}")
+        report.model_3d_attached = False
+        report.model_3d = {"name": placement.name, "error": str(exc)}
+        return
+
+    report.model_3d_attached = True
+    report.model_3d = {
+        "name": placement.name,
+        "location_mils": [location.x, location.y],
+        "raw_location_mils": [raw.x, raw.y],
+        "centered_fallback": centered,
+        "rotation_degrees": [
+            placement.rotation_x,
+            placement.rotation_y,
+            transform.rotation(placement.rotation_z),
+        ],
+        "standoff_mils": transform.scalar(placement.z_offset),
+        "identifier": getattr(body, "identifier", ""),
+    }
+
+    check = _model_placement_check(placement, transform, location, pad_bounds_mils)
+    report.model_3d["placement_check"] = check
+    report.model_3d_placement_verdict = str(check["verdict"])
+    if check["verdict"] == "needs_checking":
+        report.warnings.append(
+            "3D model placement needs checking: model bounds center is "
+            f"{check['center_distance_mils']} mils from the footprint origin "
+            f"(distance ratio {check['distance_ratio']}); the model geometry "
+            "may be imported wrong — review manually"
+        )
 
 
 def render_easyeda_footprint_source_svg(

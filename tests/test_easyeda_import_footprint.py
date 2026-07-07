@@ -14,13 +14,16 @@ from altium_cruncher.altium_cruncher_cmd_easyeda_footprint_review import (
 )
 import altium_cruncher.altium_cruncher_cmd_easyeda_import as easyeda_import_cmd
 from altium_cruncher.altium_cruncher_cmd_easyeda_import import cmd_easyeda_import
+import altium_cruncher.easyeda_altium_footprint as easyeda_footprint_mod
 from altium_cruncher.easyeda_altium_footprint import (
+    EasyEda3DModelPlacement,
     EasyEdaFootprintImportPolicy,
     build_altium_pcblib_from_easyeda_footprint,
     load_easyeda_footprint_input,
     render_easyeda_footprint_source_svg,
 )
 from altium_monkey.altium_pcb_enums import PadShape
+from altium_monkey.altium_pcb_step_bounds import PcbStepModelBounds
 from altium_monkey.altium_pcblib import AltiumPcbLib
 from altium_monkey.altium_record_pcb__region import AltiumPcbRegion
 from altium_monkey.altium_record_pcb__shapebased_region import AltiumPcbShapeBasedRegion
@@ -375,6 +378,7 @@ def test_easyeda_import_cli_downloads_3d_models_without_placing_them(
             pcblib_name=None,
             preview=False,
             no_3d_model_download=False,
+            no_3d_model_placement=True,
             pin_grid_mils=100.0,
             no_align_pin_grid=False,
             use_source_pin_electrical=False,
@@ -479,3 +483,302 @@ def test_easyeda_footprint_review_cli_generates_multi_case_html_and_svg(
     assert 'data-layer-display-name="EasyEDA' in source_svg_text
     assert 'data-doc-id="easyeda-altium-footprint-review"' in svg_text
     assert "footprint-review-row-3" in svg_text
+
+
+def test_easyeda_import_attaches_3d_model_to_footprint() -> None:
+    """A model placement embeds a STEP and attaches a 3D body to the footprint.
+
+    Uses dummy STEP bytes: STEP bounds inference fails and altium_monkey falls
+    back to the footprint pad bounds, still producing a component body. The
+    model origin (EasyEDA canvas coords) maps through the footprint transform to
+    near the footprint center for the centered RP2040 LQFN.
+    """
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step",
+        step_data=b"dummy-step-bytes",
+        origin_x=3984.252,
+        origin_y=3012.9925,
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint,
+        source_data=source_data,
+        model_placement=placement,
+    )
+
+    footprint = result.library.footprints[0]
+    assert result.report.model_3d_attached is True
+    assert len(footprint.component_bodies) == 1
+    assert footprint.component_bodies[0].model_id
+    location = result.report.model_3d["location_mils"]
+    assert location[0] == pytest.approx(5.45, abs=1.0)
+    assert location[1] == pytest.approx(0.0, abs=1.0)
+
+
+def test_easyeda_import_without_placement_adds_no_body() -> None:
+    """Omitting the model placement leaves the footprint with no 3D body."""
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data
+    )
+
+    assert result.report.model_3d_attached is False
+    assert len(result.library.footprints[0].component_bodies) == 0
+
+
+def test_placement_from_model_parses_easyeda_strings() -> None:
+    """The command maps EasyEDA origin/z/rotation strings into a placement."""
+    model_ref = easyeda_import_cmd._EasyEda3DModelRef(
+        uuid="abc",
+        title="LQFN-56",
+        origin="3984.252,3012.9925",
+        z="1.5",
+        rotation="0,0,90",
+    )
+
+    placement = easyeda_import_cmd._placement_from_model(model_ref, b"step")
+
+    assert placement is not None
+    assert placement.origin_x == pytest.approx(3984.252)
+    assert placement.origin_y == pytest.approx(3012.9925)
+    assert placement.z_offset == pytest.approx(1.5)
+    assert (placement.rotation_x, placement.rotation_y, placement.rotation_z) == (0.0, 0.0, 90.0)
+    assert placement.name == "LQFN-56.step"
+
+
+def test_placement_from_model_rejects_missing_origin() -> None:
+    """A model with no parseable origin yields no placement."""
+    model_ref = easyeda_import_cmd._EasyEda3DModelRef(
+        uuid="abc", title="x", origin="", z="", rotation=""
+    )
+    assert easyeda_import_cmd._placement_from_model(model_ref, b"step") is None
+
+
+def test_easyeda_import_cli_places_3d_model_by_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """By default the CLI attaches the downloaded STEP into the PcbLib footprint."""
+    requested_urls: list[str] = []
+
+    def fake_download(url: str) -> bytes:
+        requested_urls.append(url)
+        if "qAxj6KHrDKw4blvCG8QJPs7Y" in url:
+            return b"ISO-10303-21;\nEND-ISO-10303-21;\n"
+        return b"v 0 0 0\n"
+
+    monkeypatch.setattr(easyeda_import_cmd, "_download_easyeda_model_bytes", fake_download)
+
+    result = cmd_easyeda_import(
+        argparse.Namespace(
+            lcsc_id="C21190",
+            input_json=_fixture_path("C21190__resistor_0603_1k.json"),
+            cache_dir=None,
+            no_fetch=False,
+            symbol_name=None,
+            schlib_name=None,
+            footprint=False,
+            full=False,
+            symbol_only=False,
+            footprint_name=None,
+            pcblib_name=None,
+            preview=False,
+            no_3d_model_download=False,
+            no_3d_model_placement=False,
+            pin_grid_mils=100.0,
+            no_align_pin_grid=False,
+            use_source_pin_electrical=False,
+            use_source_pin_ieee_symbols=False,
+            pin_name_visibility="source",
+            pin_designator_visibility="source",
+            pin_text_orientation="default",
+            rotate_vertical_pin_text=False,
+            output=tmp_path,
+        )
+    )
+
+    assert result == 0
+    case_dir = tmp_path / "C21190"
+    # STEP fetched once for placement and reused for the artifact file (no double fetch).
+    assert len(requested_urls) == 2
+
+    manifest = json.loads((case_dir / "easyeda-3d-models.json").read_text(encoding="utf-8"))
+    assert manifest["placement_implemented"] is True
+    assert manifest["models"][0]["placement_status"] == "attached"
+    # The fake STEP payload has no computable bounds, so the placement check
+    # reports ok-but-unchecked rather than guessing from fallback pad bounds.
+    assert manifest["placement_verdict"] == "ok"
+    assert manifest["placement_check"]["checked"] is False
+    assert manifest["placement_check"]["reason"] == "STEP bounds unavailable"
+
+    reloaded = AltiumPcbLib.from_file(case_dir / "C21190.PcbLib")
+    assert len(reloaded.footprints[0].component_bodies) == 1
+    assert reloaded.footprints[0].component_bodies[0].model_id
+
+
+def test_easyeda_import_centers_model_with_off_footprint_origin() -> None:
+    """A model origin that maps far off the footprint is snapped to centered.
+
+    Reproduces the EasyEDA coarser-unit c_origin quirk (e.g. ~(400,300) instead
+    of ~(4000,3000)): the raw transform throws the body far off the part, so the
+    importer centers it on the footprint instead.
+    """
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step", step_data=b"dummy-step-bytes",
+        origin_x=400.0, origin_y=300.0,
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data, model_placement=placement
+    )
+
+    assert result.report.model_3d_attached is True
+    assert result.report.model_3d_centered_fallback is True
+    assert result.report.model_3d["location_mils"] == [0.0, 0.0]
+    assert len(result.library.footprints[0].component_bodies) == 1
+
+
+def test_assess_model_placement_flags_only_far_from_origin() -> None:
+    """The binary check flags model bounds significantly far from the origin."""
+    pad_bounds = (-50.0, -50.0, 50.0, 50.0)
+
+    centered = easyeda_footprint_mod._assess_model_placement(
+        (-60.0, -60.0, 60.0, 60.0), pad_bounds
+    )
+    assert centered["verdict"] == "ok"
+    assert centered["checked"] is True
+    assert centered["distance_ratio"] == pytest.approx(0.0)
+
+    # Offset by less than one bounding-box diagonal: still ok.
+    nearby = easyeda_footprint_mod._assess_model_placement(
+        (0.0, 0.0, 100.0, 100.0), pad_bounds
+    )
+    assert nearby["verdict"] == "ok"
+
+    far = easyeda_footprint_mod._assess_model_placement(
+        (1000.0, 1000.0, 1100.0, 1100.0), pad_bounds
+    )
+    assert far["verdict"] == "needs_checking"
+    assert far["distance_ratio"] > 1.0
+
+
+def test_model_placement_check_is_unchecked_without_step_bounds() -> None:
+    """Junk STEP bytes cannot be bounds-checked: ok verdict, checked=False.
+
+    altium_monkey falls back to pad-derived body bounds in this case, which
+    would make a measurement self-confirming; the check must refuse to guess
+    and must not flag the part.
+    """
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step",
+        step_data=b"dummy-step-bytes",
+        origin_x=3984.252,
+        origin_y=3012.9925,
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data, model_placement=placement
+    )
+
+    assert result.report.model_3d_attached is True
+    assert result.report.model_3d_placement_verdict == "ok"
+    check = result.report.model_3d["placement_check"]
+    assert check["checked"] is False
+    assert check["reason"] == "STEP bounds unavailable"
+
+
+def test_model_placement_check_flags_far_away_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A model whose placed bounds land far from the origin needs checking."""
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step",
+        step_data=b"dummy-step-bytes",
+        origin_x=3984.252,
+        origin_y=3012.9925,
+    )
+
+    def fake_bounds(*_args: object, **_kwargs: object) -> PcbStepModelBounds:
+        # Simulates the unit/negation error class: bounds several footprint
+        # widths away from the pad field.
+        return PcbStepModelBounds(
+            bounds_mils=(10000.0, 10000.0, 10300.0, 10300.0),
+            overall_height_mils=40.0,
+            min_z_mils=0.0,
+            max_z_mils=40.0,
+        )
+
+    monkeypatch.setattr(
+        easyeda_footprint_mod, "compute_step_model_bounds_mils", fake_bounds
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data, model_placement=placement
+    )
+
+    assert result.report.model_3d_attached is True
+    assert result.report.model_3d_placement_verdict == "needs_checking"
+    check = result.report.model_3d["placement_check"]
+    assert check["checked"] is True
+    assert check["distance_ratio"] > 1.0
+    assert any(
+        "3D model placement needs checking" in warning
+        for warning in result.report.warnings
+    )
+
+
+def test_model_placement_check_passes_model_on_the_pads(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A model whose placed bounds sit on the pad field is graded ok."""
+    easyeda_footprint, source_data = load_easyeda_footprint_input(
+        _fixture_path("C2040__mcu_rp2040.json")
+    )
+    placement = EasyEda3DModelPlacement(
+        name="rp2040.step",
+        step_data=b"dummy-step-bytes",
+        origin_x=3984.252,
+        origin_y=3012.9925,
+    )
+    transform = easyeda_footprint_mod._build_transform(
+        easyeda_footprint, source_data, EasyEdaFootprintImportPolicy()
+    )
+    pad_bounds = easyeda_footprint_mod._pad_bounds_mils(easyeda_footprint, transform)
+    assert pad_bounds is not None
+
+    def fake_bounds(*_args: object, **_kwargs: object) -> PcbStepModelBounds:
+        return PcbStepModelBounds(
+            bounds_mils=pad_bounds,
+            overall_height_mils=40.0,
+            min_z_mils=0.0,
+            max_z_mils=40.0,
+        )
+
+    monkeypatch.setattr(
+        easyeda_footprint_mod, "compute_step_model_bounds_mils", fake_bounds
+    )
+
+    result = build_altium_pcblib_from_easyeda_footprint(
+        easyeda_footprint, source_data=source_data, model_placement=placement
+    )
+
+    assert result.report.model_3d_placement_verdict == "ok"
+    assert result.report.model_3d["placement_check"]["checked"] is True
+    assert not any(
+        "3D model placement" in warning for warning in result.report.warnings
+    )
