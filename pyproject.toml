@@ -1,6 +1,6 @@
 [project]
 name = "altium-cruncher"
-version = "2026.7.6"
+version = "2026.7.7"
 description = "Cross-platform Altium CLI utilities built on public altium-monkey"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -9,7 +9,7 @@ authors = [
     { name = "Wavenumber LLC" },
 ]
 dependencies = [
-    "altium-monkey>=2026.7.6",
+    "altium-monkey>=2026.7.7",
     "colorama>=0.4.6",
     "easyeda-monkey>=2026.5.26",
     "json-with-comments>=1.2.10",
