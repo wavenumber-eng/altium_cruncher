@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026.7.9
+
+- Consume `altium-monkey>=2026.7.9`, including the OLE reader root mini
+  stream cache that makes reading many small streams from large
+  SchLib/PcbLib/SchDoc/PcbDoc files substantially faster (a reporter measured
+  a library load going from ~17s to ~4s).
+- Downstream schematic output picks up the Altium Monkey arc radius
+  round-trip fixes: fractional radii are preserved on arcs, elliptical arcs,
+  and pie charts, and authored whole radii such as exactly 100.0 mils no
+  longer serialize as omitted and reparse as 0.
+- Schematic IR `font_resolution` diagnostics are emitted in canonical sorted
+  order for stable downstream diffing.
+
 ## 2026.7.7
 
 - Consume `altium-monkey>=2026.7.7`, including the schematic font resolution
