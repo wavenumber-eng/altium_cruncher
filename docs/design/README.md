@@ -26,6 +26,8 @@ Current design notes:
 - `dependency-audit.md` - private workspace dependency references to address
   during the standalone migration.
 - `quality-signoff-status.md` - current release-gate status and pyright backlog.
+- `schematic-diff-merge.md` - future semantic SchDoc diff and merge workflow
+  migrated from the removed `appz/altium_diff` prototype plan.
 
 CLI install, command layout, licensing boundary, and dependency discipline are
 defined in `docs/adrs/ADR-0002-cli-install-and-dependency-discipline.md`.
