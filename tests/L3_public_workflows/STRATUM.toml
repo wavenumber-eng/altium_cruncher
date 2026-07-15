@@ -125,3 +125,33 @@ oracle_parse = "Parse Altium XML-BOM and PNP-METRIC files from reference_output"
 test_bom_raw_json_covers_altium_xml_oracle_designators = "Validate raw BOM source data against XML-BOM oracle designators"
 test_pnp_json_matches_altium_metric_oracle_core_geometry = "Validate PnP placement geometry against PNP-METRIC CSV"
 test_jlc_command_writes_paired_outputs_for_primary_fixtures = "Generate paired JLC BOM/CPL outputs for primary BOM/PnP fixtures"
+
+[[subtests]]
+id = "L3_005"
+file = "test_L3_005_query_workflow.py"
+name = "Query Workflow"
+description = "Run every query subcommand against the Hydroscope fixture and validate stdout JSON payloads"
+concerns = ["cli", "contracts"]
+test_case_type = "reference"
+test_cases = "../../tests/assets/projects/hydroscope/input"
+
+[subtests.code_under_test]
+module = "altium_cruncher.altium_cruncher_cmd_query"
+
+[subtests.objectives]
+summary_payload = "Summary reports sheets, counts, variants, and heuristic power nets"
+filtered_payloads = "Component, net, and connection payloads respect filters and schemas"
+stdout_purity = "stdout stays one parseable JSON payload even with verbose logging"
+error_contract = "Unknown designators and nets exit 1 with stderr hints"
+
+[subtests.approach]
+subprocess_cli = "Invoke the public query CLI through the current Python environment"
+
+[subtests.test_functions]
+test_query_summary_reports_hydroscope_overview = "Summary payload reports sheets, counts, variants, and power nets"
+test_query_components_filters_by_type_and_sheet = "Component rows respect type/sheet filters and brief default fields"
+test_query_nets_listing_and_named_terminal_detail = "Net listing filters by substring and named nets return terminals"
+test_query_connections_reports_designator_pin_rows = "Connections payload reports per-pin nets and connected terminals"
+test_query_sheet_inspects_bare_schdoc = "Sheet payload inspects one SchDoc without needing a project"
+test_query_errors_exit_nonzero_with_stderr_hint = "Unknown designators and nets exit 1 with a stderr message"
+test_query_stdout_stays_parseable_with_verbose_logging = "Verbose logging routes to stderr so stdout remains one JSON payload"

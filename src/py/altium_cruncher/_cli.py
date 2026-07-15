@@ -98,6 +98,9 @@ from altium_cruncher.altium_cruncher_cmd_profiles import (
 from altium_cruncher.altium_cruncher_cmd_prjpcb import (
     register_parser as register_prjpcb_parser,
 )
+from altium_cruncher.altium_cruncher_cmd_query import (
+    register_parser as register_query_parser,
+)
 from altium_cruncher.altium_cruncher_cmd_sch_ir import (
     register_parser as register_sch_ir_parser,
 )
@@ -310,6 +313,7 @@ def main() -> None:
     register_pnp_parser(command_subparsers)
     register_prjpcb_parser(command_subparsers)
     register_profiles_parser(command_subparsers)
+    register_query_parser(command_subparsers)
     register_sch_ir_parser(command_subparsers)
     register_sch_svg_parser(command_subparsers)
     register_schdoc_parser(command_subparsers)

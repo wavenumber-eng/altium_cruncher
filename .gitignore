@@ -15,3 +15,6 @@ rack_results/
 **/History/
 **/Project Logs for */
 **/Project Logs For */
+
+# Claude Code local settings
+.claude/settings.local.json
