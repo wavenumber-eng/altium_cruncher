@@ -87,6 +87,7 @@ def test_design_help_describes_design_json_contents() -> None:
 
     assert result.returncode == 0, result.stderr
     assert "design review bundle" in result.stdout
+    assert "physical-page schematic SVG/IR" in result.stdout
     assert "serialized SchDoc/PcbDoc JSON" in result.stdout
     assert "structured notes" in result.stdout
     assert "output/design_review" in result.stdout

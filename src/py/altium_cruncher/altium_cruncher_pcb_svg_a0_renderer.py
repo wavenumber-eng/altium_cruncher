@@ -1573,7 +1573,21 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
 
         if not primitives and not self.options.show_empty_layers:
             return []
-        return self._render_layer_group_from_primitives(  # noqa: SLF001
+        import inspect
+
+        render_layer_group = self._render_layer_group_from_primitives  # noqa: SLF001
+        if "overlay_primitives" in inspect.signature(render_layer_group).parameters:
+            return render_layer_group(
+                ctx,
+                layer,
+                color,
+                primitives,
+                [],
+                [],
+                clip_path_id=clip_path_id,
+                mask_id=mask_id,
+            )
+        return render_layer_group(
             ctx,
             layer,
             color,

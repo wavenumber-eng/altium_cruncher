@@ -6,9 +6,11 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 import jsonc  # type: ignore[import-untyped]
+import pytest
 
 from altium_monkey.altium_record_types import SchPointMils, SchRectMils
 from altium_monkey.altium_sch_object_factory import (
@@ -19,7 +21,10 @@ from altium_monkey.altium_sch_object_factory import (
 from altium_monkey.altium_schdoc import AltiumSchDoc
 
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
-from altium_cruncher.altium_cruncher_design_review import _enrich_schematic_svg
+from altium_cruncher.altium_cruncher_design_review import (
+    _enrich_schematic_svg,
+    _write_project_schematic_artifacts,
+)
 
 
 _LOW_LEVEL_NOTE_KEYS = {
@@ -120,13 +125,53 @@ def _write_review_pcb_project(project_path: Path) -> Path:
 
 
 def _run_cli(repo_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    python_paths = [str(repo_root / "src" / "py")]
+    monkey_dev_src = Path(
+        os.environ.get("ALTIUM_MONKEY_DEV", r"C:\eli\altium_monkey_dev")
+    ) / "src" / "py"
+    if monkey_dev_src.exists():
+        python_paths.insert(0, str(monkey_dev_src))
+    env["PYTHONPATH"] = (
+        os.pathsep.join(python_paths)
+        if not env.get("PYTHONPATH")
+        else os.pathsep.join(python_paths) + os.pathsep + env["PYTHONPATH"]
+    )
     return subprocess.run(
         [sys.executable, "-m", "altium_cruncher", *args],
         cwd=repo_root,
+        env=env,
         capture_output=True,
         text=True,
         check=False,
     )
+
+
+def _node_test_array_project_path() -> Path:
+    corpus_root = Path(os.environ.get("WN_TEST_CORPUS", r"C:\eli\wn_test_corpus"))
+    project_path = (
+        corpus_root
+        / "altium"
+        / "common"
+        / "real_world_pcbdoc"
+        / "node_test_array"
+        / "input"
+        / "11-10077__node-test-array__B4.PrjPcb"
+    )
+    if not project_path.exists():
+        pytest.skip(f"node_test_array corpus fixture not found: {project_path}")
+    return project_path
+
+
+def _iter_json_strings(value: object) -> Iterator[str]:
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for child in value.values():
+            yield from _iter_json_strings(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _iter_json_strings(child)
 
 
 def test_notes_payload_separates_note_text_frame_and_free_text(tmp_path: Path) -> None:
@@ -222,6 +267,7 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert len(manifest["schematic_svgs"]) == 1
     assert manifest["schematic_svgs"][0]["source"] == "annotated.SchDoc"
     assert manifest["schematic_svgs"][0]["file"].startswith("sch/")
+    assert manifest["schematic_irs"] == []
     assert manifest["pcb_svgs"] == []
     assert "Document JSON: json/schdoc/annotated.SchDoc.json" in result.stdout
     assert "Schematic SVG: sch/annotated.svg" in result.stdout
@@ -243,6 +289,8 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert "altium_monkey.schdoc.interop.a0" in readme
     assert "BOM-like part of the netlist" in readme
     assert "Power-Tree Review Hint" in readme
+    assert "compiled, resolved schematic pages" in readme
+    assert "sch-ir/" in readme
     assert "zero-ohm" in readme
     assert "current-sense resistors" in readme
     assert "indexes.component_to_nets" in readme
@@ -316,6 +364,188 @@ def test_design_review_schematic_svg_enrichment_embeds_component_lookup(
     assert '"ABC123": "R1"' in enriched
 
 
+def test_design_review_project_schematic_artifacts_are_compiled_outputs(
+    tmp_path: Path,
+) -> None:
+    """Project schematic review outputs should be compiled pages by default."""
+
+    from altium_monkey.altium_sch_geometry_oracle import (
+        SchGeometryDocument,
+        SchGeometryOp,
+        SchGeometryRecord,
+    )
+
+    class FakeDesign:
+        project = None
+
+        def __init__(self) -> None:
+            self.ir_calls = 0
+
+        def to_physical_ir(self, page_id: str, **kwargs: object) -> SchGeometryDocument:
+            self.ir_calls += 1
+            assert page_id == "PDOC1"
+            assert kwargs["profile"] == "onscreen"
+            return SchGeometryDocument(
+                records=[
+                    SchGeometryRecord(
+                        handle="1",
+                        unique_id="CUID1",
+                        kind="component",
+                        object_id="eComponent",
+                        operations=[
+                            SchGeometryOp.string(
+                                x=10,
+                                y=-10,
+                                text="R1.1",
+                                font={"name": "Arial", "size": 12, "rotation": 0},
+                                brush={"color_hex": "#000000"},
+                            )
+                        ],
+                    )
+                ],
+                document_id=page_id,
+                canvas={"width_px": 100, "height_px": 100},
+                coordinate_space={"units_per_px": 64},
+            )
+
+    design_payload: dict[str, object] = {
+        "physical_pages": [
+            {
+                "id": "PDOC1",
+                "source_sheet": "Sheet1.SchDoc",
+                "source_path": str(tmp_path / "Sheet1.SchDoc"),
+                "components": [
+                    {
+                        "designator": "R1.1",
+                        "svg_id": "CUID1",
+                        "value": "10k",
+                        "library_ref": "RES",
+                    }
+                ],
+            }
+        ],
+        "indexes": {"component_to_nets": {"R1.1": ["VIN"]}},
+    }
+
+    fake_design = FakeDesign()
+    svgs, irs = _write_project_schematic_artifacts(
+        tmp_path / "review",
+        fake_design,
+        design_payload=design_payload,
+        source_base=tmp_path,
+    )
+
+    assert fake_design.ir_calls == 1
+    assert len(svgs) == 1
+    assert len(irs) == 1
+    assert svgs[0]["file"].startswith("sch/")
+    assert irs[0]["file"].startswith("sch-ir/")
+    assert "/physical/" not in svgs[0]["file"]
+    assert "/physical/" not in irs[0]["file"]
+    assert svgs[0]["compiled_page_id"] == "PDOC1"
+    svg = (tmp_path / "review" / svgs[0]["file"]).read_text(encoding="utf-8")
+    assert 'data-view-kind="compiled_schematic_page"' in svg
+    assert 'data-compiled-page-id="PDOC1"' in svg
+    assert 'data-component="R1.1"' in svg
+
+
+def test_design_review_node_test_array_uses_compiled_physical_pages(
+    tmp_path: Path,
+) -> None:
+    """Real-world DR bundles should expose resolved compiled schematic pages."""
+    repo_root = Path(__file__).resolve().parents[1]
+    project_path = _node_test_array_project_path()
+    output_dir = tmp_path / "node_test_array_review"
+
+    result = _run_cli(repo_root, "dr", str(project_path), "-o", str(output_dir))
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    manifest = json.loads(
+        (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
+    )
+    design_payload = json.loads(
+        (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
+    )
+    physical_pages = [
+        page for page in design_payload["physical_pages"] if isinstance(page, dict)
+    ]
+    physical_page_ids = {str(page["id"]) for page in physical_pages}
+    svg_page_ids = {
+        str(entry["compiled_page_id"]) for entry in manifest["schematic_svgs"]
+    }
+    ir_page_ids = {
+        str(entry["compiled_page_id"]) for entry in manifest["schematic_irs"]
+    }
+
+    assert len(physical_pages) > len({page["source_sheet"] for page in physical_pages})
+    assert len(manifest["schematic_svgs"]) == len(physical_pages)
+    assert len(manifest["schematic_irs"]) == len(physical_pages)
+    assert svg_page_ids == physical_page_ids
+    assert ir_page_ids == physical_page_ids
+
+    page_component_designators = {
+        str(component["designator"])
+        for page in physical_pages
+        for component in page.get("components", [])
+        if isinstance(component, dict) and str(component.get("designator") or "")
+    }
+    top_level_component_designators = {
+        str(component["designator"])
+        for component in design_payload["components"]
+        if isinstance(component, dict) and str(component.get("designator") or "")
+    }
+    assert page_component_designators
+    assert page_component_designators <= top_level_component_designators
+
+    resolved_component = next(
+        component
+        for component in design_payload["components"]
+        if isinstance(component, dict)
+        and component.get("logical_designator")
+        and component.get("logical_designator") != component.get("designator")
+        and component.get("physical_sheet_id") in physical_page_ids
+    )
+    resolved_designator = str(resolved_component["designator"])
+    resolved_page_id = str(resolved_component["physical_sheet_id"])
+    svg_entry = next(
+        entry
+        for entry in manifest["schematic_svgs"]
+        if entry["compiled_page_id"] == resolved_page_id
+    )
+    ir_entry = next(
+        entry
+        for entry in manifest["schematic_irs"]
+        if entry["compiled_page_id"] == resolved_page_id
+    )
+
+    svg_text = (output_dir / svg_entry["file"]).read_text(encoding="utf-8")
+    assert f'data-compiled-page-id="{resolved_page_id}"' in svg_text
+    assert f'data-component="{resolved_designator}"' in svg_text
+    assert resolved_designator in svg_text
+
+    dnp_component = next(
+        component
+        for component in design_payload["components"]
+        if isinstance(component, dict)
+        and component.get("dnp") is True
+        and component.get("physical_sheet_id") in physical_page_ids
+    )
+    dnp_designator = str(dnp_component["designator"])
+    dnp_page_id = str(dnp_component["physical_sheet_id"])
+    dnp_svg_entry = next(
+        entry
+        for entry in manifest["schematic_svgs"]
+        if entry["compiled_page_id"] == dnp_page_id
+    )
+    dnp_svg_text = (output_dir / dnp_svg_entry["file"]).read_text(encoding="utf-8")
+    assert f'data-component="{dnp_designator}"' in dnp_svg_text
+    assert 'data-dnp="true"' in dnp_svg_text
+    assert 'data-fitted="false"' in dnp_svg_text
+
+    ir_payload = json.loads((output_dir / ir_entry["file"]).read_text(encoding="utf-8"))
+    assert resolved_designator in set(_iter_json_strings(ir_payload))
+
+
 def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:
     """Verify dr emits cheap copper review layers and no composed assembly views."""
     repo_root = Path(__file__).resolve().parents[1]
@@ -328,6 +558,13 @@ def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr + result.stdout
     manifest = json.loads(
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["schematic_svgs"]
+    assert "physical_schematic_svgs" not in manifest
+    assert "physical_schematic_irs" not in manifest
+    assert all(
+        entry["file"].startswith("sch/") and "/physical/" not in entry["file"]
+        for entry in manifest["schematic_svgs"]
     )
     assert len(manifest["pcb_svgs"]) == 1
     pcb_entry = manifest["pcb_svgs"][0]

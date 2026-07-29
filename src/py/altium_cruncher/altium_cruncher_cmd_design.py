@@ -74,9 +74,10 @@ def register_parser(
         help="generate Altium design review artifacts",
         description=(
             "Generate an Altium design review bundle from SchDoc or PrjPcb "
-            "files. The bundle includes AltiumDesign netlist JSON, serialized SchDoc/"
-            "PcbDoc JSON, schematic SVGs, PCB layer SVGs, structured notes "
-            "JSON, a manifest, and an agent-facing README."
+            "files. The bundle includes AltiumDesign netlist JSON, physical-page "
+            "schematic SVG/IR for project inputs, serialized SchDoc/PcbDoc JSON, "
+            "PCB layer SVGs, structured notes JSON, a manifest, and an agent-facing "
+            "README."
         ),
         epilog=(
             "Examples:\n"

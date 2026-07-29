@@ -46,13 +46,30 @@ def write_design_review_bundle(
     schdoc_paths = _schdoc_paths(input_file, design)
     pcbdoc_paths = _pcbdoc_paths(input_file, design)
     source_base = input_file.resolve().parent
-    sch_svgs = _write_schematic_svgs(
-        schdoc_paths,
-        output_dir,
-        design,
-        design_payload=design_payload,
-        source_base=source_base,
-    )
+    if input_file.suffix.lower() == ".prjpcb":
+        sch_svgs, sch_irs = _write_project_schematic_artifacts(
+            output_dir,
+            design,
+            design_payload=design_payload,
+            source_base=source_base,
+        )
+        if not sch_svgs and schdoc_paths:
+            sch_svgs = _write_schematic_svgs(
+                schdoc_paths,
+                output_dir,
+                design,
+                design_payload=design_payload,
+                source_base=source_base,
+            )
+    else:
+        sch_svgs = _write_schematic_svgs(
+            schdoc_paths,
+            output_dir,
+            design,
+            design_payload=design_payload,
+            source_base=source_base,
+        )
+        sch_irs = []
     doc_jsons = _write_document_jsons(
         [*schdoc_paths, *pcbdoc_paths],
         output_dir,
@@ -70,6 +87,7 @@ def write_design_review_bundle(
         doc_jsons=doc_jsons,
         notes_path=notes_path,
         sch_svgs=sch_svgs,
+        sch_irs=sch_irs,
         pcb_artifacts=pcb_artifacts,
         readme_path=readme_path,
     )
@@ -159,6 +177,124 @@ def _write_schematic_svgs(
     return artifacts
 
 
+def _write_project_schematic_artifacts(
+    output_dir: Path,
+    design: object,
+    *,
+    design_payload: dict[str, object],
+    source_base: Path,
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    """Write resolved compiled schematic SVG and IR artifacts for a project."""
+    to_physical_ir = getattr(design, "to_physical_ir", None)
+    if not callable(to_physical_ir):
+        log.warning("Compiled schematic rendering API is unavailable")
+        return [], []
+
+    raw_pages = design_payload.get("physical_pages", [])
+    pages = [page for page in raw_pages if isinstance(page, dict)]
+    if not pages:
+        return [], []
+
+    svg_dir = output_dir / "sch"
+    ir_dir = output_dir / "sch-ir"
+    svg_dir.mkdir(parents=True, exist_ok=True)
+    ir_dir.mkdir(parents=True, exist_ok=True)
+    project_parameters = _project_parameters(design)
+    svg_artifacts: list[dict[str, object]] = []
+    ir_artifacts: list[dict[str, object]] = []
+    render_options = _physical_schematic_render_options()
+    for index, page in enumerate(pages, start=1):
+        page_id = str(page.get("id") or "").strip()
+        if not page_id:
+            continue
+        source_sheet = str(page.get("source_sheet") or "sheet")
+        stem = _safe_artifact_stem(f"{index:03d}_{Path(source_sheet).stem}_{page_id}")
+
+        svg_path = svg_dir / f"{stem}.svg"
+        ir_document = to_physical_ir(
+            page_id,
+            project_parameters=project_parameters,
+            profile="onscreen",
+            render_options=render_options,
+        )
+        ir_path = ir_dir / f"{stem}.gotir.json"
+        ir_path.write_text(
+            json.dumps(ir_document.to_dict(), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        log.info("Schematic IR: %s", _relpath(ir_path, output_dir))
+        ir_artifacts.append(
+            {
+                "file": _relpath(ir_path, output_dir),
+                "compiled_page_id": page_id,
+                "source": _compiled_page_source(page, source_base),
+                "source_sheet": source_sheet,
+                "page_number": index,
+                "page_count": len(pages),
+            }
+        )
+
+        svg = _render_physical_ir_svg(ir_document, render_options=render_options)
+        svg = _enrich_project_schematic_svg(
+            svg,
+            design_payload=design_payload,
+            schematic_page=page,
+            source_base=source_base,
+        )
+        svg_path.write_text(svg, encoding="utf-8")
+        log.info("Schematic SVG: %s", _relpath(svg_path, output_dir))
+        svg_artifacts.append(
+            {
+                "file": _relpath(svg_path, output_dir),
+                "compiled_page_id": page_id,
+                "source": _compiled_page_source(page, source_base),
+                "source_sheet": source_sheet,
+                "page_number": index,
+                "page_count": len(pages),
+            }
+        )
+
+    return svg_artifacts, ir_artifacts
+
+
+def _physical_schematic_render_options() -> object:
+    from altium_monkey.altium_sch_svg_renderer import SchSvgRenderOptions
+
+    return SchSvgRenderOptions()
+
+
+def _render_physical_ir_svg(
+    ir_document: object,
+    *,
+    render_options: object,
+) -> str:
+    from altium_monkey.altium_sch_geometry_renderer import (
+        SchGeometrySvgRenderOptions,
+        SchGeometrySvgRenderer,
+    )
+
+    return SchGeometrySvgRenderer(
+        SchGeometrySvgRenderOptions(
+            include_workspace_background=True,
+            text_mode=(
+                "native_svg_export"
+                if getattr(render_options, "truncate_font_size_for_baseline", False)
+                else "onscreen"
+            ),
+            compile_mask_render_mode=getattr(
+                render_options,
+                "compile_mask_render_mode",
+                None,
+            ),
+            text_as_polygons=bool(getattr(render_options, "text_as_polygons", False)),
+            polygon_text_tolerance=float(
+                getattr(render_options, "polygon_text_tolerance", 0.5)
+            ),
+            include_view_box=bool(getattr(render_options, "include_view_box", True)),
+        )
+    ).render(ir_document)
+
+
 def _enrich_schematic_svg(
     svg: str,
     *,
@@ -190,6 +326,55 @@ def _enrich_schematic_svg(
         svg,
         design_payload=design_payload,
         schdoc_path=schdoc_path,
+    )
+
+
+def _enrich_project_schematic_svg(
+    svg: str,
+    *,
+    design_payload: dict[str, object],
+    schematic_page: dict[str, object],
+    source_base: Path,
+) -> str:
+    """Embed design-review metadata for one compiled schematic page."""
+    rel_source = _compiled_page_source(schematic_page, source_base)
+    page_id = str(schematic_page.get("id") or "")
+    payload = {
+        "schema": SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+        "source": {
+            "altium_schdoc_file": rel_source,
+            "compiled_page_id": page_id,
+        },
+        "view": {
+            "kind": "compiled_schematic_page",
+            "profile": "design_review",
+            "sheet_name": Path(str(schematic_page.get("source_sheet") or "")).stem,
+            "sheet_file": str(schematic_page.get("source_sheet") or ""),
+            "compiled_page": schematic_page,
+        },
+        "view_indexes": _compiled_schematic_svg_view_indexes(
+            design_payload,
+            schematic_page=schematic_page,
+        ),
+        "design": design_payload,
+    }
+    root_attrs = {
+        "data-enrichment-schema": SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+        "data-view-kind": "compiled_schematic_page",
+        "data-profile": "design_review",
+        "data-source": rel_source,
+        "data-sheet-name": Path(str(schematic_page.get("source_sheet") or "")).stem,
+        "data-compiled-page-id": page_id,
+        "data-review-theme": SCHEMATIC_REVIEW_THEME,
+    }
+    svg = _inject_svg_root_attrs_and_metadata(
+        svg,
+        root_attrs=root_attrs,
+        metadata_element=_schematic_svg_enrichment_metadata_element(payload),
+    )
+    return _annotate_compiled_schematic_component_groups(
+        svg,
+        schematic_page=schematic_page,
     )
 
 
@@ -285,6 +470,46 @@ def _filtered_component_to_nets(
     }
 
 
+def _compiled_schematic_svg_view_indexes(
+    design_payload: dict[str, object],
+    *,
+    schematic_page: dict[str, object],
+) -> dict[str, object]:
+    raw_components = schematic_page.get("components", [])
+    components = [
+        component
+        for component in raw_components
+        if isinstance(component, dict)
+    ]
+    svg_to_components: dict[str, list[str]] = {}
+    component_to_svg: dict[str, str] = {}
+    for component in components:
+        svg_id = str(component.get("svg_id") or "").strip()
+        designator = str(component.get("designator") or "").strip()
+        if not svg_id or not designator:
+            continue
+        svg_to_components.setdefault(svg_id, []).append(designator)
+        component_to_svg[designator] = svg_id
+    page_id = str(schematic_page.get("id") or "")
+    physical_svg_to_components = {
+        f"{page_id}|{svg_id}": sorted(values)
+        for svg_id, values in sorted(svg_to_components.items())
+    }
+    return {
+        "compiled_page_id": page_id,
+        "svg_to_components": {
+            svg_id: sorted(values)
+            for svg_id, values in sorted(svg_to_components.items())
+        },
+        "physical_svg_to_components": physical_svg_to_components,
+        "component_to_svg": dict(sorted(component_to_svg.items())),
+        "component_to_nets": _filtered_component_to_nets(
+            design_payload,
+            component_to_svg,
+        ),
+    }
+
+
 def _inject_svg_root_attrs_and_metadata(
     svg: str,
     *,
@@ -332,6 +557,25 @@ def _annotate_schematic_component_groups(
     return svg
 
 
+def _annotate_compiled_schematic_component_groups(
+    svg: str,
+    *,
+    schematic_page: dict[str, object],
+) -> str:
+    page_id = str(schematic_page.get("id") or "")
+    for component in schematic_page.get("components", []):
+        if not isinstance(component, dict):
+            continue
+        svg_id = str(component.get("svg_id") or "").strip()
+        if not svg_id:
+            continue
+        attrs = _schematic_component_group_attrs(component, svg_id)
+        attrs["data-compiled-page-id"] = page_id
+        attrs["data-compiled-svg-key"] = f"{page_id}|{svg_id}"
+        svg = _annotate_svg_group_by_id(svg, svg_id, attrs)
+    return svg
+
+
 def _schematic_component_group_attrs(
     component: dict[str, object],
     svg_id: str,
@@ -342,10 +586,34 @@ def _schematic_component_group_attrs(
         "data-element-key": svg_id,
         "data-component-uid": svg_id,
     }
+    attrs.update(_component_identity_attrs(component))
+    attrs.update(_component_variant_attrs(component))
+    attrs.update(_component_descriptive_attrs(component))
+    attrs.update(_component_classification_attrs(component))
+    return attrs
+
+
+def _component_identity_attrs(component: dict[str, object]) -> dict[str, object]:
     designator = str(component.get("designator") or "").strip()
-    if designator:
-        attrs["data-component"] = designator
-        attrs["data-designator"] = designator
+    if not designator:
+        return {}
+    return {
+        "data-component": designator,
+        "data-designator": designator,
+    }
+
+
+def _component_variant_attrs(component: dict[str, object]) -> dict[str, object]:
+    attrs: dict[str, object] = {}
+    if "dnp" in component:
+        attrs["data-dnp"] = "true" if bool(component.get("dnp")) else "false"
+    if "fitted" in component:
+        attrs["data-fitted"] = "true" if bool(component.get("fitted")) else "false"
+    return attrs
+
+
+def _component_descriptive_attrs(component: dict[str, object]) -> dict[str, object]:
+    attrs: dict[str, object] = {}
     for source_key, attr_key in (
         ("library_ref", "data-symbol-library-ref"),
         ("footprint", "data-footprint"),
@@ -354,12 +622,19 @@ def _schematic_component_group_attrs(
         value = str(component.get(source_key) or "").strip()
         if value:
             attrs[attr_key] = value
-    classification = component.get("classification")
-    if isinstance(classification, dict):
-        component_type = str(classification.get("type") or "").strip()
-        if component_type:
-            attrs["data-component-type"] = component_type
     return attrs
+
+
+def _component_classification_attrs(
+    component: dict[str, object],
+) -> dict[str, object]:
+    classification = component.get("classification")
+    if not isinstance(classification, dict):
+        return {}
+    component_type = str(classification.get("type") or "").strip()
+    if not component_type:
+        return {}
+    return {"data-component-type": component_type}
 
 
 def _annotate_svg_group_by_id(
@@ -631,6 +906,7 @@ def _manifest_payload(
     doc_jsons: list[dict[str, object]],
     notes_path: Path,
     sch_svgs: list[dict[str, object]],
+    sch_irs: list[dict[str, object]],
     pcb_artifacts: list[dict[str, object]],
     readme_path: Path,
 ) -> dict[str, object]:
@@ -641,6 +917,7 @@ def _manifest_payload(
         "document_jsons": doc_jsons,
         "notes_json": _relpath(notes_path, output_dir),
         "schematic_svgs": sch_svgs,
+        "schematic_irs": sch_irs,
         "pcb_svgs": pcb_artifacts,
         "readme": _relpath(readme_path, output_dir),
     }
@@ -652,6 +929,7 @@ def _readme_text(
     manifest: dict[str, object],
 ) -> str:
     schematic_count = len(manifest.get("schematic_svgs", []))
+    schematic_ir_count = len(manifest.get("schematic_irs", []))
     pcb_count = sum(
         len(item.get("layer_outputs", []))
         for item in manifest.get("pcb_svgs", [])
@@ -670,8 +948,10 @@ visual schematic and PCB context.
 1. Read `design_review_manifest.json`; all paths in it are relative to this
    folder.
 2. Read `{manifest['design_json']}` for the project-level design model.
-3. Open `sch/*.svg` and `pcb/layers/*.svg` for visual context. The SVGs carry
-   in-band metadata that links drawn objects back to the JSON model.
+3. Open `sch/*.svg` for schematic context. For project inputs these are
+   compiled, resolved schematic pages; for single SchDoc inputs these are
+   logical sheet renders. Open `pcb/layers/*.svg` for PCB context. The SVGs
+   carry in-band metadata that links drawn objects back to the JSON model.
 4. Use `json/schdoc/` and `json/pcbdoc/` only when you need raw Altium document
    details that are not summarized in the design JSON or SVG metadata.
 
@@ -679,7 +959,10 @@ visual schematic and PCB context.
 
 - `{manifest['design_json']}`: Altium Monkey design/netlist JSON. This is the
   primary semantic model for components, nets, hierarchy, variants, PnP, and
-  lookup indexes. For deeper model/API context, see the public
+  lookup indexes. For project inputs this is the compiled physical design view:
+  repeated sheets and channels use resolved physical designators, physical page
+  records, and page-local net/component projections. For deeper model/API
+  context, see the public
   [altium_monkey](https://github.com/wavenumber-eng/altium_monkey) project.
 - `design_review_manifest.json`: artifact index for this bundle.
 - `{manifest['notes_json']}`: JSONC dedicated notes, schematic-owned text
@@ -693,9 +976,13 @@ visual schematic and PCB context.
   `altium_monkey.schdoc.interop.a0` and `altium_monkey.schlib.interop.a0`
   interop formats; PcbDoc payloads use the
   `altium_monkey.pcbdoc.structural.a0` document format.
-- `sch/`: schematic SVGs. Each SVG root has
+- `sch/`: schematic SVGs. For project inputs these are compiled schematic
+  pages with resolved channel/repeated-sheet designators. Each SVG root has
   `data-enrichment-schema="altium_monkey.schematic.svg.enrichment.a0"` and a
   `<metadata id="schematic-enrichment-a0">` JSON payload.
+- `sch-ir/`: schematic IR JSON for project inputs. These use
+  `AltiumDesign.to_physical_ir()` so repeated/channel component designators are
+  resolved before IR emission.
 - `pcb/layers/`: PCB copper-layer SVGs with board outline, cutouts, drills, and
   slots. These use the `altium_monkey.pcb.svg.enrichment.a0` SVG contract.
 
@@ -705,13 +992,24 @@ The design JSON is produced by `altium-monkey` and is the best starting point
 for reasoning about the circuit. Important top-level areas:
 
 - `components`: component rows with designator, value, footprint, library ref,
-  hierarchy, classification, parameters, and `svg_id` where available. This is
-  effectively the BOM-like part of the netlist; use it for designator, value,
-  footprint, library, classification, and parameter review without needing a
-  separate BOM export.
-- `nets`: net rows with endpoint/component relationships.
-- `indexes.svg_to_component`: maps schematic SVG group ids to component
-  designators.
+  hierarchy, classification, parameters, and `svg_id` where available. For
+  project inputs these designators are physical/resolved when the compiled
+  model can resolve repeated sheets or channels. This is effectively the
+  BOM-like part of the netlist; use it for designator, value, footprint,
+  library, classification, and parameter review without needing a separate BOM
+  export.
+- `nets`: net rows with endpoint/component relationships. When available,
+  `aliases` and `name_sources` describe additional labels, ports, power names,
+  and other discovered names that did not win Altium's net-name selection.
+- `physical_pages`: compiled schematic-page records. Each page lists the
+  physical components and nets visible on that page, with source SchDoc lineage.
+- `indexes.svg_to_component`: legacy scalar mapping from schematic SVG group ids
+  to component designators. It is populated only when a logical SVG id maps
+  unambiguously to one physical component.
+- `indexes.svg_to_components`: maps a logical schematic SVG group id to every
+  physical designator represented by that source object.
+- `indexes.physical_svg_to_components`: maps `physical_page_id|svg_id` to the
+  component designator(s) for repeated/channel-safe graphical lookup.
 - `indexes.component_to_nets`: maps component designators to connected nets.
 - `indexes.net_to_components`: maps a net name back to the components on it.
 
@@ -734,18 +1032,24 @@ a derived power-tree view.
 ## Schematic SVG Links
 
 Schematic SVG component groups are annotated when a component `svg_id` is known.
-Look for attributes such as `data-component`, `data-designator`,
-`data-element-key`, `data-symbol-library-ref`, `data-footprint`, and
-`data-value`. To resolve a drawn component to nets:
+For project inputs, the `sch/*.svg` files are compiled physical pages and each
+root carries `data-compiled-page-id`. Component groups also carry
+`data-compiled-svg-key="{{physical_page_id}}|{{svg_id}}"` so repeated/channel
+instances are not confused with their logical source sheet. Look for attributes
+such as `data-component`, `data-designator`, `data-element-key`,
+`data-symbol-library-ref`, `data-footprint`, and `data-value`. To resolve a
+drawn component to nets:
 
 1. Read the SVG group's `data-component` or `data-element-key`.
-2. If using `data-element-key`, resolve it through
-   `indexes.svg_to_component` in the design JSON or through the SVG metadata
-   `view_indexes.svg_to_component`.
-3. Resolve the designator through `indexes.component_to_nets`.
+2. For project inputs, prefer the group's `data-compiled-svg-key` and resolve it
+   through `indexes.physical_svg_to_components` in the design JSON or through
+   the SVG metadata `view_indexes.physical_svg_to_components`.
+3. For simple non-repeated designs, `indexes.svg_to_component` remains a
+   convenient scalar shortcut when it is populated.
+4. Resolve the physical designator through `indexes.component_to_nets`.
 
-The embedded `schematic-enrichment-a0` metadata repeats the relevant view
-indexes so a single SVG can be inspected without first loading every other
+The embedded `schematic-enrichment-a0` metadata repeats the relevant page-local
+view indexes so a single SVG can be inspected without first loading every other
 artifact.
 
 ## PCB SVG Links
@@ -764,6 +1068,7 @@ specific primitive or document-level board data.
 ## Counts
 
 - Schematic SVGs: {schematic_count}
+- Schematic IRs: {schematic_ir_count}
 - PCB layer SVGs: {pcb_count}
 
 Generated artifact paths in `design_review_manifest.json` are relative to this
@@ -788,3 +1093,15 @@ def _source_path(path: Path, source_base: Path) -> str:
         return path.resolve().relative_to(source_base.resolve()).as_posix()
     except ValueError:
         return path.name
+
+
+def _compiled_page_source(page: dict[str, object], source_base: Path) -> str:
+    source_path = str(page.get("source_path") or "").strip()
+    if source_path:
+        return _source_path(Path(source_path), source_base)
+    return str(page.get("source_sheet") or "")
+
+
+def _safe_artifact_stem(value: str) -> str:
+    stem = re.sub(r"[^A-Za-z0-9_.-]+", "_", value).strip("._")
+    return stem or "artifact"
