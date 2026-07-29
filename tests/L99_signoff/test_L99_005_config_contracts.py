@@ -53,6 +53,7 @@ CONTRACTS_ROOT = PACKAGE_ROOT / "docs" / "contracts"
 DESIGN_ROOT = PACKAGE_ROOT / "docs" / "design"
 CLI_DESIGN_ROOT = DESIGN_ROOT / "cli"
 COMMAND_MANIFEST = CONTRACTS_ROOT / "command_manifest.a0.json"
+COMMAND_MANIFEST_SCHEMA = "wn_dev_std.command_manifest.a0"
 
 
 class _DataAttrParser(HTMLParser):
@@ -74,7 +75,7 @@ class _DataAttrParser(HTMLParser):
 
 def _manifest_commands() -> list[str]:
     payload = json.loads(COMMAND_MANIFEST.read_text(encoding="utf-8"))
-    assert payload["schema"] == "altium_cruncher.command_manifest.a0"
+    assert payload["schema"] == COMMAND_MANIFEST_SCHEMA
     commands = payload["commands"]
     assert isinstance(commands, list)
     return [str(command["name"]) for command in commands]

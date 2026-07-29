@@ -172,6 +172,16 @@ Design review notes:
   SchDoc/PcbDoc JSON from `json-dump` under `json/schdoc/` and `json/pcbdoc/`,
   enriched schematic SVGs under `sch/`, and PCB layer SVGs where a board
   exists;
+- `.PrjPcb` inputs must use the compiled `AltiumDesign` physical-page view by
+  default: `sch/` contains resolved physical schematic SVGs, `sch-ir/` contains
+  matching physical IR JSON, and manifest entries include `compiled_page_id`;
+- SVG review links must prefer `physical_page_id|svg_id` through
+  `indexes.physical_svg_to_components` for repeated/channel-safe lookup, while
+  `indexes.svg_to_component` remains a scalar convenience only when
+  unambiguous;
+- the generated README must explain compiled-vs-logical schematic views,
+  `physical_pages`, net `aliases`/`name_sources`, and how graphical SVG ids join
+  back to physical designators and nets;
 - PCB layer SVGs use the default `pcb-svg` layer-output shape under
   `pcb/layers/`, but limit physical layer outputs to copper layers, including
   used inner copper layers;

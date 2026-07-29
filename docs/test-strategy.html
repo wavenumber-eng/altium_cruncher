@@ -1,0 +1,59 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Altium Cruncher Test Strategy</title>
+</head>
+<body data-doc="test-strategy" data-doc-status="accepted">
+  <h1>Altium Cruncher Test Strategy</h1>
+
+  <h2>Scope</h2>
+  <p>
+    Altium Cruncher is the command-line and design-review layer over
+    altium-monkey. The test suite validates CLI routing, generated artifacts,
+    public workflows, release metadata, and integration contracts that connect
+    design JSON, schematic SVG, schematic IR, PCB SVG, and review manifests.
+  </p>
+
+  <h2>Rack And Release Gates</h2>
+  <p>
+    Rack is the suite manifest and execution model. The root manifest is
+    <a href="../tests/rack.toml">tests/rack.toml</a>. Lower strata cover focused
+    command behavior and public workflows; <code>L99_signoff</code> is the
+    release metadata, governance, and packaging gate.
+  </p>
+  <p>
+    A release candidate must pass the public workflow lane, the full L99 signoff
+    lane, package build checks, and an installed-console smoke test. Large
+    Altium fixture coverage depends on <code>WN_TEST_CORPUS</code> and should be
+    recorded when it is used for release validation.
+  </p>
+
+  <h2>External Fixtures And Oracles</h2>
+  <p>
+    Real Altium projects and large generated artifacts live outside the Git
+    repository under <code>WN_TEST_CORPUS</code>. Tests that use those projects
+    should degrade cleanly when the corpus is unavailable and should make the
+    dependency explicit in the test name or skip reason.
+  </p>
+
+  <h2>Design Review Contracts</h2>
+  <p>
+    The design-review bundle is the primary end-to-end integration surface. It
+    must preserve links between the high-level design JSON, schematic SVG group
+    identifiers, physical compiled pages, schematic IR, PCB SVG primitives, and
+    manifest entries. Repeated-sheet and channel projects must prefer physical
+    page identifiers over ambiguous logical SVG ids.
+  </p>
+
+  <h2>CLI Governance</h2>
+  <p>
+    Public and experimental commands are listed in
+    <a href="contracts/command_manifest.a0.json">docs/contracts/command_manifest.a0.json</a>.
+    Each command entry points to its CLI design document under
+    <code>docs/design/cli/</code>. Changes to command behavior should update the
+    relevant command design document and any public workflow tests that depend
+    on the behavior.
+  </p>
+</body>
+</html>

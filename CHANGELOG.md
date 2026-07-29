@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.7.29
+
+- Consume pinned `altium-monkey==2026.7.29`, including the stable project-level schematic compiler, `design.a2` physical-page contract, physical SVG/IR rendering, and net-name alias/name-source provenance.
+- `design`, `design-review`, and `dr` workflows now emit one schematic SVG/IR per compiled physical page for repeated/channel projects instead of treating logical SchDoc pages as unique review pages.
+- Add downstream multichannel DR coverage using `node_test_array` to verify `physical_pages`, `compiled_page_id`, resolved physical designators, and `physical_page_id|svg_id` component lookup metadata.
+- Preserve DNP/fitted state from the compiled design in DR schematic SVG metadata for variant-aware review tools.
+
 ## 2026.7.9
 
 - Consume `altium-monkey>=2026.7.9`, including the OLE reader root mini

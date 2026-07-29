@@ -28,6 +28,8 @@ HYDROSCOPE_PROJECT = HYDROSCOPE_DIR / "Hydroscope.PrjPcb"
 HYDROSCOPE_SCHDOC = HYDROSCOPE_DIR / "CPU.SchDoc"
 HYDROSCOPE_SCHLIB = HYDROSCOPE_DIR / "Hydroscope.SCHLIB"
 HYDROSCOPE_PCBDOC = HYDROSCOPE_DIR / "TZ-SB-0001-PCB-[A] (HydroScope Mainboard).PcbDoc"
+NODE_TEST_ARRAY_DIR = PACKAGE_ROOT / "tests" / "assets" / "projects" / "node_test_array" / "input"
+NODE_TEST_ARRAY_PROJECT = NODE_TEST_ARRAY_DIR / "11-10077__node-test-array__B4.PrjPcb"
 RT_SUPER_C1_INTLIB = (
     PACKAGE_ROOT
     / "tests"
@@ -118,9 +120,77 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
     design_payload = json.loads(
         (design_dir / "design" / "Hydroscope_design.json").read_text(encoding="utf-8")
     )
+    assert design_payload["schema"] == "altium_monkey.design.a2"
     assert len(design_payload["components"]) >= 100
     assert len(design_payload["nets"]) >= 100
+    assert isinstance(design_payload["physical_pages"], list)
     assert design_payload["indexes"]["svg_to_component"]
+
+
+def test_design_review_bundle_uses_physical_pages_for_multichannel_project(
+    tmp_path: Path,
+) -> None:
+    """Verify DR emits resolved physical-page SVG/IR artifacts for channel projects."""
+    output_dir = tmp_path / "node-test-array-dr"
+
+    _run_cli("dr", str(NODE_TEST_ARRAY_PROJECT), "-o", str(output_dir))
+
+    manifest = json.loads(
+        (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
+    )
+    design_payload = json.loads(
+        (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
+    )
+    physical_pages = [
+        page for page in design_payload["physical_pages"] if isinstance(page, dict)
+    ]
+    physical_page_ids = {str(page["id"]) for page in physical_pages}
+    svg_page_ids = {
+        str(entry["compiled_page_id"])
+        for entry in manifest["schematic_svgs"]
+        if isinstance(entry, dict)
+    }
+    ir_page_ids = {
+        str(entry["compiled_page_id"])
+        for entry in manifest["schematic_irs"]
+        if isinstance(entry, dict)
+    }
+
+    assert design_payload["schema"] == "altium_monkey.design.a2"
+    assert len(physical_pages) >= 2
+    assert svg_page_ids == physical_page_ids
+    assert ir_page_ids == physical_page_ids
+
+    page_with_component = next(
+        page
+        for page in physical_pages
+        if any(
+            isinstance(component, dict) and component.get("svg_id")
+            for component in page.get("components", [])
+        )
+    )
+    component = next(
+        component
+        for component in page_with_component["components"]
+        if isinstance(component, dict) and component.get("svg_id")
+    )
+    page_id = str(page_with_component["id"])
+    svg_id = str(component["svg_id"])
+    designator = str(component["designator"])
+    physical_svg_key = f"{page_id}|{svg_id}"
+
+    indexes = design_payload["indexes"]
+    assert designator in indexes["physical_svg_to_components"][physical_svg_key]
+    assert designator in indexes["component_to_nets"]
+
+    svg_entry = next(
+        entry for entry in manifest["schematic_svgs"] if entry["compiled_page_id"] == page_id
+    )
+    svg_text = (output_dir / svg_entry["file"]).read_text(encoding="utf-8")
+    assert 'data-view-kind="compiled_schematic_page"' in svg_text
+    assert f'data-compiled-page-id="{page_id}"' in svg_text
+    assert f'data-compiled-svg-key="{physical_svg_key}"' in svg_text
+    assert f'data-component="{designator}"' in svg_text
 
 
 def test_bom_pnp_config_and_jlc_command_use_public_project(tmp_path: Path) -> None:

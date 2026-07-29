@@ -20,12 +20,13 @@ def _project_root() -> Path:
 PACKAGE_ROOT = _project_root()
 DESIGN_ROOT = PACKAGE_ROOT / "docs" / "design"
 COMMAND_MANIFEST = PACKAGE_ROOT / "docs" / "contracts" / "command_manifest.a0.json"
+COMMAND_MANIFEST_SCHEMA = "wn_dev_std.command_manifest.a0"
 
 
 def _manifest_commands() -> list[str]:
     """Return registered public command names from the command manifest."""
     payload = json.loads(COMMAND_MANIFEST.read_text(encoding="utf-8"))
-    assert payload["schema"] == "altium_cruncher.command_manifest.a0"
+    assert payload["schema"] == COMMAND_MANIFEST_SCHEMA
     commands = payload["commands"]
     assert isinstance(commands, list)
     return [str(command["name"]) for command in commands]

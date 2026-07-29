@@ -1,6 +1,9 @@
 import argparse
 
-from altium_cruncher.altium_cruncher_cmd_sch_svg import cmd_sch_svg
+from altium_cruncher.altium_cruncher_cmd_sch_svg import (
+    _write_project_schematic_svgs,
+    cmd_sch_svg,
+)
 from altium_monkey.altium_record_sch__pin import AltiumSchPin
 from altium_monkey.altium_record_sch__rectangle import AltiumSchRectangle
 from altium_monkey.altium_record_types import CoordPoint
@@ -55,3 +58,41 @@ def test_sch_svg_command_filters_component_display_modes(tmp_path) -> None:
     assert "MODE_0" not in svg
     assert "CLI_DM1_RECT" in svg
     assert "MODE_1" in svg
+
+
+def test_sch_svg_project_writer_emits_compiled_page_svgs(tmp_path) -> None:
+    class FakeDesign:
+        def to_json(self, *, include_indexes: bool) -> dict[str, object]:
+            assert include_indexes is True
+            return {
+                "physical_pages": [
+                    {
+                        "id": "PAGE_A",
+                        "source_sheet": "Leaf.SchDoc",
+                        "room_name": "Leaf_A",
+                    },
+                    {
+                        "id": "PAGE_B",
+                        "source_sheet": "Leaf.SchDoc",
+                        "room_name": "Leaf_B",
+                    },
+                ]
+            }
+
+        def to_physical_svg(self, page_id: str, **kwargs: object) -> str:
+            assert kwargs["project_parameters"] == {"VariantName": "Base"}
+            assert kwargs["wrap_components"] is True
+            designator = {"PAGE_A": "R1.1", "PAGE_B": "R1.2"}[page_id]
+            return f'<svg data-doc-id="{page_id}"><text>{designator}</text></svg>'
+
+    count = _write_project_schematic_svgs(
+        FakeDesign(),
+        tmp_path,
+        project_parameters={"VariantName": "Base"},
+    )
+
+    assert count == 2
+    outputs = sorted(path.name for path in tmp_path.glob("*.svg"))
+    assert outputs == ["001_Leaf_Leaf_A.svg", "002_Leaf_Leaf_B.svg"]
+    assert "R1.1" in (tmp_path / outputs[0]).read_text(encoding="utf-8")
+    assert "R1.2" in (tmp_path / outputs[1]).read_text(encoding="utf-8")

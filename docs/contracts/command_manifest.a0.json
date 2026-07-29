@@ -1,36 +1,222 @@
 {
-  "schema": "altium_cruncher.command_manifest.a0",
+  "schema": "wn_dev_std.command_manifest.a0",
   "commands": [
-    {"name": "bom", "status": "public", "requires_extra": null},
-    {"name": "clean", "status": "public", "requires_extra": null},
-    {"name": "design", "status": "public", "requires_extra": null},
-    {"name": "easyeda-import", "status": "public", "requires_extra": null},
-    {"name": "extract", "status": "public", "requires_extra": null},
-    {"name": "installs", "status": "public", "requires_extra": null},
-    {"name": "jlc", "status": "public", "requires_extra": null},
-    {"name": "json-dump", "status": "experimental", "requires_extra": null},
-    {"name": "launch", "status": "public", "requires_extra": null},
-    {"name": "libraries", "status": "public", "requires_extra": null},
-    {"name": "mate", "status": "experimental", "requires_extra": null},
-    {"name": "mco", "status": "experimental", "requires_extra": null},
-    {"name": "megamaid", "status": "public", "requires_extra": null},
-    {"name": "merge", "status": "public", "requires_extra": null},
-    {"name": "notes", "status": "public", "requires_extra": null},
-    {"name": "outjob", "status": "public", "requires_extra": null},
-    {"name": "pcb-layer-step", "status": "public", "requires_extra": null},
-    {"name": "pcbdoc", "status": "public", "requires_extra": null},
-    {"name": "pcblib", "status": "public", "requires_extra": null},
-    {"name": "pcb-svg", "status": "public", "requires_extra": null},
-    {"name": "pnp", "status": "public", "requires_extra": null},
-    {"name": "prjpcb", "status": "public", "requires_extra": null},
-    {"name": "profiles", "status": "public", "requires_extra": null},
-    {"name": "sch-ir", "status": "public", "requires_extra": null},
-    {"name": "schdoc", "status": "public", "requires_extra": null},
-    {"name": "schlib", "status": "public", "requires_extra": null},
-    {"name": "sch-svg", "status": "public", "requires_extra": null},
-    {"name": "split", "status": "public", "requires_extra": null},
-    {"name": "svg", "status": "public", "requires_extra": null},
-    {"name": "variants", "status": "public", "requires_extra": null},
-    {"name": "version", "status": "public", "requires_extra": null}
+    {
+      "name": "bom",
+      "status": "public",
+      "design_doc": "docs/design/cli/bom.html",
+      "summary": "Run the altium-cruncher bom command.",
+      "surface_ref": "docs/design/cli/bom.html"
+    },
+    {
+      "name": "clean",
+      "status": "public",
+      "design_doc": "docs/design/cli/clean.html",
+      "summary": "Run the altium-cruncher clean command.",
+      "surface_ref": "docs/design/cli/clean.html"
+    },
+    {
+      "name": "design",
+      "status": "public",
+      "design_doc": "docs/design/cli/design.html",
+      "summary": "Run the altium-cruncher design command.",
+      "surface_ref": "docs/design/cli/design.html"
+    },
+    {
+      "name": "easyeda-import",
+      "status": "public",
+      "design_doc": "docs/design/cli/easyeda-import.html",
+      "summary": "Run the altium-cruncher easyeda-import command.",
+      "surface_ref": "docs/design/cli/easyeda-import.html"
+    },
+    {
+      "name": "extract",
+      "status": "public",
+      "design_doc": "docs/design/cli/extract.html",
+      "summary": "Run the altium-cruncher extract command.",
+      "surface_ref": "docs/design/cli/extract.html"
+    },
+    {
+      "name": "installs",
+      "status": "public",
+      "design_doc": "docs/design/cli/installs.html",
+      "summary": "Run the altium-cruncher installs command.",
+      "surface_ref": "docs/design/cli/installs.html"
+    },
+    {
+      "name": "jlc",
+      "status": "public",
+      "design_doc": "docs/design/cli/jlc.html",
+      "summary": "Run the altium-cruncher jlc command.",
+      "surface_ref": "docs/design/cli/jlc.html"
+    },
+    {
+      "name": "json-dump",
+      "status": "experimental",
+      "design_doc": "docs/design/cli/json-dump.html",
+      "summary": "Run the altium-cruncher json-dump command.",
+      "surface_ref": "docs/design/cli/json-dump.html"
+    },
+    {
+      "name": "launch",
+      "status": "public",
+      "design_doc": "docs/design/cli/launch.html",
+      "summary": "Run the altium-cruncher launch command.",
+      "surface_ref": "docs/design/cli/launch.html"
+    },
+    {
+      "name": "libraries",
+      "status": "public",
+      "design_doc": "docs/design/cli/libraries.html",
+      "summary": "Run the altium-cruncher libraries command.",
+      "surface_ref": "docs/design/cli/libraries.html"
+    },
+    {
+      "name": "mate",
+      "status": "experimental",
+      "design_doc": "docs/design/cli/mate.html",
+      "summary": "Run the altium-cruncher mate command.",
+      "surface_ref": "docs/design/cli/mate.html"
+    },
+    {
+      "name": "mco",
+      "status": "experimental",
+      "design_doc": "docs/design/cli/mco.html",
+      "summary": "Run the altium-cruncher mco command.",
+      "surface_ref": "docs/design/cli/mco.html"
+    },
+    {
+      "name": "megamaid",
+      "status": "public",
+      "design_doc": "docs/design/cli/megamaid.html",
+      "summary": "Run the altium-cruncher megamaid command.",
+      "surface_ref": "docs/design/cli/megamaid.html"
+    },
+    {
+      "name": "merge",
+      "status": "public",
+      "design_doc": "docs/design/cli/merge.html",
+      "summary": "Run the altium-cruncher merge command.",
+      "surface_ref": "docs/design/cli/merge.html"
+    },
+    {
+      "name": "notes",
+      "status": "public",
+      "design_doc": "docs/design/cli/notes.html",
+      "summary": "Run the altium-cruncher notes command.",
+      "surface_ref": "docs/design/cli/notes.html"
+    },
+    {
+      "name": "outjob",
+      "status": "public",
+      "design_doc": "docs/design/cli/outjob.html",
+      "summary": "Run the altium-cruncher outjob command.",
+      "surface_ref": "docs/design/cli/outjob.html"
+    },
+    {
+      "name": "pcb-layer-step",
+      "status": "public",
+      "design_doc": "docs/design/cli/pcb-layer-step.html",
+      "summary": "Run the altium-cruncher pcb-layer-step command.",
+      "surface_ref": "docs/design/cli/pcb-layer-step.html"
+    },
+    {
+      "name": "pcbdoc",
+      "status": "public",
+      "design_doc": "docs/design/cli/pcbdoc.html",
+      "summary": "Run the altium-cruncher pcbdoc command.",
+      "surface_ref": "docs/design/cli/pcbdoc.html"
+    },
+    {
+      "name": "pcblib",
+      "status": "public",
+      "design_doc": "docs/design/cli/pcblib.html",
+      "summary": "Run the altium-cruncher pcblib command.",
+      "surface_ref": "docs/design/cli/pcblib.html"
+    },
+    {
+      "name": "pcb-svg",
+      "status": "public",
+      "design_doc": "docs/design/cli/pcb-svg.html",
+      "summary": "Run the altium-cruncher pcb-svg command.",
+      "surface_ref": "docs/design/cli/pcb-svg.html"
+    },
+    {
+      "name": "pnp",
+      "status": "public",
+      "design_doc": "docs/design/cli/pnp.html",
+      "summary": "Run the altium-cruncher pnp command.",
+      "surface_ref": "docs/design/cli/pnp.html"
+    },
+    {
+      "name": "prjpcb",
+      "status": "public",
+      "design_doc": "docs/design/cli/prjpcb.html",
+      "summary": "Run the altium-cruncher prjpcb command.",
+      "surface_ref": "docs/design/cli/prjpcb.html"
+    },
+    {
+      "name": "profiles",
+      "status": "public",
+      "design_doc": "docs/design/cli/profiles.html",
+      "summary": "Run the altium-cruncher profiles command.",
+      "surface_ref": "docs/design/cli/profiles.html"
+    },
+    {
+      "name": "sch-ir",
+      "status": "public",
+      "design_doc": "docs/design/cli/sch-ir.html",
+      "summary": "Run the altium-cruncher sch-ir command.",
+      "surface_ref": "docs/design/cli/sch-ir.html"
+    },
+    {
+      "name": "schdoc",
+      "status": "public",
+      "design_doc": "docs/design/cli/schdoc.html",
+      "summary": "Run the altium-cruncher schdoc command.",
+      "surface_ref": "docs/design/cli/schdoc.html"
+    },
+    {
+      "name": "schlib",
+      "status": "public",
+      "design_doc": "docs/design/cli/schlib.html",
+      "summary": "Run the altium-cruncher schlib command.",
+      "surface_ref": "docs/design/cli/schlib.html"
+    },
+    {
+      "name": "sch-svg",
+      "status": "public",
+      "design_doc": "docs/design/cli/sch-svg.html",
+      "summary": "Run the altium-cruncher sch-svg command.",
+      "surface_ref": "docs/design/cli/sch-svg.html"
+    },
+    {
+      "name": "split",
+      "status": "public",
+      "design_doc": "docs/design/cli/split.html",
+      "summary": "Run the altium-cruncher split command.",
+      "surface_ref": "docs/design/cli/split.html"
+    },
+    {
+      "name": "svg",
+      "status": "public",
+      "design_doc": "docs/design/cli/svg.html",
+      "summary": "Run the altium-cruncher svg command.",
+      "surface_ref": "docs/design/cli/svg.html"
+    },
+    {
+      "name": "variants",
+      "status": "public",
+      "design_doc": "docs/design/cli/variants.html",
+      "summary": "Run the altium-cruncher variants command.",
+      "surface_ref": "docs/design/cli/variants.html"
+    },
+    {
+      "name": "version",
+      "status": "public",
+      "design_doc": "docs/design/cli/version.html",
+      "summary": "Run the altium-cruncher version command.",
+      "surface_ref": "docs/design/cli/version.html"
+    }
   ]
 }
