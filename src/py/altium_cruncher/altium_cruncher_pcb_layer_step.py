@@ -2834,7 +2834,7 @@ def _pad_shape_region(
     height_mm: float,
     shape: int,
     rotation_degrees: float,
-    corner_radius_percent: int,
+    corner_radius_percent: float,
     corner_radius_mm: float | None = None,
 ) -> _Region:
     if shape == int(PadShape.CIRCLE):
@@ -3248,17 +3248,17 @@ def _via_diameter_iu(via: Any, layer: PcbLayer) -> int:
     return int(getattr(via, "diameter", 0) or 0)
 
 
-def _pad_corner_radius_percent(pad: Any, layer: PcbLayer) -> int:
+def _pad_corner_radius_percent(pad: Any, layer: PcbLayer) -> float:
+    # Exact CornerRadiusChamfer lane (2026.8.1) wins over the rounded lane.
+    exact_getter = getattr(pad, "exact_corner_radius_percent_on_layer", None)
+    exact = exact_getter(layer) if callable(exact_getter) else None
+    if exact is not None:
+        return float(exact)
     idx = layer.value - 1
     corner_radius = getattr(pad, "corner_radius", []) or []
-    corner_value = 0
-    if 0 <= idx < len(corner_radius):
-        raw_corner = corner_radius[idx]
-        corner_value = int(0 if raw_corner is None else raw_corner)
-    if corner_value > 0:
-        return corner_value
-    raw_percentage = getattr(pad, "corner_radius_percentage", 0)
-    return int(0 if raw_percentage is None else raw_percentage)
+    if 0 <= idx < len(corner_radius) and corner_radius[idx]:
+        return float(corner_radius[idx])
+    return float(getattr(pad, "corner_radius_percentage", 0) or 0)
 
 
 def _is_poured_polygon_primitive(primitive: Any) -> bool:

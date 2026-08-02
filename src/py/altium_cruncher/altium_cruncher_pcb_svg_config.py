@@ -6,8 +6,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from altium_monkey.altium_pcb_layer_ref import PcbLayerRef
 from altium_monkey.altium_record_types import PcbLayer
 
+from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+    resolve_pcb_layer_ref,
+)
 from altium_cruncher.config_json import enum_help, render_commented_jsonc
 
 PCB_SVG_CONFIG_FILENAME = "pcb.svg.config"
@@ -330,7 +334,7 @@ def _parse_single_pcb_layer_selector(token: str) -> str:
     if normalized in PCB_SVG_SPECIAL_LAYERS:
         return normalized
     try:
-        return PcbLayer.from_json_name(normalized).to_json_name()
+        return resolve_pcb_layer_ref(normalized).token
     except ValueError as exc:
         raise ValueError(f"Unknown PCB layer token in --layers: {token}") from exc
 
@@ -352,12 +356,22 @@ def parse_pcb_layer_selector(raw_layers: str | None) -> list[str] | None:
     return resolved
 
 
-def pcb_svg_physical_layer_from_token(token: str) -> PcbLayer | None:
-    """Return a physical PcbLayer for a token, or None for A0 synthetic layers."""
+def pcb_svg_layer_ref_from_token(token: str) -> PcbLayerRef | None:
+    """Return a PcbLayerRef for a token, or None for A0 synthetic layers.
+
+    Raises ValueError for unknown tokens. Covers both legacy and V7 layers.
+    """
     normalized = _normalize_layer_token(token)
     if normalized in PCB_SVG_SPECIAL_LAYERS:
         return None
-    return PcbLayer.from_json_name(normalized)
+    return resolve_pcb_layer_ref(normalized)
+
+
+def pcb_svg_physical_layer_from_token(token: str) -> PcbLayer | None:
+    """Return a legacy physical PcbLayer for a token, or None for A0
+    synthetic layers and V7-only layers with no legacy equivalent."""
+    ref = pcb_svg_layer_ref_from_token(token)
+    return None if ref is None else ref.legacy_layer
 
 
 def default_pcb_svg_styles() -> dict[str, dict[str, object]]:

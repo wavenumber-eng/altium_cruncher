@@ -8,6 +8,9 @@ import re
 from altium_monkey.altium_record_types import PcbLayer
 
 from altium_cruncher.altium_cruncher_mco import JsonObject, loads_jsonc
+from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+    resolve_pcb_layer_ref_or_none,
+)
 from altium_cruncher.config_json import enum_help, render_commented_jsonc
 
 PCB_LAYER_STEP_DEFAULT_CONFIG_TEXT = """{
@@ -628,8 +631,26 @@ def resolve_pcb_layer_selector(selector: str | int | PcbLayer | None) -> PcbLaye
 
     layer = _layer_aliases().get(normalized) or _layer_by_native_name(normalized)
     if layer is None:
-        raise ValueError(f"Unknown PCB layer selector: {selector!r}")
+        return _layer_from_v7_selector(selector)
     return layer
+
+
+def _layer_from_v7_selector(selector: str | int) -> PcbLayer:
+    """Resolve V7 layer tokens; layer-step operations require a legacy layer.
+
+    Layer-step internals index dense legacy-layer arrays (``layer.value - 1``),
+    so V7-only layers (Mechanical17+, Mid31+) cannot be supported here.
+    """
+    ref = resolve_pcb_layer_ref_or_none(selector)
+    if ref is None:
+        raise ValueError(f"Unknown PCB layer selector: {selector!r}")
+    if ref.legacy_layer is None:
+        raise ValueError(
+            f"V7-only layer {ref.token!r} is not supported for layer-step "
+            "operations; choose a layer with a legacy id (Top/Bottom, "
+            "Mid1-30, Mechanical1-16)."
+        )
+    return ref.legacy_layer
 
 
 def _normalize_layer_selector(value: str) -> str:

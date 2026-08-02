@@ -12,7 +12,7 @@ MANIFEST = PACKAGE_ROOT / "docs" / "contracts" / "command_manifest.a0.json"
 
 def _manifest_commands() -> list[str]:
     payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    assert payload["schema"] == "altium_cruncher.command_manifest.a0"
+    assert payload["schema"] == "wn_dev_std.command_manifest.a0"
     commands = payload["commands"]
     assert isinstance(commands, list)
     names = [str(command["name"]) for command in commands]

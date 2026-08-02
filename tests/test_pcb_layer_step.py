@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 from types import SimpleNamespace
 
+import pytest
+
 from altium_monkey.altium_board import BoardOutlineVertex
 from altium_monkey.altium_pcb_enums import PadShape
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -87,6 +89,17 @@ def test_resolve_pcb_layer_selector_accepts_common_names() -> None:
     assert resolve_pcb_layer_selector("Bottom Layer") == PcbLayer.BOTTOM
     assert resolve_pcb_layer_selector("L1") == PcbLayer.TOP
     assert resolve_pcb_layer_selector("MECHANICAL_1") == PcbLayer.MECHANICAL_1
+
+
+def test_resolve_pcb_layer_selector_rejects_v7_only_layers() -> None:
+    """STEP export indexes dense legacy-layer arrays, so V7-only layers must
+    fail loudly instead of resolving to a wrong legacy layer."""
+    with pytest.raises(ValueError, match="V7-only layer 'MECHANICAL17'"):
+        resolve_pcb_layer_selector("Mechanical 17")
+    with pytest.raises(ValueError, match="V7-only layer 'MID31'"):
+        resolve_pcb_layer_selector("Mid 31")
+    with pytest.raises(ValueError, match="Unknown PCB layer selector"):
+        resolve_pcb_layer_selector("not-a-layer")
 
 
 def test_pcb_layer_step_config_auto_created_next_to_input(tmp_path) -> None:
@@ -973,3 +986,69 @@ def test_export_pcb_layer_step_can_preserve_board_outline_regions(
     outline_body = captured["request"]["bodies"][0]
     assert outline_body["id"] == "board_outline"
     assert "fuse_regions" not in outline_body
+
+
+def test_pad_corner_radius_percent_prefers_exact_fractional_lane() -> None:
+    from altium_cruncher.altium_cruncher_pcb_layer_step import (
+        _pad_corner_radius_percent,
+    )
+
+    exact_pad = SimpleNamespace(
+        exact_corner_radius_percent_on_layer=lambda layer: 18.181818,
+        corner_radius=[18] * 32,
+        corner_radius_percentage=18,
+    )
+    assert _pad_corner_radius_percent(exact_pad, PcbLayer.TOP) == pytest.approx(
+        18.181818
+    )
+
+    rounded_pad = SimpleNamespace(
+        exact_corner_radius_percent_on_layer=lambda layer: None,
+        corner_radius=[25] * 32,
+        corner_radius_percentage=25,
+    )
+    assert _pad_corner_radius_percent(rounded_pad, PcbLayer.TOP) == 25.0
+
+    legacy_pad = SimpleNamespace(
+        corner_radius=[],
+        corner_radius_percentage=40,
+    )
+    assert _pad_corner_radius_percent(legacy_pad, PcbLayer.TOP) == 40.0
+
+
+def test_highlight_pad_geometry_keeps_fractional_corner_radius_percent() -> None:
+    from altium_cruncher.altium_cruncher_pcb_layer_step_highlights import (
+        highlight_bodies_from_geometries,
+    )
+
+    captured: list[dict[str, object]] = []
+
+    def pad_shape_region(**kwargs):
+        captured.append(kwargs)
+        return SimpleNamespace(to_json=lambda: {"outer": {"points": []}})
+
+    highlight = PcbLayerStepHighlight(
+        id="hl",
+        color="#ff0000",
+        pad_geometries=(
+            {
+                "x_mils": 0.0,
+                "y_mils": 0.0,
+                "width_mils": 60.0,
+                "height_mils": 60.0,
+                "shape": int(PadShape.ROUNDED_RECTANGLE.value),
+                "corner_radius_percent": 18.181818,
+            },
+        ),
+    )
+    bodies = highlight_bodies_from_geometries(
+        highlights=(highlight,),
+        layer=PcbLayer.TOP,
+        z_mm=0.0,
+        copper_thickness_mm=0.035,
+        pad_shape_region=pad_shape_region,
+        step_name=lambda name: name,
+    )
+
+    assert len(bodies) == 1
+    assert captured[0]["corner_radius_percent"] == pytest.approx(18.181818)

@@ -200,6 +200,37 @@ def test_pcb_svg_cli_layers_filter_layer_outputs() -> None:
     assert config.layer_outputs["layers"] == ["BOTTOM"]
 
 
+def test_pcb_svg_cli_layers_accept_v7_layer_tokens() -> None:
+    from altium_cruncher.altium_cruncher_pcb_svg_config import parse_pcb_layer_selector
+
+    assert parse_pcb_layer_selector("top,Mechanical 17,mid_31") == [
+        "TOP",
+        "MECHANICAL17",
+        "MID31",
+    ]
+    with pytest.raises(ValueError, match="Unknown PCB layer token"):
+        parse_pcb_layer_selector("not-a-layer")
+
+
+def test_pcb_svg_layer_token_resolution_classifies_v7_layers() -> None:
+    from altium_cruncher.altium_cruncher_pcb_svg_config import (
+        pcb_svg_layer_ref_from_token,
+        pcb_svg_physical_layer_from_token,
+    )
+
+    mech17 = pcb_svg_layer_ref_from_token("MECHANICAL17")
+    assert mech17 is not None
+    assert mech17.token == "MECHANICAL17"
+    assert mech17.legacy_layer is None
+    # V7-only layers have no legacy physical layer; synthetic A0 layers
+    # resolve to None instead of raising.
+    assert pcb_svg_physical_layer_from_token("MECHANICAL17") is None
+    assert pcb_svg_physical_layer_from_token("BOARD_OUTLINE") is None
+    assert pcb_svg_physical_layer_from_token("TOP") == PcbLayer.TOP
+    with pytest.raises(ValueError):
+        pcb_svg_layer_ref_from_token("not-a-layer")
+
+
 def test_pcb_svg_cli_overrides_created_default_config(tmp_path) -> None:
     config_path = tmp_path / PCB_SVG_CONFIG_FILENAME
     input_file = tmp_path / "board.PrjPcb"

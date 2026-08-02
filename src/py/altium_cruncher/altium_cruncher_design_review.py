@@ -19,7 +19,7 @@ from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
 
 if TYPE_CHECKING:
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
-    from altium_monkey.altium_record_types import PcbLayer
+    from altium_monkey.altium_pcb_layer_ref import PcbLayerRef
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
 DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.a0"
@@ -433,9 +433,7 @@ def _schematic_components_for_sheet(
     if not isinstance(raw_components, list):
         return []
     components = [
-        component
-        for component in raw_components
-        if isinstance(component, dict)
+        component for component in raw_components if isinstance(component, dict)
     ]
     sheet_name = schdoc_path.name.lower()
     sheet_components = [
@@ -477,9 +475,7 @@ def _compiled_schematic_svg_view_indexes(
 ) -> dict[str, object]:
     raw_components = schematic_page.get("components", [])
     components = [
-        component
-        for component in raw_components
-        if isinstance(component, dict)
+        component for component in raw_components if isinstance(component, dict)
     ]
     svg_to_components: dict[str, list[str]] = {}
     component_to_svg: dict[str, str] = {}
@@ -758,35 +754,53 @@ def _pcb_review_copper_layer_tokens(
     config: "PcbSvgConfig",
 ) -> list[str]:
     from altium_monkey.altium_record_types import PcbLayer
+    from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+        pcb_layer_ref_sort_key,
+    )
     from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
 
     renderer = PcbSvgA0Renderer(config)
-    layers = {
-        layer
+    # _collect_visible_layers yields V7-aware render layers since
+    # altium-monkey 2026.8.1; keep the refs so Mechanical17+/Mid31+ content
+    # classifies correctly.
+    refs = {
+        layer.ref
         for layer in renderer._collect_visible_layers(pcbdoc)  # noqa: SLF001
         if layer.is_copper()
     }
-    layers.update(_pcb_review_primitive_copper_layers(pcbdoc))
-    tokens = [layer.to_json_name() for layer in sorted(layers, key=int)]
+    refs.update(_pcb_review_primitive_copper_layers(pcbdoc))
+    tokens = [ref.token for ref in sorted(refs, key=pcb_layer_ref_sort_key)]
     return tokens or [PcbLayer.TOP.to_json_name(), PcbLayer.BOTTOM.to_json_name()]
 
 
-def _pcb_review_primitive_copper_layers(pcbdoc: "AltiumPcbDoc") -> set["PcbLayer"]:
+def _pcb_review_primitive_copper_layers(
+    pcbdoc: "AltiumPcbDoc",
+) -> set["PcbLayerRef"]:
     from altium_monkey.altium_record_types import PcbLayer
+    from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+        pcb_layer_ref_is_copper,
+        resolve_pcb_layer_ref,
+    )
 
-    layers: set[PcbLayer] = set()
+    multilayer_token = PcbLayer.MULTI_LAYER.to_json_name()
+    layers: set["PcbLayerRef"] = set()
     saw_multilayer = False
     for layer_value in _iter_pcb_review_layer_values(pcbdoc):
-        layer = _pcb_layer_from_value(layer_value)
-        if layer is None:
+        ref = _pcb_layer_ref_from_value(layer_value)
+        if ref is None:
             continue
-        if layer == PcbLayer.MULTI_LAYER:
+        if ref.token == multilayer_token:
             saw_multilayer = True
             continue
-        if layer.is_copper():
-            layers.add(layer)
+        if pcb_layer_ref_is_copper(ref):
+            layers.add(ref)
     if saw_multilayer and not layers:
-        layers.update({PcbLayer.TOP, PcbLayer.BOTTOM})
+        layers.update(
+            {
+                resolve_pcb_layer_ref(PcbLayer.TOP),
+                resolve_pcb_layer_ref(PcbLayer.BOTTOM),
+            }
+        )
     return layers
 
 
@@ -809,25 +823,12 @@ def _iter_pcb_review_layer_values(pcbdoc: "AltiumPcbDoc") -> Iterator[object]:
                 yield getattr(primitive, "layer_end", None)
 
 
-def _pcb_layer_from_value(value: object) -> "PcbLayer | None":
-    from altium_monkey.altium_record_types import PcbLayer
+def _pcb_layer_ref_from_value(value: object) -> "PcbLayerRef | None":
+    from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+        resolve_pcb_layer_ref_or_none,
+    )
 
-    if value is None:
-        return None
-    if isinstance(value, PcbLayer):
-        return value
-    if isinstance(value, str):
-        try:
-            return PcbLayer.from_json_name(value)
-        except ValueError:
-            try:
-                return PcbLayer[value]
-            except KeyError:
-                return None
-    try:
-        return PcbLayer(int(value))
-    except (TypeError, ValueError):
-        return None
+    return resolve_pcb_layer_ref_or_none(value)
 
 
 def _log_pcb_svg_manifest_outputs(
@@ -947,7 +948,7 @@ visual schematic and PCB context.
 
 1. Read `design_review_manifest.json`; all paths in it are relative to this
    folder.
-2. Read `{manifest['design_json']}` for the project-level design model.
+2. Read `{manifest["design_json"]}` for the project-level design model.
 3. Open `sch/*.svg` for schematic context. For project inputs these are
    compiled, resolved schematic pages; for single SchDoc inputs these are
    logical sheet renders. Open `pcb/layers/*.svg` for PCB context. The SVGs
@@ -957,7 +958,7 @@ visual schematic and PCB context.
 
 ## Artifact Map
 
-- `{manifest['design_json']}`: Altium Monkey design/netlist JSON. This is the
+- `{manifest["design_json"]}`: Altium Monkey design/netlist JSON. This is the
   primary semantic model for components, nets, hierarchy, variants, PnP, and
   lookup indexes. For project inputs this is the compiled physical design view:
   repeated sheets and channels use resolved physical designators, physical page
@@ -965,7 +966,7 @@ visual schematic and PCB context.
   context, see the public
   [altium_monkey](https://github.com/wavenumber-eng/altium_monkey) project.
 - `design_review_manifest.json`: artifact index for this bundle.
-- `{manifest['notes_json']}`: JSONC dedicated notes, schematic-owned text
+- `{manifest["notes_json"]}`: JSONC dedicated notes, schematic-owned text
   frames, and schematic-owned free text by sheet. Sheet-template/title-block
   text is suppressed by default.
 - `json/schdoc/` and `json/pcbdoc/`: serialized document JSON snapshots from

@@ -321,7 +321,8 @@
       "additionalProperties": false
     },
     "layerSelector": {
-      "type": ["string", "integer", "null"]
+      "type": ["string", "integer", "null"],
+      "description": "PCB layer selector: legacy PcbLayer name (for example 'TOP_OVERLAY'), display name (for example 'Mechanical 13'), legacy integer layer id, or a V7 semantic token such as 'MECHANICAL33' when the installed altium-monkey exposes the V7-aware layer API. Layer-step rendering writes legacy layer bytes, so V7-only layers (Mechanical17+, Mid31+) are rejected with an actionable error."
     },
     "color": {
       "type": "string",

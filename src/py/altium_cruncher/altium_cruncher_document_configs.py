@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from altium_cruncher.altium_cruncher_project_profiles import (
-    STANDARD_MECHANICAL_LAYERS,
+    MECHANICAL_LAYER_PROFILE_CHOICES,
+    V7_MECHANICAL_53_LAYERS,
     generated_rigid_stack_config,
     standard_mechanical_project_config,
 )
@@ -77,7 +78,9 @@ def render_schdoc_create_config(config: JsonObject) -> str:
         config,
         comments_by_path={
             ("schema",): "SchDoc create config contract id.",
-            ("file",): "SchDoc file to create, relative to this config file unless absolute.",
+            (
+                "file",
+            ): "SchDoc file to create, relative to this config file unless absolute.",
             ("sheet_style",): (
                 "Schematic sheet style. Options: Altium SheetStyle enum name or native enum id."
             ),
@@ -131,7 +134,7 @@ def _mechanical_layer_reference_lines() -> tuple[str, ...]:
     return tuple(
         f"  {layer}=index {index}: {name}"
         for index, (layer, name, _enabled) in enumerate(
-            STANDARD_MECHANICAL_LAYERS,
+            V7_MECHANICAL_53_LAYERS,
             start=1,
         )
     )
@@ -149,19 +152,45 @@ def _pcbdoc_comment_paths(
 ) -> dict[tuple[str, ...], str]:
     return {
         (*prefix, "schema"): "PcbDoc create config contract id.",
-        (*prefix, "file"): "PcbDoc file to create, relative to this config file unless absolute.",
+        (
+            *prefix,
+            "file",
+        ): "PcbDoc file to create, relative to this config file unless absolute.",
         (*prefix, "board_outline_mils"): "Rectangular board outline in mils.",
-        (*prefix, "board_outline_mils", "left"): "Left board outline coordinate in mils.",
-        (*prefix, "board_outline_mils", "bottom"): "Bottom board outline coordinate in mils.",
-        (*prefix, "board_outline_mils", "right"): "Right board outline coordinate in mils.",
+        (
+            *prefix,
+            "board_outline_mils",
+            "left",
+        ): "Left board outline coordinate in mils.",
+        (
+            *prefix,
+            "board_outline_mils",
+            "bottom",
+        ): "Bottom board outline coordinate in mils.",
+        (
+            *prefix,
+            "board_outline_mils",
+            "right",
+        ): "Right board outline coordinate in mils.",
         (*prefix, "board_outline_mils", "top"): "Top board outline coordinate in mils.",
         (*prefix, "layer_stack"): (
-            "Generated rigid stack. stackup/stackupx import is intentionally "
-            "not part of this release contract."
+            "Generated rigid stack. Use stackupx_file instead for imported "
+            ".stackupx layer-stack documents."
         ),
-        (*prefix, "layer_stack", "mode"): "Layer-stack generation mode. Options: generated_rigid.",
+        (*prefix, "stackupx_file"): (
+            "Optional .stackupx path to import as the PcbDoc layer-stack document."
+        ),
+        (
+            *prefix,
+            "layer_stack",
+            "mode",
+        ): "Layer-stack generation mode. Options: generated_rigid.",
         (*prefix, "layer_stack", "name"): "Layer-stack display name.",
-        (*prefix, "layer_stack", "copper_layers"): "Copper layers in top-to-bottom order.",
+        (
+            *prefix,
+            "layer_stack",
+            "copper_layers",
+        ): "Copper layers in top-to-bottom order.",
         (*prefix, "layer_stack", "copper_layers", "name"): "Copper layer display name.",
         (*prefix, "layer_stack", "copper_layers", "copper_thickness_mils"): (
             "Copper thickness in mils."
@@ -185,13 +214,25 @@ def _pcbdoc_comment_paths(
             "Altium dielectric type code."
         ),
         (*prefix, "mechanical_layer_profile"): (
-            "Optional shorthand. Options: standard_component_pairs or none. "
+            "Optional shorthand. Options: "
+            f"{', '.join(MECHANICAL_LAYER_PROFILE_CHOICES)}. "
             "Explicit mechanical rows override this profile."
         ),
-        (*prefix, "mechanical_layers"): "Editable single or unpaired mechanical layer rows.",
-        (*prefix, "mechanical_layers", "layer"): "Mechanical layer id; see valid ids in the header.",
+        (
+            *prefix,
+            "mechanical_layers",
+        ): "Editable single or unpaired mechanical layer rows.",
+        (
+            *prefix,
+            "mechanical_layers",
+            "layer",
+        ): "Mechanical layer id; see valid ids in the header.",
         (*prefix, "mechanical_layers", "name"): "Mechanical layer display name.",
-        (*prefix, "mechanical_layers", "enabled"): "Whether the mechanical layer is enabled.",
+        (
+            *prefix,
+            "mechanical_layers",
+            "enabled",
+        ): "Whether the mechanical layer is enabled.",
         (*prefix, "mechanical_layers", "kind"): (
             "Optional mechanical layer kind enum name; see valid kind names in the header."
         ),
@@ -211,7 +252,11 @@ def _pcbdoc_comment_paths(
         (*prefix, "mechanical_layer_pairs", "top", "kind"): (
             "Top-side mechanical layer kind enum name; see valid kind names in the header."
         ),
-        (*prefix, "mechanical_layer_pairs", "bottom"): "Bottom-side mechanical layer row.",
+        (
+            *prefix,
+            "mechanical_layer_pairs",
+            "bottom",
+        ): "Bottom-side mechanical layer row.",
         (*prefix, "mechanical_layer_pairs", "bottom", "layer"): (
             "Bottom-side mechanical layer id; see valid ids in the header."
         ),
@@ -233,7 +278,10 @@ def _pcbdoc_comment_paths(
         (*prefix, "mechanical_layer_pairs", "pair_index"): (
             "Legacy flat pair form: optional pair ordering override."
         ),
-        (*prefix, "mechanical_layer_kinds"): "Editable mechanical layer kind assignment rows.",
+        (
+            *prefix,
+            "mechanical_layer_kinds",
+        ): "Editable mechanical layer kind assignment rows.",
         (*prefix, "mechanical_layer_kinds", "layer"): (
             "Mechanical layer id to assign; see valid ids in the header."
         ),
@@ -243,7 +291,9 @@ def _pcbdoc_comment_paths(
     }
 
 
-def project_pcbdoc_comment_paths(*, prefix: tuple[str, ...]) -> dict[tuple[str, ...], str]:
+def project_pcbdoc_comment_paths(
+    *, prefix: tuple[str, ...]
+) -> dict[tuple[str, ...], str]:
     """Return shared PcbDoc child comments for project configs."""
     comments = _pcbdoc_comment_paths(prefix=prefix)
     comments.pop((*prefix, "schema"), None)

@@ -7,6 +7,12 @@ from collections.abc import Sequence
 JsonObject = dict[str, object]
 
 STANDARD_MECHANICAL_LAYER_PROFILE = "standard_component_pairs"
+V7_MECHANICAL_53_LAYER_PROFILE = "v7_mechanical_53"
+MECHANICAL_LAYER_PROFILE_CHOICES = (
+    "none",
+    STANDARD_MECHANICAL_LAYER_PROFILE,
+    V7_MECHANICAL_53_LAYER_PROFILE,
+)
 
 STANDARD_MECHANICAL_LAYERS: tuple[tuple[str, str, bool], ...] = (
     ("MECHANICAL1", "Mechanical 1", True),
@@ -41,6 +47,11 @@ STANDARD_MECHANICAL_LAYERS: tuple[tuple[str, str, bool], ...] = (
     ("MECHANICAL30", "Top Value", True),
     ("MECHANICAL31", "Bottom Value", True),
     ("MECHANICAL32", "Mechanical 32", False),
+)
+
+V7_MECHANICAL_53_LAYERS: tuple[tuple[str, str, bool], ...] = (
+    *((layer, name, True) for layer, name, _enabled in STANDARD_MECHANICAL_LAYERS),
+    *((f"MECHANICAL{index}", f"Mechanical {index}", True) for index in range(33, 54)),
 )
 
 STANDARD_MECHANICAL_LAYER_KINDS: tuple[tuple[str, str], ...] = (
@@ -93,10 +104,31 @@ STANDARD_MECHANICAL_LAYER_PAIRS: tuple[tuple[str, str], ...] = (
 
 def standard_mechanical_profile_args() -> JsonObject:
     """Return editable MCO args for the standard mechanical layer profile."""
+    return _mechanical_profile_args(STANDARD_MECHANICAL_LAYERS)
+
+
+def v7_mechanical_53_profile_args() -> JsonObject:
+    """Return editable MCO args for Mechanical1 through Mechanical53."""
+    return _mechanical_profile_args(V7_MECHANICAL_53_LAYERS)
+
+
+def mechanical_profile_args(profile: str) -> JsonObject:
+    """Return editable MCO args for a named mechanical layer profile."""
+    normalized = profile.strip().lower().replace("-", "_")
+    if normalized == STANDARD_MECHANICAL_LAYER_PROFILE:
+        return standard_mechanical_profile_args()
+    if normalized == V7_MECHANICAL_53_LAYER_PROFILE:
+        return v7_mechanical_53_profile_args()
+    raise ValueError(f"Unsupported mechanical layer profile: {profile!r}")
+
+
+def _mechanical_profile_args(
+    layers: tuple[tuple[str, str, bool], ...],
+) -> JsonObject:
     return {
         "mechanical_layers": [
             {"layer": layer, "name": name, "enabled": enabled}
-            for layer, name, enabled in STANDARD_MECHANICAL_LAYERS
+            for layer, name, enabled in layers
         ],
         "mechanical_layer_pairs": [
             {"layer_1": layer_1, "layer_2": layer_2}
@@ -117,9 +149,7 @@ def standard_mechanical_project_config() -> JsonObject:
     }
     kinds_by_id = dict(STANDARD_MECHANICAL_LAYER_KINDS)
     paired_layers = {
-        layer
-        for layer_pair in STANDARD_MECHANICAL_LAYER_PAIRS
-        for layer in layer_pair
+        layer for layer_pair in STANDARD_MECHANICAL_LAYER_PAIRS for layer in layer_pair
     }
     single_rows: list[JsonObject] = []
     for layer, row in layers_by_id.items():

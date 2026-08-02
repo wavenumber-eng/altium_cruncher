@@ -96,6 +96,7 @@
       "properties": {
         "enabled": { "type": "boolean" },
         "layers": {
+          "description": "Either 'auto' or a list of PCB layer names: legacy PcbLayer names, display names, or V7 semantic tokens such as 'MECHANICAL33' and 'MID31' when the installed altium-monkey exposes the V7-aware layer API.",
           "oneOf": [
             { "const": "auto" },
             {
@@ -123,6 +124,7 @@
           "group_id": { "type": "string" },
           "output_svg": { "type": "string" },
           "layers": {
+            "description": "PCB layer names for this view: legacy PcbLayer names, display names, or V7 semantic tokens such as 'MECHANICAL33' and 'MID31' when the installed altium-monkey exposes the V7-aware layer API.",
             "type": "array",
             "items": { "type": "string" }
           },

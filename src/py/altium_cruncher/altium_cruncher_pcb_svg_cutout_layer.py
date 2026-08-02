@@ -98,7 +98,8 @@ class CruncherPcbCutoutLayerRenderer(PcbSvgRenderer):
             ctx,
             view_kind,
             active_layer_ids,
-            include_board_outline=include_board_outline,
+            ["BOARD_CUTOUTS"],
+            includes_board_outline=include_board_outline,
             pcbdoc=pcbdoc,
         )
         self._append_svg_defs(  # noqa: SLF001

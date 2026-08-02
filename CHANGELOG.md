@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+## 2026.8.1
+
+- Consume pinned `altium-monkey==2026.8.1`, including the V7-aware PCB layer API (`PcbLayerRef`, Mechanical17-53, StackUpX-backed Mid31-126), exact fractional pad corner radius, StackUpX GUID id enforcement, and V7-aware SVG layer identity.
+- V7 layer tokens such as `MECHANICAL17` and `MID31` now resolve through all layer-parsing entry points: `pcb-svg` layer selectors and views, `design-review` primitive classification (Mechanical17+ boards classify correctly instead of degrading to unknown-layer), `pcblib clean`, and `pcb-layer-step` selectors. Surfaces that write legacy layer bytes (`pcb-layer-step`, `pcbdoc.arrange_designators`) reject V7-only layers with an actionable error instead of silently dropping or crashing.
+- MCO `pcbdoc.add_pad` accepts a float `corner_radius_percent`; fractional percentages survive exactly through the altium-monkey CornerRadiusChamfer lane, and layer-step rendering/highlights no longer truncate fractional corner-radius percentages to integers.
+- MCO layer-bearing ops accept V7 tokens where altium-monkey 2026.8.1 supports authoring (tracks, arcs, fills, regions, text, embedded 3D models on Mechanical17-53; signal authoring on StackUpX-backed Mid31+ boards). Upstream-gated operations (`add_pad` on V7-only mechanical layers, `add_via` spans to Mid31+, `add_component` off Top/Bottom) surface the actionable altium-monkey error in the operation result.
+- `pcbdoc.create` with `stackupx_file` supports extended-signal stacks and surfaces the StackUpX GUID-enforcement error when layer ids are not GUID strings.
+
 ## 2026.7.29
 
 - Consume pinned `altium-monkey==2026.7.29`, including the stable project-level schematic compiler, `design.a2` physical-page contract, physical SVG/IR rendering, and net-name alias/name-source provenance.
