@@ -388,7 +388,8 @@
           "$ref": "#/$defs/stringList"
         },
         "layers": {
-          "$ref": "#/$defs/stringList"
+          "$ref": "#/$defs/stringList",
+          "description": "Layer name filters. Accepts legacy PcbLayer names, display names such as 'Mechanical 17', and V7 semantic tokens such as 'MECHANICAL17' when the installed altium-monkey exposes the V7-aware layer API; token and display forms match the same layer."
         },
         "preserve_regions": {
           "type": "boolean"
@@ -406,7 +407,8 @@
           "type": "boolean"
         },
         "layers": {
-          "$ref": "#/$defs/stringList"
+          "$ref": "#/$defs/stringList",
+          "description": "Layer name filters. Accepts legacy PcbLayer names, display names such as 'Mechanical 17', and V7 semantic tokens such as 'MECHANICAL17' when the installed altium-monkey exposes the V7-aware layer API; token and display forms match the same layer."
         },
         "match": {
           "enum": ["all", "regex", "contains", "exact"]
@@ -424,7 +426,8 @@
           "type": "boolean"
         },
         "layers": {
-          "$ref": "#/$defs/stringList"
+          "$ref": "#/$defs/stringList",
+          "description": "Layer name filters. Accepts legacy PcbLayer names, display names such as 'Mechanical 17', and V7 semantic tokens such as 'MECHANICAL17' when the installed altium-monkey exposes the V7-aware layer API; token and display forms match the same layer."
         },
         "preserve_component_linked": {
           "type": "boolean"

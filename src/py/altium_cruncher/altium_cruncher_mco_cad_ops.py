@@ -210,13 +210,9 @@ def _op_pcbdoc_add_text(
     )
     is_frame = _optional_bool(spec.args, "is_frame", False)
     frame_size_mils = _optional_number_pair(spec.args, "frame_size_mils")
-    text_justification = _pcb_text_justification(
-        spec.args.get("text_justification")
-    )
+    text_justification = _pcb_text_justification(spec.args.get("text_justification"))
     barcode_kind = _pcb_barcode_kind(spec.args.get("barcode_kind"))
-    barcode_render_mode = _pcb_barcode_render_mode(
-        spec.args.get("barcode_render_mode")
-    )
+    barcode_render_mode = _pcb_barcode_render_mode(spec.args.get("barcode_render_mode"))
     barcode_full_size_mils = _optional_number_pair(
         spec.args,
         "barcode_full_size_mils",
@@ -488,7 +484,7 @@ def _op_pcbdoc_arrange_designators(
     stroke_width_mils = _optional_float(spec.args, "stroke_width_mils", 8.0)
     width_factor = _optional_float(spec.args, "width_factor", 0.6)
     layer = _pcb_layer(spec.args.get("layer"), default="TOP_OVERLAY")
-    layer_id = int(cast(IntEnum, layer))
+    layer_id = _legacy_pcb_layer_id(layer, op_name="pcbdoc.arrange-designators")
     font_kind = _pcb_text_kind(spec.args.get("font_kind", "truetype"))
     font_name = _optional_string(spec.args, "font_name", "Arial") or "Arial"
     bold = _optional_bool(spec.args, "bold", True)
@@ -591,6 +587,12 @@ def _op_pcbdoc_add_pad(
         hole_size_mils=_optional_float(spec.args, "hole_size_mils", 0.0),
         plated=_optional_bool_or_none(spec.args, "plated"),
         net=_optional_string(spec.args, "net", None),
+        # Float percent survives exactly (CornerRadiusChamfer lane) since
+        # altium-monkey 2026.8.1.
+        corner_radius_percent=_optional_float_or_none(
+            spec.args,
+            "corner_radius_percent",
+        ),
         solder_mask_expansion_mils=_optional_float_or_none(
             spec.args,
             "solder_mask_expansion_mils",
@@ -888,8 +890,12 @@ def _mutation_paths(
     output_value = _optional_string(args, "output_file", None)
     overwrite = _optional_bool(args, "overwrite", False)
     if output_value is None and not overwrite:
-        raise ValueError("CAD mutation operations require output_file or overwrite=true")
-    output_file = input_file if output_value is None else _resolve_path(output_value, context)
+        raise ValueError(
+            "CAD mutation operations require output_file or overwrite=true"
+        )
+    output_file = (
+        input_file if output_value is None else _resolve_path(output_value, context)
+    )
     if output_file.exists() and output_file != input_file and not overwrite:
         raise FileExistsError(f"Output already exists: {output_file}")
     return FileMutationPaths(input_file=input_file, output_file=output_file)
@@ -1252,8 +1258,40 @@ def _pcb_layer(value: object, *, default: str) -> object:
     if isinstance(value, int) and not isinstance(value, bool):
         return PcbLayer(value)
     if isinstance(value, str):
-        return _enum_by_label(PcbLayer, value)
+        try:
+            return _enum_by_label(PcbLayer, value)
+        except ValueError as legacy_error:
+            layer_ref = _try_pcb_layer_ref(value)
+            if layer_ref is not None:
+                return layer_ref
+            raise legacy_error
     raise ValueError("PCB layer must be a string name or native integer id")
+
+
+def _legacy_pcb_layer_id(layer: object, *, op_name: str) -> int:
+    """Return the legacy layer id, rejecting V7-only layers actionably.
+
+    Ops that restyle existing primitives write raw legacy layer bytes, so
+    V7-only layers (Mechanical17+, Mid31+) cannot be expressed there.
+    """
+    if isinstance(layer, IntEnum):
+        return int(layer)
+    legacy_layer = getattr(layer, "legacy_layer", None)
+    if legacy_layer is not None:
+        return int(legacy_layer)
+    token = getattr(layer, "token", layer)
+    raise ValueError(
+        f"{op_name} does not support V7-only layer {token!r}; choose a "
+        "layer with a legacy id (for example TOP_OVERLAY or Mechanical1-16)."
+    )
+
+
+def _try_pcb_layer_ref(value: str) -> object | None:
+    try:
+        from altium_monkey import coerce_pcb_layer_ref
+    except ImportError:
+        return None
+    return coerce_pcb_layer_ref(value)
 
 
 def _pcb_body_projection(value: object, *, default: str) -> object:
@@ -1325,7 +1363,9 @@ def _pcb_text_justification(value: object) -> object | None:
         return PcbTextJustification(value)
     if isinstance(value, str):
         return _enum_by_label(PcbTextJustification, value)
-    raise ValueError("PCB text_justification must be a string name or native integer id")
+    raise ValueError(
+        "PCB text_justification must be a string name or native integer id"
+    )
 
 
 def _pcb_barcode_kind(value: object) -> object:
@@ -1366,7 +1406,9 @@ def _sch_text_orientation(value: object) -> "TextOrientation":
         if normalized.startswith("DEG_"):
             normalized = "DEGREES_" + normalized.removeprefix("DEG_")
         return cast("TextOrientation", _enum_by_label(TextOrientation, normalized))
-    raise ValueError("Schematic text orientation must be a string name or native integer id")
+    raise ValueError(
+        "Schematic text orientation must be a string name or native integer id"
+    )
 
 
 def _sch_text_justification(value: object) -> "TextJustification":
@@ -1388,7 +1430,9 @@ def _sch_power_object_style(value: object) -> object:
         return PowerObjectStyle(value)
     if isinstance(value, str):
         return _enum_by_label(PowerObjectStyle, value)
-    raise ValueError("Schematic power-port style must be a string name or native integer id")
+    raise ValueError(
+        "Schematic power-port style must be a string name or native integer id"
+    )
 
 
 def _enum_by_label(enum_type: type[IntEnum], value: str) -> IntEnum:
@@ -1425,7 +1469,9 @@ def _reject_duplicate_pcblib_footprint(
         str(getattr(footprint, "name", "") or "") == footprint_name
         for footprint in list(getattr(pcblib, "footprints", []) or [])
     ):
-        raise ValueError(f"Footprint {footprint_name!r} already exists in {library_path}")
+        raise ValueError(
+            f"Footprint {footprint_name!r} already exists in {library_path}"
+        )
 
 
 def _apply_schematic_text_style(
@@ -1891,19 +1937,31 @@ def _apply_pcb_designator_text_style(
     if font_kind == 1:
         setattr(text_obj, "font_type", 1)
         setattr(text_obj, "_font_type_offset43", 1)
-        setattr(text_obj, "stroke_font_type", max(1, int(getattr(text_obj, "stroke_font_type", 1))))
+        setattr(
+            text_obj,
+            "stroke_font_type",
+            max(1, int(getattr(text_obj, "stroke_font_type", 1))),
+        )
         setattr(text_obj, "is_bold", bool(bold))
         setattr(text_obj, "is_italic", bool(italic))
     elif font_kind == 2:
         setattr(text_obj, "font_type", 2)
         setattr(text_obj, "_font_type_offset43", 0)
-        setattr(text_obj, "stroke_font_type", max(1, int(getattr(text_obj, "stroke_font_type", 1))))
+        setattr(
+            text_obj,
+            "stroke_font_type",
+            max(1, int(getattr(text_obj, "stroke_font_type", 1))),
+        )
         setattr(text_obj, "is_bold", bool(bold))
         setattr(text_obj, "is_italic", bool(italic))
     else:
         setattr(text_obj, "font_type", 0)
         setattr(text_obj, "_font_type_offset43", 0)
-        setattr(text_obj, "stroke_font_type", max(1, int(getattr(text_obj, "stroke_font_type", 1))))
+        setattr(
+            text_obj,
+            "stroke_font_type",
+            max(1, int(getattr(text_obj, "stroke_font_type", 1))),
+        )
         setattr(text_obj, "is_bold", False)
         setattr(text_obj, "is_italic", False)
 

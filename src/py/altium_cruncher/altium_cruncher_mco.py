@@ -1070,7 +1070,7 @@ def _op_pcbdoc_create(
 
     context.invalidate_documents([file_path])
     builder = PcbDocBuilder()
-    _configure_pcbdoc_builder(builder, spec.args)
+    _configure_pcbdoc_builder(builder, spec.args, context)
     with TemporaryDirectory(prefix="altium-cruncher-pcbdoc-") as temp_dir:
         temp_file = Path(temp_dir) / file_path.name
         builder.save(temp_file)
@@ -1090,8 +1090,12 @@ def _op_pcbdoc_create(
     )
 
 
-def _configure_pcbdoc_builder(builder: object, args: Mapping[str, object]) -> None:
-    _apply_pcbdoc_layer_stack_args(builder, args)
+def _configure_pcbdoc_builder(
+    builder: object,
+    args: Mapping[str, object],
+    context: McoExecutionContext,
+) -> None:
+    _apply_pcbdoc_layer_stack_args(builder, args, context)
     _apply_pcbdoc_mechanical_layer_args(builder, args)
     _apply_pcbdoc_geometry_args(builder, args)
     builder.set_current_view_state("2D")
@@ -1101,13 +1105,29 @@ def _configure_pcbdoc_builder(builder: object, args: Mapping[str, object]) -> No
 def _apply_pcbdoc_layer_stack_args(
     builder: object,
     args: Mapping[str, object],
+    context: McoExecutionContext,
 ) -> None:
     layer_stack_template = _optional_string(args, "layer_stack_template", None)
     rigid_stack = args.get("rigid_stack")
-    if layer_stack_template is not None and rigid_stack is not None:
-        raise ValueError("Use either layer_stack_template or rigid_stack, not both")
+    stackupx_file = args.get("stackupx_file")
+    configured = [
+        name
+        for name, value in (
+            ("layer_stack_template", layer_stack_template),
+            ("rigid_stack", rigid_stack),
+            ("stackupx_file", stackupx_file),
+        )
+        if value is not None
+    ]
+    if len(configured) > 1:
+        names = ", ".join(configured)
+        raise ValueError(f"Use only one PcbDoc layer-stack input, got: {names}")
     if rigid_stack is not None:
         builder.set_layer_stack_document(_rigid_stack_document(rigid_stack))
+    elif stackupx_file is not None:
+        builder.set_layer_stack_document(
+            _stackupx_layer_stack_document(args, "stackupx_file", context)
+        )
     elif layer_stack_template is not None:
         builder.set_layer_stack_template(layer_stack_template)
 
@@ -1127,9 +1147,7 @@ def _apply_pcbdoc_geometry_args(builder: object, args: Mapping[str, object]) -> 
     )
     if sheet_frame_mils is not None:
         builder.set_sheet_frame_mils(*sheet_frame_mils)
-    board_origin_mils = _optional_number_object(
-        args, "board_origin_mils", ("x", "y")
-    )
+    board_origin_mils = _optional_number_object(args, "board_origin_mils", ("x", "y"))
     if board_origin_mils is not None:
         builder.set_origin_mils(*board_origin_mils)
     else:
@@ -1220,7 +1238,9 @@ def _rigid_stack_document(raw_value: object) -> object:
     if mode != "generated_rigid":
         raise ValueError(f"Unsupported rigid_stack.mode: {mode!r}")
     name = _optional_string(raw, "name", "generated-rigid") or "generated-rigid"
-    copper_rows = _json_object_list(raw.get("copper_layers"), "rigid_stack.copper_layers")
+    copper_rows = _json_object_list(
+        raw.get("copper_layers"), "rigid_stack.copper_layers"
+    )
     dielectric_rows = _json_object_list(
         raw.get("dielectrics_between"),
         "rigid_stack.dielectrics_between",
@@ -1265,20 +1285,31 @@ def _rigid_stack_document(raw_value: object) -> object:
     )
 
 
+def _stackupx_layer_stack_document(
+    args: Mapping[str, object],
+    field_name: str,
+    context: McoExecutionContext,
+) -> object:
+    path = _optional_path(args, field_name, context)
+    if path is None:
+        raise ValueError(f"Field {field_name!r} must be a non-empty path string")
+
+    from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
+
+    return AltiumLayerStackDocument.from_stackupx(path)
+
+
 def _apply_pcbdoc_mechanical_layer_args(
     builder: object,
     args: Mapping[str, object],
 ) -> None:
     profile = _optional_string(args, "mechanical_layer_profile", None)
     if profile:
-        normalized_profile = profile.strip().lower().replace("-", "_")
-        if normalized_profile != "standard_component_pairs":
-            raise ValueError(f"Unsupported mechanical layer profile: {profile!r}")
         from altium_cruncher.altium_cruncher_project_profiles import (
-            standard_mechanical_profile_args,
+            mechanical_profile_args,
         )
 
-        profile_args = standard_mechanical_profile_args()
+        profile_args = mechanical_profile_args(profile)
         _apply_mechanical_layers(builder, profile_args.get("mechanical_layers"))
         _apply_mechanical_layer_pairs(
             builder,
@@ -1634,12 +1665,24 @@ def _mco_template_key_comments() -> dict[str, str | tuple[str, ...]]:
             "the generated default uses 2-layer."
         ),
         "rigid_stack": "Generated rigid layer-stack object for new PcbDoc creation.",
+        "stackupx_file": (
+            "Path to a .stackupx file to import as the PcbDoc layer-stack document."
+        ),
         "mechanical_layer_profile": (
-            "Mechanical layer profile. Options: standard_component_pairs."
+            "Mechanical layer profile. Options: standard_component_pairs, "
+            "v7_mechanical_53."
         ),
         "mechanical_layers": "Editable mechanical layer display-name/enabled rows.",
         "mechanical_layer_pairs": "Editable mechanical layer top/bottom pair rows.",
         "mechanical_layer_kinds": "Editable mechanical layer kind assignment rows.",
+        "layer": (
+            "PCB layer selector. Legacy PcbLayer names/ids remain supported; "
+            "with a V7-aware altium-monkey, primitive ops also accept semantic "
+            "tokens such as MECHANICAL33. Raw serialized V7 saved-layer ids "
+            "are diagnostics, not layer selectors."
+        ),
+        "layer_start": "Start layer selector for legacy pad/via span operations.",
+        "layer_end": "End layer selector for legacy pad/via span operations.",
         "left": "Rectangle left coordinate in mils.",
         "bottom": "Rectangle bottom coordinate in mils.",
         "right": "Rectangle right coordinate in mils.",
@@ -1789,6 +1832,7 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             optional_args=(
                 "layer_stack_template",
                 "rigid_stack",
+                "stackupx_file",
                 "board_outline_mils",
                 "board_origin_mils",
                 "sheet_frame_mils",
@@ -1963,6 +2007,7 @@ def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
             ),
             optional_args=(
                 "shape",
+                "corner_radius_percent",
                 "rotation_degrees",
                 "hole_size_mils",
                 "plated",

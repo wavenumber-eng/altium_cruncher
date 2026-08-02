@@ -81,7 +81,7 @@ def _highlight_pad_region(
         height_mm=_mils_to_mm(height_mils),
         shape=int(_geometry_float(geometry, "shape", default=PadShape.CIRCLE.value)),
         rotation_degrees=_geometry_float(geometry, "rotation_degrees"),
-        corner_radius_percent=int(_geometry_float(geometry, "corner_radius_percent")),
+        corner_radius_percent=_geometry_float(geometry, "corner_radius_percent"),
         corner_radius_mm=(
             _mils_to_mm(_geometry_float(geometry, "corner_radius_mils"))
             if "corner_radius_mils" in geometry

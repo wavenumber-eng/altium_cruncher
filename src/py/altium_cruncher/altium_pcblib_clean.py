@@ -92,7 +92,9 @@ class PcbLibTextStringRemovalConfig:
             field_name="remove_text_strings.patterns",
         )
         if match == "regex":
-            _validate_regex_patterns(patterns, field_name="remove_text_strings.patterns")
+            _validate_regex_patterns(
+                patterns, field_name="remove_text_strings.patterns"
+            )
 
         return cls(
             enabled=_coerce_bool(data.get("enabled"), default.enabled),
@@ -230,7 +232,9 @@ class PcbLibCleanConfig:
         try:
             raw = load_json_config(config_path)
         except Exception as exc:
-            raise ValueError(f"Invalid JSON in PcbLib clean config: {config_path}: {exc}") from exc
+            raise ValueError(
+                f"Invalid JSON in PcbLib clean config: {config_path}: {exc}"
+            ) from exc
         return cls.from_dict(raw)
 
 
@@ -311,7 +315,9 @@ def find_workspace_pcblib_clean_config_path(
     return config_dir / DEFAULT_PCBLIB_CLEAN_CONFIG_FILENAME
 
 
-def apply_clean_to_pcblib(pcblib: object, config: PcbLibCleanConfig) -> PcbLibCleanApplyResult:
+def apply_clean_to_pcblib(
+    pcblib: object, config: PcbLibCleanConfig
+) -> PcbLibCleanApplyResult:
     reports = [
         apply_clean_to_pcblib_footprint(footprint, config)
         for footprint in getattr(pcblib, "footprints", []) or []
@@ -326,7 +332,9 @@ def apply_clean_to_pcblib_footprint(
     report = PcbLibFootprintCleanReport(
         footprint_name=str(getattr(footprint, "name", "") or ""),
         preserved_region_count=len(getattr(footprint, "regions", []) or []),
-        preserved_component_body_count=len(getattr(footprint, "component_bodies", []) or []),
+        preserved_component_body_count=len(
+            getattr(footprint, "component_bodies", []) or []
+        ),
     )
 
     removal = config.remove_mechanical_primitives
@@ -366,7 +374,9 @@ def apply_clean_to_pcblib_footprint(
         removed_count = 0
         for text_primitive in collection:
             layer = getattr(text_primitive, "layer", None)
-            if _matches_layer_policy(layer, text_removal.layers) and _matches_text_string_policy(
+            if _matches_layer_policy(
+                layer, text_removal.layers
+            ) and _matches_text_string_policy(
                 _primitive_text_content(text_primitive),
                 text_removal,
             ):
@@ -391,7 +401,9 @@ def apply_clean_to_pcblib_footprint(
         removed_count = 0
         for region in collection:
             layer = getattr(region, "layer", None)
-            if _matches_layer_policy(layer, region_removal.layers) and not _preserve_region(
+            if _matches_layer_policy(
+                layer, region_removal.layers
+            ) and not _preserve_region(
                 region,
                 region_removal,
             ):
@@ -412,7 +424,11 @@ def apply_clean_to_pcblib_footprint(
         setattr(
             footprint,
             "_record_order",
-            [primitive for primitive in record_order if id(primitive) not in removed_ids],
+            [
+                primitive
+                for primitive in record_order
+                if id(primitive) not in removed_ids
+            ],
         )
 
     return report
@@ -477,7 +493,9 @@ def _validate_regex_patterns(patterns: tuple[str, ...], *, field_name: str) -> N
         try:
             re.compile(pattern)
         except re.error as exc:
-            raise ValueError(f"Invalid regex in {field_name}: {pattern!r}: {exc}") from exc
+            raise ValueError(
+                f"Invalid regex in {field_name}: {pattern!r}: {exc}"
+            ) from exc
 
 
 def _normalize_collection_name(value: str) -> str:
@@ -502,18 +520,33 @@ def _normalize_collection_name(value: str) -> str:
 def _matches_layer_policy(layer: object, layer_policy: tuple[str, ...]) -> bool:
     if not layer_policy:
         return False
-    normalized = {_normalize_layer_policy_token(item) for item in layer_policy if item.strip()}
+    normalized = {
+        _normalize_layer_policy_token(item) for item in layer_policy if item.strip()
+    }
     if normalized.intersection({"any", "all", "*"}):
         return True
     if "mechanical" in normalized and _is_mechanical_layer(layer):
         return True
     layer_id = _coerce_layer_id(layer)
     layer_name = _normalize_layer_policy_token(_layer_report_key(layer))
-    return (
-        str(layer_id) in normalized
-        if layer_id is not None
-        else False
-    ) or layer_name.lower() in normalized
+    if layer_id is not None and str(layer_id) in normalized:
+        return True
+    if layer_name.lower() in normalized:
+        return True
+    return _matches_layer_policy_ref(layer, layer_policy)
+
+
+def _matches_layer_policy_ref(layer: object, layer_policy: tuple[str, ...]) -> bool:
+    # Token-form tolerant match so policy entries like "Mechanical 17" or
+    # "mechanical_17" hit V7 layers with canonical token MECHANICAL17.
+    from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+        resolve_pcb_layer_ref_or_none,
+    )
+
+    ref = resolve_pcb_layer_ref_or_none(layer)
+    if ref is None:
+        return False
+    return any(resolve_pcb_layer_ref_or_none(item) == ref for item in layer_policy)
 
 
 def _matches_text_string_policy(
@@ -566,8 +599,7 @@ def _is_board_cutout_region(region: object) -> bool:
 def _is_custom_pad_region(region: object) -> bool:
     props = _primitive_properties(region)
     return any(
-        str(key).upper() in {"PADINDEX", "PADGUID", "PADSTACKID"}
-        for key in props
+        str(key).upper() in {"PADINDEX", "PADGUID", "PADSTACKID"} for key in props
     )
 
 
@@ -617,8 +649,23 @@ def _normalize_layer_policy_token(value: object) -> str:
 
 
 def _is_mechanical_layer(value: object) -> bool:
+    # Family-based so promoted V7 mechanical layers (Mechanical17-53) are
+    # treated as mechanical alongside the legacy 57-72 id range.
+    from altium_monkey.altium_pcb_layer_ref import PcbLayerFamily
+    from altium_monkey.altium_record_types import PcbLayer
+    from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+        resolve_pcb_layer_ref_or_none,
+    )
+
     layer_id = _coerce_layer_id(value)
-    return 57 <= layer_id <= 72 if layer_id is not None else False
+    if layer_id is not None:
+        try:
+            return bool(PcbLayer(layer_id).is_mechanical())
+        except ValueError:
+            pass
+
+    ref = resolve_pcb_layer_ref_or_none(value)
+    return ref is not None and ref.family == PcbLayerFamily.MECHANICAL
 
 
 def _coerce_layer_id(value: object) -> int | None:
@@ -634,24 +681,30 @@ def _coerce_layer_id(value: object) -> int | None:
         return int(text)
     except ValueError:
         pass
-    try:
-        from altium_monkey.altium_record_types import PcbLayer
+    from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+        resolve_pcb_layer_ref_or_none,
+    )
 
-        return int(PcbLayer.from_json_name(text).value)
-    except Exception:
+    ref = resolve_pcb_layer_ref_or_none(text)
+    if ref is None:
         return None
+    if ref.legacy_layer_id is not None:
+        return int(ref.legacy_layer_id)
+    # V7-only layers have no legacy id; the saved id keeps them distinct.
+    # Runtime-only refs without a saved id resolve to None like unknowns.
+    return ref.v7_saved_layer_id
 
 
 def _layer_report_key(value: object) -> str:
-    layer_id = _coerce_layer_id(value)
-    if layer_id is None:
-        return "unknown"
-    try:
-        from altium_monkey.altium_record_types import PcbLayer
+    from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+        resolve_pcb_layer_ref_or_none,
+    )
 
-        return PcbLayer(layer_id).to_json_name()
-    except Exception:
-        return str(layer_id)
+    ref = resolve_pcb_layer_ref_or_none(value)
+    if ref is not None:
+        return ref.token
+    layer_id = _coerce_layer_id(value)
+    return "unknown" if layer_id is None else str(layer_id)
 
 
 def _find_hw_config_dir(

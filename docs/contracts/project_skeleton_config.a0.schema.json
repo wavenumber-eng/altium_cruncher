@@ -105,8 +105,9 @@
           }
         },
         "layer_stack_template": {"type": "string"},
+        "stackupx_file": {"type": "string"},
         "mechanical_layer_profile": {
-          "enum": ["none", "standard_component_pairs"]
+          "enum": ["none", "standard_component_pairs", "v7_mechanical_53"]
         },
         "mechanical_layers": {
           "type": "array",

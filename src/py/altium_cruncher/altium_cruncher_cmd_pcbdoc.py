@@ -27,9 +27,10 @@ from altium_cruncher.altium_cruncher_document_configs import (
     render_pcbdoc_create_config,
 )
 from altium_cruncher.altium_cruncher_project_profiles import (
+    MECHANICAL_LAYER_PROFILE_CHOICES,
     STANDARD_MECHANICAL_LAYER_PROFILE,
     generated_rigid_stack_config,
-    standard_mechanical_profile_args,
+    mechanical_profile_args,
 )
 
 log = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ def build_pcbdoc_create_mco(
     *,
     layers: int = 2,
     layer_stack_template: str | None = None,
+    stackupx_file: Path | str | None = None,
     width_mils: float = 3000.0,
     height_mils: float = 2000.0,
     mechanical_layer_profile: str | None = STANDARD_MECHANICAL_LAYER_PROFILE,
@@ -56,7 +58,11 @@ def build_pcbdoc_create_mco(
             "top": height_mils,
         },
     }
-    if layer_stack_template:
+    if layer_stack_template and stackupx_file is not None:
+        raise ValueError("Use either layer_stack_template or stackupx_file, not both")
+    if stackupx_file is not None:
+        args["stackupx_file"] = str(Path(stackupx_file))
+    elif layer_stack_template:
         args["layer_stack_template"] = layer_stack_template
     else:
         args["rigid_stack"] = generated_rigid_stack_config(layers)
@@ -102,6 +108,7 @@ def execute_pcbdoc_create_mco(
     *,
     layers: int = 2,
     layer_stack_template: str | None = None,
+    stackupx_file: Path | str | None = None,
     width_mils: float = 3000.0,
     height_mils: float = 2000.0,
     mechanical_layer_profile: str | None = None,
@@ -114,6 +121,7 @@ def execute_pcbdoc_create_mco(
             output_file,
             layers=layers,
             layer_stack_template=layer_stack_template,
+            stackupx_file=stackupx_file,
             width_mils=width_mils,
             height_mils=height_mils,
             mechanical_layer_profile=mechanical_layer_profile,
@@ -149,6 +157,7 @@ def _cmd_pcbdoc_create(args: argparse.Namespace) -> int:
             target,
             layers=args.layers,
             layer_stack_template=args.layer_stack_template,
+            stackupx_file=args.stackupx_file,
             width_mils=args.width_mils,
             height_mils=args.height_mils,
             mechanical_layer_profile=profile,
@@ -195,7 +204,9 @@ def _cmd_pcbdoc_create_from_config(
             )
             log.info("")
             log.info("Writing PcbDoc create config template: %s", output_path)
-            log.info("Please edit it, then rerun `acr pcbdoc create` to create the document.")
+            log.info(
+                "Please edit it, then rerun `acr pcbdoc create` to create the document."
+            )
             return 0
 
         config = load_pcbdoc_create_config(config_path)
@@ -209,7 +220,9 @@ def _cmd_pcbdoc_create_from_config(
             _write_json(args.emit_mco, payload, overwrite=bool(args.force))
         result = execute_mco_for_cli(
             payload,
-            McoExecutionContext(work_dir=config_path.resolve().parent, dry_run=bool(args.dry_run)),
+            McoExecutionContext(
+                work_dir=config_path.resolve().parent, dry_run=bool(args.dry_run)
+            ),
             json_stdout=bool(args.json),
         )
     except Exception as exc:
@@ -231,10 +244,7 @@ def _cmd_pcbdoc_create_from_config(
 
 
 def _merge_mechanical_profile_args(args: JsonObject, profile: str) -> None:
-    normalized = profile.strip().lower().replace("-", "_")
-    if normalized != STANDARD_MECHANICAL_LAYER_PROFILE:
-        raise ValueError(f"Unsupported mechanical layer profile: {profile!r}")
-    args.update(standard_mechanical_profile_args())
+    args.update(mechanical_profile_args(profile))
 
 
 def write_pcbdoc_create_config(
@@ -314,6 +324,11 @@ def register_parser(
         help="use an Altium Monkey layer-stack template instead of generated rigid rows",
     )
     create_parser.add_argument(
+        "--stackupx-file",
+        type=Path,
+        help="use a .stackupx file instead of generated rigid rows",
+    )
+    create_parser.add_argument(
         "--width-mils",
         type=float,
         default=3000.0,
@@ -327,7 +342,7 @@ def register_parser(
     )
     create_parser.add_argument(
         "--mechanical-layer-profile",
-        choices=("none", STANDARD_MECHANICAL_LAYER_PROFILE),
+        choices=MECHANICAL_LAYER_PROFILE_CHOICES,
         default=STANDARD_MECHANICAL_LAYER_PROFILE,
         help="optional mechanical layer/kind initialization profile",
     )

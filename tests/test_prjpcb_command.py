@@ -7,8 +7,10 @@ import sys
 from pathlib import Path
 
 import jsonschema
+import pytest
 
 from altium_cruncher.altium_cruncher_cmd_prjpcb import (
+    build_project_create_mco,
     default_project_config,
     render_project_config,
 )
@@ -16,6 +18,114 @@ from altium_cruncher.config_json import load_json_config
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _skip_without_stackupx_document_api() -> None:
+    import altium_monkey
+
+    if not hasattr(altium_monkey, "AltiumLayerStackDocument"):
+        pytest.skip("requires Altium Monkey layer-stack document API")
+    if not hasattr(altium_monkey, "AltiumStackupXDocument"):
+        pytest.skip("requires Altium Monkey StackUpX API")
+
+
+def _write_four_signal_stackupx(path: Path) -> None:
+    try:
+        from altium_monkey.altium_layer_stack_document import (
+            AltiumLayerStackDocument,
+            AltiumRigidCopperLayerSpec,
+            AltiumRigidDielectricLayerSpec,
+        )
+    except ImportError:
+        pytest.skip("requires Altium Monkey StackUpX export API")
+
+    document = AltiumLayerStackDocument.from_rigid_stack(
+        name="4 Signal Proof",
+        copper_layers=(
+            AltiumRigidCopperLayerSpec("Top Layer", copper_thickness_mils=1.4),
+            AltiumRigidCopperLayerSpec("SIG02", copper_thickness_mils=1.4),
+            AltiumRigidCopperLayerSpec("SIG03", copper_thickness_mils=1.4),
+            AltiumRigidCopperLayerSpec("Bottom Layer", copper_thickness_mils=1.4),
+        ),
+        dielectrics_between=(
+            AltiumRigidDielectricLayerSpec(
+                "Dielectric 1",
+                thickness_mils=8.0,
+                dielectric_constant=4.2,
+                material="FR-4",
+            ),
+            AltiumRigidDielectricLayerSpec(
+                "Dielectric 2",
+                thickness_mils=8.0,
+                dielectric_constant=4.2,
+                material="FR-4",
+            ),
+            AltiumRigidDielectricLayerSpec(
+                "Dielectric 3",
+                thickness_mils=8.0,
+                dielectric_constant=4.2,
+                material="FR-4",
+            ),
+        ),
+    )
+    document.to_stackupx().write(path)
+
+
+def _run_prjpcb_stackupx_create(
+    tmp_path: Path,
+    stackupx_file: Path,
+) -> tuple[Path, dict[str, object]]:
+    config = default_project_config(project_name="stackupx_project", layer_count=2)
+    pcb = config["pcb"]
+    assert isinstance(pcb, dict)
+    pcb.pop("layer_stack", None)
+    pcb["stackupx_file"] = stackupx_file.name
+
+    config_file = tmp_path / "stackupx_project.project.json"
+    mco_file = tmp_path / "stackupx_project.mco.json"
+    config_file.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "prjpcb",
+            "create",
+            str(config_file),
+            "--emit-mco",
+            str(mco_file),
+            "--json",
+        ],
+        cwd=PACKAGE_ROOT,
+        env=_cli_env(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout)["ok"] is True
+    generated_mco = json.loads(mco_file.read_text(encoding="utf-8"))
+    pcb_create_args = next(
+        operation["args"]
+        for operation in generated_mco["operations"]
+        if operation["op"] == "pcbdoc.create"
+    )
+    return tmp_path / "stackupx_project.PcbDoc", pcb_create_args
+
+
+def _stack_copper_names(pcbdoc_file: Path) -> list[str]:
+    from altium_monkey import AltiumPcbDoc
+    from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
+
+    pcbdoc = AltiumPcbDoc.from_file(pcbdoc_file)
+    stack = AltiumLayerStackDocument.from_pcbdoc(pcbdoc)
+    return [
+        str(layer.display_name)
+        for layer in stack.physical_stacks[0].layers
+        if layer.family == "copper"
+    ]
 
 
 def _cli_env() -> dict[str, str]:
@@ -188,6 +298,7 @@ def test_prjpcb_generated_config_comments_every_field() -> None:
     assert "Valid mechanical layer ids/indexes/default names:" in text
     assert "//   MECHANICAL1=index 1: Mechanical 1" in text
     assert "//   MECHANICAL32=index 32: Mechanical 32" in text
+    assert "//   MECHANICAL53=index 53: Mechanical 53" in text
     assert "Valid mechanical layer kind enum names:" in text
     assert "//   BODY_3D_TOP" in text
     assert "//   WIREBONDING_BOTTOM" in text
@@ -203,6 +314,111 @@ def test_prjpcb_generated_config_comments_every_field() -> None:
             previous_content = stripped
 
     assert missing_comments == []
+
+
+@pytest.mark.parametrize("conflicting_key", ("layer_stack", "layer_stack_template"))
+def test_prjpcb_create_rejects_stackupx_file_with_other_stack_inputs(
+    conflicting_key: str,
+) -> None:
+    config = default_project_config(project_name="invalid_stackupx", layer_count=2)
+    pcb = config["pcb"]
+    assert isinstance(pcb, dict)
+    pcb["stackupx_file"] = "board.stackupx"
+    if conflicting_key == "layer_stack_template":
+        pcb.pop("layer_stack", None)
+        pcb["layer_stack_template"] = "2-layer"
+
+    with pytest.raises(ValueError, match="Use only one pcb layer-stack input"):
+        build_project_create_mco(config)
+
+
+def test_prjpcb_create_accepts_v7_mechanical_53_profile_when_available(
+    tmp_path: Path,
+) -> None:
+    import altium_monkey
+
+    if not hasattr(altium_monkey, "coerce_pcb_layer_ref"):
+        pytest.skip("requires V7-aware altium-monkey layer API")
+
+    config = default_project_config(project_name="v7_project", layer_count=2)
+    pcb = config["pcb"]
+    assert isinstance(pcb, dict)
+    pcb.pop("mechanical_layers", None)
+    pcb.pop("mechanical_layer_pairs", None)
+    pcb.pop("mechanical_layer_kinds", None)
+    pcb["mechanical_layer_profile"] = "v7_mechanical_53"
+
+    config_file = tmp_path / "v7_project.project.json"
+    mco_file = tmp_path / "v7_project.mco.json"
+    config_file.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "prjpcb",
+            "create",
+            str(config_file),
+            "--emit-mco",
+            str(mco_file),
+            "--json",
+        ],
+        cwd=PACKAGE_ROOT,
+        env=_cli_env(),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout)["ok"] is True
+    generated_mco = json.loads(mco_file.read_text(encoding="utf-8"))
+    pcb_create_args = next(
+        operation["args"]
+        for operation in generated_mco["operations"]
+        if operation["op"] == "pcbdoc.create"
+    )
+    assert len(pcb_create_args["mechanical_layers"]) == 53
+    assert pcb_create_args["mechanical_layers"][-1] == {
+        "layer": "MECHANICAL53",
+        "name": "Mechanical 53",
+        "enabled": True,
+    }
+
+    from altium_monkey import AltiumPcbDoc
+    from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "v7_project.PcbDoc")
+    stack = AltiumLayerStackDocument.from_pcbdoc(pcbdoc)
+    mechanical_53_entries = [
+        entry
+        for entry in stack.layer_registry.entries
+        if entry.family == "mechanical" and entry.v7_layer_id == 16908341
+    ]
+    assert len(mechanical_53_entries) == 1
+    assert mechanical_53_entries[0].display_name == "Mechanical 53"
+    assert mechanical_53_entries[0].enabled is True
+
+
+def test_prjpcb_create_accepts_stackupx_file_when_available(
+    tmp_path: Path,
+) -> None:
+    _skip_without_stackupx_document_api()
+
+    stackupx_file = tmp_path / "stackupx_input.stackupx"
+    _write_four_signal_stackupx(stackupx_file)
+
+    output_file, pcb_create_args = _run_prjpcb_stackupx_create(tmp_path, stackupx_file)
+    assert pcb_create_args["stackupx_file"] == stackupx_file.name
+    assert "rigid_stack" not in pcb_create_args
+    assert "layer_stack_template" not in pcb_create_args
+    assert _stack_copper_names(output_file) == [
+        "Top Layer",
+        "SIG02",
+        "SIG03",
+        "Bottom Layer",
+    ]
 
 
 def test_prjpcb_no_args_writes_then_uses_auto_config(tmp_path: Path) -> None:

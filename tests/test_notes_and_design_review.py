@@ -8,6 +8,7 @@ import subprocess
 import sys
 from collections.abc import Iterator
 from pathlib import Path
+from types import SimpleNamespace
 
 import jsonc  # type: ignore[import-untyped]
 import pytest
@@ -23,6 +24,8 @@ from altium_monkey.altium_schdoc import AltiumSchDoc
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
 from altium_cruncher.altium_cruncher_design_review import (
     _enrich_schematic_svg,
+    _pcb_layer_ref_from_value,
+    _pcb_review_primitive_copper_layers,
     _write_project_schematic_artifacts,
 )
 
@@ -125,17 +128,15 @@ def _write_review_pcb_project(project_path: Path) -> Path:
 
 
 def _run_cli(repo_root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    # Run against the installed (pinned) altium-monkey; only the cruncher
+    # source tree is injected. A dev-checkout shim here previously shadowed
+    # the pinned monkey with stale sources.
     env = os.environ.copy()
-    python_paths = [str(repo_root / "src" / "py")]
-    monkey_dev_src = Path(
-        os.environ.get("ALTIUM_MONKEY_DEV", r"C:\eli\altium_monkey_dev")
-    ) / "src" / "py"
-    if monkey_dev_src.exists():
-        python_paths.insert(0, str(monkey_dev_src))
+    src_path = str(repo_root / "src" / "py")
     env["PYTHONPATH"] = (
-        os.pathsep.join(python_paths)
+        src_path
         if not env.get("PYTHONPATH")
-        else os.pathsep.join(python_paths) + os.pathsep + env["PYTHONPATH"]
+        else src_path + os.pathsep + env["PYTHONPATH"]
     )
     return subprocess.run(
         [sys.executable, "-m", "altium_cruncher", *args],
@@ -275,7 +276,10 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     assert "altium_monkey.schematic.svg.enrichment.a0" in schematic_svg
-    assert 'data-review-theme="altium_cruncher.design_review.schematic_svg.a0"' in schematic_svg
+    assert (
+        'data-review-theme="altium_cruncher.design_review.schematic_svg.a0"'
+        in schematic_svg
+    )
     assert 'id="schematic-enrichment-a0"' in schematic_svg
     notes_text = (output_dir / manifest["notes_json"]).read_text(encoding="utf-8")
     assert notes_text.startswith("/*\naltium-cruncher notes artifact")
@@ -353,8 +357,12 @@ def test_design_review_schematic_svg_enrichment_embeds_component_lookup(
         source_base=tmp_path,
     )
 
-    assert 'data-enrichment-schema="altium_monkey.schematic.svg.enrichment.a0"' in enriched
-    assert 'data-review-theme="altium_cruncher.design_review.schematic_svg.a0"' in enriched
+    assert (
+        'data-enrichment-schema="altium_monkey.schematic.svg.enrichment.a0"' in enriched
+    )
+    assert (
+        'data-review-theme="altium_cruncher.design_review.schematic_svg.a0"' in enriched
+    )
     assert 'id="schematic-enrichment-a0"' in enriched
     assert 'data-component="R1"' in enriched
     assert 'data-designator="R1"' in enriched
@@ -584,3 +592,51 @@ def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:
             "SLOTS",
         }
         assert (output_dir / entry["file"]).exists()
+
+
+def _stub_pcbdoc_with_layers(**collections: list[object]) -> SimpleNamespace:
+    empty: dict[str, list[object]] = {
+        name: []
+        for name in (
+            "tracks",
+            "arcs",
+            "fills",
+            "regions",
+            "shapebased_regions",
+            "polygons",
+            "pads",
+            "vias",
+            "texts",
+        )
+    }
+    empty.update(collections)
+    return SimpleNamespace(**empty)
+
+
+def test_design_review_classifies_v7_layers_including_via_spans() -> None:
+    """V7 layer names must classify correctly (copper vs mechanical), not
+    silently drop; via layer_start/layer_end spans count as copper usage."""
+    mech17 = _pcb_layer_ref_from_value("MECHANICAL17")
+    assert mech17 is not None
+    assert mech17.token == "MECHANICAL17"
+    assert mech17.legacy_layer is None
+    assert _pcb_layer_ref_from_value("garbage") is None
+
+    pcbdoc = _stub_pcbdoc_with_layers(
+        tracks=[
+            SimpleNamespace(layer="MECHANICAL17"),
+            SimpleNamespace(layer="TOPOVERLAY"),
+        ],
+        pads=[SimpleNamespace(layer="MULTILAYER")],
+        vias=[
+            SimpleNamespace(layer="MULTILAYER", layer_start="TOP", layer_end="MID31"),
+        ],
+    )
+    refs = _pcb_review_primitive_copper_layers(pcbdoc)  # type: ignore[arg-type]
+    assert {ref.token for ref in refs} == {"TOP", "MID31"}
+
+
+def test_design_review_multilayer_only_content_falls_back_to_outer_copper() -> None:
+    pcbdoc = _stub_pcbdoc_with_layers(pads=[SimpleNamespace(layer="MULTILAYER")])
+    refs = _pcb_review_primitive_copper_layers(pcbdoc)  # type: ignore[arg-type]
+    assert {ref.token for ref in refs} == {"TOP", "BOTTOM"}

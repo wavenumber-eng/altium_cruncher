@@ -225,6 +225,31 @@ def test_execute_mco_caches_documents_and_flushes_on_exit(tmp_path: Path) -> Non
     assert document_path.read_text(encoding="utf-8") == "seedAB"
 
 
+def test_execute_mco_rejects_multiple_pcbdoc_layer_stack_inputs(tmp_path: Path) -> None:
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "create_board",
+                    "op": "pcbdoc.create",
+                    "args": {
+                        "file": "invalid.PcbDoc",
+                        "rigid_stack": {"mode": "generated_rigid"},
+                        "stackupx_file": "board.stackupx",
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is False
+    assert result.results[0].operation_id == "create_board"
+    assert result.results[0].error is not None
+    assert "Use only one PcbDoc layer-stack input" in result.results[0].error
+
+
 def test_execute_mco_caches_created_pcbdoc_and_flushes_once(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -761,6 +786,469 @@ def test_atomic_cad_operations_mutate_generated_project(tmp_path: Path) -> None:
     assert len(pcbdoc.regions) == 1
     assert [user_union.name for user_union in pcbdoc.user_unions] == ["MATE_FEATURES"]
     assert pcbdoc.user_unions[0].member_count >= 6
+
+
+def test_pcb_layer_raw_v7_saved_id_remains_rejected() -> None:
+    from altium_cruncher.altium_cruncher_mco_cad_ops import _pcb_layer
+
+    with pytest.raises(ValueError):
+        _pcb_layer(16908321, default="TOP")
+
+
+def test_pcbdoc_shape_primitives_accept_v7_layer_tokens_when_available(
+    tmp_path: Path,
+) -> None:
+    import altium_monkey
+
+    if not hasattr(altium_monkey, "coerce_pcb_layer_ref"):
+        pytest.skip("requires V7-aware altium-monkey layer API")
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                *_mco_create_project_ops(
+                    board_outline_mils={
+                        "left": 0,
+                        "bottom": 0,
+                        "right": 1000,
+                        "top": 1000,
+                    },
+                ),
+                {
+                    "id": "text_m53",
+                    "op": "pcbdoc.add_text",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "text": "M53",
+                        "position_mils": [100, 100],
+                        "height_mils": 40,
+                        "layer": "MECHANICAL53",
+                    },
+                },
+                {
+                    "id": "track_m53",
+                    "op": "pcbdoc.add_track",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "start_mils": [100, 200],
+                        "end_mils": [300, 200],
+                        "width_mils": 8,
+                        "layer": "MECHANICAL53",
+                    },
+                },
+                {
+                    "id": "arc_m53",
+                    "op": "pcbdoc.add_arc",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "center_mils": [500, 200],
+                        "radius_mils": 50,
+                        "start_angle_degrees": 0,
+                        "end_angle_degrees": 90,
+                        "width_mils": 8,
+                        "layer": "MECHANICAL53",
+                    },
+                },
+                {
+                    "id": "fill_m53",
+                    "op": "pcbdoc.add_fill",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "corner1_mils": [100, 300],
+                        "corner2_mils": [200, 350],
+                        "layer": "MECHANICAL53",
+                    },
+                },
+                {
+                    "id": "region_m53",
+                    "op": "pcbdoc.add_region",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "outline_points_mils": [
+                            [300, 300],
+                            [420, 300],
+                            [420, 380],
+                            [300, 380],
+                        ],
+                        "layer": "MECHANICAL53",
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumPcbDoc
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
+    assert [text.layer_ref().token for text in pcbdoc.texts] == ["MECHANICAL53"]
+    assert [track.layer_ref().token for track in pcbdoc.tracks] == ["MECHANICAL53"]
+    assert [arc.layer_ref().token for arc in pcbdoc.arcs] == ["MECHANICAL53"]
+    assert [fill.layer_ref().token for fill in pcbdoc.fills] == ["MECHANICAL53"]
+    assert [region.layer_ref().token for region in pcbdoc.regions] == ["MECHANICAL53"]
+
+    from altium_cruncher.altium_cruncher_mco_cad_ops import _pcb_layer
+
+    for token in (
+        "saved:16908321",
+        "v7:16908321",
+        "tv7:16908321",
+        "legacy:72",
+        "kind:BODY_3D_TOP",
+    ):
+        with pytest.raises(ValueError):
+            _pcb_layer(token, default="TOP")
+
+
+def _skip_without_v7_layer_api() -> None:
+    import altium_monkey
+
+    if not hasattr(altium_monkey, "coerce_pcb_layer_ref"):
+        pytest.skip("requires V7-aware altium-monkey layer API")
+
+
+def test_pcbdoc_add_pad_preserves_fractional_corner_radius_percent(
+    tmp_path: Path,
+) -> None:
+    _skip_without_v7_layer_api()
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                *_mco_create_project_ops(
+                    board_outline_mils={
+                        "left": 0,
+                        "bottom": 0,
+                        "right": 1000,
+                        "top": 1000,
+                    },
+                ),
+                {
+                    "id": "pad_fractional",
+                    "op": "pcbdoc.add_pad",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "designator": "1",
+                        "position_mils": [200, 200],
+                        "width_mils": 60,
+                        "height_mils": 60,
+                        "shape": "rounded_rectangle",
+                        "corner_radius_percent": 18.181818,
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumPcbDoc
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
+    pad = pcbdoc.pads[0]
+    # Exact CornerRadiusChamfer lane keeps the fraction; the legacy stack byte
+    # stays rounded alongside it.
+    assert pad.corner_radius_percent_exact == pytest.approx(18.181818)
+    assert pad.corner_radius_percentage == 18
+
+
+def test_pcbdoc_add_embedded_3d_model_accepts_v7_mechanical_layer(
+    tmp_path: Path,
+) -> None:
+    _skip_without_v7_layer_api()
+
+    (tmp_path / "generated").mkdir()
+    (tmp_path / "generated" / "body.step").write_text(
+        "ISO-10303-21;\n",
+        encoding="utf-8",
+    )
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                *_mco_create_project_ops(
+                    board_outline_mils={
+                        "left": 0,
+                        "bottom": 0,
+                        "right": 1000,
+                        "top": 700,
+                    },
+                ),
+                {
+                    "id": "body_m17",
+                    "op": "pcbdoc.add_embedded_3d_model",
+                    "args": {
+                        "file": "generated/mate.PcbDoc",
+                        "overwrite": True,
+                        "model_file": "generated/body.step",
+                        "name": "V7 body",
+                        "layer": "MECHANICAL17",
+                        "location_mils": [0, 0],
+                        "bounds_mils": {
+                            "left": 0,
+                            "bottom": 0,
+                            "right": 1000,
+                            "top": 700,
+                        },
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumPcbDoc
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "mate.PcbDoc")
+    assert [body.layer_ref().token for body in pcbdoc.component_bodies] == [
+        "MECHANICAL17"
+    ]
+
+
+def test_pcbdoc_create_stackupx_supports_extended_signal_authoring(
+    tmp_path: Path,
+) -> None:
+    _skip_without_v7_layer_api()
+    from test_document_create_commands import (
+        _skip_without_stackupx_api,
+        _write_signal_stackupx,
+    )
+
+    _skip_without_stackupx_api()
+    stackupx_file = tmp_path / "extended.stackupx"
+    _write_signal_stackupx(stackupx_file, signal_layer_count=34)
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "create_board",
+                    "op": "pcbdoc.create",
+                    "args": {
+                        "file": "generated/deep.PcbDoc",
+                        "stackupx_file": str(stackupx_file),
+                        "board_outline_mils": {
+                            "left": 0,
+                            "bottom": 0,
+                            "right": 1000,
+                            "top": 1000,
+                        },
+                        "overwrite": True,
+                    },
+                },
+                {
+                    "id": "track_mid31",
+                    "op": "pcbdoc.add_track",
+                    "args": {
+                        "file": "generated/deep.PcbDoc",
+                        "overwrite": True,
+                        "start_mils": [100, 100],
+                        "end_mils": [400, 100],
+                        "width_mils": 8,
+                        "layer": "MID31",
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is True
+
+    from altium_monkey import AltiumPcbDoc
+
+    pcbdoc = AltiumPcbDoc.from_file(tmp_path / "generated" / "deep.PcbDoc")
+    assert [track.layer_ref().token for track in pcbdoc.tracks] == ["MID31"]
+
+    # Via spans onto StackUpX-only signal layers stay gated upstream; the MCO
+    # failure must carry the actionable altium-monkey message.
+    via_result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "via_mid31",
+                    "op": "pcbdoc.add_via",
+                    "args": {
+                        "file": "generated/deep.PcbDoc",
+                        "overwrite": True,
+                        "position_mils": [500, 500],
+                        "diameter_mils": 40,
+                        "hole_size_mils": 20,
+                        "layer_start": "TOP",
+                        "layer_end": "MID31",
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert via_result.ok is False
+    assert "registry-backed V7 via-span" in str(via_result.results[0].error)
+
+
+def test_pcbdoc_v7_gated_layer_ops_fail_with_actionable_errors(
+    tmp_path: Path,
+) -> None:
+    _skip_without_v7_layer_api()
+    from altium_monkey import AltiumPcbLib, PcbLayer
+
+    pcblib_path = tmp_path / "fixture.PcbLib"
+    pcblib = AltiumPcbLib()
+    footprint = pcblib.add_footprint("DBG_FP")
+    footprint.add_pad(
+        designator="1",
+        position_mils=(0.0, 0.0),
+        width_mils=80.0,
+        height_mils=80.0,
+        layer=PcbLayer.TOP,
+    )
+    pcblib.save(pcblib_path)
+
+    create_result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": _mco_create_project_ops(
+                board_outline_mils={
+                    "left": 0,
+                    "bottom": 0,
+                    "right": 1000,
+                    "top": 1000,
+                },
+            ),
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+    assert create_result.ok is True
+
+    def _single_failing_op(op: str, args: dict[str, object]) -> str:
+        result = execute_mco(
+            {
+                "schema": MCO_SCHEMA,
+                "operations": [
+                    {
+                        "id": "gated",
+                        "op": op,
+                        "args": {
+                            "file": "generated/mate.PcbDoc",
+                            "overwrite": True,
+                            **args,
+                        },
+                    },
+                ],
+            },
+            McoExecutionContext(work_dir=tmp_path),
+        )
+        assert result.ok is False
+        return str(result.results[0].error)
+
+    # Pad authoring on V7-only mechanical layers stays gated upstream.
+    pad_error = _single_failing_op(
+        "pcbdoc.add_pad",
+        {
+            "designator": "1",
+            "position_mils": [100, 100],
+            "width_mils": 60,
+            "height_mils": 60,
+            "layer": "MECHANICAL53",
+        },
+    )
+    assert "V7-only mechanical layers" in pad_error
+
+    # Component placement is a Top/Bottom contract in altium-monkey.
+    component_error = _single_failing_op(
+        "pcbdoc.add_component",
+        {
+            "library": str(pcblib_path),
+            "footprint": "DBG_FP",
+            "designator": "U1",
+            "position_mils": [500, 500],
+            "layer": "MECHANICAL53",
+        },
+    )
+    assert "Unsupported component layer" in component_error
+
+    # arrange-designators restyles raw legacy layer bytes, so V7-only layers
+    # are rejected with an actionable message.
+    arrange_error = _single_failing_op(
+        "pcbdoc.arrange_designators",
+        {
+            "designators": ["U1"],
+            "layer": "MECHANICAL17",
+        },
+    )
+    assert "does not support V7-only layer 'MECHANICAL17'" in arrange_error
+
+
+def test_arrange_designators_layer_accepts_legacy_mechanical_tokens() -> None:
+    _skip_without_v7_layer_api()
+    from altium_cruncher.altium_cruncher_mco_cad_ops import (
+        _legacy_pcb_layer_id,
+        _pcb_layer,
+    )
+
+    layer = _pcb_layer("Mechanical 13", default="TOP_OVERLAY")
+    assert _legacy_pcb_layer_id(layer, op_name="pcbdoc.arrange-designators") == 69
+
+
+def test_pcbdoc_create_stackupx_guid_enforcement_is_actionable(
+    tmp_path: Path,
+) -> None:
+    from test_document_create_commands import (
+        _skip_without_stackupx_api,
+        _stackupx_test_guid,
+        _write_signal_stackupx,
+    )
+
+    _skip_without_stackupx_api()
+    stackupx_file = tmp_path / "bad_ids.stackupx"
+    _write_signal_stackupx(stackupx_file, signal_layer_count=2)
+    # Corrupt one layer id to a non-GUID string to hit the altium-monkey
+    # StackUpX GUID guard through the MCO surface.
+    content = stackupx_file.read_text(encoding="utf-8")
+    content = content.replace(
+        _stackupx_test_guid("layer-copper", "001"),
+        "layer-copper-001",
+    )
+    stackupx_file.write_text(content, encoding="utf-8")
+
+    result = execute_mco(
+        {
+            "schema": MCO_SCHEMA,
+            "operations": [
+                {
+                    "id": "create_board",
+                    "op": "pcbdoc.create",
+                    "args": {
+                        "file": "generated/bad.PcbDoc",
+                        "stackupx_file": str(stackupx_file),
+                        "overwrite": True,
+                    },
+                },
+            ],
+        },
+        McoExecutionContext(work_dir=tmp_path),
+    )
+
+    assert result.ok is False
+    error = str(result.results[0].error)
+    assert "GUID" in error
+    assert "Omit the id arguments" in error
 
 
 def test_pcbdoc_add_text_exposes_inverted_frame_label_options(

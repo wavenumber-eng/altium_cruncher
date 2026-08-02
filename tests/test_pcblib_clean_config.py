@@ -1,10 +1,17 @@
 from pathlib import Path
 import re
 
+from altium_monkey.altium_record_types import PcbLayer
+
 from altium_cruncher.altium_cruncher_cmd_clean import _write_config_template
+from altium_cruncher.altium_cruncher_pcb_layer_resolve import resolve_pcb_layer_ref
 from altium_cruncher.altium_pcblib_clean import (
     DEFAULT_PCBLIB_CLEAN_CONFIG_FILENAME,
     PcbLibCleanConfig,
+    _coerce_layer_id,
+    _is_mechanical_layer,
+    _layer_report_key,
+    _matches_layer_policy,
     find_workspace_pcblib_clean_config_path,
 )
 from altium_cruncher.config_json import load_json_config
@@ -108,7 +115,47 @@ def test_clean_config_templates_are_commented_jsonc(tmp_path: Path) -> None:
     assert "/* Keep regions used to represent custom pads. */" in pcblib_text
     _assert_jsonc_properties_are_commented(schematic_text)
     _assert_jsonc_properties_are_commented(pcblib_text)
-    assert load_json_config(schematic_config)["schema"] == "altium_cruncher.clean.config.a0"
     assert (
-        load_json_config(pcblib_config)["schema"] == "altium_cruncher.pcblib.clean.config.a0"
+        load_json_config(schematic_config)["schema"]
+        == "altium_cruncher.clean.config.a0"
     )
+    assert (
+        load_json_config(pcblib_config)["schema"]
+        == "altium_cruncher.pcblib.clean.config.a0"
+    )
+
+
+def test_pcblib_clean_layer_policy_matches_v7_mechanical_layers() -> None:
+    """Promoted V7 mechanical layers must hit layer policies, not silently
+    fall through cleanup rules."""
+    assert _matches_layer_policy("MECHANICAL17", ("mechanical",))
+    assert _matches_layer_policy("Mechanical 17", ("MECHANICAL17",))
+    assert _matches_layer_policy("MECHANICAL17", ("mechanical_17",))
+    assert _matches_layer_policy("57", ("mechanical",))
+    assert _matches_layer_policy(PcbLayer.MECHANICAL_1, ("mechanical",))
+    assert not _matches_layer_policy("MID31", ("mechanical",))
+    assert not _matches_layer_policy("56", ("mechanical",))
+    assert not _matches_layer_policy("MECHANICAL17", ("MECHANICAL16",))
+
+
+def test_pcblib_clean_layer_classification_covers_v7_layers() -> None:
+    assert _is_mechanical_layer("MECHANICAL17")
+    assert _is_mechanical_layer("57")
+    assert _is_mechanical_layer("72")
+    assert _is_mechanical_layer(PcbLayer.MECHANICAL_16)
+    assert not _is_mechanical_layer("MID31")
+    assert not _is_mechanical_layer("56")
+    assert not _is_mechanical_layer("73")
+    assert not _is_mechanical_layer("garbage")
+
+    assert _layer_report_key(PcbLayer.TOP) == "TOP"
+    assert _layer_report_key("Mechanical 17") == "MECHANICAL17"
+    assert _layer_report_key(object()) == "unknown"
+
+    assert _coerce_layer_id("TOP") == PcbLayer.TOP.value
+    # V7-only layers keep their saved id so report entries stay distinct.
+    assert (
+        _coerce_layer_id("MECHANICAL17")
+        == resolve_pcb_layer_ref("MECHANICAL17").v7_saved_layer_id
+    )
+    assert _coerce_layer_id("garbage") is None

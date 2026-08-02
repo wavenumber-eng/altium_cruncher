@@ -19,10 +19,14 @@ from altium_monkey.altium_pcb_svg_renderer import (
     SVG_ENRICHMENT_SCHEMA_ID,
     should_render_via_drill_hole,
 )
+from altium_monkey.altium_pcb_layer_ref import PcbLayerRef
 from altium_monkey.altium_record_types import PcbLayer
 
 from altium_cruncher.altium_cruncher_pcb_assembly_svg_base import (
     CruncherPcbAssemblySvgRenderOptions,
+)
+from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
+    pcb_layer_ref_is_copper,
 )
 from altium_cruncher.altium_cruncher_pcb_assembly_svg_renderer import (
     CruncherPcbAssemblySvgRenderer,
@@ -31,6 +35,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PCB_SVG_SPECIAL_LAYERS,
     PcbSvgConfig,
     PcbSvgViewConfig,
+    pcb_svg_layer_ref_from_token,
     pcb_svg_physical_layer_from_token,
     resolve_config_output_path,
 )
@@ -415,18 +420,22 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         ctx: PcbSvgRenderContext,
         view_kind: str,
         active_layer_ids: list[int],
+        active_layer_tokens: list[str] | None = None,
         *,
-        include_board_outline: bool,
+        includes_board_outline: bool,
         pcbdoc: "AltiumPcbDoc",
     ) -> None:
+        # Signature stays compatible with the altium-monkey base renderer's
+        # _append_svg_metadata so composed base render paths can call it.
         if not self.options.include_metadata:
             return
 
         enrichment_payload = ctx.enrichment_metadata_payload(
             view_kind=view_kind,
             included_layer_ids=active_layer_ids,
+            included_layer_tokens=list(active_layer_tokens or []),
             includes_board_outline=bool(
-                include_board_outline and self.options.show_board_outline
+                includes_board_outline and self.options.show_board_outline
             ),
             pcbdoc_filename=pcbdoc.filepath.name if pcbdoc.filepath else None,
         )
@@ -473,10 +482,11 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         """Render one explicit view into a complete SVG document."""
         tokens = _normalize_draw_order([token for token in layers if token])
         physical_layers = self._physical_layers_from_tokens(tokens)
+        layer_refs = self._layer_refs_from_tokens(tokens)
         options = replace(
             self.options,
-            visible_layers=set(physical_layers),
-            layer_render_order=physical_layers,
+            visible_layers=set(layer_refs),
+            layer_render_order=layer_refs,
             mirror_x=mirror,
             board_outline_color=_style_color(styles, "board_outline", "#000000"),
             board_cutout_color=_style_color(styles, "board_cutouts", "#FF0000"),
@@ -485,16 +495,19 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
         self.options = options
 
         ctx = self._build_context(pcbdoc, project_parameters=project_parameters)  # noqa: SLF001
+        # The base renderer's clip/hole-mask collectors take coerced render
+        # layers (V7-aware) since altium-monkey 2026.8.1.
+        render_layers = self._coerced_layers(layer_refs)  # noqa: SLF001
         board_clip_id, board_clip_path_d = self._resolve_board_clip_definition(  # noqa: SLF001
             ctx,
             pcbdoc,
-            physical_layers,
+            render_layers,
             None,
         )
         layer_hole_masks = self._collect_layer_hole_masks(  # noqa: SLF001
             ctx,
             pcbdoc,
-            physical_layers,
+            render_layers,
             None,
         )
         extra_defs, extra_scene = self._collect_a0_overlays(
@@ -515,7 +528,8 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             ctx,
             view.name,
             active_layer_ids,
-            include_board_outline="BOARD_OUTLINE" in tokens,
+            list(tokens),
+            includes_board_outline="BOARD_OUTLINE" in tokens,
             pcbdoc=pcbdoc,
         )
         lines.append(f"  <g {' '.join(self._build_scene_attrs(ctx))}>")  # noqa: SLF001
@@ -584,9 +598,17 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             )
         if token in _PIN1_TOKENS:
             return self._render_a0_pin1_layer(ctx, pcbdoc, token, styles)
-        layer = pcb_svg_physical_layer_from_token(token)
-        if layer is None:
+        ref = pcb_svg_layer_ref_from_token(token)
+        if ref is None:
             return []
+        layer = ref.legacy_layer
+        if layer is None:
+            return self._render_a0_v7_layer(
+                ctx,
+                pcbdoc,
+                ref,
+                board_clip_id=board_clip_id,
+            )
         return self._render_a0_physical_layer(
             ctx,
             pcbdoc,
@@ -594,6 +616,33 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             styles,
             clip_path_id=self._layer_clip_id(board_clip_id, layer),
             mask_id=layer_hole_masks.get(layer.value, (None, []))[0],
+        )
+
+    def _render_a0_v7_layer(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        ref: PcbLayerRef,
+        *,
+        board_clip_id: str,
+    ) -> list[str]:
+        # V7-only layers (Mechanical17+, StackUpX-backed mids) have no legacy
+        # PcbLayer, so they render through the base renderer's ref-aware
+        # layer group instead of the legacy a0 per-primitive path.
+        render_layer = self._coerced_layers([ref])[0]  # noqa: SLF001
+        clip_path_id = None
+        if board_clip_id and (
+            self.options.clip_all_layers_to_board_outline
+            or pcb_layer_ref_is_copper(ref)
+        ):
+            clip_path_id = board_clip_id
+        return self._render_layer_group(  # noqa: SLF001
+            ctx,
+            pcbdoc,
+            render_layer,
+            None,
+            clip_path_id=clip_path_id,
+            mask_id=None,
         )
 
     def _layer_clip_id(self, board_clip_id: str, layer: PcbLayer) -> str | None:
@@ -613,6 +662,16 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
                 layers.append(layer)
         return layers
 
+    def _layer_refs_from_tokens(self, tokens: list[str]) -> list[PcbLayerRef]:
+        refs: list[PcbLayerRef] = []
+        for token in tokens:
+            if token in PCB_SVG_SPECIAL_LAYERS:
+                continue
+            ref = pcb_svg_layer_ref_from_token(token)
+            if ref is not None and ref not in refs:
+                refs.append(ref)
+        return refs
+
     def _active_layer_ids(self, tokens: list[str]) -> list[int]:
         ids: list[int] = []
         synthetic_ids = {
@@ -631,9 +690,13 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
             if token in synthetic_ids:
                 ids.append(synthetic_ids[token])
                 continue
-            layer = pcb_svg_physical_layer_from_token(token)
-            if layer is not None:
-                ids.append(int(layer.value))
+            ref = pcb_svg_layer_ref_from_token(token)
+            if ref is None:
+                continue
+            if ref.legacy_layer_id is not None:
+                ids.append(int(ref.legacy_layer_id))
+            elif ref.v7_saved_layer_id is not None:
+                ids.append(int(ref.v7_saved_layer_id))
         return sorted(set(ids))
 
     def _collect_a0_overlays(
@@ -1573,25 +1636,15 @@ class PcbSvgA0Renderer(CruncherPcbCutoutLayerRenderer):
 
         if not primitives and not self.options.show_empty_layers:
             return []
-        import inspect
-
-        render_layer_group = self._render_layer_group_from_primitives  # noqa: SLF001
-        if "overlay_primitives" in inspect.signature(render_layer_group).parameters:
-            return render_layer_group(
-                ctx,
-                layer,
-                color,
-                primitives,
-                [],
-                [],
-                clip_path_id=clip_path_id,
-                mask_id=mask_id,
-            )
-        return render_layer_group(
+        # The base renderer's layer-group emitter takes coerced render layers
+        # (V7-aware) since altium-monkey 2026.8.1.
+        group_layer = self._coerced_layers([layer])[0]  # noqa: SLF001
+        return self._render_layer_group_from_primitives(  # noqa: SLF001
             ctx,
-            layer,
+            group_layer,
             color,
             primitives,
+            [],
             [],
             clip_path_id=clip_path_id,
             mask_id=mask_id,
