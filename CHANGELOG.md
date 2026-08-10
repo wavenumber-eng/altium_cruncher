@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 2026.8.10
+
+- Consume pinned `altium-monkey==2026.8.10` and require the authoritative Design b0 compiled schematic graph for schematic/project review workflows.
+- `design`, `design-review`, and `dr` enumerate canonical graph page occurrences and package graph-scoped SVG and IR artifacts without reconstructing hierarchy or connectivity downstream.
+- `sch-svg` emits self-contained Design b0 bundles for SchDoc and PrjPcb inputs, including strict manifests and b0 enrichment metadata; SchLib remains an unscoped logical preview.
+- `svg project.PrjPcb` produces both the self-contained schematic bundle and PCB SVG outputs, with direct L3 integration and exhaustive graph-selector closure coverage.
+- MegaMaid carries the complete Design b0 compiled graph in its design/netlist output and publishes a versioned b0 manifest summary.
+- Design Review, schematic SVG, and MegaMaid output contracts now use explicit breaking-revision b0 schemas, and generated Design Review README guidance documents graph-authoritative agent navigation.
+
 ## 2026.8.1
 
 - Consume pinned `altium-monkey==2026.8.1`, including the V7-aware PCB layer API (`PcbLayerRef`, Mechanical17-53, StackUpX-backed Mid31-126), exact fractional pad corner radius, StackUpX GUID id enforcement, and V7-aware SVG layer identity.

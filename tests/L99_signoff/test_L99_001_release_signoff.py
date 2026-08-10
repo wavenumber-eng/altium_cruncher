@@ -23,23 +23,25 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.8.1"
-EXPECTED_RELEASE_DATE = date(2026, 8, 1)
-EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-08-01.md"
+EXPECTED_VERSION = "2026.8.10"
+EXPECTED_RELEASE_DATE = date(2026, 8, 10)
+EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-08-10.md"
 CONTROLLED_DEPENDENCY_REQUIREMENTS = {
-    "altium-monkey": "==2026.8.1",
+    "altium-monkey": "==2026.8.10",
     "wn-geometer": "==2026.6.10",
 }
 MINIMUM_CONTROLLED_DEPENDENCIES: dict[str, str] = {}
 EXACT_CONTROLLED_DEPENDENCIES = {
-    "altium-monkey": "2026.8.1",
+    "altium-monkey": "2026.8.10",
     "wn-geometer": "2026.6.10",
 }
 
 
 def test_version_contract_matches_date_based_release() -> None:
     """Verify that package version metadata follows the date release contract."""
-    pyproject = tomllib.loads((PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    pyproject = tomllib.loads(
+        (PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
     version = altium_cruncher.version()
 
     assert pyproject["project"]["version"] == EXPECTED_VERSION
@@ -48,7 +50,7 @@ def test_version_contract_matches_date_based_release() -> None:
     assert (version.major, version.minor, version.patch, version.build) == (
         2026,
         8,
-        1,
+        10,
         None,
     )
     assert version.release_date == EXPECTED_RELEASE_DATE
@@ -62,10 +64,15 @@ def test_version_contract_matches_date_based_release() -> None:
 
 def test_controlled_dependency_requirements_match_latest_release_policy() -> None:
     """Verify controlled dependencies match audited release requirements."""
-    pyproject = tomllib.loads((PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    pyproject = tomllib.loads(
+        (PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
     dependencies = set(pyproject["project"]["dependencies"])
 
-    for distribution_name, expected_requirement in CONTROLLED_DEPENDENCY_REQUIREMENTS.items():
+    for (
+        distribution_name,
+        expected_requirement,
+    ) in CONTROLLED_DEPENDENCY_REQUIREMENTS.items():
         assert f"{distribution_name}{expected_requirement}" in dependencies
 
 
@@ -94,11 +101,17 @@ def test_cli_emits_package_version() -> None:
         assert completed.stdout.startswith("altium-cruncher ")
         assert completed.stdout.splitlines()[0] == cli_version_text()
 
-        for distribution_name, expected_version in EXACT_CONTROLLED_DEPENDENCIES.items():
+        for (
+            distribution_name,
+            expected_version,
+        ) in EXACT_CONTROLLED_DEPENDENCIES.items():
             assert f"{distribution_name} {expected_version}" in completed.stdout
             assert distribution_version(distribution_name) == expected_version
 
-        for distribution_name, minimum_version in MINIMUM_CONTROLLED_DEPENDENCIES.items():
+        for (
+            distribution_name,
+            minimum_version,
+        ) in MINIMUM_CONTROLLED_DEPENDENCIES.items():
             installed_version = distribution_version(distribution_name)
             assert f"{distribution_name} {installed_version}" in completed.stdout
             assert _date_version_key(installed_version) >= _date_version_key(
@@ -118,7 +131,9 @@ def test_release_notes_mention_package_version() -> None:
 
 def test_developer_working_docs_are_excluded_from_release_artifacts() -> None:
     """Verify that developer-only plan and research docs are not packaged."""
-    pyproject = tomllib.loads((PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    pyproject = tomllib.loads(
+        (PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
     sdist = pyproject["tool"]["hatch"]["build"]["targets"]["sdist"]
 
     assert "docs/**" in sdist["include"]

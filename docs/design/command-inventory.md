@@ -13,7 +13,7 @@ This inventory records the command set migrated from the private
 | `sch-ir` | public | unit/CLI | Schematic gotIR JSON export for SchDoc, PrjPcb, and project-directory inputs using the onscreen IR profile. |
 | `pcb-svg` | public | `L3_public_workflows` | PCB SVG export and board-view generation. |
 | `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
-| `svg` | public | help only | Combined schematic/project SVG wrapper. |
+| `svg` | public | `L3_public_workflows` | Combined schematic/project SVG wrapper with graph-scoped schematic and PCB artifact verification. |
 | `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, flat raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy/highlighting, and source selection. |
 | `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL CSV/XLSX, units, variant/no-BOM filtering, and configurable sorting. |
 | `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
@@ -76,8 +76,15 @@ Shared output naming requirements:
 SVG command family notes:
 
 - `sch-svg`, `pcb-svg`, and `svg` all stay in the first public command set;
+- SchDoc and PrjPcb `sch-svg` inputs emit one SVG per compiled page occurrence;
+  SVG roots and source groups carry scoped references into a bundled Design b0
+  sidecar, `schematic_svg_manifest.b0` indexes those artifacts, and only SchLib
+  symbol previews remain logical and unscoped;
 - `svg` is a convenience command that runs schematic output, PCB output, or both
   depending on the input type;
+- L3 runs the combined project path and verifies the Design b0 schematic
+  sidecar, exhaustive scoped graph-link closure, PCB manifests, and their
+  declared SVG artifacts;
 - `svg` help describes that routing behavior and avoids presenting the command
   as a separate renderer;
 - `pcb-svg` has fixture-backed assembly-view coverage with HLR/geometer using
@@ -167,21 +174,23 @@ Design review notes:
 - preserve current `AltiumDesign.to_json()` model output from `.SchDoc`
   and `.PrjPcb` inputs under the bundle `design/` folder;
 - `design-review` and `dr` are aliases for the same bundle contract;
-- output includes `README.md`, `design_review_manifest.json`, semantic
+- output includes `README.md`, the
+  `altium_cruncher.design_review_manifest.b0` `design_review_manifest.json`, semantic
   design/netlist JSON under `design/`, structured notes JSONC, serialized
   SchDoc/PcbDoc JSON from `json-dump` under `json/schdoc/` and `json/pcbdoc/`,
   enriched schematic SVGs under `sch/`, and PCB layer SVGs where a board
   exists;
-- `.PrjPcb` inputs must use the compiled `AltiumDesign` physical-page view by
-  default: `sch/` contains resolved physical schematic SVGs, `sch-ir/` contains
-  matching physical IR JSON, and manifest entries include `compiled_page_id`;
-- SVG review links must prefer `physical_page_id|svg_id` through
-  `indexes.physical_svg_to_components` for repeated/channel-safe lookup, while
-  `indexes.svg_to_component` remains a scalar convenience only when
-  unambiguous;
-- the generated README must explain compiled-vs-logical schematic views,
-  `physical_pages`, net `aliases`/`name_sources`, and how graphical SVG ids join
-  back to physical designators and nets;
+- `.SchDoc` and `.PrjPcb` inputs enumerate Design b0 graph `page_occurrences`: `sch/`
+  contains resolved physical schematic SVGs, `sch-ir/` contains matching
+  physical IR JSON, and manifest entries include the canonical
+  `page_occurrence_ref` plus `artifact_key="sch.dwg_scene"`;
+- SVG review links use the scoped graph selector
+  `page_occurrence_ref + artifact_key + element_id`; a bare SVG id is not a
+  realized identity in repeated/channel hierarchy;
+- the generated README must explain compiled schematic views,
+  `compiled_schematic_graph`, `physical_page_metadata`, net
+  `aliases`/`name_sources`, and how scoped graphical links join back to
+  components, terminals, and local nets;
 - PCB layer SVGs use the default `pcb-svg` layer-output shape under
   `pcb/layers/`, but limit physical layer outputs to copper layers, including
   used inner copper layers;
@@ -267,11 +276,15 @@ Megamaid notes:
 - required output coverage includes `schlib/`, `pcblib/`, `bom/`, `pnp/`,
   `netlist/`, `json/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
   `sch_images/`, and `megamaid_manifest.json`;
+- `megamaid_manifest.json` uses the breaking output schema
+  `altium_cruncher.megamaid_manifest.b0` and conforms to
+  `docs/contracts/megamaid_manifest.b0.schema.json`;
 - generated combined libraries should reparse, split libraries should be flat
   project-wide for SchLib and per board for PcbLib, combined and split library
   JSON dumps should exist under `json/schlib/` and `json/pcblib/`, flat BOM
   JSON and default BOM XLSX should use the shared BOM command path, PnP JSON/CSV
-  should use the shared PnP command path, netlist JSON, SchDoc/PcbDoc JSON under
+  should use the shared PnP command path, netlist JSON must be the authoritative
+  Design b0 payload with its required compiled schematic graph, SchDoc/PcbDoc JSON under
   `json/schdoc/` and `json/pcbdoc/`, and notes JSONC should exist, and manifest
   counts/paths should be validated;
 - PcbLib split artifacts use filesystem-safe output filenames so extracted

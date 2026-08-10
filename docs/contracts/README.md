@@ -10,6 +10,14 @@ Current contracts:
 
 - `command_manifest.a0.json`: public CLI command inventory.
 - `interface_design_manifest.a0.json`: major non-dataclass interface inventory.
+- `design_review_manifest.b0.schema.json`: breaking Design b0 review-bundle
+  artifact manifest with canonical page-occurrence references.
+- `megamaid_manifest.b0.schema.json`: MegaMaid artifact manifest, including
+  the authoritative Design b0 graph output and graph-count summary.
+- `schematic_svg_enrichment.b0.schema.json`: embedded metadata for compiled
+  SchDoc/PrjPcb schematic SVGs linked to the Design b0 graph.
+- `schematic_svg_manifest.b0.schema.json`: self-contained SchDoc/PrjPcb
+  `sch-svg` bundle manifest pointing to Design b0 and graph-scoped SVG pages.
 - `bom_pnp_config.a0.schema.json`: shared BOM, PnP, and JLC config schema.
 - `clean_config.a0.schema.json`: shared schematic, schematic-library, and
   PCB-library clean config schema.

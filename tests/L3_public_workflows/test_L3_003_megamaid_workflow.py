@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 import jsonc  # type: ignore[import-untyped]
+from jsonschema import Draft202012Validator
 
 from altium_cruncher import altium_cruncher_cmd_megamaid as megamaid
 import altium_monkey.altium_schdoc as schdoc_module
@@ -27,6 +28,15 @@ HYDROSCOPE_PROJECT = (
     / "input"
     / "Hydroscope.PrjPcb"
 )
+
+
+def _assert_megamaid_manifest_contract(payload: object) -> None:
+    schema = json.loads(
+        (
+            PACKAGE_ROOT / "docs" / "contracts" / "megamaid_manifest.b0.schema.json"
+        ).read_text(encoding="utf-8")
+    )
+    Draft202012Validator(schema).validate(payload)
 
 
 def _minimal_bmp_preview() -> bytes:
@@ -111,6 +121,25 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
     assert "Logging error" not in combined_output
 
     manifest = json.loads((output_dir / "megamaid_manifest.json").read_text())
+    assert manifest["schema"] == "altium_cruncher.megamaid_manifest.b0"
+    _assert_megamaid_manifest_contract(manifest)
+    netlist_manifest = manifest["netlist"]
+    design_payload = _read_manifest_json(
+        output_dir,
+        str(netlist_manifest["design_json"]),
+    )
+    graph = design_payload["compiled_schematic_graph"]
+    assert design_payload["schema"] == "altium_monkey.design.b0"
+    assert "physical_pages" not in design_payload
+    assert graph["schema"] == "altium_monkey.compiled_schematic_graph.a0"
+    assert graph["page_occurrences"]
+    assert graph["graphical_artifact_links"]
+    assert netlist_manifest["design_schema"] == design_payload["schema"]
+    assert netlist_manifest["compiled_schematic_graph_schema"] == graph["schema"]
+    assert netlist_manifest["page_occurrence_count"] == len(graph["page_occurrences"])
+    assert netlist_manifest["graphical_artifact_link_count"] == len(
+        graph["graphical_artifact_links"]
+    )
     document_jsons = manifest["document_jsons"]
     document_kinds = {entry["kind"] for entry in document_jsons}
     assert {"SchDoc", "PcbDoc"}.issubset(document_kinds)
@@ -153,7 +182,8 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
         schlib_entries[0]["split_files"]
     )
     assert all(
-        str(path).startswith("schlib/split/") for path in schlib_entries[0]["split_files"]
+        str(path).startswith("schlib/split/")
+        for path in schlib_entries[0]["split_files"]
     )
     assert not any((output_dir / "schlib" / "split").glob("*/*.SchLib"))
 
@@ -167,7 +197,9 @@ def test_megamaid_hydroscope_extracts_images_and_models(tmp_path: Path) -> None:
     assert any(str(path).endswith("_raw.json") for path in bom_artifacts)
     assert any(str(path).endswith("_grouped.xlsx") for path in bom_artifacts)
     assert not any("grouped-json" in str(path) for path in bom_artifacts)
-    flat_bom_json = next(path for path in bom_artifacts if str(path).endswith("_raw.json"))
+    flat_bom_json = next(
+        path for path in bom_artifacts if str(path).endswith("_raw.json")
+    )
     flat_bom_payload = json.loads((output_dir / flat_bom_json).read_text())
     assert isinstance(flat_bom_payload, list)
 

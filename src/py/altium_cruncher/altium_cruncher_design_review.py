@@ -22,10 +22,15 @@ if TYPE_CHECKING:
     from altium_monkey.altium_pcb_layer_ref import PcbLayerRef
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
-DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.a0"
+DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.b0"
 SCHEMATIC_SVG_ENRICHMENT_SCHEMA = "altium_monkey.schematic.svg.enrichment.a0"
 SCHEMATIC_SVG_ENRICHMENT_METADATA_ID = "schematic-enrichment-a0"
+COMPILED_SCHEMATIC_SVG_ENRICHMENT_SCHEMA = "altium_cruncher.schematic.svg.enrichment.b0"
+COMPILED_SCHEMATIC_SVG_ENRICHMENT_METADATA_ID = "schematic-enrichment-b0"
 SCHEMATIC_REVIEW_THEME = "altium_cruncher.design_review.schematic_svg.a0"
+DESIGN_SCHEMA = "altium_monkey.design.b0"
+COMPILED_GRAPH_SCHEMA = "altium_monkey.compiled_schematic_graph.a0"
+SCHEMATIC_ARTIFACT_KEY = "sch.dwg_scene"
 
 log = logging.getLogger(__name__)
 
@@ -46,30 +51,17 @@ def write_design_review_bundle(
     schdoc_paths = _schdoc_paths(input_file, design)
     pcbdoc_paths = _pcbdoc_paths(input_file, design)
     source_base = input_file.resolve().parent
-    if input_file.suffix.lower() == ".prjpcb":
-        sch_svgs, sch_irs = _write_project_schematic_artifacts(
-            output_dir,
-            design,
-            design_payload=design_payload,
-            source_base=source_base,
+    sch_svgs, sch_irs = _write_project_schematic_artifacts(
+        output_dir,
+        design,
+        design_payload=design_payload,
+        source_base=source_base,
+    )
+    if not sch_svgs:
+        raise ValueError(
+            "Design b0 did not produce compiled schematic SVG pages; "
+            "SchDoc and PrjPcb review inputs require graph-scoped artifacts"
         )
-        if not sch_svgs and schdoc_paths:
-            sch_svgs = _write_schematic_svgs(
-                schdoc_paths,
-                output_dir,
-                design,
-                design_payload=design_payload,
-                source_base=source_base,
-            )
-    else:
-        sch_svgs = _write_schematic_svgs(
-            schdoc_paths,
-            output_dir,
-            design,
-            design_payload=design_payload,
-            source_base=source_base,
-        )
-        sch_irs = []
     doc_jsons = _write_document_jsons(
         [*schdoc_paths, *pcbdoc_paths],
         output_dir,
@@ -110,6 +102,137 @@ def _load_design(input_file: Path) -> object:
     if suffix == ".prjpcb":
         return AltiumDesign.from_prjpcb(input_file)
     raise ValueError(f"Unsupported design input type: {input_file.suffix}")
+
+
+def _compiled_schematic_graph(
+    design_payload: dict[str, object],
+) -> dict[str, object]:
+    schema = design_payload.get("schema")
+    if schema != DESIGN_SCHEMA:
+        raise ValueError(
+            f"unsupported Altium design schema {schema!r}; regenerate with "
+            f"Altium Monkey Design b0 ({DESIGN_SCHEMA})"
+        )
+    graph = design_payload.get("compiled_schematic_graph")
+    if not isinstance(graph, dict):
+        raise ValueError(
+            "malformed Design b0 payload: compiled_schematic_graph is required"
+        )
+    graph_schema = graph.get("schema")
+    if graph_schema != COMPILED_GRAPH_SCHEMA:
+        raise ValueError(
+            "unsupported compiled schematic graph schema "
+            f"{graph_schema!r}; expected {COMPILED_GRAPH_SCHEMA}"
+        )
+    return graph
+
+
+def _compiled_schematic_pages(
+    design_payload: dict[str, object],
+) -> list[dict[str, object]]:
+    """Return realized graph pages with narrow Altium presentation metadata."""
+    graph = _compiled_schematic_graph(design_payload)
+    raw_definitions, raw_pages, raw_metadata = _compiled_page_collections(
+        graph,
+        design_payload,
+    )
+    definitions = _page_definitions_by_id(raw_definitions)
+    metadata_by_page = _physical_page_metadata_by_ref(raw_metadata)
+    return [
+        _resolved_compiled_schematic_page(
+            raw_page,
+            definitions=definitions,
+            metadata_by_page=metadata_by_page,
+        )
+        for raw_page in raw_pages
+    ]
+
+
+def _compiled_page_collections(
+    graph: dict[str, object],
+    design_payload: dict[str, object],
+) -> tuple[list[object], list[object], list[object]]:
+    raw_definitions = graph.get("page_definitions")
+    raw_pages = graph.get("page_occurrences")
+    raw_metadata = design_payload.get("physical_page_metadata")
+    if not isinstance(raw_definitions, list) or not isinstance(raw_pages, list):
+        raise ValueError(
+            "malformed compiled schematic graph: page collections are required"
+        )
+    if not isinstance(raw_metadata, list):
+        raise ValueError(
+            "malformed Design b0 payload: physical_page_metadata is required"
+        )
+    return raw_definitions, raw_pages, raw_metadata
+
+
+def _page_definitions_by_id(
+    rows: list[object],
+) -> dict[str, dict[str, object]]:
+    return {
+        str(row.get("id") or ""): row
+        for row in rows
+        if isinstance(row, dict) and row.get("id")
+    }
+
+
+def _physical_page_metadata_by_ref(
+    rows: list[object],
+) -> dict[str, dict[str, object]]:
+    metadata_by_page: dict[str, dict[str, object]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("malformed physical_page_metadata row")
+        page_ref = str(row.get("page_occurrence_ref") or "")
+        if not page_ref or page_ref in metadata_by_page:
+            raise ValueError(
+                "physical_page_metadata must have one unique row per page occurrence"
+            )
+        metadata_by_page[page_ref] = row
+    return metadata_by_page
+
+
+def _resolved_compiled_schematic_page(
+    raw_page: object,
+    *,
+    definitions: dict[str, dict[str, object]],
+    metadata_by_page: dict[str, dict[str, object]],
+) -> dict[str, object]:
+    if not isinstance(raw_page, dict):
+        raise ValueError("malformed compiled schematic graph page occurrence")
+    page_ref = str(raw_page.get("id") or "")
+    definition_ref = str(raw_page.get("page_definition_ref") or "")
+    definition = definitions.get(definition_ref)
+    metadata = metadata_by_page.get(page_ref)
+    if not page_ref or definition is None or metadata is None:
+        raise ValueError(
+            "compiled page occurrence must resolve its definition and page metadata"
+        )
+    source_path = _page_definition_source_path(definition)
+    source_sheet = _page_definition_source_sheet(definition, source_path)
+    return {
+        **raw_page,
+        "page_occurrence_ref": page_ref,
+        "artifact_key": SCHEMATIC_ARTIFACT_KEY,
+        "source_path": source_path,
+        "source_sheet": source_sheet,
+        "physical_page_metadata": dict(metadata),
+    }
+
+
+def _page_definition_source_path(definition: dict[str, object]) -> str:
+    source_identity = definition.get("source_identity")
+    if not isinstance(source_identity, dict):
+        return ""
+    return str(source_identity.get("sch.source_key.source_path") or "")
+
+
+def _page_definition_source_sheet(
+    definition: dict[str, object],
+    source_path: str,
+) -> str:
+    filename = source_path.replace("\\", "/").rsplit("/", 1)[-1]
+    return filename or str(definition.get("display_name") or "sheet")
 
 
 def _schdoc_paths(input_file: Path, design: object) -> list[Path]:
@@ -190,8 +313,7 @@ def _write_project_schematic_artifacts(
         log.warning("Compiled schematic rendering API is unavailable")
         return [], []
 
-    raw_pages = design_payload.get("physical_pages", [])
-    pages = [page for page in raw_pages if isinstance(page, dict)]
+    pages = _compiled_schematic_pages(design_payload)
     if not pages:
         return [], []
 
@@ -204,7 +326,7 @@ def _write_project_schematic_artifacts(
     ir_artifacts: list[dict[str, object]] = []
     render_options = _physical_schematic_render_options()
     for index, page in enumerate(pages, start=1):
-        page_id = str(page.get("id") or "").strip()
+        page_id = str(page.get("page_occurrence_ref") or "").strip()
         if not page_id:
             continue
         source_sheet = str(page.get("source_sheet") or "sheet")
@@ -226,7 +348,8 @@ def _write_project_schematic_artifacts(
         ir_artifacts.append(
             {
                 "file": _relpath(ir_path, output_dir),
-                "compiled_page_id": page_id,
+                "page_occurrence_ref": page_id,
+                "artifact_key": SCHEMATIC_ARTIFACT_KEY,
                 "source": _compiled_page_source(page, source_base),
                 "source_sheet": source_sheet,
                 "page_number": index,
@@ -246,7 +369,8 @@ def _write_project_schematic_artifacts(
         svg_artifacts.append(
             {
                 "file": _relpath(svg_path, output_dir),
-                "compiled_page_id": page_id,
+                "page_occurrence_ref": page_id,
+                "artifact_key": SCHEMATIC_ARTIFACT_KEY,
                 "source": _compiled_page_source(page, source_base),
                 "source_sheet": source_sheet,
                 "page_number": index,
@@ -321,6 +445,7 @@ def _enrich_schematic_svg(
         svg,
         root_attrs=root_attrs,
         metadata_element=_schematic_svg_enrichment_metadata_element(payload),
+        metadata_id=SCHEMATIC_SVG_ENRICHMENT_METADATA_ID,
     )
     return _annotate_schematic_component_groups(
         svg,
@@ -338,42 +463,50 @@ def _enrich_project_schematic_svg(
 ) -> str:
     """Embed design-review metadata for one compiled schematic page."""
     rel_source = _compiled_page_source(schematic_page, source_base)
-    page_id = str(schematic_page.get("id") or "")
+    page_id = str(schematic_page.get("page_occurrence_ref") or "")
+    page_metadata = schematic_page.get("physical_page_metadata")
+    if not isinstance(page_metadata, dict):
+        page_metadata = {}
     payload = {
-        "schema": SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+        "schema": COMPILED_SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
         "source": {
             "altium_schdoc_file": rel_source,
-            "compiled_page_id": page_id,
+            "page_occurrence_ref": page_id,
+            "artifact_key": SCHEMATIC_ARTIFACT_KEY,
         },
         "view": {
             "kind": "compiled_schematic_page",
             "profile": "design_review",
             "sheet_name": Path(str(schematic_page.get("source_sheet") or "")).stem,
             "sheet_file": str(schematic_page.get("source_sheet") or ""),
-            "compiled_page": schematic_page,
+            "page_occurrence_ref": page_id,
+            "artifact_key": SCHEMATIC_ARTIFACT_KEY,
+            "physical_page_metadata": page_metadata,
         },
-        "view_indexes": _compiled_schematic_svg_view_indexes(
-            design_payload,
-            schematic_page=schematic_page,
-        ),
-        "design": design_payload,
     }
     root_attrs = {
-        "data-enrichment-schema": SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+        "data-enrichment-schema": COMPILED_SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
         "data-view-kind": "compiled_schematic_page",
         "data-profile": "design_review",
         "data-source": rel_source,
         "data-sheet-name": Path(str(schematic_page.get("source_sheet") or "")).stem,
-        "data-compiled-page-id": page_id,
+        "data-page-occurrence-ref": page_id,
+        "data-artifact-key": SCHEMATIC_ARTIFACT_KEY,
         "data-review-theme": SCHEMATIC_REVIEW_THEME,
     }
     svg = _inject_svg_root_attrs_and_metadata(
         svg,
         root_attrs=root_attrs,
-        metadata_element=_schematic_svg_enrichment_metadata_element(payload),
+        metadata_element=_schematic_svg_enrichment_metadata_element(
+            payload,
+            schema=COMPILED_SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+            metadata_id=COMPILED_SCHEMATIC_SVG_ENRICHMENT_METADATA_ID,
+        ),
+        metadata_id=COMPILED_SCHEMATIC_SVG_ENRICHMENT_METADATA_ID,
     )
-    return _annotate_compiled_schematic_component_groups(
+    return _annotate_compiled_schematic_graph_links(
         svg,
+        design_payload=design_payload,
         schematic_page=schematic_page,
     )
 
@@ -468,49 +601,12 @@ def _filtered_component_to_nets(
     }
 
 
-def _compiled_schematic_svg_view_indexes(
-    design_payload: dict[str, object],
-    *,
-    schematic_page: dict[str, object],
-) -> dict[str, object]:
-    raw_components = schematic_page.get("components", [])
-    components = [
-        component for component in raw_components if isinstance(component, dict)
-    ]
-    svg_to_components: dict[str, list[str]] = {}
-    component_to_svg: dict[str, str] = {}
-    for component in components:
-        svg_id = str(component.get("svg_id") or "").strip()
-        designator = str(component.get("designator") or "").strip()
-        if not svg_id or not designator:
-            continue
-        svg_to_components.setdefault(svg_id, []).append(designator)
-        component_to_svg[designator] = svg_id
-    page_id = str(schematic_page.get("id") or "")
-    physical_svg_to_components = {
-        f"{page_id}|{svg_id}": sorted(values)
-        for svg_id, values in sorted(svg_to_components.items())
-    }
-    return {
-        "compiled_page_id": page_id,
-        "svg_to_components": {
-            svg_id: sorted(values)
-            for svg_id, values in sorted(svg_to_components.items())
-        },
-        "physical_svg_to_components": physical_svg_to_components,
-        "component_to_svg": dict(sorted(component_to_svg.items())),
-        "component_to_nets": _filtered_component_to_nets(
-            design_payload,
-            component_to_svg,
-        ),
-    }
-
-
 def _inject_svg_root_attrs_and_metadata(
     svg: str,
     *,
     root_attrs: dict[str, object],
     metadata_element: str,
+    metadata_id: str,
 ) -> str:
     root_match = re.search(r"<svg\b[^>]*>", svg)
     if root_match is None:
@@ -522,20 +618,20 @@ def _inject_svg_root_attrs_and_metadata(
             continue
         updated_root = updated_root[:-1] + f' {key}="{_escape_attr(value)}">'
     enriched = svg[: root_match.start()] + updated_root + svg[root_match.end() :]
-    if f'id="{SCHEMATIC_SVG_ENRICHMENT_METADATA_ID}"' in enriched:
+    if f'id="{metadata_id}"' in enriched:
         return enriched
     insert_at = root_match.start() + len(updated_root)
     return enriched[:insert_at] + "\n" + metadata_element + enriched[insert_at:]
 
 
-def _schematic_svg_enrichment_metadata_element(payload: dict[str, object]) -> str:
+def _schematic_svg_enrichment_metadata_element(
+    payload: dict[str, object],
+    *,
+    schema: str = SCHEMATIC_SVG_ENRICHMENT_SCHEMA,
+    metadata_id: str = SCHEMATIC_SVG_ENRICHMENT_METADATA_ID,
+) -> str:
     body = html.escape(json.dumps(payload, indent=2, sort_keys=True), quote=False)
-    return (
-        f'<metadata id="{SCHEMATIC_SVG_ENRICHMENT_METADATA_ID}" '
-        f'data-schema="{SCHEMATIC_SVG_ENRICHMENT_SCHEMA}">\n'
-        f"{body}\n"
-        "</metadata>"
-    )
+    return f'<metadata id="{metadata_id}" data-schema="{schema}">\n{body}\n</metadata>'
 
 
 def _annotate_schematic_component_groups(
@@ -553,23 +649,99 @@ def _annotate_schematic_component_groups(
     return svg
 
 
-def _annotate_compiled_schematic_component_groups(
+def _annotate_compiled_schematic_graph_links(
     svg: str,
     *,
+    design_payload: dict[str, object],
     schematic_page: dict[str, object],
 ) -> str:
-    page_id = str(schematic_page.get("id") or "")
-    for component in schematic_page.get("components", []):
-        if not isinstance(component, dict):
-            continue
-        svg_id = str(component.get("svg_id") or "").strip()
-        if not svg_id:
-            continue
-        attrs = _schematic_component_group_attrs(component, svg_id)
-        attrs["data-compiled-page-id"] = page_id
-        attrs["data-compiled-svg-key"] = f"{page_id}|{svg_id}"
-        svg = _annotate_svg_group_by_id(svg, svg_id, attrs)
+    graph = _compiled_schematic_graph(design_payload)
+    page_ref = str(schematic_page.get("page_occurrence_ref") or "")
+    components = _rows_by_id(graph.get("component_occurrences"))
+    design_components = _rows_by_key(design_payload.get("components"), "designator")
+    for link in _scoped_graphical_artifact_links(graph, page_ref):
+        element_id = str(link["element_id"])
+        attrs = _graphical_link_attrs(link, page_ref)
+        attrs.update(
+            _component_graphical_link_attrs(
+                link,
+                element_id=element_id,
+                components=components,
+                design_components=design_components,
+            )
+        )
+        svg = _annotate_svg_group_by_id(svg, element_id, attrs)
     return svg
+
+
+def _rows_by_id(value: object) -> dict[str, dict[str, object]]:
+    return _rows_by_key(value, "id")
+
+
+def _rows_by_key(value: object, key: str) -> dict[str, dict[str, object]]:
+    if not isinstance(value, list):
+        return {}
+    return {
+        str(row.get(key) or ""): row
+        for row in value
+        if isinstance(row, dict) and row.get(key)
+    }
+
+
+def _scoped_graphical_artifact_links(
+    graph: dict[str, object],
+    page_ref: str,
+) -> list[dict[str, object]]:
+    value = graph.get("graphical_artifact_links")
+    if not isinstance(value, list):
+        return []
+    return [
+        link
+        for link in value
+        if isinstance(link, dict)
+        and str(link.get("page_occurrence_ref") or "") == page_ref
+        and str(link.get("artifact_key") or "") == SCHEMATIC_ARTIFACT_KEY
+        and str(link.get("element_id") or "").strip()
+    ]
+
+
+def _graphical_link_attrs(
+    link: dict[str, object],
+    page_ref: str,
+) -> dict[str, object]:
+    return {
+        "data-page-occurrence-ref": page_ref,
+        "data-artifact-key": SCHEMATIC_ARTIFACT_KEY,
+        "data-element-id": str(link["element_id"]),
+        "data-graph-target-type": str(link.get("target_type") or ""),
+        "data-graph-target-ref": str(link.get("target_ref") or ""),
+    }
+
+
+def _component_graphical_link_attrs(
+    link: dict[str, object],
+    *,
+    element_id: str,
+    components: dict[str, dict[str, object]],
+    design_components: dict[str, dict[str, object]],
+) -> dict[str, object]:
+    if link.get("target_type") != "sch.component_occurrence":
+        return {}
+    component_ref = str(link.get("target_ref") or "")
+    component = components.get(component_ref)
+    if component is None:
+        return {}
+    physical_designator = str(
+        component.get("physical_designator")
+        or component.get("display_designator")
+        or ""
+    )
+    attrs = _schematic_component_group_attrs(
+        design_components.get(physical_designator, component),
+        element_id,
+    )
+    attrs["data-component-occurrence-ref"] = component_ref
+    return attrs
 
 
 def _schematic_component_group_attrs(
@@ -949,21 +1121,45 @@ visual schematic and PCB context.
 1. Read `design_review_manifest.json`; all paths in it are relative to this
    folder.
 2. Read `{manifest["design_json"]}` for the project-level design model.
-3. Open `sch/*.svg` for schematic context. For project inputs these are
-   compiled, resolved schematic pages; for single SchDoc inputs these are
-   logical sheet renders. Open `pcb/layers/*.svg` for PCB context. The SVGs
+3. Open `sch/*.svg` for schematic context. SchDoc and PrjPcb inputs both emit
+   compiled, resolved schematic pages. Open `pcb/layers/*.svg` for PCB context. The SVGs
    carry in-band metadata that links drawn objects back to the JSON model.
 4. Use `json/schdoc/` and `json/pcbdoc/` only when you need raw Altium document
    details that are not summarized in the design JSON or SVG metadata.
+
+## Instructions for Review Agents
+
+- Treat the bundled Design b0 `compiled_schematic_graph` as the authoritative
+  schematic topology. Do not reconstruct connectivity from SVG geometry,
+  repeated net names, page proximity, or the legacy convenience indexes.
+- Select a schematic page by canonical `page_occurrence_ref`. Reused sheets can
+  share source drawings, labels, and element ids, so an `element_id` alone is
+  never a globally unique selector.
+- Join SVG evidence to semantics only with the full scoped selector
+  `page_occurrence_ref + artifact_key + element_id`, then verify the group's
+  `data-graph-target-type` and `data-graph-target-ref` against the matching
+  `graphical_artifact_links` row.
+- Traverse hierarchy through graph terminals and
+  `hierarchy_terminal_bindings`; traverse within a page through
+  `local_net_occurrences`. Do not merge same-named local nets across pages
+  unless the graph supplies the boundary relationship.
+- Apply DNP, fitted, and design-variant facts from the top-level Design rows.
+  The compiled graph is intentionally variant-neutral and represents the
+  complete source schematic.
+- If a scoped SVG selector, graph target, page reference, or hierarchy binding
+  cannot be resolved, report that as missing evidence. Do not silently infer a
+  replacement from a similar designator or net name.
+- Use raw SchDoc/PcbDoc JSON to inspect source records and properties, not as a
+  competing compiled connectivity model.
 
 ## Artifact Map
 
 - `{manifest["design_json"]}`: Altium Monkey design/netlist JSON. This is the
   primary semantic model for components, nets, hierarchy, variants, PnP, and
-  lookup indexes. For project inputs this is the compiled physical design view:
-  repeated sheets and channels use resolved physical designators, physical page
-  records, and page-local net/component projections. For deeper model/API
-  context, see the public
+  lookup indexes. Design b0 embeds the authoritative
+  variant-neutral compiled schematic graph. Repeated sheets and channels use
+  canonical page, hierarchy, component, local-net, terminal, binding, and
+  drawing-link occurrences. For deeper model/API context, see the public
   [altium_monkey](https://github.com/wavenumber-eng/altium_monkey) project.
 - `design_review_manifest.json`: artifact index for this bundle.
 - `{manifest["notes_json"]}`: JSONC dedicated notes, schematic-owned text
@@ -977,11 +1173,11 @@ visual schematic and PCB context.
   `altium_monkey.schdoc.interop.a0` and `altium_monkey.schlib.interop.a0`
   interop formats; PcbDoc payloads use the
   `altium_monkey.pcbdoc.structural.a0` document format.
-- `sch/`: schematic SVGs. For project inputs these are compiled schematic
+- `sch/`: schematic SVGs. For SchDoc and PrjPcb inputs these are compiled schematic
   pages with resolved channel/repeated-sheet designators. Each SVG root has
-  `data-enrichment-schema="altium_monkey.schematic.svg.enrichment.a0"` and a
-  `<metadata id="schematic-enrichment-a0">` JSON payload.
-- `sch-ir/`: schematic IR JSON for project inputs. These use
+  `data-enrichment-schema="altium_cruncher.schematic.svg.enrichment.b0"` and a
+  `<metadata id="schematic-enrichment-b0">` JSON payload.
+- `sch-ir/`: schematic IR JSON for SchDoc and PrjPcb inputs. These use
   `AltiumDesign.to_physical_ir()` so repeated/channel component designators are
   resolved before IR emission.
 - `pcb/layers/`: PCB copper-layer SVGs with board outline, cutouts, drills, and
@@ -1002,15 +1198,22 @@ for reasoning about the circuit. Important top-level areas:
 - `nets`: net rows with endpoint/component relationships. When available,
   `aliases` and `name_sources` describe additional labels, ports, power names,
   and other discovered names that did not win Altium's net-name selection.
-- `physical_pages`: compiled schematic-page records. Each page lists the
-  physical components and nets visible on that page, with source SchDoc lineage.
+- `compiled_schematic_graph`: the required source-neutral graph. Select pages
+  from `page_occurrences`; use `component_occurrences`,
+  `local_net_occurrences`, `terminal_occurrences`, and
+  `hierarchy_terminal_bindings` for schematic semantics.
+- `physical_page_metadata`: Altium channel, room, path, and document
+  presentation facts keyed by canonical `page_occurrence_ref`. It does not
+  repeat components or nets.
+- `compiled_schematic_graph.graphical_artifact_links`: maps the scoped drawing
+  selector `page_occurrence_ref + artifact_key + element_id` to its semantic
+  graph target. Current schematic review artifacts use
+  `artifact_key="sch.dwg_scene"`.
 - `indexes.svg_to_component`: legacy scalar mapping from schematic SVG group ids
   to component designators. It is populated only when a logical SVG id maps
   unambiguously to one physical component.
 - `indexes.svg_to_components`: maps a logical schematic SVG group id to every
   physical designator represented by that source object.
-- `indexes.physical_svg_to_components`: maps `physical_page_id|svg_id` to the
-  component designator(s) for repeated/channel-safe graphical lookup.
 - `indexes.component_to_nets`: maps component designators to connected nets.
 - `indexes.net_to_components`: maps a net name back to the components on it.
 
@@ -1033,25 +1236,25 @@ a derived power-tree view.
 ## Schematic SVG Links
 
 Schematic SVG component groups are annotated when a component `svg_id` is known.
-For project inputs, the `sch/*.svg` files are compiled physical pages and each
-root carries `data-compiled-page-id`. Component groups also carry
-`data-compiled-svg-key="{{physical_page_id}}|{{svg_id}}"` so repeated/channel
-instances are not confused with their logical source sheet. Look for attributes
-such as `data-component`, `data-designator`, `data-element-key`,
+For SchDoc and PrjPcb inputs, the `sch/*.svg` files are compiled physical pages and each
+root carries `data-page-occurrence-ref` and
+`data-artifact-key="sch.dwg_scene"`. Linked source groups carry the same scoped
+selector, and component groups also carry `data-component-occurrence-ref`.
+Look for attributes such as `data-component`, `data-designator`, `data-element-key`,
 `data-symbol-library-ref`, `data-footprint`, and `data-value`. To resolve a
 drawn component to nets:
 
-1. Read the SVG group's `data-component` or `data-element-key`.
-2. For project inputs, prefer the group's `data-compiled-svg-key` and resolve it
-   through `indexes.physical_svg_to_components` in the design JSON or through
-   the SVG metadata `view_indexes.physical_svg_to_components`.
-3. For simple non-repeated designs, `indexes.svg_to_component` remains a
-   convenient scalar shortcut when it is populated.
-4. Resolve the physical designator through `indexes.component_to_nets`.
+1. Read the SVG root `data-page-occurrence-ref` and `data-artifact-key`, plus
+   the source group's `data-element-id`.
+2. Resolve that tuple through graph `graphical_artifact_links`.
+3. Follow the graph target ref to a component, terminal, local net, or page.
+4. For a component target, use its physical designator with the top-level
+   Design component and variant rows; optional compatibility indexes may then
+   provide convenient net-name lookups.
 
-The embedded `schematic-enrichment-a0` metadata repeats the relevant page-local
-view indexes so a single SVG can be inspected without first loading every other
-artifact.
+The embedded `schematic-enrichment-b0` metadata records artifact identity and
+page presentation only. It does not duplicate the semantic graph; load the
+bundle's Design JSON sidecar for semantic traversal.
 
 ## PCB SVG Links
 
@@ -1099,7 +1302,10 @@ def _source_path(path: Path, source_base: Path) -> str:
 def _compiled_page_source(page: dict[str, object], source_base: Path) -> str:
     source_path = str(page.get("source_path") or "").strip()
     if source_path:
-        return _source_path(Path(source_path), source_base)
+        path = Path(source_path)
+        if path.is_absolute():
+            return _source_path(path, source_base)
+        return source_path.replace("\\", "/")
     return str(page.get("source_sheet") or "")
 
 

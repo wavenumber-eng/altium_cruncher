@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/schematic_svg_manifest.b0.schema.json",
+  "title": "Altium Cruncher Schematic SVG Manifest b0",
+  "type": "object",
+  "required": [
+    "schema",
+    "input",
+    "design_json",
+    "design_schema",
+    "compiled_schematic_graph_schema",
+    "svgs"
+  ],
+  "properties": {
+    "schema": {"const": "altium_cruncher.schematic_svg_manifest.b0"},
+    "input": {"type": "string", "minLength": 1},
+    "design_json": {"type": "string", "minLength": 1},
+    "design_schema": {"const": "altium_monkey.design.b0"},
+    "compiled_schematic_graph_schema": {
+      "const": "altium_monkey.compiled_schematic_graph.a0"
+    },
+    "svgs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/svg_artifact"}
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "svg_artifact": {
+      "type": "object",
+      "required": [
+        "file",
+        "page_occurrence_ref",
+        "artifact_key",
+        "source",
+        "source_sheet",
+        "page_number",
+        "page_count"
+      ],
+      "properties": {
+        "file": {"type": "string", "minLength": 1},
+        "page_occurrence_ref": {"type": "string", "minLength": 1},
+        "artifact_key": {"const": "sch.dwg_scene"},
+        "source": {"type": "string", "minLength": 1},
+        "source_sheet": {"type": "string", "minLength": 1},
+        "page_number": {"type": "integer", "minimum": 1},
+        "page_count": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}

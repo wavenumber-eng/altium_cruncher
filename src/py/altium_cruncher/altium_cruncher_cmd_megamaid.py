@@ -34,11 +34,17 @@ from altium_cruncher.bom_pnp_cli_common import (
 from altium_cruncher.bom_pnp_model import BomPnpConfig, select_variant_names
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
 from altium_cruncher.altium_cruncher_notes import render_notes_jsonc
+from altium_cruncher.altium_cruncher_design_review import (
+    COMPILED_GRAPH_SCHEMA,
+    DESIGN_SCHEMA,
+    _compiled_schematic_graph,
+)
 
 log = logging.getLogger(__name__)
 
 MEGAMAID_BOM_OUTPUT_KINDS = ("raw-json", "grouped-xlsx")
 MEGAMAID_PNP_OUTPUT_KINDS = ("json", "csv")
+MEGAMAID_MANIFEST_SCHEMA = "altium_cruncher.megamaid_manifest.b0"
 
 
 def _relative_to_root(path: Path, root: Path) -> str:
@@ -653,7 +659,9 @@ def _extract_pcblibs_for_project(
         split_results = split_pcblib_filesystem_safe(pcblib, split_dir, verbose=debug)
         split_files = [
             str(path)
-            for path in sorted(split_results.values(), key=lambda item: item.name.lower())
+            for path in sorted(
+                split_results.values(), key=lambda item: item.name.lower()
+            )
         ]
 
         manifest_entries.append(
@@ -766,11 +774,13 @@ def cmd_megamaid(args) -> int:
         )
 
         netlist_payload = design.to_json(include_indexes=True)
+        compiled_graph = _compiled_schematic_graph(netlist_payload)
         netlist_path = output_dir / "netlist" / f"{input_file.stem}_netlist.json"
         netlist_path.parent.mkdir(parents=True, exist_ok=True)
         netlist_path.write_text(json.dumps(netlist_payload, indent=2), encoding="utf-8")
 
         manifest = {
+            "schema": MEGAMAID_MANIFEST_SCHEMA,
             "kind": "megamaid",
             "input_project": str(input_file),
             "output_root": str(output_dir),
@@ -782,8 +792,16 @@ def cmd_megamaid(args) -> int:
             "pnp": pnp_manifest,
             "netlist": {
                 "design_json": _relative_to_root(netlist_path, output_dir),
+                "design_schema": DESIGN_SCHEMA,
+                "compiled_schematic_graph_schema": COMPILED_GRAPH_SCHEMA,
                 "component_count": len(netlist_payload.get("components", [])),
                 "net_count": len(netlist_payload.get("nets", [])),
+                "page_occurrence_count": len(
+                    compiled_graph.get("page_occurrences", [])
+                ),
+                "graphical_artifact_link_count": len(
+                    compiled_graph.get("graphical_artifact_links", [])
+                ),
             },
             "document_jsons": document_jsons,
             "library_jsons": library_jsons,
