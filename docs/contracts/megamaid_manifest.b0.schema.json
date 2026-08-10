@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/megamaid_manifest.b0.schema.json",
+  "title": "Altium Cruncher MegaMaid Manifest b0",
+  "type": "object",
+  "required": [
+    "schema",
+    "kind",
+    "input_project",
+    "output_root",
+    "variants",
+    "bom_pnp_config",
+    "schdoc_count",
+    "pcbdoc_count",
+    "bom",
+    "pnp",
+    "netlist",
+    "document_jsons",
+    "library_jsons",
+    "notes",
+    "schlib",
+    "pcblib",
+    "embedded_assets",
+    "sch_images"
+  ],
+  "properties": {
+    "schema": {"const": "altium_cruncher.megamaid_manifest.b0"},
+    "kind": {"const": "megamaid"},
+    "input_project": {"type": "string", "minLength": 1},
+    "output_root": {"type": "string", "minLength": 1},
+    "variants": {"type": "array", "items": {"type": "string"}},
+    "bom_pnp_config": {"type": ["string", "null"]},
+    "schdoc_count": {"type": "integer", "minimum": 0},
+    "pcbdoc_count": {"type": "integer", "minimum": 0},
+    "bom": {"type": "object"},
+    "pnp": {"type": "object"},
+    "netlist": {"$ref": "#/$defs/netlist"},
+    "document_jsons": {"type": "array", "items": {"type": "object"}},
+    "library_jsons": {"type": "object"},
+    "notes": {"type": "object"},
+    "schlib": {"type": "array", "items": {"type": "object"}},
+    "pcblib": {"type": "array", "items": {"type": "object"}},
+    "embedded_assets": {"type": "object"},
+    "sch_images": {"type": "object"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "netlist": {
+      "type": "object",
+      "required": [
+        "design_json",
+        "design_schema",
+        "compiled_schematic_graph_schema",
+        "component_count",
+        "net_count",
+        "page_occurrence_count",
+        "graphical_artifact_link_count"
+      ],
+      "properties": {
+        "design_json": {"type": "string", "minLength": 1},
+        "design_schema": {"const": "altium_monkey.design.b0"},
+        "compiled_schematic_graph_schema": {
+          "const": "altium_monkey.compiled_schematic_graph.a0"
+        },
+        "component_count": {"type": "integer", "minimum": 0},
+        "net_count": {"type": "integer", "minimum": 0},
+        "page_occurrence_count": {"type": "integer", "minimum": 0},
+        "graphical_artifact_link_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  }
+}

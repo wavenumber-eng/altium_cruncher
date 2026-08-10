@@ -8,6 +8,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+import xml.etree.ElementTree as ET
+
+from jsonschema import Draft202012Validator
 
 from altium_cruncher.config_json import load_json_config
 from altium_cruncher.output_path_templates import resolve_output_relative_path
@@ -28,7 +31,9 @@ HYDROSCOPE_PROJECT = HYDROSCOPE_DIR / "Hydroscope.PrjPcb"
 HYDROSCOPE_SCHDOC = HYDROSCOPE_DIR / "CPU.SchDoc"
 HYDROSCOPE_SCHLIB = HYDROSCOPE_DIR / "Hydroscope.SCHLIB"
 HYDROSCOPE_PCBDOC = HYDROSCOPE_DIR / "TZ-SB-0001-PCB-[A] (HydroScope Mainboard).PcbDoc"
-NODE_TEST_ARRAY_DIR = PACKAGE_ROOT / "tests" / "assets" / "projects" / "node_test_array" / "input"
+NODE_TEST_ARRAY_DIR = (
+    PACKAGE_ROOT / "tests" / "assets" / "projects" / "node_test_array" / "input"
+)
 NODE_TEST_ARRAY_PROJECT = NODE_TEST_ARRAY_DIR / "11-10077__node-test-array__B4.PrjPcb"
 RT_SUPER_C1_INTLIB = (
     PACKAGE_ROOT
@@ -63,6 +68,82 @@ def _run_cli(*args: str) -> str:
     return combined
 
 
+def _svg_tree_by_page(
+    paths: list[Path],
+) -> dict[str, tuple[ET.Element, dict[str, ET.Element]]]:
+    pages: dict[str, tuple[ET.Element, dict[str, ET.Element]]] = {}
+    for path in paths:
+        root = ET.parse(path).getroot()
+        page_ref = root.attrib.get("data-page-occurrence-ref", "")
+        assert page_ref, path
+        assert page_ref not in pages, page_ref
+        elements = {
+            element.attrib["id"]: element
+            for element in root.iter()
+            if element.attrib.get("id")
+        }
+        pages[page_ref] = (root, elements)
+    return pages
+
+
+def _assert_compiled_graph_svg_closure(
+    graph: dict[str, object],
+    svg_pages: dict[str, tuple[ET.Element, dict[str, ET.Element]]],
+) -> None:
+    raw_links = graph["graphical_artifact_links"]
+    assert isinstance(raw_links, list)
+    links = [link for link in raw_links if isinstance(link, dict)]
+    assert links
+    assert {str(link["artifact_key"]) for link in links} == {"sch.dwg_scene"}
+
+    for link in links:
+        page_ref = str(link["page_occurrence_ref"])
+        element_id = str(link["element_id"])
+        target_type = str(link["target_type"])
+        target_ref = str(link["target_ref"])
+        root, elements = svg_pages[page_ref]
+        assert root.attrib["data-artifact-key"] == "sch.dwg_scene"
+        element = elements[element_id]
+        assert element.attrib["data-page-occurrence-ref"] == page_ref
+        assert element.attrib["data-artifact-key"] == "sch.dwg_scene"
+        assert element.attrib["data-element-id"] == element_id
+        assert element.attrib["data-graph-target-type"] == target_type
+        assert element.attrib["data-graph-target-ref"] == target_ref
+
+
+def _load_schematic_svg_bundle(
+    output_dir: Path,
+) -> tuple[
+    dict[str, object],
+    dict[str, object],
+    dict[str, tuple[ET.Element, dict[str, ET.Element]]],
+]:
+    manifest = json.loads(
+        (output_dir / "schematic_svg_manifest.json").read_text(encoding="utf-8")
+    )
+    schema = json.loads(
+        (
+            PACKAGE_ROOT
+            / "docs"
+            / "contracts"
+            / "schematic_svg_manifest.b0.schema.json"
+        ).read_text(encoding="utf-8")
+    )
+    Draft202012Validator(schema).validate(manifest)
+    design_payload = json.loads(
+        (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
+    )
+    svg_pages = _svg_tree_by_page(
+        [output_dir / entry["file"] for entry in manifest["svgs"]]
+    )
+    assert manifest["design_schema"] == design_payload["schema"]
+    assert (
+        manifest["compiled_schematic_graph_schema"]
+        == (design_payload["compiled_schematic_graph"]["schema"])
+    )
+    return manifest, design_payload, svg_pages
+
+
 def test_cli_help_mentions_intlib_extract_support() -> None:
     help_text = _run_cli("--help")
 
@@ -73,9 +154,22 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
     """Exercise Sch SVG, BOM, PnP, and design JSON commands on Hydroscope."""
     sch_svg_dir = tmp_path / "sch-svg"
     _run_cli("sch-svg", str(HYDROSCOPE_SCHDOC), "-o", str(sch_svg_dir))
-    sch_svg = sch_svg_dir / "CPU.svg"
-    assert sch_svg.exists()
-    assert "<svg" in sch_svg.read_text(encoding="utf-8", errors="ignore")[:200]
+    standalone_manifest, standalone_design, standalone_svg_pages = (
+        _load_schematic_svg_bundle(sch_svg_dir)
+    )
+    standalone_graph = standalone_design["compiled_schematic_graph"]
+    assert standalone_manifest["input"] == "CPU.SchDoc"
+    assert len(standalone_graph["page_occurrences"]) == 1
+    assert set(standalone_svg_pages) == {
+        str(page["id"])
+        for page in standalone_graph["page_occurrences"]
+        if isinstance(page, dict)
+    }
+    assert {
+        root.attrib["data-enrichment-schema"]
+        for root, _elements in standalone_svg_pages.values()
+    } == {"altium_cruncher.schematic.svg.enrichment.b0"}
+    _assert_compiled_graph_svg_closure(standalone_graph, standalone_svg_pages)
 
     bom_dir = tmp_path / "bom"
     _run_cli(
@@ -120,14 +214,90 @@ def test_schematic_and_design_json_commands_use_public_project(tmp_path: Path) -
     design_payload = json.loads(
         (design_dir / "design" / "Hydroscope_design.json").read_text(encoding="utf-8")
     )
-    assert design_payload["schema"] == "altium_monkey.design.a2"
+    assert design_payload["schema"] == "altium_monkey.design.b0"
     assert len(design_payload["components"]) >= 100
     assert len(design_payload["nets"]) >= 100
-    assert isinstance(design_payload["physical_pages"], list)
+    assert "physical_pages" not in design_payload
+    assert isinstance(
+        design_payload["compiled_schematic_graph"]["page_occurrences"], list
+    )
     assert design_payload["indexes"]["svg_to_component"]
 
+    project_svg_dir = tmp_path / "project-sch-svg"
+    _run_cli("sch-svg", str(HYDROSCOPE_PROJECT), "-o", str(project_svg_dir))
+    project_manifest, project_design, project_svg_pages = _load_schematic_svg_bundle(
+        project_svg_dir
+    )
+    graph = design_payload["compiled_schematic_graph"]
+    assert project_manifest["input"] == HYDROSCOPE_PROJECT.name
+    assert project_design["compiled_schematic_graph"] == graph
+    assert set(project_svg_pages) == {
+        str(page["id"]) for page in graph["page_occurrences"] if isinstance(page, dict)
+    }
+    _assert_compiled_graph_svg_closure(graph, project_svg_pages)
 
-def test_design_review_bundle_uses_physical_pages_for_multichannel_project(
+
+def test_combined_svg_command_emits_schematic_graph_and_pcb_outputs(
+    tmp_path: Path,
+) -> None:
+    """Exercise the combined project SVG path across schematic and PCB outputs."""
+    config = tmp_path / "pcb.svg.config"
+    config.write_text(
+        json.dumps(
+            {
+                "schema": "pcb.svg.config.a0",
+                "global": {
+                    "include_metadata": True,
+                    "show_empty_layers": False,
+                },
+                "layer_outputs": {
+                    "enabled": True,
+                    "layers": ["TOP"],
+                    "include_special_layers": ["BOARD_OUTLINE"],
+                },
+                "views": [],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    output_root = tmp_path / "combined-svg"
+    _run_cli(
+        "svg",
+        str(HYDROSCOPE_PROJECT),
+        "--config",
+        str(config),
+        "-o",
+        str(output_root),
+    )
+
+    manifest, design_payload, svg_pages = _load_schematic_svg_bundle(
+        output_root / "sch-svg"
+    )
+    graph = design_payload["compiled_schematic_graph"]
+    assert manifest["input"] == HYDROSCOPE_PROJECT.name
+    assert set(svg_pages) == {
+        str(page["id"]) for page in graph["page_occurrences"] if isinstance(page, dict)
+    }
+    assert {
+        root.attrib["data-enrichment-schema"] for root, _elements in svg_pages.values()
+    } == {"altium_cruncher.schematic.svg.enrichment.b0"}
+    _assert_compiled_graph_svg_closure(graph, svg_pages)
+
+    pcb_output_dir = output_root / "pcb-svg"
+    pcb_manifest_paths = sorted(pcb_output_dir.glob("*__views.json"))
+    assert pcb_manifest_paths
+    for manifest_path in pcb_manifest_paths:
+        pcb_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        assert pcb_manifest["schema"] == "pcb.svg.manifest.a0"
+        layer_outputs = pcb_manifest["layer_outputs"]
+        assert layer_outputs
+        for layer_output in layer_outputs.values():
+            assert (pcb_output_dir / layer_output["file"]).is_file()
+
+
+def test_design_review_bundle_uses_compiled_graph_for_multichannel_project(
     tmp_path: Path,
 ) -> None:
     """Verify DR emits resolved physical-page SVG/IR artifacts for channel projects."""
@@ -138,59 +308,71 @@ def test_design_review_bundle_uses_physical_pages_for_multichannel_project(
     manifest = json.loads(
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
     )
+    assert manifest["schema"] == "altium_cruncher.design_review_manifest.b0"
     design_payload = json.loads(
         (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
     )
-    physical_pages = [
-        page for page in design_payload["physical_pages"] if isinstance(page, dict)
-    ]
-    physical_page_ids = {str(page["id"]) for page in physical_pages}
+    graph = design_payload["compiled_schematic_graph"]
+    pages = [page for page in graph["page_occurrences"] if isinstance(page, dict)]
+    page_ids = {str(page["id"]) for page in pages}
     svg_page_ids = {
-        str(entry["compiled_page_id"])
+        str(entry["page_occurrence_ref"])
         for entry in manifest["schematic_svgs"]
         if isinstance(entry, dict)
     }
     ir_page_ids = {
-        str(entry["compiled_page_id"])
+        str(entry["page_occurrence_ref"])
         for entry in manifest["schematic_irs"]
         if isinstance(entry, dict)
     }
 
-    assert design_payload["schema"] == "altium_monkey.design.a2"
-    assert len(physical_pages) >= 2
-    assert svg_page_ids == physical_page_ids
-    assert ir_page_ids == physical_page_ids
+    assert design_payload["schema"] == "altium_monkey.design.b0"
+    assert "physical_pages" not in design_payload
+    assert len(pages) >= 2
+    assert svg_page_ids == page_ids
+    assert ir_page_ids == page_ids
 
-    page_with_component = next(
-        page
-        for page in physical_pages
-        if any(
-            isinstance(component, dict) and component.get("svg_id")
-            for component in page.get("components", [])
-        )
-    )
     component = next(
         component
-        for component in page_with_component["components"]
-        if isinstance(component, dict) and component.get("svg_id")
+        for component in graph["component_occurrences"]
+        if isinstance(component, dict)
     )
-    page_id = str(page_with_component["id"])
-    svg_id = str(component["svg_id"])
-    designator = str(component["designator"])
-    physical_svg_key = f"{page_id}|{svg_id}"
+    component_ref = str(component["id"])
+    link = next(
+        link
+        for link in graph["graphical_artifact_links"]
+        if isinstance(link, dict)
+        and link.get("target_type") == "sch.component_occurrence"
+        and link.get("target_ref") == component_ref
+    )
+    page_id = str(component["page_occurrence_ref"])
+    element_id = str(link["element_id"])
+    designator = str(component["physical_designator"])
 
     indexes = design_payload["indexes"]
-    assert designator in indexes["physical_svg_to_components"][physical_svg_key]
     assert designator in indexes["component_to_nets"]
 
     svg_entry = next(
-        entry for entry in manifest["schematic_svgs"] if entry["compiled_page_id"] == page_id
+        entry
+        for entry in manifest["schematic_svgs"]
+        if entry["page_occurrence_ref"] == page_id
     )
     svg_text = (output_dir / svg_entry["file"]).read_text(encoding="utf-8")
     assert 'data-view-kind="compiled_schematic_page"' in svg_text
-    assert f'data-compiled-page-id="{page_id}"' in svg_text
-    assert f'data-compiled-svg-key="{physical_svg_key}"' in svg_text
+    assert f'data-page-occurrence-ref="{page_id}"' in svg_text
+    assert f'data-element-id="{element_id}"' in svg_text
+    assert f'data-component-occurrence-ref="{component_ref}"' in svg_text
     assert f'data-component="{designator}"' in svg_text
+
+    dr_svg_pages = _svg_tree_by_page(
+        [output_dir / entry["file"] for entry in manifest["schematic_svgs"]]
+    )
+    assert set(dr_svg_pages) == page_ids
+    assert {
+        root.attrib["data-enrichment-schema"]
+        for root, _elements in dr_svg_pages.values()
+    } == {"altium_cruncher.schematic.svg.enrichment.b0"}
+    _assert_compiled_graph_svg_closure(graph, dr_svg_pages)
 
 
 def test_bom_pnp_config_and_jlc_command_use_public_project(tmp_path: Path) -> None:
@@ -620,7 +802,11 @@ def test_clean_init_config_writes_templates_without_cleaning(tmp_path: Path) -> 
     assert (
         "/* Text matching mode. Options: all, regex, contains, exact. */" in pcblib_text
     )
-    assert load_json_config(schematic_config)["schema"] == "altium_cruncher.clean.config.a0"
     assert (
-        load_json_config(pcblib_config)["schema"] == "altium_cruncher.pcblib.clean.config.a0"
+        load_json_config(schematic_config)["schema"]
+        == "altium_cruncher.clean.config.a0"
+    )
+    assert (
+        load_json_config(pcblib_config)["schema"]
+        == "altium_cruncher.pcblib.clean.config.a0"
     )

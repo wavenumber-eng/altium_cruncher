@@ -1,6 +1,7 @@
 """sch-svg command for altium_cruncher."""
 
 import argparse
+import json
 import logging
 import re
 from pathlib import Path
@@ -15,6 +16,8 @@ from altium_cruncher.altium_cruncher_cmd_sch_ir import (
 
 log = logging.getLogger(__name__)
 
+SCHEMATIC_SVG_MANIFEST_SCHEMA = "altium_cruncher.schematic_svg_manifest.b0"
+
 
 def cmd_sch_svg(args) -> int:
     """
@@ -26,10 +29,8 @@ def cmd_sch_svg(args) -> int:
     output_dir = _resolve_output_dir(args.output, "sch-svg")
     suffix = input_file.suffix.lower()
 
-    if suffix == ".schdoc":
-        return _write_logical_schdoc_svgs([input_file], output_dir)
-    if suffix == ".prjpcb":
-        return _write_project_or_logical_svgs(input_file, output_dir)
+    if suffix in {".schdoc", ".prjpcb"}:
+        return _write_compiled_schematic_bundle(input_file, output_dir)
     if suffix == ".schlib":
         return _write_schlib_svgs(input_file, output_dir)
     log.error(f"Unsupported file type: {suffix}")
@@ -55,76 +56,69 @@ def _resolve_sch_svg_input(raw_file: str | None) -> Path | None:
     return None
 
 
-def _write_project_or_logical_svgs(input_file: Path, output_dir: Path) -> int:
+def _write_compiled_schematic_bundle(input_file: Path, output_dir: Path) -> int:
+    """Write self-contained compiled SVG, Design b0, and manifest artifacts."""
     from altium_monkey.altium_design import AltiumDesign
-    from altium_monkey.altium_prjpcb import AltiumPrjPcb
 
-    design = AltiumDesign.from_prjpcb(input_file)
-    project = design.project or AltiumPrjPcb(input_file)
-    schdoc_files = project.get_schdoc_paths()
-    project_parameters = _project_parameters(project)
-    if not schdoc_files:
-        log.error(f"No SchDoc files found in project: {input_file}")
-        return 1
-    log.info(f"Found {len(schdoc_files)} SchDoc file(s) in project")
-
-    success_count = _write_project_schematic_svgs(
+    design = (
+        AltiumDesign.from_schdoc(input_file)
+        if input_file.suffix.lower() == ".schdoc"
+        else AltiumDesign.from_prjpcb(input_file)
+    )
+    payload = design.to_json(include_indexes=True)
+    project_parameters = _project_parameters(getattr(design, "project", None))
+    artifacts = _write_compiled_schematic_svg_artifacts(
         design,
         output_dir,
+        payload=payload,
         project_parameters=project_parameters,
+        source_base=input_file.resolve().parent,
     )
-    if success_count > 0:
-        log.info(f"Successfully generated {success_count} SVG file(s)")
-        return 0
-    log.warning(
-        "No compiled schematic pages were available; falling back to logical SchDoc SVGs"
+    from altium_cruncher.altium_cruncher_design_review import (
+        COMPILED_GRAPH_SCHEMA,
+        DESIGN_SCHEMA,
+        _compiled_schematic_pages,
     )
-    return _write_logical_schdoc_svgs(
-        schdoc_files,
-        output_dir,
-        project_parameters=project_parameters,
+
+    expected_count = len(_compiled_schematic_pages(payload))
+    if not artifacts or len(artifacts) != expected_count:
+        log.error(
+            "Generated %d/%d compiled schematic SVG page(s)",
+            len(artifacts),
+            expected_count,
+        )
+        return 1
+
+    design_path = output_dir / "design" / f"{input_file.stem}_design.json"
+    design_path.parent.mkdir(parents=True, exist_ok=True)
+    design_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    manifest = {
+        "schema": SCHEMATIC_SVG_MANIFEST_SCHEMA,
+        "input": input_file.name,
+        "design_json": design_path.relative_to(output_dir).as_posix(),
+        "design_schema": DESIGN_SCHEMA,
+        "compiled_schematic_graph_schema": COMPILED_GRAPH_SCHEMA,
+        "svgs": artifacts,
+    }
+    manifest_path = output_dir / "schematic_svg_manifest.json"
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2) + "\n",
+        encoding="utf-8",
     )
+    log.info("Design b0 sidecar: %s", design_path.name)
+    log.info("Schematic SVG manifest: %s", manifest_path.name)
+    log.info("Successfully generated %d SVG file(s)", len(artifacts))
+    return 0
 
 
 def _project_parameters(project: object) -> dict[str, str]:
+    if project is None:
+        return {}
     parameters = dict(getattr(project, "parameters", {}))
     current_variant = project.get_current_variant()
     if current_variant:
         parameters["VariantName"] = current_variant
     return parameters
-
-
-def _write_logical_schdoc_svgs(
-    schdoc_files: list[Path],
-    output_dir: Path,
-    *,
-    project_parameters: dict[str, str] | None = None,
-) -> int:
-    from altium_monkey.altium_schdoc import AltiumSchDoc
-
-    parameters = project_parameters or {}
-    success_count = 0
-    for schdoc_path in schdoc_files:
-        output_file = output_dir / f"{schdoc_path.stem}.svg"
-        log.info(f"Processing: {schdoc_path.name}")
-        try:
-            schdoc = AltiumSchDoc(schdoc_path)
-            svg_content = schdoc.to_svg(
-                project_parameters=parameters, wrap_components=True
-            )
-            log_current_font_resolution_diagnostics()
-            output_file.write_text(svg_content, encoding="utf-8")
-            log.info(f"  -> {output_file.name}")
-            success_count += 1
-        except Exception as exc:
-            log.error(f"Error processing {schdoc_path.name}: {exc}")
-
-    if success_count == len(schdoc_files):
-        log.info(f"Successfully generated {success_count} SVG file(s)")
-        return 0
-
-    log.warning(f"Generated {success_count}/{len(schdoc_files)} SVG file(s)")
-    return 1
 
 
 def _write_schlib_svgs(input_file: Path, output_dir: Path) -> int:
@@ -159,23 +153,48 @@ def _write_project_schematic_svgs(
     *,
     project_parameters: dict[str, str],
 ) -> int:
-    """Write compiled/resolved schematic page SVGs for a project input."""
+    """Compatibility wrapper returning the compiled SVG artifact count."""
+    payload = design.to_json(include_indexes=True)
+    return len(
+        _write_compiled_schematic_svg_artifacts(
+            design,
+            output_dir,
+            payload=payload,
+            project_parameters=project_parameters,
+            source_base=output_dir,
+        )
+    )
+
+
+def _write_compiled_schematic_svg_artifacts(
+    design: object,
+    output_dir: Path,
+    *,
+    payload: dict[str, object],
+    project_parameters: dict[str, str],
+    source_base: Path,
+) -> list[dict[str, object]]:
+    """Write graph-scoped compiled SVG pages and return manifest rows."""
     to_physical_svg = getattr(design, "to_physical_svg", None)
     if not callable(to_physical_svg):
         log.warning("Compiled schematic SVG API is unavailable")
-        return 0
+        return []
 
-    payload = design.to_json(include_indexes=True)
-    raw_pages = payload.get("physical_pages", [])
-    pages = [page for page in raw_pages if isinstance(page, dict)]
+    from altium_cruncher.altium_cruncher_design_review import (
+        _compiled_schematic_pages,
+        _compiled_page_source,
+        _enrich_project_schematic_svg,
+    )
+
+    pages = _compiled_schematic_pages(payload)
     if not pages:
-        return 0
+        return []
 
-    log.info(f"Found {len(pages)} compiled schematic page(s) in project")
+    log.info("Found %d compiled schematic page(s)", len(pages))
     used_names: set[str] = set()
-    success_count = 0
+    artifacts: list[dict[str, object]] = []
     for index, page in enumerate(pages, start=1):
-        page_id = str(page.get("id") or "").strip()
+        page_id = str(page.get("page_occurrence_ref") or "").strip()
         if not page_id:
             continue
         output_file = output_dir / _compiled_page_svg_filename(
@@ -190,13 +209,29 @@ def _write_project_schematic_svgs(
                 project_parameters=project_parameters,
                 wrap_components=True,
             )
+            svg_content = _enrich_project_schematic_svg(
+                svg_content,
+                design_payload=payload,
+                schematic_page=page,
+                source_base=source_base,
+            )
             log_current_font_resolution_diagnostics()
             output_file.write_text(svg_content, encoding="utf-8")
             log.info(f"  -> {output_file.name}")
-            success_count += 1
+            artifacts.append(
+                {
+                    "file": output_file.relative_to(output_dir).as_posix(),
+                    "page_occurrence_ref": page_id,
+                    "artifact_key": "sch.dwg_scene",
+                    "source": _compiled_page_source(page, source_base),
+                    "source_sheet": str(page.get("source_sheet") or ""),
+                    "page_number": index,
+                    "page_count": len(pages),
+                }
+            )
         except Exception as exc:
             log.error(f"Error processing compiled page {page_id}: {exc}")
-    return success_count
+    return artifacts
 
 
 def _compiled_page_svg_filename(
@@ -212,14 +247,17 @@ def _compiled_page_svg_filename(
 
 
 def _compiled_page_label(page: dict[str, object]) -> str:
+    metadata = page.get("physical_page_metadata")
+    if not isinstance(metadata, dict):
+        metadata = {}
     for key in (
         "room_name",
         "channel_prefix",
         "channel_alpha",
         "physical_instance_path",
-        "id",
+        "page_occurrence_ref",
     ):
-        label = str(page.get(key) or "").strip()
+        label = str(metadata.get(key) or page.get(key) or "").strip()
         if label:
             return label
     return "sheet"

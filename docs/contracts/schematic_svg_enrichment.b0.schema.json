@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/schematic_svg_enrichment.b0.schema.json",
+  "title": "Compiled Schematic SVG Enrichment b0",
+  "type": "object",
+  "required": ["schema", "source", "view"],
+  "properties": {
+    "schema": {"const": "altium_cruncher.schematic.svg.enrichment.b0"},
+    "source": {
+      "type": "object",
+      "required": [
+        "altium_schdoc_file",
+        "page_occurrence_ref",
+        "artifact_key"
+      ],
+      "properties": {
+        "altium_schdoc_file": {"type": "string", "minLength": 1},
+        "page_occurrence_ref": {"type": "string", "minLength": 1},
+        "artifact_key": {"const": "sch.dwg_scene"}
+      },
+      "additionalProperties": false
+    },
+    "view": {
+      "type": "object",
+      "required": [
+        "kind",
+        "profile",
+        "sheet_name",
+        "sheet_file",
+        "page_occurrence_ref",
+        "artifact_key",
+        "physical_page_metadata"
+      ],
+      "properties": {
+        "kind": {"const": "compiled_schematic_page"},
+        "profile": {"const": "design_review"},
+        "sheet_name": {"type": "string"},
+        "sheet_file": {"type": "string", "minLength": 1},
+        "page_occurrence_ref": {"type": "string", "minLength": 1},
+        "artifact_key": {"const": "sch.dwg_scene"},
+        "physical_page_metadata": {"type": "object"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

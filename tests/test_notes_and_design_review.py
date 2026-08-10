@@ -9,8 +9,10 @@ import sys
 from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
+import xml.etree.ElementTree as ET
 
 import jsonc  # type: ignore[import-untyped]
+from jsonschema import Draft202012Validator
 import pytest
 
 from altium_monkey.altium_record_types import SchPointMils, SchRectMils
@@ -23,6 +25,7 @@ from altium_monkey.altium_schdoc import AltiumSchDoc
 
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
 from altium_cruncher.altium_cruncher_design_review import (
+    _compiled_schematic_pages,
     _enrich_schematic_svg,
     _pcb_layer_ref_from_value,
     _pcb_review_primitive_copper_layers,
@@ -44,6 +47,42 @@ _LOW_LEVEL_NOTE_KEYS = {
     "collapsed",
     "kind",
 }
+
+
+def _assert_contract(payload: object, schema_name: str) -> None:
+    root = Path(__file__).resolve().parents[1]
+    schema = json.loads(
+        (root / "docs" / "contracts" / schema_name).read_text(encoding="utf-8")
+    )
+    Draft202012Validator(schema).validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (
+            {"schema": "altium_monkey.design.a2", "physical_pages": []},
+            "regenerate with Altium Monkey Design b0",
+        ),
+        (
+            {"schema": "altium_monkey.design.b0"},
+            "compiled_schematic_graph is required",
+        ),
+        (
+            {
+                "schema": "altium_monkey.design.b0",
+                "compiled_schematic_graph": {"schema": "future.a0"},
+            },
+            "unsupported compiled schematic graph schema",
+        ),
+    ],
+)
+def test_compiled_page_discovery_rejects_legacy_or_malformed_graphs(
+    payload: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        _compiled_schematic_pages(payload)
 
 
 def _assert_sparse_note_entry(entry: dict[str, object]) -> None:
@@ -254,7 +293,8 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     manifest = json.loads(
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
     )
-    assert manifest["schema"] == "altium_cruncher.design_review_manifest.a0"
+    assert manifest["schema"] == "altium_cruncher.design_review_manifest.b0"
+    _assert_contract(manifest, "design_review_manifest.b0.schema.json")
     assert manifest["input"] == "annotated.SchDoc"
     assert str(manifest["design_json"]).startswith("design/")
     assert (output_dir / manifest["design_json"]).exists()
@@ -268,19 +308,23 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert len(manifest["schematic_svgs"]) == 1
     assert manifest["schematic_svgs"][0]["source"] == "annotated.SchDoc"
     assert manifest["schematic_svgs"][0]["file"].startswith("sch/")
-    assert manifest["schematic_irs"] == []
+    assert len(manifest["schematic_irs"]) == 1
+    assert (
+        manifest["schematic_irs"][0]["page_occurrence_ref"]
+        == (manifest["schematic_svgs"][0]["page_occurrence_ref"])
+    )
     assert manifest["pcb_svgs"] == []
     assert "Document JSON: json/schdoc/annotated.SchDoc.json" in result.stdout
-    assert "Schematic SVG: sch/annotated.svg" in result.stdout
+    assert "Schematic SVG: sch/" in result.stdout
     schematic_svg = (output_dir / manifest["schematic_svgs"][0]["file"]).read_text(
         encoding="utf-8",
     )
-    assert "altium_monkey.schematic.svg.enrichment.a0" in schematic_svg
+    assert "altium_cruncher.schematic.svg.enrichment.b0" in schematic_svg
     assert (
         'data-review-theme="altium_cruncher.design_review.schematic_svg.a0"'
         in schematic_svg
     )
-    assert 'id="schematic-enrichment-a0"' in schematic_svg
+    assert 'id="schematic-enrichment-b0"' in schematic_svg
     notes_text = (output_dir / manifest["notes_json"]).read_text(encoding="utf-8")
     assert notes_text.startswith("/*\naltium-cruncher notes artifact")
     notes_payload = jsonc.loads(notes_text)
@@ -294,6 +338,12 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert "BOM-like part of the netlist" in readme
     assert "Power-Tree Review Hint" in readme
     assert "compiled, resolved schematic pages" in readme
+    assert "Instructions for Review Agents" in readme
+    assert "as the authoritative" in readme
+    assert "schematic topology" in readme
+    assert "page_occurrence_ref + artifact_key + element_id" in readme
+    assert "Do not silently infer" in readme
+    assert "variant-neutral" in readme
     assert "sch-ir/" in readme
     assert "zero-ohm" in readme
     assert "current-sense resistors" in readme
@@ -417,19 +467,84 @@ def test_design_review_project_schematic_artifacts_are_compiled_outputs(
             )
 
     design_payload: dict[str, object] = {
-        "physical_pages": [
+        "schema": "altium_monkey.design.b0",
+        "compiled_schematic_graph": {
+            "schema": "altium_monkey.compiled_schematic_graph.a0",
+            "type": "sch.compiled_schematic_graph",
+            "identity_namespace": "sch.compiled_schematic_graph.a0",
+            "unit_definitions": [],
+            "page_definitions": [
+                {
+                    "type": "sch.page_definition",
+                    "id": "PDEF1",
+                    "unit_definition_ref": "UDEF1",
+                    "display_name": "Sheet1.SchDoc",
+                    "source_identity": {"sch.source_key.source_path": "Sheet1.SchDoc"},
+                }
+            ],
+            "unit_occurrences": [],
+            "page_occurrences": [
+                {
+                    "type": "sch.page_occurrence",
+                    "id": "PDOC1",
+                    "page_definition_ref": "PDEF1",
+                    "unit_occurrence_ref": "UOCC1",
+                    "display_name": "Sheet1.SchDoc",
+                    "sheet_number": "1",
+                    "instance_order": 0,
+                    "source_identity": {
+                        "sch.source_key.source_path": "$root/Sheet1.SchDoc"
+                    },
+                }
+            ],
+            "hierarchy_occurrences": [],
+            "component_occurrences": [
+                {
+                    "type": "sch.component_occurrence",
+                    "id": "COCC1",
+                    "page_occurrence_ref": "PDOC1",
+                    "source_designator": "R1",
+                    "physical_designator": "R1.1",
+                    "display_designator": "R1.1",
+                    "unit": 1,
+                    "body_style": 0,
+                    "source_identity": {"sch.source_key.source_uuid": "CUID1"},
+                }
+            ],
+            "local_net_occurrences": [],
+            "terminal_occurrences": [],
+            "hierarchy_terminal_bindings": [],
+            "graphical_artifact_links": [
+                {
+                    "type": "sch.graphical_artifact_link",
+                    "id": "GLINK1",
+                    "page_occurrence_ref": "PDOC1",
+                    "target_type": "sch.component_occurrence",
+                    "target_ref": "COCC1",
+                    "artifact_key": "sch.dwg_scene",
+                    "element_id": "CUID1",
+                    "source_identity": {"sch.source_key.artifact_element": "CUID1"},
+                }
+            ],
+        },
+        "physical_page_metadata": [
             {
-                "id": "PDOC1",
-                "source_sheet": "Sheet1.SchDoc",
-                "source_path": str(tmp_path / "Sheet1.SchDoc"),
-                "components": [
-                    {
-                        "designator": "R1.1",
-                        "svg_id": "CUID1",
-                        "value": "10k",
-                        "library_ref": "RES",
-                    }
-                ],
+                "page_occurrence_ref": "PDOC1",
+                "physical_instance_path": "Root/Sheet1",
+                "channel_index": 1,
+                "channel_prefix": "",
+                "channel_alpha": "A",
+                "room_name": "Sheet1_A",
+                "physical_room_name": "Sheet1_A",
+                "document_number": "1",
+            }
+        ],
+        "components": [
+            {
+                "designator": "R1.1",
+                "svg_id": "CUID1",
+                "value": "10k",
+                "library_ref": "RES",
             }
         ],
         "indexes": {"component_to_nets": {"R1.1": ["VIN"]}},
@@ -450,17 +565,37 @@ def test_design_review_project_schematic_artifacts_are_compiled_outputs(
     assert irs[0]["file"].startswith("sch-ir/")
     assert "/physical/" not in svgs[0]["file"]
     assert "/physical/" not in irs[0]["file"]
-    assert svgs[0]["compiled_page_id"] == "PDOC1"
+    assert svgs[0]["page_occurrence_ref"] == "PDOC1"
+    assert svgs[0]["artifact_key"] == "sch.dwg_scene"
     svg = (tmp_path / "review" / svgs[0]["file"]).read_text(encoding="utf-8")
     assert 'data-view-kind="compiled_schematic_page"' in svg
-    assert 'data-compiled-page-id="PDOC1"' in svg
+    assert 'data-enrichment-schema="altium_cruncher.schematic.svg.enrichment.b0"' in svg
+    assert 'id="schematic-enrichment-b0"' in svg
+    assert 'id="schematic-enrichment-a0"' not in svg
+    assert 'data-page-occurrence-ref="PDOC1"' in svg
+    assert 'data-artifact-key="sch.dwg_scene"' in svg
+    assert 'data-component-occurrence-ref="COCC1"' in svg
     assert 'data-component="R1.1"' in svg
+    assert '"design":' not in svg
+    root = ET.fromstring(svg)
+    metadata = next(
+        element
+        for element in root.iter()
+        if element.attrib.get("id") == "schematic-enrichment-b0"
+    )
+    assert metadata.attrib["data-schema"] == (
+        "altium_cruncher.schematic.svg.enrichment.b0"
+    )
+    _assert_contract(
+        json.loads(metadata.text or ""),
+        "schematic_svg_enrichment.b0.schema.json",
+    )
 
 
-def test_design_review_node_test_array_uses_compiled_physical_pages(
+def test_design_review_node_test_array_uses_compiled_graph_pages(
     tmp_path: Path,
 ) -> None:
-    """Real-world DR bundles should expose resolved compiled schematic pages."""
+    """Real-world DR bundles should expose canonical compiled graph pages."""
     repo_root = Path(__file__).resolve().parents[1]
     project_path = _node_test_array_project_path()
     output_dir = tmp_path / "node_test_array_review"
@@ -471,63 +606,81 @@ def test_design_review_node_test_array_uses_compiled_physical_pages(
     manifest = json.loads(
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
     )
+    _assert_contract(manifest, "design_review_manifest.b0.schema.json")
     design_payload = json.loads(
         (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
     )
-    physical_pages = [
-        page for page in design_payload["physical_pages"] if isinstance(page, dict)
-    ]
-    physical_page_ids = {str(page["id"]) for page in physical_pages}
+    graph = design_payload["compiled_schematic_graph"]
+    pages = [page for page in graph["page_occurrences"] if isinstance(page, dict)]
+    page_ids = {str(page["id"]) for page in pages}
     svg_page_ids = {
-        str(entry["compiled_page_id"]) for entry in manifest["schematic_svgs"]
+        str(entry["page_occurrence_ref"]) for entry in manifest["schematic_svgs"]
     }
     ir_page_ids = {
-        str(entry["compiled_page_id"]) for entry in manifest["schematic_irs"]
+        str(entry["page_occurrence_ref"]) for entry in manifest["schematic_irs"]
     }
 
-    assert len(physical_pages) > len({page["source_sheet"] for page in physical_pages})
-    assert len(manifest["schematic_svgs"]) == len(physical_pages)
-    assert len(manifest["schematic_irs"]) == len(physical_pages)
-    assert svg_page_ids == physical_page_ids
-    assert ir_page_ids == physical_page_ids
+    assert design_payload["schema"] == "altium_monkey.design.b0"
+    assert "physical_pages" not in design_payload
+    assert len(pages) > len(graph["page_definitions"])
+    assert len(manifest["schematic_svgs"]) == len(pages)
+    assert len(manifest["schematic_irs"]) == len(pages)
+    assert svg_page_ids == page_ids
+    assert ir_page_ids == page_ids
+    assert {
+        str(row["page_occurrence_ref"])
+        for row in design_payload["physical_page_metadata"]
+    } == page_ids
+    assert {str(entry["artifact_key"]) for entry in manifest["schematic_svgs"]} == {
+        "sch.dwg_scene"
+    }
 
-    page_component_designators = {
-        str(component["designator"])
-        for page in physical_pages
-        for component in page.get("components", [])
-        if isinstance(component, dict) and str(component.get("designator") or "")
+    graph_component_designators = {
+        str(component["physical_designator"])
+        for component in graph["component_occurrences"]
+        if isinstance(component, dict)
+        and str(component.get("physical_designator") or "")
     }
     top_level_component_designators = {
         str(component["designator"])
         for component in design_payload["components"]
         if isinstance(component, dict) and str(component.get("designator") or "")
     }
-    assert page_component_designators
-    assert page_component_designators <= top_level_component_designators
+    assert graph_component_designators
+    assert graph_component_designators <= top_level_component_designators
 
     resolved_component = next(
         component
-        for component in design_payload["components"]
+        for component in graph["component_occurrences"]
         if isinstance(component, dict)
-        and component.get("logical_designator")
-        and component.get("logical_designator") != component.get("designator")
-        and component.get("physical_sheet_id") in physical_page_ids
+        and component.get("source_designator")
+        and component.get("source_designator") != component.get("physical_designator")
     )
-    resolved_designator = str(resolved_component["designator"])
-    resolved_page_id = str(resolved_component["physical_sheet_id"])
+    resolved_designator = str(resolved_component["physical_designator"])
+    resolved_page_id = str(resolved_component["page_occurrence_ref"])
+    resolved_component_ref = str(resolved_component["id"])
+    resolved_element_id = next(
+        str(link["element_id"])
+        for link in graph["graphical_artifact_links"]
+        if isinstance(link, dict)
+        and link.get("target_type") == "sch.component_occurrence"
+        and link.get("target_ref") == resolved_component_ref
+    )
     svg_entry = next(
         entry
         for entry in manifest["schematic_svgs"]
-        if entry["compiled_page_id"] == resolved_page_id
+        if entry["page_occurrence_ref"] == resolved_page_id
     )
     ir_entry = next(
         entry
         for entry in manifest["schematic_irs"]
-        if entry["compiled_page_id"] == resolved_page_id
+        if entry["page_occurrence_ref"] == resolved_page_id
     )
 
     svg_text = (output_dir / svg_entry["file"]).read_text(encoding="utf-8")
-    assert f'data-compiled-page-id="{resolved_page_id}"' in svg_text
+    assert f'data-page-occurrence-ref="{resolved_page_id}"' in svg_text
+    assert f'data-element-id="{resolved_element_id}"' in svg_text
+    assert f'data-component-occurrence-ref="{resolved_component_ref}"' in svg_text
     assert f'data-component="{resolved_designator}"' in svg_text
     assert resolved_designator in svg_text
 
@@ -536,14 +689,20 @@ def test_design_review_node_test_array_uses_compiled_physical_pages(
         for component in design_payload["components"]
         if isinstance(component, dict)
         and component.get("dnp") is True
-        and component.get("physical_sheet_id") in physical_page_ids
+        and component.get("designator") in graph_component_designators
     )
     dnp_designator = str(dnp_component["designator"])
-    dnp_page_id = str(dnp_component["physical_sheet_id"])
+    dnp_occurrence = next(
+        component
+        for component in graph["component_occurrences"]
+        if isinstance(component, dict)
+        and component.get("physical_designator") == dnp_designator
+    )
+    dnp_page_id = str(dnp_occurrence["page_occurrence_ref"])
     dnp_svg_entry = next(
         entry
         for entry in manifest["schematic_svgs"]
-        if entry["compiled_page_id"] == dnp_page_id
+        if entry["page_occurrence_ref"] == dnp_page_id
     )
     dnp_svg_text = (output_dir / dnp_svg_entry["file"]).read_text(encoding="utf-8")
     assert f'data-component="{dnp_designator}"' in dnp_svg_text

@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/design_review_manifest.b0.schema.json",
+  "title": "Altium Cruncher Design Review Manifest b0",
+  "type": "object",
+  "required": [
+    "schema",
+    "input",
+    "design_json",
+    "document_jsons",
+    "notes_json",
+    "schematic_svgs",
+    "schematic_irs",
+    "pcb_svgs",
+    "readme"
+  ],
+  "properties": {
+    "schema": {"const": "altium_cruncher.design_review_manifest.b0"},
+    "input": {"$ref": "#/$defs/path"},
+    "design_json": {"$ref": "#/$defs/path"},
+    "document_jsons": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/document_artifact"}
+    },
+    "notes_json": {"$ref": "#/$defs/path"},
+    "schematic_svgs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {"$ref": "#/$defs/logical_schematic_artifact"},
+          {"$ref": "#/$defs/compiled_schematic_artifact"}
+        ]
+      }
+    },
+    "schematic_irs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/compiled_schematic_artifact"}
+    },
+    "pcb_svgs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/pcb_artifact"}
+    },
+    "readme": {"$ref": "#/$defs/path"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "path": {"type": "string", "minLength": 1},
+    "positive_integer": {"type": "integer", "minimum": 1},
+    "document_artifact": {
+      "type": "object",
+      "required": ["file", "source", "kind"],
+      "properties": {
+        "file": {"$ref": "#/$defs/path"},
+        "source": {"$ref": "#/$defs/path"},
+        "kind": {"enum": ["SchDoc", "PcbDoc"]}
+      },
+      "additionalProperties": false
+    },
+    "logical_schematic_artifact": {
+      "type": "object",
+      "required": ["file", "source", "page_number", "page_count"],
+      "properties": {
+        "file": {"$ref": "#/$defs/path"},
+        "source": {"$ref": "#/$defs/path"},
+        "page_number": {"$ref": "#/$defs/positive_integer"},
+        "page_count": {"$ref": "#/$defs/positive_integer"}
+      },
+      "additionalProperties": false
+    },
+    "compiled_schematic_artifact": {
+      "type": "object",
+      "required": [
+        "file",
+        "page_occurrence_ref",
+        "artifact_key",
+        "source",
+        "source_sheet",
+        "page_number",
+        "page_count"
+      ],
+      "properties": {
+        "file": {"$ref": "#/$defs/path"},
+        "page_occurrence_ref": {"type": "string", "minLength": 1},
+        "artifact_key": {"const": "sch.dwg_scene"},
+        "source": {"$ref": "#/$defs/path"},
+        "source_sheet": {"$ref": "#/$defs/path"},
+        "page_number": {"$ref": "#/$defs/positive_integer"},
+        "page_count": {"$ref": "#/$defs/positive_integer"}
+      },
+      "additionalProperties": false
+    },
+    "pcb_output": {
+      "type": "object",
+      "required": ["name", "file", "layers"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "file": {"$ref": "#/$defs/path"},
+        "layers": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "pcb_artifact": {
+      "type": "object",
+      "required": ["manifest", "board", "layer_outputs", "views"],
+      "properties": {
+        "manifest": {"$ref": "#/$defs/path"},
+        "board": {"type": ["string", "null"]},
+        "layer_outputs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/pcb_output"}
+        },
+        "views": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/pcb_output"}
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
