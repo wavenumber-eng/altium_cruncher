@@ -4,7 +4,7 @@ requires-python = "==3.12.*"
 
 [[package]]
 name = "altium-cruncher"
-version = "2026.8.10"
+version = "2026.8.11"
 source = { editable = "." }
 dependencies = [
     { name = "altium-monkey" },
@@ -40,7 +40,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "altium-monkey", specifier = "==2026.8.10" },
+    { name = "altium-monkey", specifier = "==2026.8.11" },
     { name = "build", marker = "extra == 'test'", specifier = ">=1.2.0" },
     { name = "colorama", specifier = ">=0.4.6" },
     { name = "easyeda-monkey", specifier = ">=2026.5.26" },
@@ -70,7 +70,7 @@ dev = [
 
 [[package]]
 name = "altium-monkey"
-version = "2026.8.10"
+version = "2026.8.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "freetype-py" },
@@ -80,9 +80,9 @@ dependencies = [
     { name = "uharfbuzz" },
     { name = "wn-geometer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/eb/ca/bade61c5726f2f3ecd8dcebde7f2f029256940e3377e29578c04b00983af/altium_monkey-2026.8.10.tar.gz", hash = "sha256:fefd4754bb6c373515c3a25860049fd003b36a6c0c6a816674aa588e2c8cb085", size = 4251824, upload-time = "2026-08-10T17:11:10.365Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b7/2b/e91208b044199154e73f1719bfb4ed2b830c992f281fdeea241f4e82afbd/altium_monkey-2026.8.11.tar.gz", hash = "sha256:271c183177d7da05fc4c0609e1b497ac52a34db8f39cacce4c940475c5cc857e", size = 4252274, upload-time = "2026-08-11T12:34:29.346Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/ba/be0f8be0d42984fd7105ddf53515f71a60879e2dd2d365f68c8bb8f91f1f/altium_monkey-2026.8.10-py3-none-any.whl", hash = "sha256:8e254f0b616eaa64d694d0516f0ee9a7cd41af665b129ebdd43b28b08d42dc5b", size = 4344683, upload-time = "2026-08-10T17:11:08.422Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/d0/c8cb665f6e49960531abb5d2991a070a8b9102d5812812dd2750d0dc38d9/altium_monkey-2026.8.11-py3-none-any.whl", hash = "sha256:043195e87578ebf077ae223d54512b5e242b65aef15369d4da9d33cc433b7740", size = 4345228, upload-time = "2026-08-11T12:34:27.163Z" },
 ]
 
 [[package]]

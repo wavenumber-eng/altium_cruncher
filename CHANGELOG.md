@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2026.8.11
+
+- Consume pinned `altium-monkey==2026.8.11`, carrying the schematic Unicode record-encoding correction through `design`, Design Review, MegaMaid, `sch-svg`, and other Altium-backed workflows.
+- Preserve leading and trailing whitespace in authoritative `%UTF8%` sidecars while retaining CP1252-safe fallback fields for older Altium readers.
+- Recover valid legacy unmarked UTF-8 with contextual diagnostics and reject malformed byte sequences instead of silently producing control characters or corrupted text.
+- Keep the Design b0 compiled schematic graph, graph-scoped SVG metadata, and Cruncher b0 output contracts unchanged.
+
 ## 2026.8.10
 
 - Consume pinned `altium-monkey==2026.8.10` and require the authoritative Design b0 compiled schematic graph for schematic/project review workflows.
