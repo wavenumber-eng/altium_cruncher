@@ -23,16 +23,16 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.8.10"
-EXPECTED_RELEASE_DATE = date(2026, 8, 10)
-EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-08-10.md"
+EXPECTED_VERSION = "2026.8.11"
+EXPECTED_RELEASE_DATE = date(2026, 8, 11)
+EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-08-11.md"
 CONTROLLED_DEPENDENCY_REQUIREMENTS = {
-    "altium-monkey": "==2026.8.10",
+    "altium-monkey": "==2026.8.11",
     "wn-geometer": "==2026.6.10",
 }
 MINIMUM_CONTROLLED_DEPENDENCIES: dict[str, str] = {}
 EXACT_CONTROLLED_DEPENDENCIES = {
-    "altium-monkey": "2026.8.10",
+    "altium-monkey": "2026.8.11",
     "wn-geometer": "2026.6.10",
 }
 
@@ -50,7 +50,7 @@ def test_version_contract_matches_date_based_release() -> None:
     assert (version.major, version.minor, version.patch, version.build) == (
         2026,
         8,
-        10,
+        11,
         None,
     )
     assert version.release_date == EXPECTED_RELEASE_DATE
@@ -139,6 +139,15 @@ def test_developer_working_docs_are_excluded_from_release_artifacts() -> None:
     assert "docs/**" in sdist["include"]
     assert "docs/plans/**" in sdist["exclude"]
     assert "docs/research/**" in sdist["exclude"]
+
+
+def test_release_build_backend_is_metadata_compatible() -> None:
+    """Keep release artifacts compatible with the Twine validation gate."""
+    pyproject = tomllib.loads(
+        (PACKAGE_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+
+    assert pyproject["build-system"]["requires"] == ["hatchling==1.31.0"]
 
 
 def test_python_signoff_does_not_regress() -> None:
