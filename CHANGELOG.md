@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2026.8.11.1
+
+- Consume pinned `altium-monkey==2026.8.11.post1`, carrying Python 3.14 dependency compatibility and exact duplicate-unannotated-component identity into all Altium-backed workflows.
+- Keep Cruncher's own Python support range and public output schemas unchanged.
+
 ## 2026.8.11
 
 - Consume pinned `altium-monkey==2026.8.11`, carrying the schematic Unicode record-encoding correction through `design`, Design Review, MegaMaid, `sch-svg`, and other Altium-backed workflows.
