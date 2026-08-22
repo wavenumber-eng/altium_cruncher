@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2026.8.21
+
+- Consume pinned `altium-monkey==2026.8.21`, carrying Altium-proven schematic source paint order, compiled-graph/index corrections, full Python/C++ parity, and record-decoding fixes into all Altium-backed workflows.
+- Consume pinned `wn-geometer==2026.8.21` with ABI `20260821`, including endpoint/radius arc support for planar regions used by PCB layer STEP generation.
+- Keep Cruncher's CLI, configuration, Design Review, MegaMaid, and exported schema contracts unchanged.
+
 ## 2026.8.11.1
 
 - Consume pinned `altium-monkey==2026.8.11.post1`, carrying Python 3.14 dependency compatibility and exact duplicate-unannotated-component identity into all Altium-backed workflows.

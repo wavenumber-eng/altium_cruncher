@@ -4,7 +4,7 @@ requires-python = "==3.12.*"
 
 [[package]]
 name = "altium-cruncher"
-version = "2026.8.11.1"
+version = "2026.8.21"
 source = { editable = "." }
 dependencies = [
     { name = "altium-monkey" },
@@ -40,7 +40,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "altium-monkey", specifier = "==2026.8.11.post1" },
+    { name = "altium-monkey", specifier = "==2026.8.21" },
     { name = "build", marker = "extra == 'test'", specifier = ">=1.2.0" },
     { name = "colorama", specifier = ">=0.4.6" },
     { name = "easyeda-monkey", specifier = ">=2026.5.26" },
@@ -52,7 +52,7 @@ requires-dist = [
     { name = "rich", specifier = ">=13.7.0" },
     { name = "ruff", marker = "extra == 'test'", specifier = ">=0.8.0" },
     { name = "twine", marker = "extra == 'test'", specifier = ">=5.0.0" },
-    { name = "wn-geometer", specifier = "==2026.6.10" },
+    { name = "wn-geometer", specifier = "==2026.8.21" },
     { name = "wn-rack", marker = "extra == 'test'", specifier = ">=1.1.0" },
 ]
 provides-extras = ["easyeda", "test"]
@@ -70,19 +70,21 @@ dev = [
 
 [[package]]
 name = "altium-monkey"
-version = "2026.8.11.post1"
+version = "2026.8.21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "freetype-py" },
+    { name = "jsonschema-rs" },
     { name = "lxml" },
     { name = "lz4" },
+    { name = "msgspec" },
     { name = "pillow" },
     { name = "uharfbuzz" },
     { name = "wn-geometer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1b/02/a52327f5d6c1b2a7d39bfbe227843e74f5f6453b84ff9884efa3104581b4/altium_monkey-2026.8.11.post1.tar.gz", hash = "sha256:40c47a5d22ff3729324ba3ed0ffe5692f04fc0f246c00a1aebe0f97104aa0c05", size = 4254114, upload-time = "2026-08-12T02:06:59Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/8b/b09207334a6767552b66203d9e4cb037e22611d9094d1be8b833cf97b293/altium_monkey-2026.8.21.tar.gz", hash = "sha256:d3d53947181fc35a72d94da6fad5e731617cd10d9fd39ca9c5648b698e1f1b7d", size = 4369782, upload-time = "2026-08-22T00:56:14.891Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/66/c3/ce1447b5350fff47c84205dd4e1ca78b5eed6048bba417835c5225d52eb6/altium_monkey-2026.8.11.post1-py3-none-any.whl", hash = "sha256:6fb7bf6da1165b8b2947bcf2778cf7149084c2ea57aa21ae3b384e2235a72ac1", size = 4346509, upload-time = "2026-08-12T02:06:56.48Z" },
+    { url = "https://files.pythonhosted.org/packages/73/65/66d1d435d2cec5209936045f36f7a30b44979a54fa6f6fc9b8abf6d759be/altium_monkey-2026.8.21-py3-none-any.whl", hash = "sha256:7d0bb41984a6adbee659b161173132ac6c7dfa99d14a9ef8d5ed06598f0ba382", size = 4478231, upload-time = "2026-08-22T00:56:13.157Z" },
 ]
 
 [[package]]
@@ -343,6 +345,23 @@ wheels = [
 ]
 
 [[package]]
+name = "jsonschema-rs"
+version = "0.48.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/d9/8855459939edc138f91a92129bb81b958c63532d4535f010dc377ad5c3bf/jsonschema_rs-0.48.5.tar.gz", hash = "sha256:113bc6b72cdf6ca24ce3503a805983ecfaf8849bb6c647f19731653114fb42e0", size = 2238428, upload-time = "2026-07-22T09:08:43.096Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/82/2eebf8ee00a1e0dafbd16d24843619ed48b505db4b56e3be7cde352305fb/jsonschema_rs-0.48.5-cp310-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:3be53890ff6a602f4ca42ec88f1c3fffefd47c726b11acf3f7726ccb6a67eab7", size = 8245153, upload-time = "2026-07-22T09:07:55.67Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/00/12813212dec8399f6f1ba497b595318787bb9a95958a786c399135d5b6e5/jsonschema_rs-0.48.5-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:788be7d86a2a081598a46add32d3405822abd00c3938ede915ead7899ec8b9d2", size = 4299423, upload-time = "2026-07-22T09:07:58.605Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/94/e6a363af3c12767f14556ad3609234129652f292c1e447b83d7700491a08/jsonschema_rs-0.48.5-cp310-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:5cc0d8eb0dc1b795b7e31ff070b48fe71d5d084f6b14d5b3932c9714560a8b16", size = 4089300, upload-time = "2026-07-22T09:08:00.213Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/71/f93678664766a450f8e7d2371ddb6df926fbfc4827bb079d51eea95a1982/jsonschema_rs-0.48.5-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:14134ce6baa38106bf5d04eea22d37cee397ddbb473249ea9ce4ae79d6347466", size = 4413386, upload-time = "2026-07-22T09:08:01.992Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/61/a8e63e37e7f80d77e462a82ffc8b425d217b69120dd01e4d1f185b077140/jsonschema_rs-0.48.5-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:8bb40a845496227b80c9cb84c9f5a4e2ffe102fb367395da0b9b701eaeb93e16", size = 4050792, upload-time = "2026-07-22T09:08:03.453Z" },
+    { url = "https://files.pythonhosted.org/packages/09/61/3a9a76d60597955a95d493ae3f37e8768232eef581145668dd7d049f8aaa/jsonschema_rs-0.48.5-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:ae6603c60bbe71dff4487339a6376cdb5084aa6b1082ec3ce30d22ae8e714b25", size = 4247676, upload-time = "2026-07-22T09:08:04.924Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/72/f553404374401eae8f143a189bde33e97138e3da9a3ece8f57ceb90f8139/jsonschema_rs-0.48.5-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:d401cb2eb65b9aab1f596afc630a0f803475047978a25a1bff0ea1c5444a8f50", size = 4643220, upload-time = "2026-07-22T09:08:06.458Z" },
+    { url = "https://files.pythonhosted.org/packages/17/41/2a7a47f2429538f492560d9f8e4fc172cb1b069b80de1bc2cc364f5bfb4c/jsonschema_rs-0.48.5-cp310-abi3-win32.whl", hash = "sha256:ff4b6d52c6e9f3060aa673360edfca7538189fc7e93a59fa00c3f0d8f816189a", size = 3666157, upload-time = "2026-07-22T09:08:08.166Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/0e/063b4fbfd622b93215318b2151e866083cced50c6eca24af2725784eabf8/jsonschema_rs-0.48.5-cp310-abi3-win_amd64.whl", hash = "sha256:3d7c8d73c37fe5f7d3630b44ad295a959cc6bdab5f34cb58a3ba1f82fca1c638", size = 4310877, upload-time = "2026-07-22T09:08:09.674Z" },
+]
+
+[[package]]
 name = "jsonschema-specifications"
 version = "2025.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -441,6 +460,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/de/1d/f4da6f02cdffe04d6362210b807146a26044c88d839208aec273bb0d9184/more_itertools-11.1.0.tar.gz", hash = "sha256:48e8f4d9e7e5878571ecf6f2b4e57634f93cd474cc8cfbd2376f2d11b396e30d", size = 145772, upload-time = "2026-05-22T14:14:29.909Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e8/3d/1087453384dbde46a8c7f9356eead2c58be8a7bf156bca40243377c85715/more_itertools-11.1.0-py3-none-any.whl", hash = "sha256:4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192", size = 72226, upload-time = "2026-05-22T14:14:28.824Z" },
+]
+
+[[package]]
+name = "msgspec"
+version = "0.21.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/60/f79b9b013a16fa3a58350c9295ddc6789f2e335f36ea61ed10a21b215364/msgspec-0.21.1.tar.gz", hash = "sha256:2313508e394b0d208f8f56892ca9b2799e2561329de9763b19619595a6c0f72c", size = 319193, upload-time = "2026-04-12T21:44:50.394Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6e/cf/317224852c00248c620a9bcf4b26e2e4ab8afd752f18d2a6ef73ebd423b6/msgspec-0.21.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:d4248cf0b6129b7d230eacd493c17cc2d4f3989f3bb7f633a928a85b7dcfa251", size = 196188, upload-time = "2026-04-12T21:44:07.181Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/81/074612945c0666078f7366f40000013de9f6ba687491d450df699bceebc9/msgspec-0.21.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:5102c7e9b3acff82178449b85006d96310e690291bb1ea0142f1b24bcb8aabcb", size = 188473, upload-time = "2026-04-12T21:44:08.736Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/37/655101799590bcc5fddb2bd3fe0e6194e816c2d1da7c361725f5eb89a910/msgspec-0.21.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:846758412e9518252b2ac9bffd6f0e54d9ff614f5f9488df7749f81ff5c80920", size = 218871, upload-time = "2026-04-12T21:44:09.917Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/d1/d4cd9fe89c7d400d7a18f86ccc94daa3f0927f53558846fcb60791dce5d6/msgspec-0.21.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:21995e74b5c598c2e004110ad66ec7f1b8c20bf2bcf3b2de8fd9a3094422d3ff", size = 225025, upload-time = "2026-04-12T21:44:11.191Z" },
+    { url = "https://files.pythonhosted.org/packages/24/bf/e20549e602b9edccadeeff98760345a416f9cce846a657e8b18e3396b212/msgspec-0.21.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:6129f0cca52992e898fd5344187f7c8127b63d810b2fd73e36fca73b4c6475ee", size = 222672, upload-time = "2026-04-12T21:44:12.481Z" },
+    { url = "https://files.pythonhosted.org/packages/b4/68/04d7a8f0f786545cf9b8c280c57aa6befb5977af6e884b8b54191cbe44b3/msgspec-0.21.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:ef3ec2296248d1f8b9231acb051b6d471dfde8f21819e86c9adaaa9f42918521", size = 227303, upload-time = "2026-04-12T21:44:13.709Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/4d/619866af2840875be408047bf9e70ceafbae6ab50660de7134ed1b25eb86/msgspec-0.21.1-cp312-cp312-win_amd64.whl", hash = "sha256:d4ab834a054c6f0cbeef6df9e7e1b33d5f1bc7b86dea1d2fd7cad003873e783d", size = 190017, upload-time = "2026-04-12T21:44:14.977Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/2e/a8f9eca8fd00e097d7a9e99ba8a4685db994494448e3d4f0b7f6e9a3c0f7/msgspec-0.21.1-cp312-cp312-win_arm64.whl", hash = "sha256:628aaa35c74950a8c59da330d7e98917e1c7188f983745782027748ee4ca573e", size = 175345, upload-time = "2026-04-12T21:44:16.431Z" },
 ]
 
 [[package]]
@@ -815,13 +850,13 @@ wheels = [
 
 [[package]]
 name = "wn-geometer"
-version = "2026.6.10"
+version = "2026.8.21"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/5d/dc4993dae57914edff4d0e6e2a22dfd457545212225c50e796cee66f4151/wn_geometer-2026.6.10-py3-none-macosx_11_0_arm64.whl", hash = "sha256:fff41eb880b3a493e1b01ecf4c72d6b40e0a6d6afeb2ccef098df9ba8ce2d522", size = 10659273, upload-time = "2026-06-10T21:56:25.686Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/d3/9c97ff141b26bd6ec37de703ffc923677e601d0a4b8001fe6073358b12c5/wn_geometer-2026.6.10-py3-none-manylinux_2_39_aarch64.whl", hash = "sha256:cf50f70882b9eb1e21b9e0c53ba0a64667270c90981931c0dc8fb6192eed719a", size = 13636792, upload-time = "2026-06-10T21:56:28.017Z" },
-    { url = "https://files.pythonhosted.org/packages/06/a9/8c8568c71337be2298966fccf419471b936f18cc0906a2ea201c5ad0fdaf/wn_geometer-2026.6.10-py3-none-manylinux_2_39_x86_64.whl", hash = "sha256:e14504894403f52cae6bd79c9c0a56103494638555ba2316ebd33ed8eef5c4de", size = 14292737, upload-time = "2026-06-10T21:56:30.423Z" },
-    { url = "https://files.pythonhosted.org/packages/ba/ab/e32d5960d12c80907571ce9d34b0b467e15ceff3e824974e08b413a2c591/wn_geometer-2026.6.10-py3-none-win_amd64.whl", hash = "sha256:f814ef17a9d09f69e43e843803c522b1890ccecff2cc5c7acf6f8bd193ec4aa3", size = 7224997, upload-time = "2026-06-10T21:56:32.867Z" },
+    { url = "https://files.pythonhosted.org/packages/13/66/c065a10cbdb915d5b2e4873729b615fbf708b5b3cec53b8dd71c6f667cd5/wn_geometer-2026.8.21-py3-none-macosx_11_0_arm64.whl", hash = "sha256:3ddbd8bbeb591b22814810a0c5cfa306ef511ebdb6cb85424a4fea45b6b70239", size = 11456381, upload-time = "2026-08-22T00:09:37.515Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/3d/8dd8c5ca252009038bafbab4bf9f309e3dc297f71e608b97ceee367632b1/wn_geometer-2026.8.21-py3-none-manylinux_2_35_aarch64.whl", hash = "sha256:24bc0a05ef506ed2a096acf1c09ea959743a0ed3d24274d68b20fd0dfb236c7e", size = 14523846, upload-time = "2026-08-22T00:09:39.649Z" },
+    { url = "https://files.pythonhosted.org/packages/56/d6/17c6c3e77fbb146657d43b5084e8285b8ad4f03615a2565c99b6c5b90d40/wn_geometer-2026.8.21-py3-none-manylinux_2_35_x86_64.whl", hash = "sha256:c57b3bf18aeee125a3f0746c63b4a69d097214543e7bd1ebe2549a12a1adf07b", size = 15248280, upload-time = "2026-08-22T00:09:41.925Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/6c/c08f2cb621cce33ae480bc36e830f4a8b241610a7ad921bca8581570802c/wn_geometer-2026.8.21-py3-none-win_amd64.whl", hash = "sha256:d49f894b6c34aee69b6109dd5a54d4ae490d0f6ccc7491b651e1c39bfd51edd4", size = 7936528, upload-time = "2026-08-22T00:09:43.888Z" },
 ]
 
 [[package]]
