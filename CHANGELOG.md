@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- SchDoc and SchLib documents nested in `altium_cruncher.json_dump.a0` now use
+  Altium Monkey's canonical `{schema, document}` envelope while preserving the
+  outer batch envelope. Delivery is gated on the next Altium Monkey dependency
+  bump that includes the canonical envelope API.
+
 ## 2026.8.21
 
 - Consume pinned `altium-monkey==2026.8.21`, carrying Altium-proven schematic source paint order, compiled-graph/index corrections, full Python/C++ parity, and record-decoding fixes into all Altium-backed workflows.

@@ -5,10 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import Field, dataclass, fields, is_dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Literal
+from typing import ClassVar, Literal, Protocol, cast
+
+from altium_monkey import SCHDOC_INTEROP_SCHEMA, SCHLIB_INTEROP_SCHEMA
 
 from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
@@ -17,8 +19,6 @@ from altium_cruncher.altium_cruncher_common import (
 
 JSON_DUMP_SCHEMA = "altium_cruncher.json_dump.a0"
 JSON_DUMP_MANIFEST_SCHEMA = "altium_cruncher.json_dump.manifest.a0"
-SCH_DOC_INTEROP_FORMAT = "altium_monkey.schdoc.interop.a0"
-SCH_LIB_INTEROP_FORMAT = "altium_monkey.schlib.interop.a0"
 PCB_DOC_STRUCTURAL_FORMAT = "altium_monkey.pcbdoc.structural.a0"
 PCB_LIB_STRUCTURAL_FORMAT = "altium_monkey.pcblib.structural.a0"
 
@@ -73,6 +73,10 @@ _PCB_FOOTPRINT_COLLECTIONS = (
 )
 
 _NOT_JSONABLE = object()
+
+
+class _DataclassValue(Protocol):
+    __dataclass_fields__: ClassVar[dict[str, Field[object]]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,16 +216,16 @@ def _load_document_payload(
     if kind == "SchDoc":
         from altium_monkey.altium_schdoc import AltiumSchDoc
 
-        return _with_document_format(
-            AltiumSchDoc(source_path).to_json(),
-            SCH_DOC_INTEROP_FORMAT,
+        return _require_tagged_schema(
+            AltiumSchDoc(source_path).to_tagged_json(),
+            SCHDOC_INTEROP_SCHEMA,
         )
     if kind == "SchLib":
         from altium_monkey.altium_schlib import AltiumSchLib
 
-        return _with_document_format(
-            AltiumSchLib(source_path).to_json(),
-            SCH_LIB_INTEROP_FORMAT,
+        return _require_tagged_schema(
+            AltiumSchLib(source_path).to_tagged_json(),
+            SCHLIB_INTEROP_SCHEMA,
         )
     if kind == "PcbDoc":
         from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -234,12 +238,16 @@ def _load_document_payload(
     raise ValueError(f"Unsupported json-dump document kind: {kind}")
 
 
-def _with_document_format(
+def _require_tagged_schema(
     payload: dict[str, object],
-    document_format: str,
+    expected_schema: str,
 ) -> dict[str, object]:
-    """Return a document payload with an explicit Altium Monkey format tag."""
-    return {"format": document_format, **payload}
+    """Verify the core producer returned the requested schematic envelope."""
+    if payload.get("schema") != expected_schema:
+        raise ValueError(
+            f"Unexpected schematic interop schema: {payload.get('schema')}"
+        )
+    return payload
 
 
 def _pcbdoc_to_json(pcbdoc: object) -> dict[str, object]:
@@ -386,10 +394,12 @@ def _dataclass_to_jsonable(
     depth: int,
 ) -> dict[str, object]:
     result: dict[str, object] = {"class": type(value).__name__}
-    for field in fields(value):
+    for field in fields(cast(_DataclassValue, value)):
         if field.name.startswith("_"):
             continue
-        result[field.name] = _jsonable(getattr(value, field.name), seen, depth=depth + 1)
+        result[field.name] = _jsonable(
+            getattr(value, field.name), seen, depth=depth + 1
+        )
     properties = _public_properties(value, seen, depth=depth)
     if properties:
         result["properties"] = properties
@@ -437,7 +447,9 @@ def _public_properties(
     return result
 
 
-def _collection_counts(value: object, collection_names: tuple[str, ...]) -> dict[str, int]:
+def _collection_counts(
+    value: object, collection_names: tuple[str, ...]
+) -> dict[str, int]:
     counts: dict[str, int] = {}
     for name in collection_names:
         collection = getattr(value, name, ())
