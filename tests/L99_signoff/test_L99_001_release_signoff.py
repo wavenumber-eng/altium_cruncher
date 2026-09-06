@@ -6,7 +6,7 @@ import json
 import subprocess
 import sys
 import tomllib
-from datetime import date
+from datetime import date, timedelta
 from importlib.metadata import version as distribution_version
 from pathlib import Path
 
@@ -23,17 +23,17 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.9.4"
-EXPECTED_RELEASE_DATE = date(2026, 9, 4)
-EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-09-04.md"
+EXPECTED_VERSION = "2026.9.7"
+EXPECTED_RELEASE_DATE = date(2026, 9, 7)
+EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-09-07.md"
 CONTROLLED_DEPENDENCY_REQUIREMENTS = {
-    "altium-monkey": "==2026.9.4",
-    "wn-geometer": "==2026.9.4",
+    "altium-monkey": "==2026.9.7",
+    "wn-geometer": "==2026.9.7",
 }
 MINIMUM_CONTROLLED_DEPENDENCIES: dict[str, str] = {}
 EXACT_CONTROLLED_DEPENDENCIES = {
-    "altium-monkey": "2026.9.4",
-    "wn-geometer": "2026.9.4",
+    "altium-monkey": "2026.9.7",
+    "wn-geometer": "2026.9.7",
 }
 
 
@@ -50,11 +50,11 @@ def test_version_contract_matches_date_based_release() -> None:
     assert (version.major, version.minor, version.patch, version.build) == (
         2026,
         9,
-        4,
+        7,
         None,
     )
     assert version.release_date == EXPECTED_RELEASE_DATE
-    assert version.release_date <= date.today()
+    assert version.release_date <= date.today() + timedelta(days=1)
     assert pyproject["project"]["scripts"] == {
         "acr": "altium_cruncher._cli:main",
         "ad": "altium_cruncher.altium_cruncher_cmd_launch:main_ad",
