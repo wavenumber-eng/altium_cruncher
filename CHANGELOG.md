@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2026.9.7
+
+- Update the controlled `altium-monkey` and `wn-geometer` dependencies to `2026.9.7`.
+
 ## 2026.9.4
 
 - Update the controlled `altium-monkey` and `wn-geometer` dependencies to `2026.9.4`.
