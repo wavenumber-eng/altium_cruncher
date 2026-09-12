@@ -7,10 +7,36 @@ on:
     branches: [main]
 
 jobs:
+  scope:
+    name: Change scope
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.scope.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Classify changed paths
+        id: scope
+        run: python tests/support_scripts/ci_scope.py
+      - name: Check CI scope policy
+        if: steps.scope.outputs.docs_only != 'true'
+        run: python -m unittest discover -s tests -p test_ci_scope.py
+      - uses: astral-sh/setup-uv@v8.2.0
+        if: steps.scope.outputs.docs_only != 'true'
+      - name: Check Wavenumber development standard
+        if: steps.scope.outputs.docs_only != 'true'
+        run: uvx --from git+https://github.com/wavenumber-eng/wn-dev-std.git wn-dev-std check . --format text
+
   contracts:
     name: Generated public contracts
+    needs: scope
+    if: always() && (needs.scope.result != 'success' || needs.scope.outputs.docs_only != 'true')
     runs-on: ubuntu-latest
     steps:
+      - name: Require successful scope check
+        if: needs.scope.result != 'success'
+        run: exit 1
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
@@ -23,7 +49,10 @@ jobs:
 
   test:
     name: test (${{ matrix.os }}, py${{ matrix.python-version }})
-    runs-on: ${{ matrix.os }}
+    needs: scope
+    # Always expand the matrix so each required check name is reported.
+    if: always()
+    runs-on: ${{ needs.scope.outputs.docs_only == 'true' && 'ubuntu-latest' || matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -31,12 +60,21 @@ jobs:
         python-version: ["3.14"]
 
     steps:
+      - name: Require successful scope check
+        if: needs.scope.result != 'success'
+        run: exit 1
+      - name: Documentation-only change
+        if: needs.scope.outputs.docs_only == 'true'
+        run: echo "Documentation-only change; skipping validation, builds, and installation."
       - uses: actions/checkout@v5
+        if: needs.scope.outputs.docs_only != 'true'
       - uses: astral-sh/setup-uv@v8.2.0
+        if: needs.scope.outputs.docs_only != 'true'
       - name: Set up Python
+        if: needs.scope.outputs.docs_only != 'true'
         run: uv python install ${{ matrix.python-version }}
       - name: Validate Windows installer script
-        if: runner.os == 'Windows'
+        if: needs.scope.outputs.docs_only != 'true' && runner.os == 'Windows'
         shell: pwsh
         run: |
           $tokens = $null
@@ -50,17 +88,20 @@ jobs:
             $errors | Format-List | Out-String | Write-Error
             exit 1
           }
-      - name: Check Wavenumber development standard
-        run: uvx --from git+https://github.com/wavenumber-eng/wn-dev-std.git wn-dev-std check . --format text
       - name: Run Rack suite
+        if: needs.scope.outputs.docs_only != 'true'
         run: uv run --extra test rack run --all
       - name: Check generated Python config consumer
+        if: needs.scope.outputs.docs_only != 'true'
         run: |
           uv run --extra test pytest -q tests/test_pcb_svg_config_contract.py tests/test_creation_config_contract.py tests/test_mco_contract.py tests/test_workflow_contracts.py tests/test_public_output_contracts.py
           uv run --extra test pyright src/py/altium_cruncher/contracts/generated tests/support_scripts/config_type_consumer.py
       - name: Build package
+        if: needs.scope.outputs.docs_only != 'true'
         run: uv run --extra test python -m build
       - name: Check package
+        if: needs.scope.outputs.docs_only != 'true'
         run: uv run --extra test twine check dist/*
       - name: Run installed console test
+        if: needs.scope.outputs.docs_only != 'true'
         run: uv run --extra test python tests/support_scripts/install_test.py
