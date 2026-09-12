@@ -63,6 +63,28 @@ def _unavailable_step_reason(name: str) -> str:
     return "embedded STEP unavailable or unreadable"
 
 
+def _body_model_label(body: AltiumPcbComponentBody) -> str:
+    fallback = "extruded body" if body.model_type == 0 else "unnamed model"
+    return str(body.properties.get("MODEL.NAME") or fallback)
+
+
+def _report_step_completions(
+    futures: dict[Future[g.ModelTessellation], tuple[str, AltiumPcbComponent | None, int]],
+    side: str,
+) -> None:
+    # Observe completion without raising task errors here; source-order
+    # consumption still supplies body-specific warnings/errors.
+    for completed, future in enumerate(as_completed(futures), 1):
+        name, component, index = futures[future]
+        owner = component.designator if component is not None else f"free-body-{index}"
+        failed = future.cancelled() or future.exception() is not None
+        log.info(
+            "%s %s STEP model %d/%d: %s (%s)",
+            "Failed" if failed else "Completed",
+            side, completed, len(futures), name, owner,
+        )
+
+
 def _geometer_failure_message(error: g.GeometerOperationError | g.GeometerError) -> str:
     if isinstance(error, g.GeometerOperationError):
         details = "; ".join(f"{d.code}: {d.message}" for d in error.diagnostics)
@@ -545,9 +567,7 @@ class IllustrationJob:
             self._warn_tessellation(key, context)
             log.debug("Reused cached model: %s", context or key[:12])
             return meshes
-        if prepared is None:
-            log.info("Tessellating model: %s", context or key[:12])
-        result = self._tessellate_native(key, payload, prepared)
+        result = self._tessellate_native(key, payload, prepared, context)
         self._tessellation_warnings[key] = tuple(result.metadata.warnings)
         self._warn_tessellation(key, context)
         self.counts["tessellations"] += 1
@@ -568,11 +588,13 @@ class IllustrationJob:
         key: str,
         payload: bytes | dict[str, object],
         prepared: tuple[Literal["native"], Future[g.ModelTessellation]] | None,
+        context: str | None,
     ) -> g.ModelTessellation:
         try:
             if prepared is not None:
                 result = prepared[1].result()
             else:
+                log.info("Tessellating model: %s", context or key[:12])
                 step = payload if isinstance(payload, bytes) else g.planar_step(payload)
                 result = _model_tessellation(self.client, step)
         except (g.GeometerOperationError, g.GeometerError) as error:
@@ -629,9 +651,7 @@ class IllustrationJob:
             else:
                 future = workers.submit(_model_tessellation, entry["step_bytes"])
                 self._prepared_tessellations[key] = "native", future
-                component = _owning_component(pcbdoc, body)
-                owner = component.designator if component is not None else f"free-body-{index}"
-                futures[future] = f"{entry['name']} ({owner})"
+                futures[future] = entry["name"], _owning_component(pcbdoc, body), index
         if futures:
             log.info("Preparing %s STEP models: %d unique models", side, len(futures))
             log.debug(
@@ -642,15 +662,7 @@ class IllustrationJob:
             )
             # Finish the batch before serial extrusions use the collection
             # client: do not run a fifth native operation beside four workers.
-            # Observe completion without raising task errors here; source-order
-            # consumption below still supplies body-specific warnings/errors.
-            for completed, future in enumerate(as_completed(futures), 1):
-                failed = future.cancelled() or future.exception() is not None
-                log.info(
-                    "%s %s STEP model %d/%d: %s",
-                    "Failed" if failed else "Completed",
-                    side, completed, len(futures), futures[future],
-                )
+            _report_step_completions(futures, side)
 
     @staticmethod
     def _prefetch_entry(
@@ -795,8 +807,7 @@ class IllustrationJob:
                 body, component, anchor, helper, by_id, by_name, f"{designator} body {index}", is_bottom
             )
         except ModelGeometryError as error:
-            fallback = "extruded body" if body.model_type == 0 else "unnamed model"
-            name = str(body.properties.get("MODEL.NAME") or fallback)
+            name = _body_model_label(body)
             self.warn(f"{designator} body {index} ({name}): {error}; omitted")
             return None
         if geometry is None:
