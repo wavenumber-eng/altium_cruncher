@@ -281,14 +281,16 @@ def test_notes_payload_suppresses_sheet_template_text_by_default(
     assert "suppressed_counts" not in raw_payload
 
 
-def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
+@pytest.mark.parametrize("include_indexes", [True, False])
+def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path, include_indexes: bool) -> None:
     """Verify design/dr output contains design, notes, SVG, document JSON, and README."""
     repo_root = Path(__file__).resolve().parents[1]
     schdoc_path = tmp_path / "annotated.SchDoc"
     output_dir = tmp_path / "review"
     _write_annotation_schdoc(schdoc_path)
 
-    result = _run_cli(repo_root, "dr", str(schdoc_path), "-o", str(output_dir))
+    extra = [] if include_indexes else ["--no-indexes"]
+    result = _run_cli(repo_root, "dr", str(schdoc_path), "-o", str(output_dir), *extra)
 
     assert result.returncode == 0, result.stderr + result.stdout
     manifest = json.loads(
@@ -299,6 +301,13 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert manifest["input"] == "annotated.SchDoc"
     assert str(manifest["design_json"]).startswith("design/")
     assert (output_dir / manifest["design_json"]).exists()
+    design_payload = json.loads((output_dir / manifest["design_json"]).read_text(encoding="utf-8"))
+    from altium_monkey.sch_compiled_design.generated.codecs import GeneratedStructuralCodec
+
+    GeneratedStructuralCodec().convert("urn:altium-monkey:schema:design_b0", design_payload)
+    assert design_payload["compile"]["schema"] == "altium_monkey.sch.compiled_design_model.b0"
+    assert isinstance(design_payload["diagnostics"], list)
+    assert ("indexes" in design_payload) == include_indexes
     assert (output_dir / manifest["notes_json"]).exists()
     assert (output_dir / manifest["readme"]).exists()
     assert str(manifest["notes_json"]).endswith(".jsonc")
@@ -349,6 +358,42 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path) -> None:
     assert "zero-ohm" in readme
     assert "current-sense resistors" in readme
     assert "indexes.component_to_nets" in readme
+    assert "Multipart Components and Pin Counts" in readme
+    assert "not automatically electrical-design defects" in readme
+    assert "do not multiply that count by two" in readme
+    assert "optional (`--no-indexes` omits them)" in readme
+
+
+def test_design_review_preserves_compiler_warnings_without_failing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from altium_monkey.altium_design import AltiumDesign
+    from altium_cruncher.altium_cruncher_design_review import write_design_review_bundle
+
+    source = tmp_path / "warning.SchDoc"
+    _write_annotation_schdoc(source)
+    original = AltiumDesign.to_json
+    upstream_diagnostic = {
+        "code": "missing_component_source_identity", "severity": "warning",
+        "message": "Source identity is unavailable", "owner_kind": "component",
+        "owner_id": "opaque-compiler-component",
+    }
+
+    def warning_payload(self, **kwargs):
+        assert kwargs["include_compile_metadata"] is True
+        payload = original(self, **kwargs)
+        payload["compile"]["summary"].update(has_warnings=True, diagnostic_count=1)
+        payload["diagnostics"] = [upstream_diagnostic]
+        return payload
+
+    monkeypatch.setattr(AltiumDesign, "to_json", warning_payload)
+    output = tmp_path / "review"
+    manifest = write_design_review_bundle(source, output, include_indexes=False)
+    saved = json.loads((output / manifest["design_json"]).read_text(encoding="utf-8"))
+    assert saved["diagnostics"] == [upstream_diagnostic]
+    assert saved["compile"]["summary"]["has_warnings"] is True
+    assert saved["compiled_schematic_graph"]["schema"] == "altium_monkey.compiled_schematic_graph.a0"
+    assert (output / manifest["readme"]).exists()
 
 
 def test_design_review_uses_design_review_default_output_dir(tmp_path: Path) -> None:
@@ -423,8 +468,10 @@ def test_design_review_schematic_svg_enrichment_embeds_component_lookup(
     assert '"ABC123": "R1"' in enriched
 
 
+@pytest.mark.parametrize("bridge_page", ["PDOC1", "other-page", None])
 def test_design_review_project_schematic_artifacts_are_compiled_outputs(
     tmp_path: Path,
+    bridge_page: str | None,
 ) -> None:
     """Project schematic review outputs should be compiled pages by default."""
 
@@ -465,6 +512,7 @@ def test_design_review_project_schematic_artifacts_are_compiled_outputs(
                 document_id=page_id,
                 canvas={"width_px": 100, "height_px": 100},
                 coordinate_space={"units_per_px": 64},
+                extras={"physical_page": {"page_occurrence_ref": bridge_page, "id": "RAW-PDOC1"}},
             )
 
     design_payload: dict[str, object] = {
@@ -544,6 +592,8 @@ def test_design_review_project_schematic_artifacts_are_compiled_outputs(
             {
                 "designator": "R1.1",
                 "svg_id": "CUID1",
+                "source_unique_id": "CUID1",
+                "physical_sheet_id": "RAW-PDOC1",
                 "value": "10k",
                 "library_ref": "RES",
             }
@@ -577,6 +627,7 @@ def test_design_review_project_schematic_artifacts_are_compiled_outputs(
     assert 'data-artifact-key="sch.dwg_scene"' in svg
     assert 'data-component-occurrence-ref="COCC1"' in svg
     assert 'data-component="R1.1"' in svg
+    assert ('data-value="10k"' in svg) == (bridge_page == "PDOC1")
     assert '"design":' not in svg
     root = ET.fromstring(svg)
     metadata = next(

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix design-review SVG metadata joins to use source identity within the rendered
+  physical document, preventing value and variant-state leakage between repeated
+  labels. Include compact compiler metadata and clarify agent guidance for
+  diagnostics, multipart pin counts, scoped connectivity, and optional indexes.
 - Add the `toon` project preview command with editable SVG configuration,
   top/bottom and assembly presets, project variants, progressive status and
   timing reports. Expose illustration, designator, solder-mask film and substrate
