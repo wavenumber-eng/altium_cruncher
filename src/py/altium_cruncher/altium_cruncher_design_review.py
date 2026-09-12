@@ -43,7 +43,10 @@ def write_design_review_bundle(
 ) -> dict[str, object]:
     """Write the full design-review bundle for a SchDoc or PrjPcb."""
     design = _load_design(input_file)
-    design_payload = design.to_json(include_indexes=include_indexes)
+    design_payload = design.to_json(
+        include_indexes=include_indexes,
+        include_compile_metadata=True,
+    )
     design_json_path = output_dir / "design" / f"{input_file.stem}_design.json"
     _write_json(design_json_path, design_payload)
     log.info("Design JSON: %s", _relpath(design_json_path, output_dir))
@@ -361,7 +364,10 @@ def _write_project_schematic_artifacts(
         svg = _enrich_project_schematic_svg(
             svg,
             design_payload=design_payload,
-            schematic_page=page,
+            schematic_page={
+                **page,
+                "physical_document_id": _rendered_physical_document_id(ir_document, page_id),
+            },
             source_base=source_base,
         )
         svg_path.write_text(svg, encoding="utf-8")
@@ -379,6 +385,17 @@ def _write_project_schematic_artifacts(
         )
 
     return svg_artifacts, ir_artifacts
+
+
+def _rendered_physical_document_id(ir_document: object, page_ref: str) -> str:
+    """Use the released IR bridge, never decode an opaque graph occurrence ID."""
+    extras = getattr(ir_document, "extras", None)
+    physical_page = extras.get("physical_page") if isinstance(extras, dict) else None
+    if not isinstance(physical_page, dict):
+        return ""
+    if physical_page.get("page_occurrence_ref") != page_ref:
+        return ""
+    return str(physical_page.get("id") or "")
 
 
 def _physical_schematic_render_options() -> object:
@@ -658,7 +675,10 @@ def _annotate_compiled_schematic_graph_links(
     graph = _compiled_schematic_graph(design_payload)
     page_ref = str(schematic_page.get("page_occurrence_ref") or "")
     components = _rows_by_id(graph.get("component_occurrences"))
-    design_components = _rows_by_key(design_payload.get("components"), "designator")
+    design_components = _design_components_by_source(
+        design_payload.get("components"),
+        str(schematic_page.get("physical_document_id") or ""),
+    )
     for link in _scoped_graphical_artifact_links(graph, page_ref):
         element_id = str(link["element_id"])
         attrs = _graphical_link_attrs(link, page_ref)
@@ -676,6 +696,23 @@ def _annotate_compiled_schematic_graph_links(
 
 def _rows_by_id(value: object) -> dict[str, dict[str, object]]:
     return _rows_by_key(value, "id")
+
+
+def _design_components_by_source(
+    value: object,
+    physical_document_id: str,
+) -> dict[str, dict[str, object]]:
+    """Resolve only unique source identities in the rendered physical document."""
+    if not physical_document_id or not isinstance(value, list):
+        return {}
+    candidates: dict[str, list[dict[str, object]]] = {}
+    for row in value:
+        if not isinstance(row, dict) or row.get("physical_sheet_id") != physical_document_id:
+            continue
+        source_uid = str(row.get("source_unique_id") or "")
+        if source_uid:
+            candidates.setdefault(source_uid, []).append(row)
+    return {uid: rows[0] for uid, rows in candidates.items() if len(rows) == 1}
 
 
 def _rows_by_key(value: object, key: str) -> dict[str, dict[str, object]]:
@@ -729,16 +766,23 @@ def _component_graphical_link_attrs(
         return {}
     component_ref = str(link.get("target_ref") or "")
     component = components.get(component_ref)
-    if component is None:
+    if component is None or component.get("page_occurrence_ref") != link.get("page_occurrence_ref"):
         return {}
     physical_designator = str(
         component.get("physical_designator")
         or component.get("display_designator")
         or ""
     )
+    source_identity = component.get("source_identity")
+    source_uid = (
+        str(source_identity.get("sch.source_key.source_uuid") or "")
+        if isinstance(source_identity, dict) else ""
+    )
+    # Multipart bodies can lack a matching aggregate row in Design b0. Preserve
+    # their graph identity and label without guessing shared attributes by name.
+    enriched = design_components.get(source_uid, {})
     attrs = _schematic_component_group_attrs(
-        design_components.get(physical_designator, component),
-        element_id,
+        {**enriched, "designator": physical_designator}, element_id,
     )
     attrs["data-component-occurrence-ref"] = component_ref
     return attrs
@@ -1129,12 +1173,20 @@ visual schematic and PCB context.
 
 ## Instructions for Review Agents
 
+- Start with `compile.summary`, top-level `diagnostics`, and graph terminal
+  `resolution_diagnostics`. These describe compiler health and evidence limits;
+  they are not automatically electrical-design defects. An unresolved link is
+  missing evidence, not proof of an open circuit. No diagnostics does not certify
+  the design. Keep diagnostic codes and their owner context in findings.
 - Treat the bundled Design b0 `compiled_schematic_graph` as the authoritative
   schematic topology. Do not reconstruct connectivity from SVG geometry,
   repeated net names, page proximity, or the legacy convenience indexes.
 - Select a schematic page by canonical `page_occurrence_ref`. Reused sheets can
   share source drawings, labels, and element ids, so an `element_id` alone is
   never a globally unique selector.
+- Component designators are display labels, not unique identities. Distinct
+  unannotated components can both display `R?`; multipart bodies can legitimately
+  share one component label. Use graph occurrence and source identity evidence.
 - Join SVG evidence to semantics only with the full scoped selector
   `page_occurrence_ref + artifact_key + element_id`, then verify the group's
   `data-graph-target-type` and `data-graph-target-ref` against the matching
@@ -1145,7 +1197,8 @@ visual schematic and PCB context.
   unless the graph supplies the boundary relationship.
 - Apply DNP, fitted, and design-variant facts from the top-level Design rows.
   The compiled graph is intentionally variant-neutral and represents the
-  complete source schematic.
+  complete source schematic. Join those rows only when source identity and
+  physical-page scope establish a unique match; do not choose by designator.
 - If a scoped SVG selector, graph target, page reference, or hierarchy binding
   cannot be resolved, report that as missing evidence. Do not silently infer a
   replacement from a similar designator or net name.
@@ -1202,6 +1255,11 @@ for reasoning about the circuit. Important top-level areas:
   from `page_occurrences`; use `component_occurrences`,
   `local_net_occurrences`, `terminal_occurrences`, and
   `hierarchy_terminal_bindings` for schematic semantics.
+- `compile` and `diagnostics`: compact compiler context explicitly included by
+  DR, even with `--no-indexes`. This is not the complete beta raw model returned
+  by `AltiumDesign.compile().to_dict()`. Interpret codes using the Altium Monkey
+  documentation for the installed release; retain uncertainty where compilation
+  could not resolve source evidence.
 - `physical_page_metadata`: Altium channel, room, path, and document
   presentation facts keyed by canonical `page_occurrence_ref`. It does not
   repeat components or nets.
@@ -1217,6 +1275,27 @@ for reasoning about the circuit. Important top-level areas:
 - `indexes.component_to_nets`: maps component designators to connected nets.
 - `indexes.net_to_components`: maps a net name back to the components on it.
 
+Indexes are optional (`--no-indexes` omits them) and keyed by display information.
+They are conveniences, not identity or connectivity authority. Net aliases are
+non-unique search/provenance information: the same local name may occur in
+several realized nets. Follow scoped graph connectivity to disambiguate it.
+
+## Multipart Components and Pin Counts
+
+For the current Design b0 export, `classification.pin_count` is Altium's combined
+compiled schematic pin count for the complete component (`DM_PinCount`). A dual
+three-pin transistor reports six: do not multiply that count by two. Do not divide
+an aggregate count to infer each body's count; bodies can have unequal pin counts.
+This field does not establish the physical package-pad count or prove that every
+package pad, such as a thermal pad, appears in the schematic symbol.
+
+For per-body investigation, inspect the source SchDoc body and its selected part
+and display mode. The Python API's `body.pins` is filtered for that selection;
+visible pins additionally depend on hidden-pin and show-hidden-pin settings.
+The raw compiler API exposes `pin_count`, `all_pin_count`, and `part_count` for
+compiler investigation, but it is a separate beta diagnostic model. Do not assume
+future typed `schematic_cardinality` fields exist in this bundle.
+
 ## Power-Tree Review Hint
 
 For supply and power-tree analysis, it is often useful to build a derived graph
@@ -1229,9 +1308,12 @@ elements.
 
 Do not blindly merge every two-pin device: capacitors, LEDs, TVS parts, loads,
 and protection parts have different meaning. Use component classification,
-designator prefix, value text, footprint, and parameters from `components` plus
-`indexes.component_to_nets` to decide which two-pin parts should be followed in
-a derived power-tree view.
+designator prefix, value text, footprint, and parameters from identity-matched
+`components` rows to decide which two-pin parts should be followed in a derived
+power-tree view. Establish connectivity through component-pin terminals, local
+nets, and hierarchy bindings in the graph. `indexes.component_to_nets` can aid
+navigation when present, but must not replace scoped connectivity evidence or
+merge components that happen to have the same display label.
 
 ## Schematic SVG Links
 
@@ -1248,9 +1330,19 @@ drawn component to nets:
    the source group's `data-element-id`.
 2. Resolve that tuple through graph `graphical_artifact_links`.
 3. Follow the graph target ref to a component, terminal, local net, or page.
-4. For a component target, use its physical designator with the top-level
-   Design component and variant rows; optional compatibility indexes may then
-   provide convenient net-name lookups.
+4. For a component target, match its source UID within the realized physical
+   document to the top-level Design component row. The matching `sch-ir/` artifact
+   records both `physical_page.page_occurrence_ref` and `physical_page.id`; the
+   latter matches the Design row's `physical_sheet_id`. Match graph
+   `source_identity["sch.source_key.source_uuid"]` to `source_unique_id` within
+   that document. These IDs belong to different namespaces; do not parse or
+   directly equate raw compiler IDs with graph occurrence IDs.
+
+DR adds value, footprint, classification, and DNP/fitted attributes only for a
+unique identity match. Missing or duplicate candidates retain graph identity and
+supported labels without guessed enrichment. In Design b0, some multipart body
+UIDs have no matching aggregate Design row; absent enrichment is not evidence
+that the body is unfitted or has no value. Consult its source SchDoc as needed.
 
 The embedded `schematic-enrichment-b0` metadata records artifact identity and
 page presentation only. It does not duplicate the semantic graph; load the
