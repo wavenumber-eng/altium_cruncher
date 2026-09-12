@@ -35,7 +35,7 @@
   output-format flags and the runtime rasterizer dependency; users can convert
   exported SVGs independently. Preserve progressive status and timing output.
 - Move the package, development environment, and CI to Python 3.14.
-- Update Altium Monkey to 2026.9.12 and Geometer to 2026.9.11 and remove the temporary
+- Update Altium Monkey to 2026.9.12.post1 and Geometer to 2026.9.11 and remove the temporary
   Geometer dependency override.
 - Require EasyEDA Monkey 2026.9.11 or newer for Python 3.14 compatibility.
 

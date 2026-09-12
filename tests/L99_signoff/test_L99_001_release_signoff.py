@@ -27,13 +27,13 @@ EXPECTED_VERSION = "2026.9.12"
 EXPECTED_RELEASE_DATE = date(2026, 9, 12)
 EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-09-12.md"
 CONTROLLED_DEPENDENCY_REQUIREMENTS = {
-    "altium-monkey": "==2026.9.12",
+    "altium-monkey": "==2026.9.12.post1",
     "wn-geometer": "==2026.9.11",
     "easyeda-monkey": ">=2026.9.11",
 }
 MINIMUM_CONTROLLED_DEPENDENCIES: dict[str, str] = {}
 EXACT_CONTROLLED_DEPENDENCIES = {
-    "altium-monkey": "2026.9.12",
+    "altium-monkey": "2026.9.12.post1",
     "wn-geometer": "2026.9.11",
 }
 
