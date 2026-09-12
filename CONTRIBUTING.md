@@ -1,6 +1,6 @@
 # Contributing
 
-`altium-cruncher` accepts direct public pull requests once CI is enabled.
+`altium-cruncher` accepts direct public pull requests.
 
 Use `uv` for local development and test commands. Public CLI install
 documentation should prefer `uv tool install altium-cruncher`.
@@ -45,7 +45,8 @@ Before opening a PR:
 3. Update docs for public commands, interfaces, JSON output, or config formats.
 4. Justify every new public feature, command, and dependency in the commit,
    PR, or linked plan.
-5. Run package tests and signoff locally.
+5. Run package tests and signoff locally for code changes. Documentation-only
+   edits do not require the package test/build pipeline.
 
 Minimize external dependencies. A new dependency must explain why the standard
 library and existing project dependencies are not enough, whether it is
@@ -76,6 +77,12 @@ uv run --extra test rack run --all
 
 Rack is the primary local gate. Additional release artifact tests should
 also run before publishing.
+
+Documentation-only pull requests, including generated Markdown and HTML updates,
+bypass test/build CI. GitHub still reports the required statuses and checks PR
+metadata. Machine-readable contracts and mixed code/documentation changes run
+full CI. See [Documentation-Only CI](docs/build.md#documentation-only-ci) for the
+file policy and manual-run behavior.
 
 Release decisions, compatibility policy, and public contract changes should be
 recorded in `docs/adrs/`.
