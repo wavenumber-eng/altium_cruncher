@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2026.9.12
+
 - Keep Toon progress readable by reserving timing, worker and cache diagnostics
   for `--verbose`. Show completed STEP filenames, identify unsupported model
   formats in warnings, and end with success and the output location.
