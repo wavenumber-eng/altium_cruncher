@@ -127,3 +127,33 @@ oracle_parse = "Parse Altium XML-BOM and PNP-METRIC files from reference_output"
 test_bom_raw_json_covers_altium_xml_oracle_designators = "Validate raw BOM source data against XML-BOM oracle designators"
 test_pnp_json_matches_altium_metric_oracle_core_geometry = "Validate PnP placement geometry against PNP-METRIC CSV"
 test_jlc_command_writes_paired_outputs_for_primary_fixtures = "Generate paired JLC BOM/CPL outputs for primary BOM/PnP fixtures"
+
+[[subtests]]
+id = "L3_005"
+file = "test_L3_005_pcb_illustration.py"
+name = "PCB Illustration Adapter"
+description = "Native Geometer demo rendering with Altium extrusion and model placement"
+concerns = ["contracts", "release"]
+test_case_type = "reference"
+test_cases = "../../tests/assets/projects/rt_super_c1/input"
+
+[subtests.code_under_test]
+module = "altium_cruncher.altium_cruncher_pcb_illustration"
+
+[subtests.objectives]
+extrusions = "Preserve authored body Z extents and native visibility"
+demo_rendering = "Use native material fusion, colors and HLR"
+placement = "Match STEP root placement and omit model-less components"
+
+[subtests.approach]
+native_calls = "Exercise persistent Geometer IPC with generated solids and RT_SUPER_C1"
+
+[subtests.test_functions]
+test_extruded_bodies_use_native_depth_and_surface_fusion = "Check native stacked-body depth, free bodies and fusion"
+test_rt_components_include_extrusions_and_omit_parts_without_models = "Check D3/D4 materials and omit the pogo-pad connector"
+test_step_tessellation_preserves_root_placement_used_by_assembly = "Keep a translated and rotated STEP root"
+test_extrusion_legacy_heights_are_elevations = "Interpret standoff and overall height as lower and upper Z"
+test_bottom_extrusions_preserve_xy_and_outward_depth = "Keep asymmetric bottom bodies registered and resolve stacked outward depth"
+test_component_svg_cache_reuses_instances_and_keeps_material_variants = "Reuse SVGs across placed instances while keeping source material variants distinct"
+test_rt_bottom_models_use_body_side_and_signed_z_offset = "Select actual body side and preserve bottom STEP standoff"
+test_component_virtual_layers_compose_cache_and_link_metadata = "Compose native symbols and fitted model/pad designators, reuse layers, and preserve readable bottom labels and metadata links"

@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "outjob_run",
+    "title": "OutJob execution",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.outjob.run.a0"
+}

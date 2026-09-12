@@ -1,0 +1,6148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/mco_input.a0.schema.json",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/McoDocument"
+    },
+    {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/BuiltinOperation"
+          },
+          {
+            "$ref": "#/$defs/CustomOperation"
+          }
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "McoDocument": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "altium_cruncher.mco.a0"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BuiltinOperation"
+              },
+              {
+                "$ref": "#/$defs/CustomOperation"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "operations"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "BuiltinOperation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FileCopyOperation"
+        },
+        {
+          "$ref": "#/$defs/McoFailOperation"
+        },
+        {
+          "$ref": "#/$defs/McoMessageOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddArcOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddComponentOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddEmbedded3dModelOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddFillOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddPadOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddRegionOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddTextOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddTrackOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocAddViaOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocArrangeDesignatorsOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocCreateOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocCreateUserUnionOperation"
+        },
+        {
+          "$ref": "#/$defs/PcbdocExportLayerStepOperation"
+        },
+        {
+          "$ref": "#/$defs/PcblibAddFootprintOperation"
+        },
+        {
+          "$ref": "#/$defs/PcblibCreateOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectAddDocumentOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectAddParameterOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectAddVariantOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectAddVariantDnpOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectCloneVariantOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectCreateOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectDeleteVariantOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectListVariantsOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectRenameVariantOperation"
+        },
+        {
+          "$ref": "#/$defs/ProjectToggleVariantDnpOperation"
+        },
+        {
+          "$ref": "#/$defs/SchdocAddComponentOperation"
+        },
+        {
+          "$ref": "#/$defs/SchdocAddNetLabelOperation"
+        },
+        {
+          "$ref": "#/$defs/SchdocAddPowerPortOperation"
+        },
+        {
+          "$ref": "#/$defs/SchdocAddWireOperation"
+        },
+        {
+          "$ref": "#/$defs/SchdocCreateOperation"
+        },
+        {
+          "$ref": "#/$defs/SchlibAddSymbolOperation"
+        },
+        {
+          "$ref": "#/$defs/SchlibCreateOperation"
+        }
+      ]
+    },
+    "CustomOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "$ref": "#/$defs/McoString",
+          "description": "Custom registry operation name; built-in names are excluded during generation.",
+          "x-acr-custom-op": true,
+          "not": {
+            "enum": [
+              "file.copy",
+              "mco.fail",
+              "fail",
+              "mco.message",
+              "message",
+              "pcbdoc.add_arc",
+              "pcbdoc.add_component",
+              "pcbdoc.add_embedded_3d_model",
+              "pcbdoc.add_fill",
+              "pcbdoc.add_pad",
+              "pcbdoc.add_region",
+              "pcbdoc.add_text",
+              "pcbdoc.add_track",
+              "pcbdoc.add_via",
+              "pcbdoc.arrange_designators",
+              "pcbdoc.create",
+              "pcbdoc.create_user_union",
+              "pcbdoc.export_layer_step",
+              "pcblib.add_footprint",
+              "pcblib.create",
+              "project.add_document",
+              "project.add_parameter",
+              "project.add_variant",
+              "project.add_variant_dnp",
+              "project.clone_variant",
+              "project.create",
+              "project.delete_variant",
+              "project.list_variants",
+              "project.rename_variant",
+              "project.toggle_variant_dnp",
+              "schdoc.add_component",
+              "schdoc.add_net_label",
+              "schdoc.add_power_port",
+              "schdoc.add_wire",
+              "schdoc.create",
+              "schlib.add_symbol",
+              "schlib.create"
+            ]
+          }
+        },
+        "args": {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "FileCopyOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "file.copy"
+        },
+        "args": {
+          "$ref": "#/$defs/FileCopyArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "file.copy",
+        "group": "file",
+        "summary": "Copy one file into the workflow output tree."
+      }
+    },
+    "McoFailOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mco.fail"
+            },
+            {
+              "type": "string",
+              "const": "fail"
+            }
+          ]
+        },
+        "args": {
+          "$ref": "#/$defs/McoFailArgs"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "mco.fail",
+        "group": "mco",
+        "summary": "Fail intentionally, usually for control-flow tests."
+      }
+    },
+    "McoMessageOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mco.message"
+            },
+            {
+              "type": "string",
+              "const": "message"
+            }
+          ]
+        },
+        "args": {
+          "$ref": "#/$defs/McoMessageArgs"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "mco.message",
+        "group": "mco",
+        "summary": "Emit a human-readable message."
+      }
+    },
+    "PcbdocAddArcOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_arc"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddArcArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_arc",
+        "group": "pcbdoc",
+        "summary": "Add a PCB arc."
+      }
+    },
+    "PcbdocAddComponentOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_component"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddComponentArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_component",
+        "group": "pcbdoc",
+        "summary": "Insert a PCB component from a PcbLib."
+      }
+    },
+    "PcbdocAddEmbedded3dModelOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_embedded_3d_model"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddEmbedded3dModelArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_embedded_3d_model",
+        "group": "pcbdoc",
+        "summary": "Embed a 3D model in a PCB document."
+      }
+    },
+    "PcbdocAddFillOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_fill"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddFillArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_fill",
+        "group": "pcbdoc",
+        "summary": "Add a rectangular PCB fill."
+      }
+    },
+    "PcbdocAddPadOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_pad"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddPadArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_pad",
+        "group": "pcbdoc",
+        "summary": "Add a free PCB pad."
+      }
+    },
+    "PcbdocAddRegionOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_region"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddRegionArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_region",
+        "group": "pcbdoc",
+        "summary": "Add a PCB region."
+      }
+    },
+    "PcbdocAddTextOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_text"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddTextArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_text",
+        "group": "pcbdoc",
+        "summary": "Add PCB text."
+      }
+    },
+    "PcbdocAddTrackOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_track"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddTrackArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_track",
+        "group": "pcbdoc",
+        "summary": "Add a PCB track."
+      }
+    },
+    "PcbdocAddViaOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_via"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocAddViaArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.add_via",
+        "group": "pcbdoc",
+        "summary": "Add a PCB via."
+      }
+    },
+    "PcbdocArrangeDesignatorsOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.arrange_designators"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocArrangeDesignatorsArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.arrange_designators",
+        "group": "pcbdoc",
+        "summary": "Position generated PCB designator text."
+      }
+    },
+    "PcbdocCreateOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.create"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocCreateArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.create",
+        "group": "pcbdoc",
+        "summary": "Create an empty PCB document."
+      }
+    },
+    "PcbdocCreateUserUnionOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.create_user_union"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocCreateUserUnionArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.create_user_union",
+        "group": "pcbdoc",
+        "summary": "Create a user union over generated PCB objects."
+      }
+    },
+    "PcbdocExportLayerStepOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.export_layer_step"
+        },
+        "args": {
+          "$ref": "#/$defs/PcbdocExportLayerStepArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcbdoc.export_layer_step",
+        "group": "pcbdoc",
+        "summary": "Export a PCB layer STEP artifact."
+      }
+    },
+    "PcblibAddFootprintOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcblib.add_footprint"
+        },
+        "args": {
+          "$ref": "#/$defs/PcblibAddFootprintArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcblib.add_footprint",
+        "group": "pcblib",
+        "summary": "Add one empty footprint container to a PcbLib."
+      }
+    },
+    "PcblibCreateOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "pcblib.create"
+        },
+        "args": {
+          "$ref": "#/$defs/PcblibCreateArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "pcblib.create",
+        "group": "pcblib",
+        "summary": "Initialize a new PCB footprint library for later PcbLib operations."
+      }
+    },
+    "ProjectAddDocumentOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.add_document"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectAddDocumentArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.add_document",
+        "group": "project",
+        "summary": "Append a document entry to a .PrjPcb file."
+      }
+    },
+    "ProjectAddParameterOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.add_parameter"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectAddParameterArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.add_parameter",
+        "group": "project",
+        "summary": "Set one project parameter."
+      }
+    },
+    "ProjectAddVariantOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.add_variant"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectAddVariantArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.add_variant",
+        "group": "project",
+        "summary": "Add one project variant."
+      }
+    },
+    "ProjectAddVariantDnpOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.add_variant_dnp"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectAddVariantDnpArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.add_variant_dnp",
+        "group": "project",
+        "summary": "Mark one designator Not Fitted in a project variant."
+      }
+    },
+    "ProjectCloneVariantOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.clone_variant"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectCloneVariantArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.clone_variant",
+        "group": "project",
+        "summary": "Clone an existing project variant under a new name."
+      }
+    },
+    "ProjectCreateOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.create"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectCreateArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.create",
+        "group": "project",
+        "summary": "Create an empty .PrjPcb file."
+      }
+    },
+    "ProjectDeleteVariantOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.delete_variant"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectDeleteVariantArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.delete_variant",
+        "group": "project",
+        "summary": "Delete one project variant."
+      }
+    },
+    "ProjectListVariantsOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.list_variants"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectListVariantsArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.list_variants",
+        "group": "project",
+        "summary": "List project variants, DNP rows, and parameter changes."
+      }
+    },
+    "ProjectRenameVariantOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.rename_variant"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectRenameVariantArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.rename_variant",
+        "group": "project",
+        "summary": "Rename one project variant."
+      }
+    },
+    "ProjectToggleVariantDnpOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "project.toggle_variant_dnp"
+        },
+        "args": {
+          "$ref": "#/$defs/ProjectToggleVariantDnpArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "project.toggle_variant_dnp",
+        "group": "project",
+        "summary": "Toggle one designator between fitted and Not Fitted in a project variant."
+      }
+    },
+    "SchdocAddComponentOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "schdoc.add_component"
+        },
+        "args": {
+          "$ref": "#/$defs/SchdocAddComponentArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "schdoc.add_component",
+        "group": "schdoc",
+        "summary": "Insert a schematic component from a SchLib."
+      }
+    },
+    "SchdocAddNetLabelOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "schdoc.add_net_label"
+        },
+        "args": {
+          "$ref": "#/$defs/SchdocAddNetLabelArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "schdoc.add_net_label",
+        "group": "schdoc",
+        "summary": "Add a schematic net label."
+      }
+    },
+    "SchdocAddPowerPortOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "schdoc.add_power_port"
+        },
+        "args": {
+          "$ref": "#/$defs/SchdocAddPowerPortArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "schdoc.add_power_port",
+        "group": "schdoc",
+        "summary": "Add a schematic power port."
+      }
+    },
+    "SchdocAddWireOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "schdoc.add_wire"
+        },
+        "args": {
+          "$ref": "#/$defs/SchdocAddWireArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "schdoc.add_wire",
+        "group": "schdoc",
+        "summary": "Add a schematic wire."
+      }
+    },
+    "SchdocCreateOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "schdoc.create"
+        },
+        "args": {
+          "$ref": "#/$defs/SchdocCreateArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "schdoc.create",
+        "group": "schdoc",
+        "summary": "Create an empty schematic document."
+      }
+    },
+    "SchlibAddSymbolOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "schlib.add_symbol"
+        },
+        "args": {
+          "$ref": "#/$defs/SchlibAddSymbolArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "schlib.add_symbol",
+        "group": "schlib",
+        "summary": "Add one empty schematic symbol to a SchLib."
+      }
+    },
+    "SchlibCreateOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "type": "string",
+          "const": "schlib.create"
+        },
+        "args": {
+          "$ref": "#/$defs/SchlibCreateArgs"
+        }
+      },
+      "required": [
+        "op",
+        "args"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "x-acr-operation": {
+        "name": "schlib.create",
+        "group": "schlib",
+        "summary": "Create an empty schematic library."
+      }
+    },
+    "McoString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "FileCopyArgs": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/McoString"
+        },
+        "destination": {
+          "$ref": "#/$defs/McoString"
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "source",
+        "destination"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "McoFailArgs": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "McoMessageArgs": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddArcArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "center_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "radius_mils": {
+          "type": "number"
+        },
+        "start_angle_degrees": {
+          "type": "number"
+        },
+        "end_angle_degrees": {
+          "type": "number"
+        },
+        "width_mils": {
+          "type": "number"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "net": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "file",
+        "center_mils",
+        "radius_mils",
+        "start_angle_degrees",
+        "end_angle_degrees",
+        "width_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddComponentArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "library": {
+          "$ref": "#/$defs/McoString"
+        },
+        "footprint": {
+          "$ref": "#/$defs/McoString"
+        },
+        "designator": {
+          "$ref": "#/$defs/McoString"
+        },
+        "position_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "source_unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_hierarchical_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_component_library": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_lib_reference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channel_offset": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comment_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "component_parameters": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecordString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pad_nets": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecordString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotation_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "source_footprint_library": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comment_visible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "source_designator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "library",
+        "footprint",
+        "designator",
+        "position_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddEmbedded3dModelArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "model_file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "model_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "MECHANICAL_13"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "location_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointMils"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": [
+            0,
+            0
+          ]
+        },
+        "rotation_x_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "rotation_y_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "rotation_z_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "z_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "bounds_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundsObject"
+            },
+            {
+              "$ref": "#/$defs/BoundsArray"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projection_outline_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RegionPoints"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overall_height_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1
+        },
+        "z_mils": {
+          "type": "number",
+          "description": "Takes precedence over z_mm when supplied."
+        }
+      },
+      "required": [
+        "file",
+        "model_file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddFillArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "corner1_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "corner2_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "rotation_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "net": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "file",
+        "corner1_mils",
+        "corner2_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddPadArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "designator": {
+          "$ref": "#/$defs/McoString"
+        },
+        "position_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "width_mils": {
+          "type": "number"
+        },
+        "height_mils": {
+          "type": "number"
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "corner_radius_percent": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotation_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "hole_size_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "plated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "net": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "solder_mask_expansion_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "paste_mask_expansion_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tenting_top": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tenting_bottom": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "solder_mask_expansion_mode": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "paste_mask_expansion_mode": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "designator",
+        "position_mils",
+        "width_mils",
+        "height_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddRegionArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "outline_points_mils": {
+          "$ref": "#/$defs/RegionPoints"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "hole_points_mils": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/PointMils"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_keepout": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "keepout_restrictions": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "net": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "is_board_cutout": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file",
+        "outline_points_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddTextArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "text": {
+          "$ref": "#/$defs/McoString"
+        },
+        "position_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP_OVERLAY"
+        },
+        "height_mils": {
+          "type": "number"
+        },
+        "font_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "stroke"
+        },
+        "font_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "Arial"
+        },
+        "bold": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "rotation_degrees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "stroke_width_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 10
+        },
+        "is_comment": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "is_designator": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "is_mirrored": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "is_inverted": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "inverted_margin_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "use_inverted_rectangle": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "inverted_rectangle_size_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_frame": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "frame_size_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barcode_full_size_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barcode_margin_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointMils"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": [
+            20,
+            20
+          ]
+        },
+        "barcode_min_width_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "barcode_show_text": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true
+        },
+        "barcode_inverted": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true
+        },
+        "text_justification": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barcode_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "barcode_render_mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "text",
+        "position_mils",
+        "height_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddTrackArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "start_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "end_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "width_mils": {
+          "type": "number"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "net": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "file",
+        "start_mils",
+        "end_mils",
+        "width_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocAddViaArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "position_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "diameter_mils": {
+          "type": "number"
+        },
+        "hole_size_mils": {
+          "type": "number"
+        },
+        "layer_start": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP"
+        },
+        "layer_end": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "BOTTOM"
+        },
+        "net": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "file",
+        "position_mils",
+        "diameter_mils",
+        "hole_size_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocArrangeDesignatorsArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "designators": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/McoString"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "placement": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "above_component"
+        },
+        "offset_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointMils"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": [
+            0,
+            10
+          ]
+        },
+        "height_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 40
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "TOP_OVERLAY"
+        },
+        "stroke_width_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 8
+        },
+        "width_factor": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.6
+        },
+        "bold": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "font_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "Arial"
+        },
+        "font_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "truetype"
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocCreateArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "layer_stack_template": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rigid_stack": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RigidLayerStack"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stackupx_file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McoString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "board_outline_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoardOutlineMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "board_origin_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OriginMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sheet_frame_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SheetFrameMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mechanical_layer_profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mechanical_layers": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/McoMechanicalLayer"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mechanical_layer_pairs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/McoMechanicalPair"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mechanical_layer_kinds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/McoMechanicalKind"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocCreateUserUnionArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "members": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "all"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "all"
+        }
+      },
+      "required": [
+        "file",
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocExportLayerStepArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "output_file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Delegated to PcbLayerStepConfig along with additional fixture options; see pcb-layer-step configuration."
+        },
+        "board_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "highlights": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/LayerStepHighlight"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file",
+        "output_file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcblibAddFootprintArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "0mil"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        },
+        "item_guid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        },
+        "revision_guid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecordString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "primitive_parameters": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecordString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcblibCreateArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectAddDocumentArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "document": {
+          "$ref": "#/$defs/McoString"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "file",
+        "document"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectAddParameterArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "value": {
+          "$ref": "#/$defs/McoString"
+        }
+      },
+      "required": [
+        "file",
+        "name",
+        "value"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectAddVariantArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "allow_fabrication": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file",
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectAddVariantDnpArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "variant": {
+          "$ref": "#/$defs/McoString"
+        },
+        "designator": {
+          "$ref": "#/$defs/McoString"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "alternate_part": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        }
+      },
+      "required": [
+        "file",
+        "variant",
+        "designator"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectCloneVariantArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "source_name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "allow_fabrication": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file",
+        "source_name",
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectCreateArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectDeleteVariantArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        }
+      },
+      "required": [
+        "file",
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectListVariantsArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectRenameVariantArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "new_name": {
+          "$ref": "#/$defs/McoString"
+        }
+      },
+      "required": [
+        "file",
+        "name",
+        "new_name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectToggleVariantDnpArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "variant": {
+          "$ref": "#/$defs/McoString"
+        },
+        "designator": {
+          "$ref": "#/$defs/McoString"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "alternate_part": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        }
+      },
+      "required": [
+        "file",
+        "variant",
+        "designator"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchdocAddComponentArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "library": {
+          "$ref": "#/$defs/McoString"
+        },
+        "symbol": {
+          "$ref": "#/$defs/McoString"
+        },
+        "designator": {
+          "$ref": "#/$defs/McoString"
+        },
+        "position_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "design_item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "footprint_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "footprint_library": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecordString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "mirrored": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "part_id": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 1
+        },
+        "display_mode": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0
+        },
+        "designator_style": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchematicTextStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comment_style": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchematicTextStyle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "footprint_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        }
+      },
+      "required": [
+        "file",
+        "library",
+        "symbol",
+        "designator",
+        "position_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchdocAddNetLabelArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "text": {
+          "$ref": "#/$defs/McoString"
+        },
+        "location_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "justification": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "default": "BOTTOM_LEFT"
+        }
+      },
+      "required": [
+        "file",
+        "text",
+        "location_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchdocAddPowerPortArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "text": {
+          "$ref": "#/$defs/McoString"
+        },
+        "location_mils": {
+          "$ref": "#/$defs/PointMils"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "default": "BAR"
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "show_net_name": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true
+        }
+      },
+      "required": [
+        "file",
+        "text",
+        "location_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchdocAddWireArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString",
+          "description": "Input Altium document path, relative to the MCO file directory."
+        },
+        "output_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional output document; otherwise overwrite=true is required."
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Allow overwriting the input or existing output document."
+        },
+        "points_mils": {
+          "$ref": "#/$defs/WirePoints"
+        }
+      },
+      "required": [
+        "file",
+        "points_mils"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchdocCreateArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "template": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McoString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sheet_style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "D"
+        },
+        "apply_template_visual_sheet_settings": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        },
+        "custom_sheet_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CustomSheetMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchlibAddSymbolArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "$ref": "#/$defs/McoString"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": ""
+        }
+      },
+      "required": [
+        "file",
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchlibCreateArgs": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/McoString"
+        },
+        "overwrite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PointMils": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    },
+    "BoundsObject": {
+      "type": "object",
+      "properties": {
+        "left": {
+          "type": "number"
+        },
+        "bottom": {
+          "type": "number"
+        },
+        "right": {
+          "type": "number"
+        },
+        "top": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "left",
+        "bottom",
+        "right",
+        "top"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "BoundsArray": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "RegionPoints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PointMils"
+      },
+      "minItems": 3
+    },
+    "RigidLayerStack": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "generated_rigid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Layer-stack generation mode. Omission or null uses generated_rigid."
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "copper_layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CopperLayer"
+          },
+          "minItems": 2,
+          "description": "Copper layers in top-to-bottom order."
+        },
+        "dielectrics_between": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DielectricLayer"
+          },
+          "description": "Dielectric layers between adjacent copper layers."
+        }
+      },
+      "required": [
+        "copper_layers",
+        "dielectrics_between"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "BoardOutlineMils": {
+      "type": "object",
+      "properties": {
+        "left": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "bottom": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "right": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "top": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "left",
+        "bottom",
+        "right",
+        "top"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "OriginMils": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "y": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SheetFrameMils": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "y": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "McoMechanicalLayer": {
+      "type": "object",
+      "properties": {
+        "layer": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true
+        }
+      },
+      "required": [
+        "layer"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "McoMechanicalPair": {
+      "type": "object",
+      "properties": {
+        "layer_1": {
+          "$ref": "#/$defs/McoString"
+        },
+        "layer_2": {
+          "$ref": "#/$defs/McoString"
+        },
+        "pair_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Defaults to the row's zero-based source index."
+        }
+      },
+      "required": [
+        "layer_1",
+        "layer_2"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "McoMechanicalKind": {
+      "type": "object",
+      "properties": {
+        "layer": {
+          "$ref": "#/$defs/McoString"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "layer",
+        "kind"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "LayerStepHighlight": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/McoString"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "color": {
+          "$ref": "#/$defs/McoString"
+        },
+        "pad_geometries": {
+          "type": "array",
+          "items": {},
+          "description": "Geometry records consumed by the existing STEP exporter; non-object entries are ignored."
+        },
+        "z_offset_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.001
+        },
+        "thickness_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 0.01
+        }
+      },
+      "required": [
+        "id",
+        "color"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchematicTextStyle": {
+      "type": "object",
+      "properties": {
+        "position_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PointMils"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "font_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "Arial"
+        },
+        "font_size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 12
+        },
+        "bold": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Default is true for designator style and false for comment style."
+        },
+        "justification": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hidden": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Explicit hidden takes precedence over visible."
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "WirePoints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PointMils"
+      },
+      "minItems": 2
+    },
+    "CustomSheetMils": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "description": "Custom sheet width in mils."
+        },
+        "height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "description": "Custom sheet height in mils."
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "CopperLayer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/NonemptyString",
+          "description": "Copper layer display name."
+        },
+        "copper_thickness_mils": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Copper thickness in mils."
+        },
+        "thickness_mils": {
+          "description": "Historical extension field; ignored by creation. Use copper_thickness_mils."
+        },
+        "component_placement": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional native component-placement enum id."
+        },
+        "copper_orientation": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional native copper-orientation enum id."
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "DielectricLayer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/NonemptyString"
+        },
+        "material": {
+          "$ref": "#/$defs/NonemptyString"
+        },
+        "thickness_mils": {
+          "type": "number"
+        },
+        "dielectric_constant": {
+          "type": "number"
+        },
+        "dk": {
+          "description": "Historical extension field; ignored by creation. Use dielectric_constant."
+        },
+        "dielectric_type": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type_code": {
+          "description": "Historical extension field; ignored by creation. Use dielectric_type."
+        },
+        "loss_tangent": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "material",
+        "thickness_mils",
+        "dielectric_constant"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "NonemptyString": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/mco/main.tsp. Do not edit."
+}

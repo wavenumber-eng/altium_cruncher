@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.outjob.run.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.outjob.run.a0"
+    },
+    "project": {
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OutjobResult"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "project",
+    "success",
+    "results"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "OutjobResult": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "outjob": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "launch_code": {
+          "type": "integer"
+        },
+        "timed_out": {
+          "type": "boolean"
+        },
+        "error_count": {
+          "type": "integer"
+        },
+        "marker_text": {
+          "type": "string"
+        },
+        "normalized_changed": {
+          "type": "boolean"
+        },
+        "rebound_document_paths": {
+          "type": "integer"
+        },
+        "marker_path": {
+          "type": "string"
+        },
+        "log_path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "outjob",
+        "success",
+        "launch_code",
+        "timed_out",
+        "error_count",
+        "marker_text",
+        "normalized_changed",
+        "rebound_document_paths",
+        "marker_path",
+        "log_path"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

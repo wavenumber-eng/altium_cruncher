@@ -29,6 +29,8 @@ from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
     load_pcb_svg_component_inventory,
 )
 from altium_cruncher.config_json import load_json_config
+from .pcb_svg_model_cache import add_model_cache_arguments
+from .pcb_svg_workers import add_svg_worker_arguments
 
 log = logging.getLogger(__name__)
 
@@ -160,9 +162,15 @@ def _default_pcb_svg_config_text(
         "// Synthetic layer tokens: BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS,\n"
         "//   ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM,\n"
         "//   ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM.\n"
+        "//   SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM.\n"
+        "//   ILLUSTRATION_TOP, ILLUSTRATION_BOTTOM.\n"
+        "// soldermask_film: color=auto uses saved Altium 3D color (green fallback);\n"
+        "//   opacity=1 is opaque. Override either under global.styles or views[].styles.\n"
+        "// drills/slots: outline=true draws unfilled boundaries; outline_width_mm sets\n"
+        "//   their width. respect_tenting=true hides mask-covered plated hole marks.\n"
         "\n"
-        "// In each view, the layers array is the draw order. HLR renders last, and\n"
-        "//   DRILLS/SLOTS render immediately before HLR.\n"
+        "// Physical layers render first, then DRILLS/SLOTS, then HLR, then the\n"
+        "//   illustration/designator layers in their listed relative order.\n"
         "\n"
         "// With .PrjPcb input, add global.pcbdoc to select one specific board.\n"
         "\n"
@@ -183,8 +191,9 @@ def _default_pcb_svg_config_text(
         '    "enabled": true,\n'
         '    "color": "#F59E0B",\n'
         '    "line_width_mm": 0.12,\n'
-        '    "projection_algorithm": "exact",\n'
-        '    "curve_mode": "native_arcs",\n'
+        '    "projection_algorithm": "fast",\n'
+        '    "outline_algorithm": "fast-mesh-shadow",\n'
+        '    "curve_mode": "polyline",\n'
         '    "samples_per_curve": 24,\n'
         '    "round_digits": 3,\n'
         '    "include_visible": true,\n'
@@ -197,7 +206,11 @@ def _default_pcb_svg_config_text(
         "  }\n"
         "\n"
         "Geometer pass-through settings currently accepted by assembly_hlr include:\n"
-        "  projection_algorithm, mesh_linear_deflection, mesh_angular_deflection,\n"
+        "  STEP projections default to fast HLR with fast-mesh-shadow outlines.\n"
+        "  Fast output uses polylines. Explicit exact/poly keeps legacy outlines.\n"
+        "  Fast candidate controls belong in assembly_hlr.fast; legacy edge flags\n"
+        "  and disabled include_visible/include_outline require explicit poly/exact.\n"
+        "  projection_algorithm, outline_algorithm, mesh_linear_deflection, mesh_angular_deflection,\n"
         "  mesh_relative, hlr_angle_tolerance, and edge flags like edge_h_outline.\n"
         "\n"
         "Component override examples:\n"
@@ -260,7 +273,9 @@ def _load_pcb_svg_config(config_path: Path) -> PcbSvgConfig:
         raise ValueError(
             f"Failed to parse pcb-svg config '{config_path}': {exc}"
         ) from exc
-    return PcbSvgConfig.from_dict(raw_data)
+    from .contracts.pcb_svg import decode_pcb_svg_config
+
+    return PcbSvgConfig.from_dict(decode_pcb_svg_config(raw_data))
 
 
 def _parse_pcb_views(raw_views: str | None) -> set[str] | None:
@@ -324,6 +339,33 @@ def _apply_pcb_layer_selection(
     return config
 
 
+def _validate_view_cutout_settings(cutout_style: dict[str, object], view_name: str) -> None:
+    if cutout_style.get("scope", "all") not in ("all", "interior"):
+        raise ValueError("board_cutouts.scope must be 'all' or 'interior'")
+    outline_style = str(cutout_style.get("outline_style", "solid")).lower()
+    if outline_style not in {"solid", "dashed"}:
+        raise ValueError(
+            f"Invalid board_cutouts.outline_style '{outline_style}' for view '{view_name}'"
+        )
+    for field_name in (
+        "hatch_spacing_mm",
+        "hatch_line_width_mm",
+        "outline_dash_mm",
+        "outline_width_mm",
+        "label_max_font_size_mm",
+        "label_fill_ratio",
+    ):
+        value = cutout_style.get(field_name, 0.01)
+        if not isinstance(value, (int, float, str)) or float(value) <= 0:
+            raise ValueError(
+                f"Invalid board_cutouts.{field_name} for view '{view_name}'"
+            )
+    for field_name in ("outline_opacity", "hatch_opacity", "label_opacity", "label_fill_ratio"):
+        value = cutout_style.get(field_name, 1.0)
+        if not isinstance(value, (int, float)) or not 0 <= value <= 1:
+            raise ValueError(f"Invalid board_cutouts.{field_name} for view '{view_name}'")
+
+
 def _resolve_view_render_settings(
     global_options: PcbSvgGlobalConfig,
     view: PcbSvgViewConfig,
@@ -334,23 +376,7 @@ def _resolve_view_render_settings(
     """Return the effective A0 render settings for one view."""
     config = PcbSvgConfig(global_options=global_options, views=[view])
     styles = config.resolved_styles_for_view(view)
-    cutout_style = styles.get("board_cutouts", {})
-    outline_style = str(cutout_style.get("outline_style", "solid")).lower()
-    if outline_style not in {"solid", "dashed"}:
-        raise ValueError(
-            f"Invalid board_cutouts.outline_style '{outline_style}' for view '{view.name}'"
-        )
-    for field_name in (
-        "hatch_spacing_mm",
-        "hatch_line_width_mm",
-        "outline_dash_mm",
-        "outline_width_mm",
-    ):
-        value = cutout_style.get(field_name, 0.01)
-        if not isinstance(value, (int, float, str)) or float(value) <= 0:
-            raise ValueError(
-                f"Invalid board_cutouts.{field_name} for view '{view.name}'"
-            )
+    _validate_view_cutout_settings(styles.get("board_cutouts", {}), view.name)
     svg_scale = (
         global_options.svg_scale if default_svg_scale is None else default_svg_scale
     )
@@ -604,6 +630,9 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         help="output directory (default: ./output/pcb-svg)",
     )
     add_pcb_svg_option_arguments(pcb_svg_parser)
+    pcb_svg_parser.add_argument("--timings", type=Path, help="write SVG job/layer/view wall timings and cache outcomes as JSON")
+    add_model_cache_arguments(pcb_svg_parser)
+    add_svg_worker_arguments(pcb_svg_parser)
     pcb_svg_parser.set_defaults(handler=cmd_pcb_svg)
     return pcb_svg_parser
 

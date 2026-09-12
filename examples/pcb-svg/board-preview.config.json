@@ -1,0 +1,189 @@
+{
+  "schema": "pcb.svg.config.a0",
+  "global": {
+    "include_metadata": true,
+    "clip_to_outline": true,
+    "clip_holes_from_copper": true,
+    "styles": {
+      "board_outline": {
+        "enabled": true,
+        "color": "#000000",
+        "line_width_mm": 0.25
+      },
+      "smd_pads": {
+        "enabled": true,
+        "color": "#DFC951"
+      },
+      "through_hole_pads": {
+        "enabled": true,
+        "color": "#DFC951"
+      },
+      "copper_traces": {
+        "enabled": true,
+        "color": "#DFC951"
+      },
+      "vias": {
+        "enabled": true,
+        "color": "#DFC951"
+      },
+      "copper_polygons": {
+        "enabled": true,
+        "color": "#DFC951"
+      },
+      "soldermask_film": {
+        "color": "auto",
+        "opacity": 0.85
+      },
+      "drills": {
+        "plated_color": "#D3D3D3",
+        "non_plated_color": "#D3D3D3",
+        "outline": false,
+        "respect_tenting": true
+      },
+      "slots": {
+        "plated_color": "#D3D3D3",
+        "non_plated_color": "#D3D3D3",
+        "outline": false,
+        "respect_tenting": true
+      },
+      "board_cutouts": {
+        "scope": "interior",
+        "color": "#555555",
+        "outline_width_mm": 0.24,
+        "outline_opacity": 0.25,
+        "hatch": true,
+        "hatch_spacing_mm": 1.0,
+        "hatch_angle_deg": 45.0,
+        "hatch_line_width_mm": 0.12,
+        "hatch_color": "#777777",
+        "hatch_opacity": 0.18,
+        "label": "CUTOUT",
+        "label_color": "#444444",
+        "label_opacity": 0.25,
+        "label_max_font_size_mm": 3.0,
+        "label_fill_ratio": 0.72
+      },
+      "silkscreen_component_graphics": {
+        "enabled": true,
+        "color": "#434343"
+      },
+      "silkscreen_designators": {
+        "enabled": true,
+        "color": "#434343"
+      },
+      "silkscreen_board_graphics": {
+        "enabled": true,
+        "color": "#434343"
+      },
+      "board_substrate": {
+        "enabled": true,
+        "color": "#B6A26B"
+      }
+    }
+  },
+  "layer_outputs": {
+    "enabled": false
+  },
+  "views": [
+    {
+      "name": "top_board_saved",
+      "layers": [
+        "BOARD_SUBSTRATE",
+        "TOP",
+        "SOLDERMASK_FILM_TOP",
+        "TOPOVERLAY",
+        "BOARD_CUTOUTS",
+        "DRILLS",
+        "SLOTS",
+        "BOARD_OUTLINE",
+        "ILLUSTRATION_TOP"
+      ],
+      "group_id": "pcb-svg-board-top-saved",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false,
+      "styles": {}
+    },
+    {
+      "name": "bottom_board_saved",
+      "layers": [
+        "BOARD_SUBSTRATE",
+        "BOTTOM",
+        "SOLDERMASK_FILM_BOTTOM",
+        "BOTTOMOVERLAY",
+        "BOARD_CUTOUTS",
+        "DRILLS",
+        "SLOTS",
+        "BOARD_OUTLINE",
+        "ILLUSTRATION_BOTTOM"
+      ],
+      "group_id": "pcb-svg-board-bottom-saved",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": true,
+      "styles": {}
+    },
+    {
+      "name": "top_board_green",
+      "layers": [
+        "BOARD_SUBSTRATE",
+        "TOP",
+        "SOLDERMASK_FILM_TOP",
+        "TOPOVERLAY",
+        "BOARD_CUTOUTS",
+        "DRILLS",
+        "SLOTS",
+        "BOARD_OUTLINE",
+        "ILLUSTRATION_TOP"
+      ],
+      "group_id": "pcb-svg-board-top-green",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false,
+      "styles": {
+        "soldermask_film": {
+          "color": "#176B3A",
+          "opacity": 0.9
+        },
+        "silkscreen_component_graphics": {
+          "color": "#F5F5F5"
+        },
+        "silkscreen_designators": {
+          "color": "#F5F5F5"
+        },
+        "silkscreen_board_graphics": {
+          "color": "#F5F5F5"
+        }
+      }
+    },
+    {
+      "name": "bottom_board_green",
+      "layers": [
+        "BOARD_SUBSTRATE",
+        "BOTTOM",
+        "SOLDERMASK_FILM_BOTTOM",
+        "BOTTOMOVERLAY",
+        "BOARD_CUTOUTS",
+        "DRILLS",
+        "SLOTS",
+        "BOARD_OUTLINE",
+        "ILLUSTRATION_BOTTOM"
+      ],
+      "group_id": "pcb-svg-board-bottom-green",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": true,
+      "styles": {
+        "soldermask_film": {
+          "color": "#176B3A",
+          "opacity": 0.9
+        },
+        "silkscreen_component_graphics": {
+          "color": "#F5F5F5"
+        },
+        "silkscreen_designators": {
+          "color": "#F5F5F5"
+        },
+        "silkscreen_board_graphics": {
+          "color": "#F5F5F5"
+        }
+      }
+    }
+  ]
+}

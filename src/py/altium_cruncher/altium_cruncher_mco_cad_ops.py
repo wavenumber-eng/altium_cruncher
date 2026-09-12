@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from altium_cruncher.contracts.mco import mco_default, mco_model_default
+
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from enum import IntEnum
@@ -42,7 +44,7 @@ def _op_schdoc_add_wire(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="schdoc.add_wire")
     points = _required_points(spec.args, "points_mils", minimum=2)
     if context.dry_run:
         return _dry_run_result(spec, paths, {"points": len(points)})
@@ -63,12 +65,14 @@ def _op_schdoc_add_net_label(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="schdoc.add_net_label")
     text = _required_string(spec.args, "text")
     location = _required_point(spec.args, "location_mils")
     orientation = _sch_text_orientation(spec.args.get("orientation"))
     justification = _sch_text_justification(
-        spec.args.get("justification", "BOTTOM_LEFT")
+        spec.args.get(
+            "justification", mco_default("schdoc.add_net_label", "justification")
+        )
     )
     if context.dry_run:
         return _dry_run_result(spec, paths, {"text": text})
@@ -92,12 +96,18 @@ def _op_schdoc_add_power_port(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="schdoc.add_power_port")
     text = _required_string(spec.args, "text")
     location = _required_point(spec.args, "location_mils")
     orientation = _sch_text_orientation(spec.args.get("orientation"))
-    style = _sch_power_object_style(spec.args.get("style", "BAR"))
-    show_net_name = _optional_bool(spec.args, "show_net_name", True)
+    style = _sch_power_object_style(
+        spec.args.get("style", mco_default("schdoc.add_power_port", "style"))
+    )
+    show_net_name = _optional_bool(
+        spec.args,
+        "show_net_name",
+        mco_default("schdoc.add_power_port", "show_net_name"),
+    )
     if context.dry_run:
         return _dry_run_result(spec, paths, {"text": text})
 
@@ -121,7 +131,7 @@ def _op_schdoc_add_component(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="schdoc.add_component")
     library_path = _path_from_arg(spec.args, "library", context)
     symbol = _required_string(spec.args, "symbol")
     designator = _required_string(spec.args, "designator")
@@ -144,26 +154,62 @@ def _op_schdoc_add_component(
         designator,
         int(round(position[0])),
         int(round(position[1])),
-        orientation=int(_optional_float(spec.args, "orientation", 0.0)),
-        is_mirrored=_optional_bool(spec.args, "mirrored", False),
-        part_id=int(_optional_float(spec.args, "part_id", 1.0)),
-        display_mode=int(_optional_float(spec.args, "display_mode", 0.0)),
+        orientation=int(
+            _optional_float(
+                spec.args,
+                "orientation",
+                mco_default("schdoc.add_component", "orientation"),
+            )
+        ),
+        is_mirrored=_optional_bool(
+            spec.args, "mirrored", mco_default("schdoc.add_component", "mirrored")
+        ),
+        part_id=int(
+            _optional_float(
+                spec.args, "part_id", mco_default("schdoc.add_component", "part_id")
+            )
+        ),
+        display_mode=int(
+            _optional_float(
+                spec.args,
+                "display_mode",
+                mco_default("schdoc.add_component", "display_mode"),
+            )
+        ),
     )
     component = schdoc.components[-1]
-    unique_id = _optional_string(spec.args, "unique_id", None)
+    unique_id = _optional_string(
+        spec.args, "unique_id", mco_default("schdoc.add_component", "unique_id")
+    )
     if unique_id is not None:
         setattr(component, "unique_id", unique_id)
-    design_item_id = _optional_string(spec.args, "design_item_id", None)
+    design_item_id = _optional_string(
+        spec.args,
+        "design_item_id",
+        mco_default("schdoc.add_component", "design_item_id"),
+    )
     if design_item_id is not None:
         setattr(component, "design_item_id", design_item_id)
     for name, value in (_optional_string_dict(spec.args, "parameters") or {}).items():
         getattr(component, "add_parameter")(name, value)
-    footprint_model = _optional_string(spec.args, "footprint_model", None)
+    footprint_model = _optional_string(
+        spec.args,
+        "footprint_model",
+        mco_default("schdoc.add_component", "footprint_model"),
+    )
     if footprint_model is not None:
         getattr(component, "add_footprint")(
             footprint_model,
-            description=_optional_string(spec.args, "footprint_description", ""),
-            library_name=_optional_string(spec.args, "footprint_library", ""),
+            description=_optional_string(
+                spec.args,
+                "footprint_description",
+                mco_default("schdoc.add_component", "footprint_description"),
+            ),
+            library_name=_optional_string(
+                spec.args,
+                "footprint_library",
+                mco_default("schdoc.add_component", "footprint_library"),
+            ),
         )
     _apply_schematic_text_style(component, spec.args, "designator_style")
     _apply_schematic_text_style(component, spec.args, "comment_style")
@@ -183,32 +229,62 @@ def _op_pcbdoc_add_text(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_text")
     text = _required_string(spec.args, "text")
     position = _required_point(spec.args, "position_mils")
     height = _required_float(spec.args, "height_mils")
-    layer = _pcb_layer(spec.args.get("layer"), default="TOP_OVERLAY")
-    rotation_degrees = _optional_float(spec.args, "rotation_degrees", 0.0)
-    stroke_width_mils = _optional_float(spec.args, "stroke_width_mils", 10.0)
-    font_kind = _pcb_text_kind(spec.args.get("font_kind"))
-    font_name = _optional_string(spec.args, "font_name", "Arial")
-    bold = _optional_bool(spec.args, "bold", False)
-    italic = _optional_bool(spec.args, "italic", False)
-    is_comment = _optional_bool(spec.args, "is_comment", False)
-    is_designator = _optional_bool(spec.args, "is_designator", False)
-    is_mirrored = _optional_bool(spec.args, "is_mirrored", False)
-    is_inverted = _optional_bool(spec.args, "is_inverted", False)
-    inverted_margin_mils = _optional_float(spec.args, "inverted_margin_mils", 0.0)
+    layer = _pcb_layer(
+        spec.args.get("layer"), default=mco_default("pcbdoc.add_text", "layer")
+    )
+    rotation_degrees = _optional_float(
+        spec.args,
+        "rotation_degrees",
+        mco_default("pcbdoc.add_text", "rotation_degrees"),
+    )
+    stroke_width_mils = _optional_float(
+        spec.args,
+        "stroke_width_mils",
+        mco_default("pcbdoc.add_text", "stroke_width_mils"),
+    )
+    font_kind = _pcb_text_kind(
+        spec.args.get("font_kind", mco_default("pcbdoc.add_text", "font_kind"))
+    )
+    font_name = _optional_string(
+        spec.args, "font_name", mco_default("pcbdoc.add_text", "font_name")
+    )
+    bold = _optional_bool(spec.args, "bold", mco_default("pcbdoc.add_text", "bold"))
+    italic = _optional_bool(
+        spec.args, "italic", mco_default("pcbdoc.add_text", "italic")
+    )
+    is_comment = _optional_bool(
+        spec.args, "is_comment", mco_default("pcbdoc.add_text", "is_comment")
+    )
+    is_designator = _optional_bool(
+        spec.args, "is_designator", mco_default("pcbdoc.add_text", "is_designator")
+    )
+    is_mirrored = _optional_bool(
+        spec.args, "is_mirrored", mco_default("pcbdoc.add_text", "is_mirrored")
+    )
+    is_inverted = _optional_bool(
+        spec.args, "is_inverted", mco_default("pcbdoc.add_text", "is_inverted")
+    )
+    inverted_margin_mils = _optional_float(
+        spec.args,
+        "inverted_margin_mils",
+        mco_default("pcbdoc.add_text", "inverted_margin_mils"),
+    )
     use_inverted_rectangle = _optional_bool(
         spec.args,
         "use_inverted_rectangle",
-        False,
+        mco_default("pcbdoc.add_text", "use_inverted_rectangle"),
     )
     inverted_rectangle_size_mils = _optional_number_pair(
         spec.args,
         "inverted_rectangle_size_mils",
     )
-    is_frame = _optional_bool(spec.args, "is_frame", False)
+    is_frame = _optional_bool(
+        spec.args, "is_frame", mco_default("pcbdoc.add_text", "is_frame")
+    )
     frame_size_mils = _optional_number_pair(spec.args, "frame_size_mils")
     text_justification = _pcb_text_justification(spec.args.get("text_justification"))
     barcode_kind = _pcb_barcode_kind(spec.args.get("barcode_kind"))
@@ -220,11 +296,23 @@ def _op_pcbdoc_add_text(
     barcode_margin_mils = _optional_number_pair(
         spec.args,
         "barcode_margin_mils",
-        default=(20.0, 20.0),
+        default=tuple(mco_default("pcbdoc.add_text", "barcode_margin_mils")),
     )
-    barcode_min_width_mils = _optional_float(spec.args, "barcode_min_width_mils", 0.0)
-    barcode_show_text = _optional_bool(spec.args, "barcode_show_text", True)
-    barcode_inverted = _optional_bool(spec.args, "barcode_inverted", True)
+    barcode_min_width_mils = _optional_float(
+        spec.args,
+        "barcode_min_width_mils",
+        mco_default("pcbdoc.add_text", "barcode_min_width_mils"),
+    )
+    barcode_show_text = _optional_bool(
+        spec.args,
+        "barcode_show_text",
+        mco_default("pcbdoc.add_text", "barcode_show_text"),
+    )
+    barcode_inverted = _optional_bool(
+        spec.args,
+        "barcode_inverted",
+        mco_default("pcbdoc.add_text", "barcode_inverted"),
+    )
     if context.dry_run:
         return _dry_run_result(
             spec,
@@ -278,7 +366,7 @@ def _op_pcbdoc_add_component(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_component")
     library_path = _path_from_arg(spec.args, "library", context)
     footprint_name = _required_string(spec.args, "footprint")
     designator = _required_string(spec.args, "designator")
@@ -303,15 +391,29 @@ def _op_pcbdoc_add_component(
         footprint,
         designator=designator,
         position_mils=position,
-        layer=_pcb_layer(spec.args.get("layer"), default="TOP"),
-        rotation_degrees=_optional_float(spec.args, "rotation_degrees", 0.0),
+        layer=_pcb_layer(
+            spec.args.get("layer"), default=mco_default("pcbdoc.add_component", "layer")
+        ),
+        rotation_degrees=_optional_float(
+            spec.args,
+            "rotation_degrees",
+            mco_default("pcbdoc.add_component", "rotation_degrees"),
+        ),
         source_footprint_library=_optional_string(
             spec.args,
             "source_footprint_library",
             str(library_path),
         ),
-        comment_text=_optional_string(spec.args, "comment_text", None),
-        comment_visible=_optional_bool(spec.args, "comment_visible", False),
+        comment_text=_optional_string(
+            spec.args,
+            "comment_text",
+            mco_default("pcbdoc.add_component", "comment_text"),
+        ),
+        comment_visible=_optional_bool(
+            spec.args,
+            "comment_visible",
+            mco_default("pcbdoc.add_component", "comment_visible"),
+        ),
         component_parameters=_optional_string_dict(spec.args, "component_parameters"),
         pad_nets=_optional_string_dict(spec.args, "pad_nets"),
         source_pcblib=pcblib,
@@ -334,7 +436,9 @@ def _op_pcblib_create(
     context: McoExecutionContext,
 ) -> McoOperationResult:
     file_path = _path_from_arg(spec.args, "file", context)
-    overwrite = _optional_bool(spec.args, "overwrite", False)
+    overwrite = _optional_bool(
+        spec.args, "overwrite", mco_default("pcblib.create", "overwrite")
+    )
     if file_path.exists() and not overwrite:
         return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
     outputs = {"library": str(file_path.resolve())}
@@ -366,12 +470,34 @@ def _op_pcblib_add_footprint(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcblib.add_footprint")
     name = _required_string(spec.args, "name")
-    height = _optional_string(spec.args, "height", "0mil") or "0mil"
-    description = _optional_string(spec.args, "description", "") or ""
-    item_guid = _optional_string(spec.args, "item_guid", "") or ""
-    revision_guid = _optional_string(spec.args, "revision_guid", "") or ""
+    height = (
+        _optional_string(
+            spec.args, "height", mco_default("pcblib.add_footprint", "height")
+        )
+        or "0mil"
+    )
+    description = (
+        _optional_string(
+            spec.args, "description", mco_default("pcblib.add_footprint", "description")
+        )
+        or ""
+    )
+    item_guid = (
+        _optional_string(
+            spec.args, "item_guid", mco_default("pcblib.add_footprint", "item_guid")
+        )
+        or ""
+    )
+    revision_guid = (
+        _optional_string(
+            spec.args,
+            "revision_guid",
+            mco_default("pcblib.add_footprint", "revision_guid"),
+        )
+        or ""
+    )
     parameters = _optional_string_dict(spec.args, "parameters") or {}
     primitive_parameters = (
         _optional_string_dict(spec.args, "primitive_parameters") or {}
@@ -472,23 +598,59 @@ def _op_pcbdoc_arrange_designators(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.arrange_designators")
     designators = _optional_string_list(spec.args, "designators")
-    placement = _optional_string(spec.args, "placement", "above_component")
+    placement = _optional_string(
+        spec.args, "placement", mco_default("pcbdoc.arrange_designators", "placement")
+    )
     if placement != "above_component":
         raise ValueError("pcbdoc.arrange-designators placement must be above_component")
-    offset = _optional_number_pair(spec.args, "offset_mils", default=(0.0, 10.0))
+    offset = _optional_number_pair(
+        spec.args,
+        "offset_mils",
+        default=tuple(mco_default("pcbdoc.arrange_designators", "offset_mils")),
+    )
     if offset is None:
-        offset = (0.0, 10.0)
-    height_mils = _optional_float(spec.args, "height_mils", 40.0)
-    stroke_width_mils = _optional_float(spec.args, "stroke_width_mils", 8.0)
-    width_factor = _optional_float(spec.args, "width_factor", 0.6)
-    layer = _pcb_layer(spec.args.get("layer"), default="TOP_OVERLAY")
+        offset = tuple(mco_default("pcbdoc.arrange_designators", "offset_mils"))
+    height_mils = _optional_float(
+        spec.args,
+        "height_mils",
+        mco_default("pcbdoc.arrange_designators", "height_mils"),
+    )
+    stroke_width_mils = _optional_float(
+        spec.args,
+        "stroke_width_mils",
+        mco_default("pcbdoc.arrange_designators", "stroke_width_mils"),
+    )
+    width_factor = _optional_float(
+        spec.args,
+        "width_factor",
+        mco_default("pcbdoc.arrange_designators", "width_factor"),
+    )
+    layer = _pcb_layer(
+        spec.args.get("layer"),
+        default=mco_default("pcbdoc.arrange_designators", "layer"),
+    )
     layer_id = _legacy_pcb_layer_id(layer, op_name="pcbdoc.arrange-designators")
-    font_kind = _pcb_text_kind(spec.args.get("font_kind", "truetype"))
-    font_name = _optional_string(spec.args, "font_name", "Arial") or "Arial"
-    bold = _optional_bool(spec.args, "bold", True)
-    italic = _optional_bool(spec.args, "italic", False)
+    font_kind = _pcb_text_kind(
+        spec.args.get(
+            "font_kind", mco_default("pcbdoc.arrange_designators", "font_kind")
+        )
+    )
+    font_name = (
+        _optional_string(
+            spec.args,
+            "font_name",
+            mco_default("pcbdoc.arrange_designators", "font_name"),
+        )
+        or "Arial"
+    )
+    bold = _optional_bool(
+        spec.args, "bold", mco_default("pcbdoc.arrange_designators", "bold")
+    )
+    italic = _optional_bool(
+        spec.args, "italic", mco_default("pcbdoc.arrange_designators", "italic")
+    )
     if context.dry_run:
         return _dry_run_result(
             spec,
@@ -522,7 +684,7 @@ def _op_pcbdoc_add_track(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_track")
     start = _required_point(spec.args, "start_mils")
     end = _required_point(spec.args, "end_mils")
     width = _required_float(spec.args, "width_mils")
@@ -534,8 +696,10 @@ def _op_pcbdoc_add_track(
         start,
         end,
         width_mils=width,
-        layer=_pcb_layer(spec.args.get("layer"), default="TOP"),
-        net=_optional_string(spec.args, "net", None),
+        layer=_pcb_layer(
+            spec.args.get("layer"), default=mco_default("pcbdoc.add_track", "layer")
+        ),
+        net=_optional_string(spec.args, "net", mco_default("pcbdoc.add_track", "net")),
     )
     _mark_pcbdoc_dirty(context, paths)
     return _success_result(spec, paths, {"width_mils": width})
@@ -545,7 +709,7 @@ def _op_pcbdoc_add_arc(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_arc")
     center = _required_point(spec.args, "center_mils")
     radius = _required_float(spec.args, "radius_mils")
     if context.dry_run:
@@ -558,8 +722,10 @@ def _op_pcbdoc_add_arc(
         start_angle_degrees=_required_float(spec.args, "start_angle_degrees"),
         end_angle_degrees=_required_float(spec.args, "end_angle_degrees"),
         width_mils=_required_float(spec.args, "width_mils"),
-        layer=_pcb_layer(spec.args.get("layer"), default="TOP"),
-        net=_optional_string(spec.args, "net", None),
+        layer=_pcb_layer(
+            spec.args.get("layer"), default=mco_default("pcbdoc.add_arc", "layer")
+        ),
+        net=_optional_string(spec.args, "net", mco_default("pcbdoc.add_arc", "net")),
     )
     _mark_pcbdoc_dirty(context, paths)
     return _success_result(spec, paths, {"radius_mils": radius})
@@ -569,7 +735,7 @@ def _op_pcbdoc_add_pad(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_pad")
     designator = _required_string(spec.args, "designator")
     position = _required_point(spec.args, "position_mils")
     if context.dry_run:
@@ -581,12 +747,20 @@ def _op_pcbdoc_add_pad(
         position_mils=position,
         width_mils=_required_float(spec.args, "width_mils"),
         height_mils=_required_float(spec.args, "height_mils"),
-        layer=_pcb_layer(spec.args.get("layer"), default="TOP"),
+        layer=_pcb_layer(
+            spec.args.get("layer"), default=mco_default("pcbdoc.add_pad", "layer")
+        ),
         shape=_pad_shape(spec.args.get("shape")),
-        rotation_degrees=_optional_float(spec.args, "rotation_degrees", 0.0),
-        hole_size_mils=_optional_float(spec.args, "hole_size_mils", 0.0),
+        rotation_degrees=_optional_float(
+            spec.args,
+            "rotation_degrees",
+            mco_default("pcbdoc.add_pad", "rotation_degrees"),
+        ),
+        hole_size_mils=_optional_float(
+            spec.args, "hole_size_mils", mco_default("pcbdoc.add_pad", "hole_size_mils")
+        ),
         plated=_optional_bool_or_none(spec.args, "plated"),
-        net=_optional_string(spec.args, "net", None),
+        net=_optional_string(spec.args, "net", mco_default("pcbdoc.add_pad", "net")),
         # Float percent survives exactly (CornerRadiusChamfer lane) since
         # altium-monkey 2026.8.1.
         corner_radius_percent=_optional_float_or_none(
@@ -631,7 +805,7 @@ def _op_pcbdoc_add_via(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_via")
     position = _required_point(spec.args, "position_mils")
     if context.dry_run:
         return _dry_run_result(spec, paths, {"position_mils": list(position)})
@@ -641,9 +815,15 @@ def _op_pcbdoc_add_via(
         position_mils=position,
         diameter_mils=_required_float(spec.args, "diameter_mils"),
         hole_size_mils=_required_float(spec.args, "hole_size_mils"),
-        layer_start=_pcb_layer(spec.args.get("layer_start"), default="TOP"),
-        layer_end=_pcb_layer(spec.args.get("layer_end"), default="BOTTOM"),
-        net=_optional_string(spec.args, "net", None),
+        layer_start=_pcb_layer(
+            spec.args.get("layer_start"),
+            default=mco_default("pcbdoc.add_via", "layer_start"),
+        ),
+        layer_end=_pcb_layer(
+            spec.args.get("layer_end"),
+            default=mco_default("pcbdoc.add_via", "layer_end"),
+        ),
+        net=_optional_string(spec.args, "net", mco_default("pcbdoc.add_via", "net")),
     )
     _mark_pcbdoc_dirty(context, paths)
     return _success_result(spec, paths, {"position_mils": list(position)})
@@ -653,7 +833,7 @@ def _op_pcbdoc_add_fill(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_fill")
     corner1 = _required_point(spec.args, "corner1_mils")
     corner2 = _required_point(spec.args, "corner2_mils")
     if context.dry_run:
@@ -663,9 +843,15 @@ def _op_pcbdoc_add_fill(
     pcbdoc.add_fill(
         corner1,
         corner2,
-        rotation_degrees=_optional_float(spec.args, "rotation_degrees", 0.0),
-        layer=_pcb_layer(spec.args.get("layer"), default="TOP"),
-        net=_optional_string(spec.args, "net", None),
+        rotation_degrees=_optional_float(
+            spec.args,
+            "rotation_degrees",
+            mco_default("pcbdoc.add_fill", "rotation_degrees"),
+        ),
+        layer=_pcb_layer(
+            spec.args.get("layer"), default=mco_default("pcbdoc.add_fill", "layer")
+        ),
+        net=_optional_string(spec.args, "net", mco_default("pcbdoc.add_fill", "net")),
     )
     _mark_pcbdoc_dirty(context, paths)
     return _success_result(spec, paths, {"corner1_mils": list(corner1)})
@@ -675,9 +861,13 @@ def _op_pcbdoc_add_region(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_region")
     outline_points = _required_points(spec.args, "outline_points_mils", minimum=3)
-    is_board_cutout = _optional_bool(spec.args, "is_board_cutout", False)
+    is_board_cutout = _optional_bool(
+        spec.args,
+        "is_board_cutout",
+        mco_default("pcbdoc.add_region", "is_board_cutout"),
+    )
     if context.dry_run:
         return _dry_run_result(
             spec,
@@ -688,11 +878,21 @@ def _op_pcbdoc_add_region(
     pcbdoc = _open_pcbdoc_for_mutation(paths, context)
     region = pcbdoc.add_region(
         outline_points_mils=outline_points,
-        layer=_pcb_layer(spec.args.get("layer"), default="TOP"),
+        layer=_pcb_layer(
+            spec.args.get("layer"), default=mco_default("pcbdoc.add_region", "layer")
+        ),
         hole_points_mils=_optional_hole_points(spec.args),
-        is_keepout=_optional_bool(spec.args, "is_keepout", False),
-        keepout_restrictions=int(_optional_float(spec.args, "keepout_restrictions", 0)),
-        net=_optional_string(spec.args, "net", None),
+        is_keepout=_optional_bool(
+            spec.args, "is_keepout", mco_default("pcbdoc.add_region", "is_keepout")
+        ),
+        keepout_restrictions=int(
+            _optional_float(
+                spec.args,
+                "keepout_restrictions",
+                mco_default("pcbdoc.add_region", "keepout_restrictions"),
+            )
+        ),
+        net=_optional_string(spec.args, "net", mco_default("pcbdoc.add_region", "net")),
     )
     if is_board_cutout:
         _mark_region_as_board_cutout(region)
@@ -717,13 +917,16 @@ def _op_pcbdoc_create_user_union(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.create_user_union")
     name = _required_string(spec.args, "name")
     if context.dry_run:
         return _dry_run_result(spec, paths, {"name": name})
 
     pcbdoc = _open_pcbdoc_for_mutation(paths, context)
-    members = _union_members(pcbdoc, spec.args.get("members", "all"))
+    members = _union_members(
+        pcbdoc,
+        spec.args.get("members", mco_default("pcbdoc.create_user_union", "members")),
+    )
     created = pcbdoc.create_user_union(name, members)
     _mark_pcbdoc_dirty(context, paths)
     return _success_result(
@@ -743,7 +946,9 @@ def _op_pcbdoc_export_layer_step(
 ) -> McoOperationResult:
     input_file = _path_from_arg(spec.args, "file", context)
     output_file = _path_from_arg(spec.args, "output_file", context)
-    overwrite = _optional_bool(spec.args, "overwrite", False)
+    overwrite = _optional_bool(
+        spec.args, "overwrite", mco_default("pcbdoc.export_layer_step", "overwrite")
+    )
     if output_file.exists() and not overwrite:
         raise FileExistsError(f"Output already exists: {output_file}")
     if context.dry_run:
@@ -765,7 +970,11 @@ def _op_pcbdoc_export_layer_step(
     )
 
     context.flush_documents()
-    parsed_config = PcbLayerStepConfig.from_dict(spec.args)
+    # The MCO transport owns these fields; the shared config owns export options.
+    parsed_config = PcbLayerStepConfig.from_dict({
+        key: value for key, value in spec.args.items()
+        if key not in {"file", "output_file", "overwrite", "highlights", "board_name"}
+    })
     options = replace(
         parsed_config.to_options(),
         highlights=_pcb_layer_step_highlights(spec.args),
@@ -794,7 +1003,7 @@ def _op_pcbdoc_add_embedded_3d_model(
     spec: McoOperationSpec,
     context: McoExecutionContext,
 ) -> McoOperationResult:
-    paths = _mutation_paths(spec.args, context)
+    paths = _mutation_paths(spec.args, context, op="pcbdoc.add_embedded_3d_model")
     model_file = _path_from_arg(spec.args, "model_file", context)
     model_name = (
         _optional_string(spec.args, "model_name", model_file.name) or model_file.name
@@ -803,7 +1012,7 @@ def _op_pcbdoc_add_embedded_3d_model(
     location_mils = _optional_number_pair(
         spec.args,
         "location_mils",
-        default=(0.0, 0.0),
+        default=tuple(mco_default("pcbdoc.add_embedded_3d_model", "location_mils")),
     )
     assert location_mils is not None
     if context.dry_run:
@@ -824,12 +1033,30 @@ def _op_pcbdoc_add_embedded_3d_model(
     )
     pcbdoc.add_embedded_3d_model(
         model,
-        layer=_pcb_layer(spec.args.get("layer"), default="MECHANICAL_13"),
-        side=_pcb_body_projection(spec.args.get("side"), default="TOP"),
+        layer=_pcb_layer(
+            spec.args.get("layer"),
+            default=mco_default("pcbdoc.add_embedded_3d_model", "layer"),
+        ),
+        side=_pcb_body_projection(
+            spec.args.get("side"),
+            default=mco_default("pcbdoc.add_embedded_3d_model", "side"),
+        ),
         location_mils=location_mils,
-        rotation_x_degrees=_optional_float(spec.args, "rotation_x_degrees", 0.0),
-        rotation_y_degrees=_optional_float(spec.args, "rotation_y_degrees", 0.0),
-        rotation_z_degrees=_optional_float(spec.args, "rotation_z_degrees", 0.0),
+        rotation_x_degrees=_optional_float(
+            spec.args,
+            "rotation_x_degrees",
+            mco_default("pcbdoc.add_embedded_3d_model", "rotation_x_degrees"),
+        ),
+        rotation_y_degrees=_optional_float(
+            spec.args,
+            "rotation_y_degrees",
+            mco_default("pcbdoc.add_embedded_3d_model", "rotation_y_degrees"),
+        ),
+        rotation_z_degrees=_optional_float(
+            spec.args,
+            "rotation_z_degrees",
+            mco_default("pcbdoc.add_embedded_3d_model", "rotation_z_degrees"),
+        ),
         standoff_height_mils=_model_z_mils(spec.args),
         bounds_mils=_optional_bounds_mils(spec.args, "bounds_mils"),
         projection_outline_mils=_optional_points_mils(
@@ -839,7 +1066,9 @@ def _op_pcbdoc_add_embedded_3d_model(
         ),
         overall_height_mils=_optional_float_or_none(spec.args, "overall_height_mils"),
         name=body_name,
-        opacity=_optional_float(spec.args, "opacity", 1.0),
+        opacity=_optional_float(
+            spec.args, "opacity", mco_default("pcbdoc.add_embedded_3d_model", "opacity")
+        ),
     )
     _mark_pcbdoc_dirty(context, paths)
     return _success_result(
@@ -877,18 +1106,26 @@ def _pcb_layer_step_highlight(
         pad_geometries=tuple(
             dict(geometry) for geometry in pad_geometries if isinstance(geometry, dict)
         ),
-        z_offset_mm=_optional_float(value, "z_offset_mm", 0.001),
-        thickness_mm=_optional_float(value, "thickness_mm", 0.01),
+        z_offset_mm=_optional_float(
+            value, "z_offset_mm", mco_model_default("LayerStepHighlight", "z_offset_mm")
+        ),
+        thickness_mm=_optional_float(
+            value,
+            "thickness_mm",
+            mco_model_default("LayerStepHighlight", "thickness_mm"),
+        ),
     )
 
 
 def _mutation_paths(
     args: Mapping[str, object],
     context: McoExecutionContext,
+    *,
+    op: str,
 ) -> FileMutationPaths:
     input_file = _path_from_arg(args, "file", context)
     output_value = _optional_string(args, "output_file", None)
-    overwrite = _optional_bool(args, "overwrite", False)
+    overwrite = _optional_bool(args, "overwrite", mco_default(op, "overwrite"))
     if output_value is None and not overwrite:
         raise ValueError(
             "CAD mutation operations require output_file or overwrite=true"
@@ -1309,7 +1546,12 @@ def _pcb_body_projection(value: object, *, default: str) -> object:
 def _model_z_mils(args: Mapping[str, object]) -> float:
     if "z_mils" in args:
         return _required_float(args, "z_mils")
-    return _optional_float(args, "z_mm", 0.0) * MILS_PER_MM
+    return (
+        _optional_float(
+            args, "z_mm", mco_default("pcbdoc.add_embedded_3d_model", "z_mm")
+        )
+        * MILS_PER_MM
+    )
 
 
 def _pad_shape(value: object) -> object:
@@ -1487,8 +1729,14 @@ def _apply_schematic_text_style(
     text_record = getattr(component, method_name)(
         x=x,
         y=y,
-        font_name=_optional_string(style, "font_name", "Arial"),
-        font_size=int(_optional_float(style, "font_size", 12.0)),
+        font_name=_optional_string(
+            style, "font_name", mco_model_default("SchematicTextStyle", "font_name")
+        ),
+        font_size=int(
+            _optional_float(
+                style, "font_size", mco_model_default("SchematicTextStyle", "font_size")
+            )
+        ),
         bold=_optional_bool(style, "bold", field_name == "designator_style"),
     )
     _apply_schematic_text_justification(text_record, style)

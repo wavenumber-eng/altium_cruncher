@@ -1,0 +1,21 @@
+{
+  "name": "@wavenumber/altium-cruncher-contract-toolchain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "generate:contracts": "node scripts/generate-config-contracts.mjs",
+    "check:contracts": "node scripts/generate-config-contracts.mjs --check",
+    "check:typescript": "tsc --noEmit -p tsconfig.contracts.json",
+    "check:browser": "node tests/support_scripts/check_config_browser.mjs"
+  },
+  "devDependencies": {
+    "@typespec/compiler": "1.16.0",
+    "@typespec/json-schema": "1.16.0",
+    "ajv": "8.20.0",
+    "esbuild": "0.28.1",
+    "json-schema-to-typescript": "15.0.4",
+    "typescript": "5.9.3"
+  }
+}

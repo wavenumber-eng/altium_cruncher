@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- Add the `toon` project preview command with editable SVG configuration,
+  top/bottom and assembly presets, project variants, progressive status and
+  timing reports. Expose illustration, designator, solder-mask film and substrate
+  layers through generic PCB SVG composition, with shared and persistent caches.
+- Fix durable PCB SVG updates retaining an old scene reflection after changing
+  mirroring or canvas width; preserve user annotations and custom SVG attributes.
+- Refactor Toon/SVG model preparation, cache validation, variant composition and
+  layer rendering; preserve Fast HLR/Fast mesh-shadow defaults and SVG behavior.
+  Invalid cached SVG scales and mesh indices now trigger rebuildable cache misses.
+- Separate shared BOM/PnP artifact writers, project-creation compilation, MCO
+  terminal reporting and schematic diagnostics from command dispatch. Centralize
+  CLI registration and document all commands/native boundaries for the Rust port.
+
+- Make TypeSpec authoritative for all Cruncher JSON/JSONC configs and output
+  contracts, with generated Python DTOs, browser TypeScript types/validators,
+  locally bundled JSON Schemas and a complete ownership inventory. Preserve
+  existing wire formats and partial-config semantics, including legacy Mate.
+- Add typed built-in MCO result contracts alongside the extensible execution
+  envelope. Check generated artifacts and shared browser/Python vectors in CI.
+- Keep Toon output SVG-only. Remove experimental PNG export, raster settings,
+  output-format flags and the runtime rasterizer dependency; users can convert
+  exported SVGs independently. Preserve progressive status and timing output.
+- Move the package, development environment, and CI to Python 3.14.
+- Update Altium Monkey to 2026.9.12 and Geometer to 2026.9.11 and remove the temporary
+  Geometer dependency override.
+- Require EasyEDA Monkey 2026.9.11 or newer for Python 3.14 compatibility.
+
 ## 2026.9.7
 
 - Update the controlled `altium-monkey` and `wn-geometer` dependencies to `2026.9.7`.

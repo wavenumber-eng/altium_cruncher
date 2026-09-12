@@ -1,0 +1,455 @@
+[
+  {
+    "name": "empty raw array",
+    "value": [],
+    "valid": true
+  },
+  {
+    "name": "empty document",
+    "value": {
+      "operations": []
+    },
+    "valid": true
+  },
+  {
+    "name": "null schema",
+    "value": {
+      "schema": null,
+      "operations": []
+    },
+    "valid": true
+  },
+  {
+    "name": "wrong schema",
+    "value": {
+      "schema": "other",
+      "operations": []
+    },
+    "valid": false
+  },
+  {
+    "name": "required ordered list",
+    "value": {},
+    "valid": false
+  },
+  {
+    "name": "null args rejected",
+    "value": [
+      {
+        "op": "mco.message",
+        "args": null
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "message alias",
+    "value": [
+      {
+        "op": "message",
+        "id": null,
+        "message": "Hi"
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "fail alias",
+    "value": [
+      {
+        "op": "fail",
+        "id": "",
+        "on_fail": "recover"
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "custom operation extension",
+    "value": [
+      {
+        "op": "user.custom",
+        "args": {
+          "settings": {
+            "a": [
+              1,
+              false
+            ]
+          }
+        },
+        "editor": {
+          "fold": false
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "builtin cannot escape through custom",
+    "value": [
+      {
+        "op": "file.copy",
+        "args": {
+          "source": "a"
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "alias cannot escape through custom",
+    "value": [
+      {
+        "op": "message",
+        "args": {
+          "text": 5
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "copy null overwrite",
+    "value": [
+      {
+        "op": "file.copy",
+        "args": {
+          "source": "a",
+          "destination": "b",
+          "overwrite": null
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "strict boolean",
+    "value": [
+      {
+        "op": "file.copy",
+        "args": {
+          "source": "a",
+          "destination": "b",
+          "overwrite": "false"
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "text and barcode styles",
+    "value": [
+      {
+        "op": "pcbdoc.add_text",
+        "args": {
+          "file": "a.PcbDoc",
+          "text": "Hello",
+          "position_mils": [
+            10,
+            20
+          ],
+          "height_mils": 40,
+          "output_file": "b.PcbDoc",
+          "barcode_margin_mils": [
+            20,
+            20
+          ],
+          "is_mirrored": true,
+          "font_kind": "truetype"
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "text missing height",
+    "value": [
+      {
+        "op": "pcbdoc.add_text",
+        "args": {
+          "file": "a.PcbDoc",
+          "text": "Hello",
+          "position_mils": [
+            10,
+            20
+          ],
+          "output_file": "b.PcbDoc"
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "point length",
+    "value": [
+      {
+        "op": "pcbdoc.add_text",
+        "args": {
+          "file": "a.PcbDoc",
+          "text": "Hello",
+          "position_mils": [
+            10
+          ],
+          "height_mils": 40,
+          "output_file": "b.PcbDoc"
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "numeric points only",
+    "value": [
+      {
+        "op": "pcbdoc.add_text",
+        "args": {
+          "file": "a.PcbDoc",
+          "text": "Hello",
+          "position_mils": [
+            true,
+            20
+          ],
+          "height_mils": 40,
+          "output_file": "b.PcbDoc"
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "optional designator selection",
+    "value": [
+      {
+        "op": "pcbdoc.arrange_designators",
+        "args": {
+          "file": "a.PcbDoc",
+          "overwrite": true
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "template in schematic",
+    "value": [
+      {
+        "op": "schdoc.create",
+        "args": {
+          "file": "a.SchDoc",
+          "template": "a.SchDot",
+          "sheet_style": "3"
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "MCO sheet style is string",
+    "value": [
+      {
+        "op": "schdoc.create",
+        "args": {
+          "file": "a.SchDoc",
+          "sheet_style": 3
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "strict parameter values",
+    "value": [
+      {
+        "op": "pcblib.add_footprint",
+        "args": {
+          "file": "a.PcbLib",
+          "name": "PART",
+          "parameters": {
+            "Count": 3
+          },
+          "overwrite": true
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "native enum integral number",
+    "value": [
+      {
+        "op": "pcbdoc.add_pad",
+        "args": {
+          "file": "a.PcbDoc",
+          "designator": "1",
+          "position_mils": [
+            0,
+            0
+          ],
+          "width_mils": 40,
+          "height_mils": 50,
+          "layer": 1.0,
+          "solder_mask_expansion_mode": 0.0,
+          "overwrite": true
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "embedded model z priority",
+    "value": [
+      {
+        "op": "pcbdoc.add_embedded_3d_model",
+        "args": {
+          "file": "a.PcbDoc",
+          "model_file": "a.step",
+          "z_mm": 1,
+          "z_mils": 50,
+          "bounds_mils": [
+            0,
+            0,
+            100,
+            100
+          ],
+          "overwrite": true
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "explicit z_mils null fails",
+    "value": [
+      {
+        "op": "pcbdoc.add_embedded_3d_model",
+        "args": {
+          "file": "a.PcbDoc",
+          "model_file": "a.step",
+          "z_mils": null,
+          "overwrite": true
+        }
+      }
+    ],
+    "valid": false
+  },
+  {
+    "name": "empty hole ring legacy",
+    "value": [
+      {
+        "op": "pcbdoc.add_region",
+        "args": {
+          "file": "a.PcbDoc",
+          "outline_points_mils": [
+            [
+              0,
+              0
+            ],
+            [
+              10,
+              0
+            ],
+            [
+              0,
+              10
+            ]
+          ],
+          "hole_points_mils": [
+            []
+          ],
+          "overwrite": true
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "STEP delegated options",
+    "value": [
+      {
+        "op": "pcbdoc.export_layer_step",
+        "args": {
+          "file": "a.PcbDoc",
+          "output_file": "a.step",
+          "features": {
+            "tracks": false
+          },
+          "highlights": [
+            {
+              "id": "J1",
+              "color": "#FF0000",
+              "pad_geometries": [
+                null,
+                {
+                  "foo": 1
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "legacy hyphen name is custom",
+    "value": [
+      {
+        "op": "pcbdoc.add-track",
+        "args": {}
+      }
+    ],
+    "valid": true
+  },
+  {
+    "name": "extensions preserved",
+    "value": {
+      "operations": [
+        {
+          "op": "mco.message",
+          "args": {
+            "text": "hello",
+            "unused": {
+              "x": 1
+            }
+          }
+        }
+      ],
+      "editor": {
+        "selected": "op1"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "null optional model outline",
+    "valid": true,
+    "value": [
+      {
+        "op": "pcbdoc.add_embedded_3d_model",
+        "args": {
+          "file": "a.PcbDoc",
+          "model_file": "a.step",
+          "projection_outline_mils": null
+        }
+      }
+    ]
+  },
+  {
+    "name": "legacy boolean mechanical kind",
+    "valid": true,
+    "value": [
+      {
+        "op": "pcbdoc.create",
+        "args": {
+          "file": "a.PcbDoc",
+          "mechanical_layer_kinds": [
+            {
+              "layer": "MECHANICAL2",
+              "kind": false
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

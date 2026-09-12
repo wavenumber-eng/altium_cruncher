@@ -25,6 +25,23 @@ from altium_cruncher.altium_cruncher_cmd_mco import print_mco_execution_result
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture(autouse=True)
+def validate_default_registry_results(monkeypatch):
+    """Qualify real success/dry-run/error outputs exercised by these workflows."""
+    from altium_cruncher.contracts.generated.public import decode_contract
+    original = execute_mco
+
+    def checked(*args, **kwargs):
+        result = original(*args, **kwargs)
+        decode_contract("mco_execution", result.to_dict())
+        if kwargs.get("registry") is None:
+            for item in result.to_dict()["results"]:
+                decode_contract("mco_builtin_result", item)
+        return result
+
+    monkeypatch.setattr(sys.modules[__name__], "execute_mco", checked)
+
+
 def _mco_create_project_ops(
     *,
     output_dir: str = "generated",
@@ -1707,7 +1724,11 @@ def test_library_component_operations_place_schematic_and_pcb_parts(
     }
     assert params["Value"] == "Debug Contact"
     assert params["Manufacturer Part Number"] == "DBG-001"
-    assert schdoc.components[0].footprint == "DBG_CONTACT_FP"
+    # Monkey 2026.9.12 stores authored footprints in implementation records,
+    # without writing the redundant legacy component FOOTPRINT field.
+    from altium_monkey.altium_record_sch__implementation import AltiumSchImplementation
+    implementations = [record for record in schdoc.objects if isinstance(record, AltiumSchImplementation)]
+    assert [(record.model_name, record.is_current) for record in implementations] == [("DBG_CONTACT_FP", True)]
     assert [component.designator for component in pcbdoc.components] == ["TP1"]
     assert [component.footprint for component in pcbdoc.components] == [
         "DBG_CONTACT_FP"

@@ -5,7 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import logging
-from typing import Any, Literal
+import json
+from typing import Any, Literal, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from geometer import HlrProjectionResult
 
 log = logging.getLogger(__name__)
 
@@ -17,6 +21,8 @@ CurveMode = Literal["native_arcs", "polyline"]
 class AssemblyProjectionOptions:
     side: ProjectionSide
     projection_algorithm: str | None = None
+    outline_algorithm: str | None = None
+    fast: Mapping[str, object] | None = None
     curve_mode: CurveMode = "native_arcs"
     samples_per_curve: int = 24
     round_digits: int = 3
@@ -75,6 +81,8 @@ class AssemblyProjectionCache:
             str(model_hash),
             str(options.side),
             str(options.projection_algorithm or ""),
+            str(options.outline_algorithm or ""),
+            json.dumps(dict(options.fast or {}), sort_keys=True, allow_nan=False),
             str(options.curve_mode),
             int(max(2, options.samples_per_curve)),
             int(max(0, options.round_digits)),
@@ -159,36 +167,7 @@ class AssemblyProjectionCache:
             projection_y_direction = [-1.0, 0.0, 0.0]
 
         round_digits = int(max(0, options.round_digits))
-        curve_mode = str(options.curve_mode).strip().lower()
-        if curve_mode not in {"native_arcs", "polyline"}:
-            curve_mode = "native_arcs"
-
-        hlr_options: dict[str, object] = {
-            "curve_mode": curve_mode,
-            "samples_per_curve": int(max(2, options.samples_per_curve)),
-            "round_digits": round_digits,
-            "include_visible": bool(options.include_visible),
-            "include_outline": bool(options.include_outline),
-            "union_simple_polygons": bool(options.union_polygons),
-            "union_outline_polygons": bool(options.union_polygons),
-        }
-        if options.projection_algorithm:
-            hlr_options["projection_algorithm"] = str(options.projection_algorithm)
-        if options.mesh_linear_deflection is not None:
-            hlr_options["mesh_linear_deflection"] = float(
-                options.mesh_linear_deflection
-            )
-        if options.mesh_angular_deflection is not None:
-            hlr_options["mesh_angular_deflection"] = float(
-                options.mesh_angular_deflection
-            )
-        if options.mesh_relative is not None:
-            hlr_options["mesh_relative"] = bool(options.mesh_relative)
-        if options.hlr_angle_tolerance is not None:
-            hlr_options["hlr_angle_tolerance"] = float(options.hlr_angle_tolerance)
-        hlr_options.update(
-            {key: bool(value) for key, value in (options.edge_flags or {}).items()}
-        )
+        hlr_options = _hlr_options(options)
 
         result = geometer.project_step_hlr(
             step_bytes,
@@ -303,7 +282,7 @@ class AssemblyProjectionCache:
 
 
 def _result_geometry(
-    result: object,
+    result: HlrProjectionResult,
     view_id: str,
     preferred: str,
     fallback: str,
@@ -443,3 +422,65 @@ __all__ = [
     "ProjectionSide",
     "get_assembly_projection_cache",
 ]
+
+
+def _hlr_options(options: AssemblyProjectionOptions) -> dict[str, object]:
+    curve_mode = str(options.curve_mode).strip().lower()
+    if curve_mode not in {"native_arcs", "polyline"}:
+        curve_mode = "native_arcs"
+
+    hlr_options: dict[str, object] = {
+        "curve_mode": curve_mode,
+        "samples_per_curve": int(max(2, options.samples_per_curve)),
+        "round_digits": int(max(0, options.round_digits)),
+        "include_visible": bool(options.include_visible),
+        "include_outline": bool(options.include_outline),
+        "union_simple_polygons": bool(options.union_polygons),
+        "union_outline_polygons": bool(options.union_polygons),
+    }
+    _apply_backend_options(hlr_options, options)
+    if options.mesh_linear_deflection is not None:
+        hlr_options["mesh_linear_deflection"] = float(
+            options.mesh_linear_deflection
+        )
+    if options.mesh_angular_deflection is not None:
+        hlr_options["mesh_angular_deflection"] = float(
+            options.mesh_angular_deflection
+        )
+    if options.mesh_relative is not None:
+        hlr_options["mesh_relative"] = bool(options.mesh_relative)
+    if options.hlr_angle_tolerance is not None:
+        hlr_options["hlr_angle_tolerance"] = float(options.hlr_angle_tolerance)
+    hlr_options.update(
+        {key: bool(value) for key, value in (options.edge_flags or {}).items()}
+    )
+    return hlr_options
+
+
+def _projection_algorithm(options: AssemblyProjectionOptions) -> str:
+    legacy_controls = (
+        not options.include_visible or not options.include_outline or bool(options.edge_flags)
+    )
+    algorithm = str(options.projection_algorithm or "fast").strip().lower()
+    if algorithm == "fast" and legacy_controls:
+        raise ValueError(
+            "Fast HLR uses assembly_hlr.fast candidate controls; legacy include_visible, "
+            "include_outline and edge_* controls require projection_algorithm poly/exact."
+        )
+    return algorithm
+
+
+def _apply_backend_options(hlr_options: dict[str, object], options: AssemblyProjectionOptions) -> None:
+    algorithm = _projection_algorithm(options)
+    hlr_options["projection_algorithm"] = algorithm
+    # Keep explicit legacy backends on their existing outline behavior.
+    # Fast HLR produces polylines regardless of the legacy arc preference.
+    if algorithm == "fast":
+        hlr_options["curve_mode"] = "polyline"
+        hlr_options["outline_algorithm"] = "fast-mesh-shadow"
+    if options.outline_algorithm:
+        hlr_options["outline_algorithm"] = str(options.outline_algorithm)
+    if options.fast:
+        if algorithm != "fast":
+            raise ValueError("assembly_hlr.fast requires projection_algorithm fast")
+        hlr_options["fast"] = dict(options.fast)

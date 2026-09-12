@@ -8,7 +8,7 @@ CLI. It builds higher-level Altium workflows on top of the public
 
 ## Setup
 
-Use `uv` for local development:
+Use `uv` with Python 3.14 for local development (`.python-version` selects it):
 
 ```powershell
 uv sync --all-extras
@@ -32,6 +32,25 @@ Do not develop new `altium-cruncher` features in the old monorepo copy under
 `toolz/altium_cruncher`; that copy is stale. Use this standalone checkout.
 
 ## Public Surface
+
+All Cruncher-owned public JSON/JSONC contracts are authored in
+`src/tsp/altium_cruncher`: config structure, static defaults and help in `config`,
+operation arguments in `mco`, and emitted payloads in `outputs`.
+See `docs/design/public-contract-authority.md` for ownership boundaries.
+Run `npm ci --ignore-scripts`, then
+`npm run generate:contracts` after edits. Do not hand-edit generated schemas,
+Python DTO/resources, TypeScript bindings/validator, or the generated field guide.
+`npm run check:contracts`, `npm run check:typescript` and `npm run check:browser`
+check freshness, complete public-schema coverage and the web consumer.
+MCO operation/argument models and their ordered container live under
+`src/tsp/altium_cruncher/mco`; generate their schemas, catalog metadata, defaults
+and template help with the same commands. Add a Python handler registration when
+adding a built-in operation. Preserve reached-operation validation, failure
+branches, custom registries and existing dry-run semantics.
+Keep authored overrides presence-preserving; preset merging, layer resolution,
+MCO compilation, native profile/stack construction and rendering remain Python
+behavior. Node is development tooling, not a CLI runtime
+requirement.
 
 Command names, CLI arguments, config schemas, generated JSON, and generated file
 layouts are public contracts. Update the matching design document, command or

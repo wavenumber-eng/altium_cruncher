@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "profiles_clean",
+    "title": "Profile cleanup report",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.profiles.clean.a0"
+}

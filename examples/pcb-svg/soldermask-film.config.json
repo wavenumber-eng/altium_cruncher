@@ -1,0 +1,25 @@
+{
+  "schema": "pcb.svg.config.a0",
+  "global": {
+    "styles": {
+      "soldermask_film": { "enabled": true, "color": "auto", "opacity": 1.0 }
+    }
+  },
+  "layer_outputs": { "enabled": false },
+  "views": [
+    {
+      "name": "top_mask_film",
+      "layers": ["SOLDERMASK_FILM_TOP"],
+      "group_id": "pcb-svg-film-top",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false
+    },
+    {
+      "name": "bottom_mask_film",
+      "layers": ["SOLDERMASK_FILM_BOTTOM"],
+      "group_id": "pcb-svg-film-bottom",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": true
+    }
+  ]
+}

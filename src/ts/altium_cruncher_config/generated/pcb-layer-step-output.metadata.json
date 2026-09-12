@@ -1,0 +1,10 @@
+{
+  "contract": {
+    "stem": "pcb_layer_step",
+    "slug": "pcb-layer-step-output",
+    "title": "PCB layer STEP sidecar",
+    "source": "../outputs/pcb-layer-step",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.pcb_layer_step.a0"
+}

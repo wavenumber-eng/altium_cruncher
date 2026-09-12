@@ -1,0 +1,1940 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.mco.builtin_result.a0",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/Failure"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "mco.message"
+            },
+            {
+              "type": "string",
+              "const": "message"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {},
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.create"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/ProjectPath"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.add_document"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string"
+            },
+            "document": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "project",
+            "document"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "project.add_parameter"
+            },
+            {
+              "type": "string",
+              "const": "project.add_variant"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/NamedProject"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.list_variants"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/ImportedVariantsList"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.delete_variant"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/SectionProject"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.rename_variant"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "section": {
+              "type": "string"
+            },
+            "new_name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "project",
+            "name",
+            "section",
+            "new_name"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.clone_variant"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "section": {
+              "type": "string"
+            },
+            "source_name": {
+              "type": "string"
+            },
+            "unique_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "project",
+            "name",
+            "section",
+            "source_name",
+            "unique_id"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.add_variant_dnp"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/DnpAdded"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "project.toggle_variant_dnp"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToggleAdded"
+            },
+            {
+              "$ref": "#/$defs/ToggleRemoved"
+            }
+          ]
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "schdoc.create"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "schematic": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "schematic"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.create"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "board": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "board"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "schlib.create"
+            },
+            {
+              "type": "string",
+              "const": "pcblib.create"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "library": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "library"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "schlib.add_symbol"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "library": {
+              "type": "string"
+            },
+            "symbol": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "library",
+            "symbol"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "file.copy"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "destination": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "source",
+            "destination"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "schdoc.add_wire"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "points": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "file",
+            "points"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "schdoc.add_net_label"
+            },
+            {
+              "type": "string",
+              "const": "schdoc.add_power_port"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/TextOutput"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_text"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TextOutput"
+            },
+            {
+              "$ref": "#/$defs/TextDryRun"
+            }
+          ]
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "schdoc.add_component"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "library": {
+              "type": "string"
+            },
+            "symbol": {
+              "type": "string"
+            },
+            "designator": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file",
+            "library",
+            "symbol",
+            "designator"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_component"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "library": {
+              "type": "string"
+            },
+            "footprint": {
+              "type": "string"
+            },
+            "designator": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file",
+            "library",
+            "footprint",
+            "designator"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcblib.add_footprint"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "footprint": {
+              "type": "string"
+            },
+            "parameters": {
+              "type": "integer"
+            },
+            "primitive_parameters": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "file",
+            "footprint",
+            "parameters",
+            "primitive_parameters"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.arrange_designators"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArrangeDone"
+            },
+            {
+              "$ref": "#/$defs/ArrangeDryRun"
+            }
+          ]
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_track"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "width_mils": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "file",
+            "width_mils"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_arc"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "radius_mils": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "file",
+            "radius_mils"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_pad"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "designator": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file",
+            "designator"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_via"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "position_mils": {
+              "$ref": "#/$defs/Pair"
+            }
+          },
+          "required": [
+            "file",
+            "position_mils"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_fill"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "corner1_mils": {
+              "$ref": "#/$defs/Pair"
+            }
+          },
+          "required": [
+            "file",
+            "corner1_mils"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_region"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "points": {
+              "type": "integer"
+            },
+            "is_board_cutout": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "file",
+            "points",
+            "is_board_cutout"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.create_user_union"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnionDone"
+            },
+            {
+              "$ref": "#/$defs/UnionDryRun"
+            }
+          ]
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.export_layer_step"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/StepExport"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "const": "pcbdoc.add_embedded_3d_model"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/EmbeddedModel"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  ],
+  "description": "Explicit default-registry result contract, including dry-run shapes and flush failures. Use the generic execution contract for custom registries, which may replace even a built-in operation name. No new wire tag is inserted.",
+  "$defs": {
+    "Failure": {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "const": "fail"
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {},
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ProjectPath": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "NamedProject": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "name"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SectionProject": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "section": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "name",
+        "section"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "DnpAdded": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "designator": {
+          "type": "string"
+        },
+        "unique_id": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "variant",
+        "designator",
+        "unique_id",
+        "variation"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ToggleAdded": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "designator": {
+          "type": "string"
+        },
+        "unique_id": {
+          "type": "string"
+        },
+        "variation": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "const": "added"
+        },
+        "dnp": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": [
+        "project",
+        "variant",
+        "designator",
+        "unique_id",
+        "variation",
+        "action",
+        "dnp"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ToggleRemoved": {
+      "type": "object",
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "designator": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "const": "removed"
+        },
+        "dnp": {
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "required": [
+        "project",
+        "variant",
+        "designator",
+        "action",
+        "dnp"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "TextOutput": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "text"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "TextDryRun": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "font_kind": {
+          "type": "string"
+        },
+        "text_justification": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "text",
+        "font_kind",
+        "text_justification"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ArrangeDone": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "updated": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "updated"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ArrangeDryRun": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "designators": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string",
+              "const": "all"
+            }
+          ]
+        },
+        "placement": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "designators",
+        "placement"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Pair": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "UnionDone": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "union_index": {
+          "type": "integer"
+        },
+        "member_count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "name",
+        "union_index",
+        "member_count"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "UnionDryRun": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "name"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "StepExport": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "step_file": {
+          "type": "string"
+        },
+        "manifest_file": {
+          "type": "string"
+        },
+        "highlight_count": {
+          "type": "integer"
+        },
+        "layer": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "step_file",
+        "manifest_file",
+        "highlight_count"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "EmbeddedModel": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "model_file": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "z_mils": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "file",
+        "model_file",
+        "name"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedVariantsList": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "altium_cruncher.variants.list.a0"
+        },
+        "project": {
+          "type": "string"
+        },
+        "current_variant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "variant_count": {
+          "$ref": "#/$defs/ImportedVariantsList_Count"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImportedVariantsList_Variant"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImportedVariantsList_VariantRow"
+          }
+        },
+        "index_errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "project",
+        "current_variant",
+        "variant_count",
+        "variants",
+        "rows",
+        "index_errors"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedVariantsList_Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ImportedVariantsList_Variant": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "unique_id": {
+          "type": "string"
+        },
+        "allow_fabrication": {
+          "type": "boolean"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "dnp": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation_count": {
+          "$ref": "#/$defs/ImportedVariantsList_Count"
+        },
+        "parameter_count": {
+          "$ref": "#/$defs/ImportedVariantsList_Count"
+        },
+        "param_variation_count": {
+          "$ref": "#/$defs/ImportedVariantsList_Count"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImportedVariantsList_VariantRow"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "unique_id",
+        "allow_fabrication",
+        "current",
+        "dnp",
+        "variation_count",
+        "parameter_count",
+        "param_variation_count",
+        "rows"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedVariantsList_VariantRow": {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "designator": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "component_value": {
+          "type": "string"
+        },
+        "parameter_name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "unique_id": {
+          "type": "string"
+        },
+        "alternate_part": {
+          "type": "string"
+        },
+        "alternate_part_resolved": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "variant",
+        "sheet",
+        "designator",
+        "operation",
+        "detail",
+        "component_value",
+        "parameter_name",
+        "value",
+        "unique_id"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/mco-builtins.tsp. Do not edit."
+}

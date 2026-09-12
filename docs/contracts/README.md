@@ -6,6 +6,18 @@ JSON outputs and configuration formats.
 Contract artifacts should be paired with conformance tests before the related
 public interface is considered release-ready.
 
+All Cruncher-owned public JSON/JSONC configs and output contracts are authored in
+`src/tsp/altium_cruncher`. Every `*.schema.json` here is generated; use
+`npm run generate:contracts`, not hand edits.
+See the [authoring/consumer guide](../design/pcb-svg-config-authority.md) for
+Python/browser codecs, partial-config semantics and the numeric-string validator
+extension, and the [creation guide](../design/creation-config-authority.md) for
+shared document sections and MCO semantics. The complete
+[authority inventory](../design/public-contract-authority.md) covers every root,
+producer, consumer and upstream exception. MCO operation models and containers are generated
+from `src/tsp/altium_cruncher/mco`; see the
+[MCO contract guide](../design/mco-contract-authority.md).
+
 Current contracts:
 
 - `command_manifest.a0.json`: public CLI command inventory.
@@ -22,10 +34,16 @@ Current contracts:
 - `clean_config.a0.schema.json`: shared schematic, schematic-library, and
   PCB-library clean config schema.
 - `mate_config.a0.schema.json`: mating-board workflow config schema.
+- `mco_input.a0.schema.json`: authored MCO document/raw-array contract with
+  operation-specific built-in arguments and custom-registry extension names.
+- `mco_envelope.a0.schema.json`: execution container/operation fields; argument
+  checking is deferred so failure branches and custom handlers retain control.
 - `schdoc_create_config.a0.schema.json`: standalone SchDoc create config schema.
 - `pcbdoc_create_config.a0.schema.json`: standalone PcbDoc create config schema.
 - `pcb_layer_step_config.a0.schema.json`: fixture-alignment PCB layer STEP
   config schema.
 - `pcb_svg_config.a0.schema.json`: experimental explicit PCB SVG config schema.
+- `pcb_svg_component_layers.a0.schema.json`: illustrated component metadata.
+- `pcb_svg_timings.a0.schema.json`: per-job/layer/view/variant timing reports.
 - `project_skeleton_config.a0.schema.json`: JSONC PrjPcb skeleton creation
   config schema.

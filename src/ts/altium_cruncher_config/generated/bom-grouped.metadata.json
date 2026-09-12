@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "bom_grouped",
+    "title": "Grouped BOM",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.bom.grouped.a0"
+}

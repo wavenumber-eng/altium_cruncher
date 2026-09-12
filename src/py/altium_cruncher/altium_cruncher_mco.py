@@ -5,12 +5,21 @@ from __future__ import annotations
 import json
 import shutil
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
+from typing import cast
 
 from altium_cruncher.config_json import render_commented_jsonc
 
-MCO_SCHEMA = "altium_cruncher.mco.a0"
+from altium_cruncher.contracts.mco import (
+    mco_metadata,
+    mco_default,
+    mco_model_default,
+    validate_execution_envelope,
+    validate_builtin_args,
+)
+
+MCO_SCHEMA = str(mco_metadata()["schema"])
 JsonObject = dict[str, object]
 
 
@@ -386,6 +395,7 @@ def load_jsonc_file(path: Path | str) -> object:
 
 def parse_mco_operations(payload: object) -> list[McoOperationSpec]:
     """Parse a root MCO document or raw operation array."""
+    validate_execution_envelope(payload)
     raw_operations = _raw_operation_items(payload)
     operations = [
         _parse_mco_operation(raw_operation, index)
@@ -486,29 +496,17 @@ def _drop_trailing_comma(output: list[str]) -> None:
 def _raw_operation_items(payload: object) -> list[object]:
     if isinstance(payload, list):
         return list(payload)
-    root = _json_object(payload, "MCO root")
-    schema = root.get("schema")
-    if schema not in {None, MCO_SCHEMA}:
-        raise ValueError(f"Unsupported MCO schema: {schema!r}")
-    raw_operations = root.get("operations")
-    if not isinstance(raw_operations, list):
-        raise ValueError("MCO document must contain an operations array")
-    return list(raw_operations)
+    return list(cast(dict[str, list[object]], payload)["operations"])
 
 
 def _parse_mco_operation(payload: object, index: int) -> McoOperationSpec:
-    raw = _json_object(payload, f"MCO operation {index}")
-    op = _required_string(raw, "op", f"MCO operation {index}")
-    operation_id = _optional_string(raw, "id", f"op{index}") or f"op{index}"
-    args = raw.get("args", {})
-    message = _optional_string(raw, "message", None)
-    on_fail = _optional_string(raw, "on_fail", None)
+    raw = cast(dict[str, object], payload)
     return McoOperationSpec(
-        operation_id=operation_id,
-        op=op,
-        args=_json_object(args, f"MCO operation {operation_id} args"),
-        on_fail=on_fail,
-        message=message,
+        operation_id=cast(str, raw.get("id") or f"op{index}"),
+        op=cast(str, raw["op"]),
+        args=dict(cast(dict[str, object], raw.get("args", {}))),
+        on_fail=cast(str | None, raw.get("on_fail")),
+        message=cast(str | None, raw.get("message")),
     )
 
 
@@ -592,6 +590,10 @@ def _run_operation(
     if handler is None:
         return McoOperationResult.failed(spec, f"Unknown MCO operation: {spec.op}")
     try:
+        if not context.dry_run and handler is DEFAULT_MCO_OPERATIONS.get(spec.op):
+            if spec.op == "pcbdoc.create":
+                _check_pcbdoc_stack_inputs(spec.args)
+            spec = replace(spec, args=validate_builtin_args(spec.op, spec.args))
         return handler(spec, context)
     except Exception as exc:
         return McoOperationResult.failed(
@@ -626,11 +628,15 @@ def _op_project_create(
 ) -> McoOperationResult:
     file_path = _required_path(spec.args, "file", context)
     project_name = (
-        _optional_string(spec.args, "name", None)
-        or _optional_string(spec.args, "project_name", None)
+        _optional_string(spec.args, "name", mco_default("project.create", "name"))
+        or _optional_string(
+            spec.args, "project_name", mco_default("project.create", "project_name")
+        )
         or file_path.stem
     )
-    overwrite = _optional_bool(spec.args, "overwrite", False)
+    overwrite = _optional_bool(
+        spec.args, "overwrite", mco_default("project.create", "overwrite")
+    )
     if file_path.exists() and not overwrite:
         return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
     outputs = {"project": str(file_path.resolve())}
@@ -660,7 +666,9 @@ def _op_project_add_document(
 ) -> McoOperationResult:
     project_file = _required_path(spec.args, "file", context)
     document = _required_string(spec.args, "document", spec.op)
-    unique_id = _optional_string(spec.args, "unique_id", None)
+    unique_id = _optional_string(
+        spec.args, "unique_id", mco_default("project.add_document", "unique_id")
+    )
     normalized = document.replace("/", "\\")
     if context.dry_run:
         return McoOperationResult.succeeded(
@@ -733,9 +741,17 @@ def _op_project_add_variant(
 ) -> McoOperationResult:
     project_file = _required_path(spec.args, "file", context)
     name = _required_string(spec.args, "name", spec.op)
-    unique_id = _optional_string(spec.args, "unique_id", None)
-    allow_fabrication = _optional_bool(spec.args, "allow_fabrication", True)
-    current = _optional_bool(spec.args, "current", False)
+    unique_id = _optional_string(
+        spec.args, "unique_id", mco_default("project.add_variant", "unique_id")
+    )
+    allow_fabrication = _optional_bool(
+        spec.args,
+        "allow_fabrication",
+        mco_default("project.add_variant", "allow_fabrication"),
+    )
+    current = _optional_bool(
+        spec.args, "current", mco_default("project.add_variant", "current")
+    )
     if context.dry_run:
         return McoOperationResult.succeeded(
             spec,
@@ -835,9 +851,13 @@ def _op_project_clone_variant(
     project_file = _required_path(spec.args, "file", context)
     source_name = _required_string(spec.args, "source_name", spec.op)
     name = _required_string(spec.args, "name", spec.op)
-    unique_id = _optional_string(spec.args, "unique_id", None)
+    unique_id = _optional_string(
+        spec.args, "unique_id", mco_default("project.clone_variant", "unique_id")
+    )
     allow_fabrication = _optional_bool_or_none(spec.args, "allow_fabrication")
-    current = _optional_bool(spec.args, "current", False)
+    current = _optional_bool(
+        spec.args, "current", mco_default("project.clone_variant", "current")
+    )
     project = _project_for_variant_mutation(project_file, context)
 
     from altium_cruncher.altium_cruncher_prjpcb_variants import (
@@ -871,8 +891,17 @@ def _op_project_add_variant_dnp(
     project_file = _required_path(spec.args, "file", context)
     variant = _required_string(spec.args, "variant", spec.op)
     designator = _required_string(spec.args, "designator", spec.op)
-    unique_id = _optional_string(spec.args, "unique_id", None)
-    alternate_part = _optional_string(spec.args, "alternate_part", "") or ""
+    unique_id = _optional_string(
+        spec.args, "unique_id", mco_default("project.add_variant_dnp", "unique_id")
+    )
+    alternate_part = (
+        _optional_string(
+            spec.args,
+            "alternate_part",
+            mco_default("project.add_variant_dnp", "alternate_part"),
+        )
+        or ""
+    )
     project = _project_for_variant_mutation(project_file, context)
 
     from altium_cruncher.altium_cruncher_prjpcb_variants import (
@@ -906,8 +935,17 @@ def _op_project_toggle_variant_dnp(
     project_file = _required_path(spec.args, "file", context)
     variant = _required_string(spec.args, "variant", spec.op)
     designator = _required_string(spec.args, "designator", spec.op)
-    unique_id = _optional_string(spec.args, "unique_id", None)
-    alternate_part = _optional_string(spec.args, "alternate_part", "") or ""
+    unique_id = _optional_string(
+        spec.args, "unique_id", mco_default("project.toggle_variant_dnp", "unique_id")
+    )
+    alternate_part = (
+        _optional_string(
+            spec.args,
+            "alternate_part",
+            mco_default("project.toggle_variant_dnp", "alternate_part"),
+        )
+        or ""
+    )
     project = _project_for_variant_mutation(project_file, context)
 
     from altium_cruncher.altium_cruncher_prjpcb_variants import (
@@ -940,7 +978,9 @@ def _op_schdoc_create(
     context: McoExecutionContext,
 ) -> McoOperationResult:
     file_path = _required_path(spec.args, "file", context)
-    overwrite = _optional_bool(spec.args, "overwrite", False)
+    overwrite = _optional_bool(
+        spec.args, "overwrite", mco_default("schdoc.create", "overwrite")
+    )
     if file_path.exists() and not overwrite:
         return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
     outputs = {"schematic": str(file_path.resolve())}
@@ -962,12 +1002,14 @@ def _op_schdoc_create(
             apply_visual_sheet_settings=_optional_bool(
                 spec.args,
                 "apply_template_visual_sheet_settings",
-                False,
+                mco_default("schdoc.create", "apply_template_visual_sheet_settings"),
             ),
         )
     _apply_project_skeleton_schematic_sheet_style(
         schdoc,
-        _optional_string(spec.args, "sheet_style", "D"),
+        _optional_string(
+            spec.args, "sheet_style", mco_default("schdoc.create", "sheet_style")
+        ),
     )
     _apply_schematic_custom_sheet_size(
         schdoc,
@@ -992,7 +1034,9 @@ def _op_schlib_create(
     context: McoExecutionContext,
 ) -> McoOperationResult:
     file_path = _required_path(spec.args, "file", context)
-    overwrite = _optional_bool(spec.args, "overwrite", False)
+    overwrite = _optional_bool(
+        spec.args, "overwrite", mco_default("schlib.create", "overwrite")
+    )
     if file_path.exists() and not overwrite:
         return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
     outputs = {"library": str(file_path.resolve())}
@@ -1023,7 +1067,12 @@ def _op_schlib_add_symbol(
 ) -> McoOperationResult:
     file_path = _required_path(spec.args, "file", context)
     name = _required_string(spec.args, "name", spec.op)
-    description = _optional_string(spec.args, "description", "") or ""
+    description = (
+        _optional_string(
+            spec.args, "description", mco_default("schlib.add_symbol", "description")
+        )
+        or ""
+    )
     outputs = {"library": str(file_path.resolve()), "symbol": name}
     if context.dry_run:
         return McoOperationResult.succeeded(
@@ -1053,7 +1102,9 @@ def _op_pcbdoc_create(
     context: McoExecutionContext,
 ) -> McoOperationResult:
     file_path = _required_path(spec.args, "file", context)
-    overwrite = _optional_bool(spec.args, "overwrite", False)
+    overwrite = _optional_bool(
+        spec.args, "overwrite", mco_default("pcbdoc.create", "overwrite")
+    )
     if file_path.exists() and not overwrite:
         return McoOperationResult.failed(spec, f"Output already exists: {file_path}")
     outputs = {"board": str(file_path.resolve())}
@@ -1102,11 +1153,7 @@ def _configure_pcbdoc_builder(
     builder.set_2d_current_layer("TOP")
 
 
-def _apply_pcbdoc_layer_stack_args(
-    builder: object,
-    args: Mapping[str, object],
-    context: McoExecutionContext,
-) -> None:
+def _check_pcbdoc_stack_inputs(args: Mapping[str, object]) -> None:
     layer_stack_template = _optional_string(args, "layer_stack_template", None)
     rigid_stack = args.get("rigid_stack")
     stackupx_file = args.get("stackupx_file")
@@ -1122,6 +1169,17 @@ def _apply_pcbdoc_layer_stack_args(
     if len(configured) > 1:
         names = ", ".join(configured)
         raise ValueError(f"Use only one PcbDoc layer-stack input, got: {names}")
+
+
+def _apply_pcbdoc_layer_stack_args(
+    builder: object,
+    args: Mapping[str, object],
+    context: McoExecutionContext,
+) -> None:
+    layer_stack_template = _optional_string(args, "layer_stack_template", None)
+    rigid_stack = args.get("rigid_stack")
+    stackupx_file = args.get("stackupx_file")
+    _check_pcbdoc_stack_inputs(args)
     if rigid_stack is not None:
         builder.set_layer_stack_document(_rigid_stack_document(rigid_stack))
     elif stackupx_file is not None:
@@ -1332,7 +1390,9 @@ def _apply_mechanical_layers(builder: object, value: object) -> None:
         builder.set_mechanical_layer(
             layer,
             name=_optional_string(row, "name", None),
-            enabled=_optional_bool(row, "enabled", True),
+            enabled=_optional_bool(
+                row, "enabled", mco_model_default("McoMechanicalLayer", "enabled")
+            ),
         )
 
 
@@ -1377,7 +1437,9 @@ def _op_copy_file(
 ) -> McoOperationResult:
     source = _required_path(spec.args, "source", context)
     destination = _required_path(spec.args, "destination", context)
-    overwrite = _optional_bool(spec.args, "overwrite", False)
+    overwrite = _optional_bool(
+        spec.args, "overwrite", mco_default("file.copy", "overwrite")
+    )
     if not source.exists():
         return McoOperationResult.failed(spec, f"Source file not found: {source}")
     if not source.is_file():
@@ -1559,16 +1621,8 @@ def _mco_template_text() -> str:
     return render_commented_jsonc(
         _mco_template_payload(),
         comments_by_path={
-            ("schema",): "MCO config contract id.",
-            (
-                "operations",
-            ): "Operations execute in order. Use on_fail to jump to another operation id.",
-            ("operations", "args"): (
-                "Operation-specific arguments. Use altium-cruncher mco ops to inspect each contract."
-            ),
-            ("operations", "args", "board_outline_mils"): (
-                "Board outline rectangle in mils."
-            ),
+            tuple(path.split(".")): text
+            for path, text in mco_metadata()["jsonc-comments"].items()
         },
         comments_by_key=_mco_template_key_comments(),
         header_lines=(
@@ -1580,530 +1634,86 @@ def _mco_template_text() -> str:
 
 
 def _mco_template_payload() -> JsonObject:
-    return {
-        "schema": MCO_SCHEMA,
-        "operations": [
-            {
-                "op": "project.create",
-                "id": "create_project",
-                "message": "Create a blank Altium project",
-                "args": {
-                    "file": "output/mate/mate.PrjPcb",
-                    "name": "mate",
-                    "overwrite": False,
-                },
-            },
-            {
-                "op": "schdoc.create",
-                "id": "create_schematic",
-                "message": "Create a blank schematic",
-                "args": {
-                    "file": "output/mate/mate.SchDoc",
-                    "sheet_style": "D",
-                    "overwrite": False,
-                },
-            },
-            {
-                "op": "pcbdoc.create",
-                "id": "create_board",
-                "message": "Create a blank board",
-                "args": {
-                    "file": "output/mate/mate.PcbDoc",
-                    "layer_stack_template": "2-layer",
-                    "overwrite": False,
-                    "board_outline_mils": {
-                        "left": 0,
-                        "bottom": 0,
-                        "right": 3000,
-                        "top": 2000,
-                    },
-                },
-            },
-            {
-                "op": "project.add_document",
-                "id": "add_schematic_to_project",
-                "message": "Add schematic to project",
-                "args": {
-                    "file": "output/mate/mate.PrjPcb",
-                    "document": "mate.SchDoc",
-                },
-            },
-            {
-                "op": "project.add_document",
-                "id": "add_board_to_project",
-                "message": "Add board to project",
-                "args": {
-                    "file": "output/mate/mate.PrjPcb",
-                    "document": "mate.PcbDoc",
-                },
-            },
-        ],
-    }
+    from copy import deepcopy
+
+    return deepcopy(mco_metadata()["template"])
 
 
 def _mco_template_key_comments() -> dict[str, str | tuple[str, ...]]:
     operations = ", ".join(available_mco_operations())
-    return {
-        "op": ("MCO operation name. Options:", operations),
-        "id": "Stable operation id used by logs and on_fail jumps.",
-        "message": "Free-form human-readable operation message.",
-        "file": "Path to the target Altium document or project file.",
-        "name": "Free-form generated object or project name.",
-        "overwrite": "Allow replacing an existing output object/file.",
-        "document": "Project-relative document path to add to a .PrjPcb.",
-        "footprint": "PcbLib footprint pattern name.",
-        "height": 'Footprint height string, for example "0mil".',
-        "description": "Human-readable footprint description.",
-        "primitive_parameters": "Footprint PrimitiveParameters side-stream values.",
-        "sheet_style": (
-            "Schematic sheet style. Options: Altium SheetStyle enum name or native enum id."
-        ),
-        "custom_sheet_mils": "Custom schematic sheet size object with width and height in mils.",
-        "template": "Optional .SchDot template path for SchDoc creation.",
-        "layer_stack_template": (
-            "Layer stack template id. Options are supplied by altium-monkey; "
-            "the generated default uses 2-layer."
-        ),
-        "rigid_stack": "Generated rigid layer-stack object for new PcbDoc creation.",
-        "stackupx_file": (
-            "Path to a .stackupx file to import as the PcbDoc layer-stack document."
-        ),
-        "mechanical_layer_profile": (
-            "Mechanical layer profile. Options: standard_component_pairs, "
-            "v7_mechanical_53."
-        ),
-        "mechanical_layers": "Editable mechanical layer display-name/enabled rows.",
-        "mechanical_layer_pairs": "Editable mechanical layer top/bottom pair rows.",
-        "mechanical_layer_kinds": "Editable mechanical layer kind assignment rows.",
-        "layer": (
-            "PCB layer selector. Legacy PcbLayer names/ids remain supported; "
-            "with a V7-aware altium-monkey, primitive ops also accept semantic "
-            "tokens such as MECHANICAL33. Raw serialized V7 saved-layer ids "
-            "are diagnostics, not layer selectors."
-        ),
-        "layer_start": "Start layer selector for legacy pad/via span operations.",
-        "layer_end": "End layer selector for legacy pad/via span operations.",
-        "left": "Rectangle left coordinate in mils.",
-        "bottom": "Rectangle bottom coordinate in mils.",
-        "right": "Rectangle right coordinate in mils.",
-        "top": "Rectangle top coordinate in mils.",
-    }
+    comments = dict(mco_metadata()["jsonc-key-comments"])
+    comments["op"] = ("MCO operation name. Options:", operations)
+    return comments
 
 
 def _default_mco_operation_info() -> dict[str, McoOperationInfo]:
     from altium_cruncher.altium_cruncher_mco_cad_ops import CAD_MCO_OPERATIONS
 
     cad = CAD_MCO_OPERATIONS
-    infos = [
-        McoOperationInfo(
-            "mco.message",
-            _op_message,
-            "mco",
-            "Emit a human-readable message.",
-            optional_args=("text",),
-        ),
-        McoOperationInfo(
-            "mco.fail",
-            _op_fail,
-            "mco",
-            "Fail intentionally, usually for control-flow tests.",
-            optional_args=("message",),
-        ),
-        McoOperationInfo(
-            "file.copy",
-            _op_copy_file,
-            "file",
-            "Copy one file into the workflow output tree.",
-            required_args=("source", "destination"),
-            optional_args=("overwrite",),
-        ),
-        McoOperationInfo(
-            "project.create",
-            _op_project_create,
-            "project",
-            "Create an empty .PrjPcb file.",
-            required_args=("file",),
-            optional_args=("name", "project_name", "overwrite"),
-        ),
-        McoOperationInfo(
-            "project.add_document",
-            _op_project_add_document,
-            "project",
-            "Append a document entry to a .PrjPcb file.",
-            required_args=("file", "document"),
-            optional_args=("unique_id",),
-        ),
-        McoOperationInfo(
-            "project.add_parameter",
-            _op_project_add_parameter,
-            "project",
-            "Set one project parameter.",
-            required_args=("file", "name", "value"),
-        ),
-        McoOperationInfo(
-            "project.add_variant",
-            _op_project_add_variant,
-            "project",
-            "Add one project variant.",
-            required_args=("file", "name"),
-            optional_args=("unique_id", "allow_fabrication", "current"),
-        ),
-        McoOperationInfo(
-            "project.add_variant_dnp",
-            _op_project_add_variant_dnp,
-            "project",
-            "Mark one designator Not Fitted in a project variant.",
-            required_args=("file", "variant", "designator"),
-            optional_args=("unique_id", "alternate_part"),
-        ),
-        McoOperationInfo(
-            "project.toggle_variant_dnp",
-            _op_project_toggle_variant_dnp,
-            "project",
-            "Toggle one designator between fitted and Not Fitted in a project variant.",
-            required_args=("file", "variant", "designator"),
-            optional_args=("unique_id", "alternate_part"),
-        ),
-        McoOperationInfo(
-            "project.clone_variant",
-            _op_project_clone_variant,
-            "project",
-            "Clone an existing project variant under a new name.",
-            required_args=("file", "source_name", "name"),
-            optional_args=("unique_id", "allow_fabrication", "current"),
-        ),
-        McoOperationInfo(
-            "project.delete_variant",
-            _op_project_delete_variant,
-            "project",
-            "Delete one project variant.",
-            required_args=("file", "name"),
-        ),
-        McoOperationInfo(
-            "project.list_variants",
-            _op_project_list_variants,
-            "project",
-            "List project variants, DNP rows, and parameter changes.",
-            required_args=("file",),
-        ),
-        McoOperationInfo(
-            "project.rename_variant",
-            _op_project_rename_variant,
-            "project",
-            "Rename one project variant.",
-            required_args=("file", "name", "new_name"),
-        ),
-        McoOperationInfo(
-            "schdoc.create",
-            _op_schdoc_create,
-            "schdoc",
-            "Create an empty schematic document.",
-            required_args=("file",),
-            optional_args=(
-                "sheet_style",
-                "template",
-                "apply_template_visual_sheet_settings",
-                "custom_sheet_mils",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "schlib.create",
-            _op_schlib_create,
-            "schlib",
-            "Create an empty schematic library.",
-            required_args=("file",),
-            optional_args=("overwrite",),
-        ),
-        McoOperationInfo(
-            "schlib.add_symbol",
-            _op_schlib_add_symbol,
-            "schlib",
-            "Add one empty schematic symbol to a SchLib.",
-            required_args=("file", "name"),
-            optional_args=("description",),
-        ),
-        McoOperationInfo(
-            "pcbdoc.create",
-            _op_pcbdoc_create,
-            "pcbdoc",
-            "Create an empty PCB document.",
-            required_args=("file",),
-            optional_args=(
-                "layer_stack_template",
-                "rigid_stack",
-                "stackupx_file",
-                "board_outline_mils",
-                "board_origin_mils",
-                "sheet_frame_mils",
-                "mechanical_layer_profile",
-                "mechanical_layers",
-                "mechanical_layer_pairs",
-                "mechanical_layer_kinds",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "pcblib.create",
-            cad["pcblib.create"],
-            "pcblib",
-            "Initialize a new PCB footprint library for later PcbLib operations.",
-            required_args=("file",),
-            optional_args=("overwrite",),
-        ),
-        McoOperationInfo(
-            "pcblib.add_footprint",
-            cad["pcblib.add-footprint"],
-            "pcblib",
-            "Add one empty footprint container to a PcbLib.",
-            required_args=("file", "name"),
-            optional_args=(
-                "height",
-                "description",
-                "item_guid",
-                "revision_guid",
-                "parameters",
-                "primitive_parameters",
-                "output_file",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "schdoc.add_wire",
-            cad["schdoc.add-wire"],
-            "schdoc",
-            "Add a schematic wire.",
-            required_args=("file", "points_mils"),
-            optional_args=("overwrite",),
-        ),
-        McoOperationInfo(
-            "schdoc.add_net_label",
-            cad["schdoc.add-net-label"],
-            "schdoc",
-            "Add a schematic net label.",
-            required_args=("file", "text", "location_mils"),
-            optional_args=("orientation", "justification", "overwrite"),
-        ),
-        McoOperationInfo(
-            "schdoc.add_power_port",
-            cad["schdoc.add-power-port"],
-            "schdoc",
-            "Add a schematic power port.",
-            required_args=("file", "text", "location_mils"),
-            optional_args=("style", "orientation", "show_net_name", "overwrite"),
-        ),
-        McoOperationInfo(
-            "schdoc.add_component",
-            cad["schdoc.add-component"],
-            "schdoc",
-            "Insert a schematic component from a SchLib.",
-            required_args=("file", "library", "symbol", "designator", "position_mils"),
-            optional_args=(
-                "unique_id",
-                "design_item_id",
-                "footprint_model",
-                "footprint_library",
-                "parameters",
-                "orientation",
-                "mirrored",
-                "part_id",
-                "display_mode",
-                "designator_style",
-                "comment_style",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_text",
-            cad["pcbdoc.add-text"],
-            "pcbdoc",
-            "Add PCB text.",
-            required_args=("file", "text", "position_mils"),
-            optional_args=(
-                "layer",
-                "height_mils",
-                "font_kind",
-                "font_name",
-                "bold",
-                "italic",
-                "inverted_box",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_component",
-            cad["pcbdoc.add-component"],
-            "pcbdoc",
-            "Insert a PCB component from a PcbLib.",
-            required_args=(
-                "file",
-                "library",
-                "footprint",
-                "designator",
-                "position_mils",
-            ),
-            optional_args=(
-                "layer",
-                "source_unique_id",
-                "source_hierarchical_path",
-                "source_component_library",
-                "source_lib_reference",
-                "source_description",
-                "channel_offset",
-                "comment_text",
-                "component_parameters",
-                "pad_nets",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "pcbdoc.arrange_designators",
-            cad["pcbdoc.arrange-designators"],
-            "pcbdoc",
-            "Position generated PCB designator text.",
-            required_args=("file", "designators"),
-            optional_args=(
-                "placement",
-                "offset_mils",
-                "height_mils",
-                "layer",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_track",
-            cad["pcbdoc.add-track"],
-            "pcbdoc",
-            "Add a PCB track.",
-            required_args=("file", "start_mils", "end_mils", "width_mils"),
-            optional_args=("layer", "net", "overwrite"),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_arc",
-            cad["pcbdoc.add-arc"],
-            "pcbdoc",
-            "Add a PCB arc.",
-            required_args=(
-                "file",
-                "center_mils",
-                "radius_mils",
-                "start_angle_degrees",
-                "end_angle_degrees",
-                "width_mils",
-            ),
-            optional_args=("layer", "net", "overwrite"),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_pad",
-            cad["pcbdoc.add-pad"],
-            "pcbdoc",
-            "Add a free PCB pad.",
-            required_args=(
-                "file",
-                "designator",
-                "position_mils",
-                "width_mils",
-                "height_mils",
-            ),
-            optional_args=(
-                "shape",
-                "corner_radius_percent",
-                "rotation_degrees",
-                "hole_size_mils",
-                "plated",
-                "layer",
-                "net",
-                "solder_mask_expansion_mils",
-                "paste_mask_expansion_mils",
-                "tenting_top",
-                "tenting_bottom",
-                "solder_mask_expansion_mode",
-                "paste_mask_expansion_mode",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_via",
-            cad["pcbdoc.add-via"],
-            "pcbdoc",
-            "Add a PCB via.",
-            required_args=("file", "position_mils", "diameter_mils", "hole_size_mils"),
-            optional_args=("layer_start", "layer_end", "net", "overwrite"),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_fill",
-            cad["pcbdoc.add-fill"],
-            "pcbdoc",
-            "Add a rectangular PCB fill.",
-            required_args=("file", "corner1_mils", "corner2_mils"),
-            optional_args=("rotation_degrees", "layer", "net", "overwrite"),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_region",
-            cad["pcbdoc.add-region"],
-            "pcbdoc",
-            "Add a PCB region.",
-            required_args=("file", "outline_points_mils"),
-            optional_args=(
-                "layer",
-                "hole_points_mils",
-                "is_keepout",
-                "keepout_restrictions",
-                "net",
-                "is_board_cutout",
-                "overwrite",
-            ),
-        ),
-        McoOperationInfo(
-            "pcbdoc.create_user_union",
-            cad["pcbdoc.create-user-union"],
-            "pcbdoc",
-            "Create a user union over generated PCB objects.",
-            required_args=("file", "name"),
-            optional_args=("members", "overwrite"),
-        ),
-        McoOperationInfo(
-            "pcbdoc.export_layer_step",
-            cad["pcbdoc.export-layer-step"],
-            "pcbdoc",
-            "Export a PCB layer STEP artifact.",
-            required_args=("file", "output_file", "layer"),
-            optional_args=("board_name", "z_mm", "highlights", "colors", "overwrite"),
-        ),
-        McoOperationInfo(
-            "pcbdoc.add_embedded_3d_model",
-            cad["pcbdoc.add-embedded-3d-model"],
-            "pcbdoc",
-            "Embed a 3D model in a PCB document.",
-            required_args=("file", "model_file"),
-            optional_args=(
-                "model_name",
-                "name",
-                "layer",
-                "side",
-                "location_mils",
-                "rotation_x_degrees",
-                "rotation_y_degrees",
-                "rotation_z_degrees",
-                "z_mm",
-                "bounds_mils",
-                "projection_outline_mils",
-                "overall_height_mils",
-                "opacity",
-                "overwrite",
-            ),
-        ),
-    ]
-    return {info.name: info for info in infos}
+    handlers: dict[str, McoOperationHandler] = {
+        "file.copy": _op_copy_file,
+        "mco.fail": _op_fail,
+        "mco.message": _op_message,
+        "pcbdoc.add_arc": cad["pcbdoc.add-arc"],
+        "pcbdoc.add_component": cad["pcbdoc.add-component"],
+        "pcbdoc.add_embedded_3d_model": cad["pcbdoc.add-embedded-3d-model"],
+        "pcbdoc.add_fill": cad["pcbdoc.add-fill"],
+        "pcbdoc.add_pad": cad["pcbdoc.add-pad"],
+        "pcbdoc.add_region": cad["pcbdoc.add-region"],
+        "pcbdoc.add_text": cad["pcbdoc.add-text"],
+        "pcbdoc.add_track": cad["pcbdoc.add-track"],
+        "pcbdoc.add_via": cad["pcbdoc.add-via"],
+        "pcbdoc.arrange_designators": cad["pcbdoc.arrange-designators"],
+        "pcbdoc.create": _op_pcbdoc_create,
+        "pcbdoc.create_user_union": cad["pcbdoc.create-user-union"],
+        "pcbdoc.export_layer_step": cad["pcbdoc.export-layer-step"],
+        "pcblib.add_footprint": cad["pcblib.add-footprint"],
+        "pcblib.create": cad["pcblib.create"],
+        "project.add_document": _op_project_add_document,
+        "project.add_parameter": _op_project_add_parameter,
+        "project.add_variant": _op_project_add_variant,
+        "project.add_variant_dnp": _op_project_add_variant_dnp,
+        "project.clone_variant": _op_project_clone_variant,
+        "project.create": _op_project_create,
+        "project.delete_variant": _op_project_delete_variant,
+        "project.list_variants": _op_project_list_variants,
+        "project.rename_variant": _op_project_rename_variant,
+        "project.toggle_variant_dnp": _op_project_toggle_variant_dnp,
+        "schdoc.add_component": cad["schdoc.add-component"],
+        "schdoc.add_net_label": cad["schdoc.add-net-label"],
+        "schdoc.add_power_port": cad["schdoc.add-power-port"],
+        "schdoc.add_wire": cad["schdoc.add-wire"],
+        "schdoc.create": _op_schdoc_create,
+        "schlib.add_symbol": _op_schlib_add_symbol,
+        "schlib.create": _op_schlib_create,
+    }
+    contracts = mco_metadata()["operations"]
+    if set(handlers) != {info["name"] for info in contracts}:
+        raise RuntimeError(
+            "MCO TypeSpec operations and Python handler registration differ"
+        )
+    return {
+        info["name"]: McoOperationInfo(
+            name=info["name"],
+            handler=handlers[info["name"]],
+            group=info["group"],
+            summary=info["summary"],
+            required_args=tuple(info["required_args"]),
+            optional_args=tuple(info["optional_args"]),
+            aliases=tuple(info["aliases"]),
+        )
+        for info in contracts
+    }
 
 
 def _default_mco_operations(
     infos: Mapping[str, McoOperationInfo],
 ) -> dict[str, McoOperationHandler]:
-    handlers = {info.name: info.handler for info in infos.values()}
-    handlers["message"] = _op_message
-    handlers["fail"] = _op_fail
-    return handlers
+    return {
+        tag: info.handler
+        for info in infos.values()
+        for tag in [info.name, *info.aliases]
+    }
 
 
 DEFAULT_MCO_OPERATION_INFO: dict[str, McoOperationInfo] = _default_mco_operation_info()

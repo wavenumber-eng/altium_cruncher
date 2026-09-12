@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "launch",
+    "title": "Altium launch",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.launch.a0"
+}

@@ -7,6 +7,20 @@ on:
     branches: [main]
 
 jobs:
+  contracts:
+    name: Generated public contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run check:contracts
+      - run: npm run check:typescript
+      - run: npm run check:browser
+
   test:
     name: test (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
@@ -14,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.12"]
+        python-version: ["3.14"]
 
     steps:
       - uses: actions/checkout@v5
@@ -40,6 +54,10 @@ jobs:
         run: uvx --from git+https://github.com/wavenumber-eng/wn-dev-std.git wn-dev-std check . --format text
       - name: Run Rack suite
         run: uv run --extra test rack run --all
+      - name: Check generated Python config consumer
+        run: |
+          uv run --extra test pytest -q tests/test_pcb_svg_config_contract.py tests/test_creation_config_contract.py tests/test_mco_contract.py tests/test_workflow_contracts.py tests/test_public_output_contracts.py
+          uv run --extra test pyright src/py/altium_cruncher/contracts/generated tests/support_scripts/config_type_consumer.py
       - name: Build package
         run: uv run --extra test python -m build
       - name: Check package

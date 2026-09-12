@@ -2,6 +2,39 @@
 
 from __future__ import annotations
 
+from .contracts.workflows import domain_default
+from .pcb_layer_step_options import (
+    DEFAULT_COPPER_COLOR as DEFAULT_COPPER_COLOR,
+    DEFAULT_OUTLINE_COLOR as DEFAULT_OUTLINE_COLOR,
+    DEFAULT_BOARD_CUTOUT_COLOR as DEFAULT_BOARD_CUTOUT_COLOR,
+    DEFAULT_DRILL_HOLE_COLOR as DEFAULT_DRILL_HOLE_COLOR,
+    DEFAULT_MAX_BOOLEAN_DRILL_CUTS as DEFAULT_MAX_BOOLEAN_DRILL_CUTS,
+    PCB_LAYER_STEP_CONFIG_FILENAME as PCB_LAYER_STEP_CONFIG_FILENAME,
+    PCB_LAYER_STEP_LEGACY_CONFIG_FILENAME as PCB_LAYER_STEP_LEGACY_CONFIG_FILENAME,
+    PCB_LAYER_STEP_CONFIG_SCHEMA as PCB_LAYER_STEP_CONFIG_SCHEMA,
+    PCB_LAYER_STEP_CONFIG_SCHEMA_V2 as PCB_LAYER_STEP_CONFIG_SCHEMA_V2,
+    DEFAULT_PAD_THICKNESS_BIAS_MM as DEFAULT_PAD_THICKNESS_BIAS_MM,
+    DEFAULT_VIA_THICKNESS_BIAS_MM as DEFAULT_VIA_THICKNESS_BIAS_MM,
+    DEFAULT_POLYGON_THICKNESS_BIAS_MM as DEFAULT_POLYGON_THICKNESS_BIAS_MM,
+    DEFAULT_TRACE_THICKNESS_BIAS_MM as DEFAULT_TRACE_THICKNESS_BIAS_MM,
+    DRILL_HOLE_MODE_AUTO as DRILL_HOLE_MODE_AUTO,
+    DRILL_HOLE_MODE_CUT as DRILL_HOLE_MODE_CUT,
+    DRILL_HOLE_MODE_OVERLAY as DRILL_HOLE_MODE_OVERLAY,
+    DRILL_HOLE_MODE_NONE as DRILL_HOLE_MODE_NONE,
+    DRILL_SCOPE_MODE_INHERIT as DRILL_SCOPE_MODE_INHERIT,
+    DRILL_HOLE_SHAPE_SOLID as DRILL_HOLE_SHAPE_SOLID,
+    DRILL_HOLE_SHAPE_RING as DRILL_HOLE_SHAPE_RING,
+    DRILL_HOLE_SHAPES as DRILL_HOLE_SHAPES,
+    DRILL_PLATED_RING_SHAPE_ANNULUS as DRILL_PLATED_RING_SHAPE_ANNULUS,
+    DRILL_PLATED_RING_SHAPES as DRILL_PLATED_RING_SHAPES,
+    _NON_COPPER_BODY_IDS as _NON_COPPER_BODY_IDS,
+    DRILL_HOLE_MODES as DRILL_HOLE_MODES,
+    DRILL_SCOPE_MODES as DRILL_SCOPE_MODES,
+    _COLOR_NAMES as _COLOR_NAMES,
+    _PadColorRule as _PadColorRule,
+    PcbLayerStepOptions as PcbLayerStepOptions,
+)
+
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, replace
 import fnmatch
@@ -10,6 +43,7 @@ import logging
 import math
 from pathlib import Path
 from typing import Any
+from altium_monkey.altium_record_pcb__shapebased_region import PcbExtendedVertex, PcbSimpleVertex
 
 from altium_monkey.altium_board import BoardOutlineVertex, resolve_outline_arc_segment
 from altium_monkey.altium_pcb_enums import PadShape
@@ -38,146 +72,6 @@ from altium_cruncher.altium_cruncher_pcb_layer_step_utils import (
 from altium_cruncher import altium_cruncher_pcb_layer_step_origin as step_origin
 
 log = logging.getLogger(__name__)
-
-DEFAULT_COPPER_COLOR = "#B87333"
-DEFAULT_OUTLINE_COLOR = "#FFFF00"
-DEFAULT_BOARD_CUTOUT_COLOR = "#FFFF00"
-DEFAULT_DRILL_HOLE_COLOR = "#FFFFFF"
-DEFAULT_MAX_BOOLEAN_DRILL_CUTS = 128
-PCB_LAYER_STEP_CONFIG_FILENAME = "pcb-layer-step.jsonc"
-PCB_LAYER_STEP_LEGACY_CONFIG_FILENAME = "pcb-layer-step.json"
-PCB_LAYER_STEP_CONFIG_SCHEMA = "altium_cruncher.pcb_layer_step.config.a0"
-PCB_LAYER_STEP_CONFIG_SCHEMA_V2 = "altium_cruncher.pcb_layer_step.config.a0"
-DEFAULT_PAD_THICKNESS_BIAS_MM = 0.010
-DEFAULT_VIA_THICKNESS_BIAS_MM = 0.006
-DEFAULT_POLYGON_THICKNESS_BIAS_MM = 0.003
-DEFAULT_TRACE_THICKNESS_BIAS_MM = 0.0
-DRILL_HOLE_MODE_AUTO = "auto"
-DRILL_HOLE_MODE_CUT = "cut"
-DRILL_HOLE_MODE_OVERLAY = "overlay"
-DRILL_HOLE_MODE_NONE = "none"
-DRILL_SCOPE_MODE_INHERIT = "inherit"
-DRILL_HOLE_SHAPE_SOLID = "solid"
-DRILL_HOLE_SHAPE_RING = "ring"
-DRILL_HOLE_SHAPES = frozenset({DRILL_HOLE_SHAPE_SOLID, DRILL_HOLE_SHAPE_RING})
-DRILL_PLATED_RING_SHAPE_ANNULUS = "annulus"
-DRILL_PLATED_RING_SHAPES = frozenset(("annulus",))
-_NON_COPPER_BODY_IDS = frozenset(
-    {
-        "board_outline",
-        "board_cutouts",
-        "drill_holes",
-        "plated_drill_holes",
-        "non_plated_drill_holes",
-    }
-)
-DRILL_HOLE_MODES = frozenset(
-    {
-        DRILL_HOLE_MODE_AUTO,
-        DRILL_HOLE_MODE_CUT,
-        DRILL_HOLE_MODE_OVERLAY,
-        DRILL_HOLE_MODE_NONE,
-    }
-)
-DRILL_SCOPE_MODES = frozenset(
-    {
-        DRILL_SCOPE_MODE_INHERIT,
-        DRILL_HOLE_MODE_CUT,
-        DRILL_HOLE_MODE_OVERLAY,
-        DRILL_HOLE_MODE_NONE,
-    }
-)
-_COLOR_NAMES = {
-    "black": "#000000",
-    "blue": "#0000FF",
-    "brown": "#A52A2A",
-    "copper": DEFAULT_COPPER_COLOR,
-    "gray": "#808080",
-    "green": "#008000",
-    "grey": "#808080",
-    "orange": "#FFA500",
-    "purple": "#800080",
-    "red": "#FF0000",
-    "white": "#FFFFFF",
-    "yellow": "#FFFF00",
-}
-
-
-@dataclass(frozen=True, slots=True)
-class _PadColorRule:
-    designators: tuple[str, ...]
-    color: str
-    step_body_name: str = "matched_pads"
-
-
-@dataclass(frozen=True, slots=True)
-class PcbLayerStepOptions:
-    """Options for one-layer PCB STEP export."""
-
-    layer: PcbLayer = PcbLayer.BOTTOM
-    thickness_mm: float = 0.035
-    z_mm: float = 0.0
-    copper_color: str = DEFAULT_COPPER_COLOR
-    outline_width_mm: float = 0.2
-    outline_color: str = DEFAULT_OUTLINE_COLOR
-    board_cutout_color: str = DEFAULT_BOARD_CUTOUT_COLOR
-    include_board_cutouts: bool = True
-    include_copper: bool = True
-    include_board_outline: bool = True
-    include_poured_polygons: bool = True
-    cut_holes: bool = True
-    drill_hole_mode: str = DRILL_HOLE_MODE_AUTO
-    max_boolean_drill_cuts: int = DEFAULT_MAX_BOOLEAN_DRILL_CUTS
-    drill_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
-    drill_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
-    drill_non_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
-    drill_overlay_thickness_mm: float = 0.001
-    drill_minimum_diameter_mm: float = 0.0
-    drill_hole_shape: str = DRILL_HOLE_SHAPE_SOLID
-    drill_ring_width_mm: float = 0.12
-    drill_plated_ring_shape: str = DRILL_PLATED_RING_SHAPE_ANNULUS
-    drill_selected_component_mode: str = DRILL_SCOPE_MODE_INHERIT
-    drill_other_component_mode: str = DRILL_SCOPE_MODE_INHERIT
-    drill_free_pad_mode: str = DRILL_SCOPE_MODE_INHERIT
-    drill_via_mode: str = DRILL_SCOPE_MODE_INHERIT
-    fuse_copper: bool = True
-    fuse_board_outline: bool = True
-    arc_segments: int = 32
-    include_tracks: bool = True
-    include_arcs: bool = True
-    include_fills: bool = True
-    include_regions: bool = True
-    include_vias: bool = True
-    include_component_pads: bool = True
-    include_free_pads: bool = True
-    include_designators: tuple[str, ...] = ()
-    pad_color_rules: tuple[_PadColorRule, ...] = ()
-    track_color: str | None = None
-    track_body: str = "tracks"
-    arc_color: str | None = None
-    arc_body: str = "arcs"
-    fill_color: str | None = None
-    fill_body: str = "fills"
-    polygon_color: str | None = None
-    polygon_body: str = "polygons"
-    region_color: str | None = None
-    region_body: str = "regions"
-    via_color: str | None = None
-    via_body: str = "vias"
-    component_pad_color: str | None = None
-    component_pad_body: str = "component_pads"
-    free_pad_color: str | None = None
-    free_pad_body: str = "free_pads"
-    track_thickness_bias_mm: float = DEFAULT_TRACE_THICKNESS_BIAS_MM
-    arc_thickness_bias_mm: float = DEFAULT_TRACE_THICKNESS_BIAS_MM
-    fill_thickness_bias_mm: float = DEFAULT_TRACE_THICKNESS_BIAS_MM
-    polygon_thickness_bias_mm: float = DEFAULT_POLYGON_THICKNESS_BIAS_MM
-    region_thickness_bias_mm: float = DEFAULT_POLYGON_THICKNESS_BIAS_MM
-    via_thickness_bias_mm: float = DEFAULT_VIA_THICKNESS_BIAS_MM
-    component_pad_thickness_bias_mm: float = DEFAULT_PAD_THICKNESS_BIAS_MM
-    free_pad_thickness_bias_mm: float = DEFAULT_PAD_THICKNESS_BIAS_MM
-    highlights: tuple["PcbLayerStepHighlight", ...] = ()
-
 
 @dataclass(frozen=True, slots=True)
 class PcbLayerStepResult:
@@ -598,73 +492,73 @@ def _drill_non_plated_color_source(
 class PcbLayerStepConfig:
     """JSON config for one-layer PCB STEP export."""
 
-    schema: str = PCB_LAYER_STEP_CONFIG_SCHEMA
-    name: str | None = None
-    output_step: str | None = None
-    pcbdoc: str | None = None
-    layer: str = "bottom"
-    thickness_mm: float = 0.035
-    z_mm: float = 0.0
-    copper_color: str = DEFAULT_COPPER_COLOR
-    outline_width_mm: float = 0.2
-    outline_color: str = DEFAULT_OUTLINE_COLOR
-    board_cutout_color: str = DEFAULT_BOARD_CUTOUT_COLOR
-    include_board_cutouts: bool = True
-    include_copper: bool = True
-    include_board_outline: bool = True
-    include_poured_polygons: bool = True
-    cut_holes: bool = True
-    drill_hole_mode: str = DRILL_HOLE_MODE_AUTO
-    max_boolean_drill_cuts: int = DEFAULT_MAX_BOOLEAN_DRILL_CUTS
-    drill_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
-    drill_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
-    drill_non_plated_hole_color: str = DEFAULT_DRILL_HOLE_COLOR
-    drill_overlay_thickness_mm: float = 0.001
-    drill_minimum_diameter_mm: float = 0.0
-    drill_hole_shape: str = DRILL_HOLE_SHAPE_SOLID
-    drill_ring_width_mm: float = 0.12
-    drill_plated_ring_shape: str = DRILL_PLATED_RING_SHAPE_ANNULUS
-    drill_selected_component_mode: str = DRILL_SCOPE_MODE_INHERIT
-    drill_other_component_mode: str = DRILL_SCOPE_MODE_INHERIT
-    drill_free_pad_mode: str = DRILL_SCOPE_MODE_INHERIT
-    drill_via_mode: str = DRILL_SCOPE_MODE_INHERIT
-    fuse_copper: bool = True
-    fuse_board_outline: bool = True
-    arc_segments: int = 32
-    include_tracks: bool = True
-    include_arcs: bool = True
-    include_fills: bool = True
-    include_regions: bool = True
-    include_vias: bool = True
-    include_component_pads: bool = True
-    include_free_pads: bool = True
-    include_designators: tuple[str, ...] = ()
-    pad_color_rules: tuple[_PadColorRule, ...] = ()
-    track_color: str | None = None
-    track_body: str = "tracks"
-    arc_color: str | None = None
-    arc_body: str = "arcs"
-    fill_color: str | None = None
-    fill_body: str = "fills"
-    polygon_color: str | None = None
-    polygon_body: str = "polygons"
-    region_color: str | None = None
-    region_body: str = "regions"
-    via_color: str | None = None
-    via_body: str = "vias"
-    component_pad_color: str | None = None
-    component_pad_body: str = "component_pads"
-    free_pad_color: str | None = None
-    free_pad_body: str = "free_pads"
-    track_thickness_bias_mm: float = DEFAULT_TRACE_THICKNESS_BIAS_MM
-    arc_thickness_bias_mm: float = DEFAULT_TRACE_THICKNESS_BIAS_MM
-    fill_thickness_bias_mm: float = DEFAULT_TRACE_THICKNESS_BIAS_MM
-    polygon_thickness_bias_mm: float = DEFAULT_POLYGON_THICKNESS_BIAS_MM
-    region_thickness_bias_mm: float = DEFAULT_POLYGON_THICKNESS_BIAS_MM
-    via_thickness_bias_mm: float = DEFAULT_VIA_THICKNESS_BIAS_MM
-    component_pad_thickness_bias_mm: float = DEFAULT_PAD_THICKNESS_BIAS_MM
-    free_pad_thickness_bias_mm: float = DEFAULT_PAD_THICKNESS_BIAS_MM
-    outputs: tuple["PcbLayerStepConfig", ...] = ()
+    schema: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "schema")
+    name: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "name")
+    output_step: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "output_step")
+    pcbdoc: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "pcbdoc")
+    layer: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "layer")
+    thickness_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "thickness_mm")
+    z_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "z_mm")
+    copper_color: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "copper_color")
+    outline_width_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "outline_width_mm")
+    outline_color: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "outline_color")
+    board_cutout_color: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "board_cutout_color")
+    include_board_cutouts: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_board_cutouts")
+    include_copper: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_copper")
+    include_board_outline: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_board_outline")
+    include_poured_polygons: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_poured_polygons")
+    cut_holes: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "cut_holes")
+    drill_hole_mode: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_hole_mode")
+    max_boolean_drill_cuts: int = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "max_boolean_drill_cuts")
+    drill_hole_color: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_hole_color")
+    drill_plated_hole_color: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_plated_hole_color")
+    drill_non_plated_hole_color: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_non_plated_hole_color")
+    drill_overlay_thickness_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_overlay_thickness_mm")
+    drill_minimum_diameter_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_minimum_diameter_mm")
+    drill_hole_shape: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_hole_shape")
+    drill_ring_width_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_ring_width_mm")
+    drill_plated_ring_shape: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_plated_ring_shape")
+    drill_selected_component_mode: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_selected_component_mode")
+    drill_other_component_mode: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_other_component_mode")
+    drill_free_pad_mode: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_free_pad_mode")
+    drill_via_mode: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "drill_via_mode")
+    fuse_copper: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "fuse_copper")
+    fuse_board_outline: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "fuse_board_outline")
+    arc_segments: int = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "arc_segments")
+    include_tracks: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_tracks")
+    include_arcs: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_arcs")
+    include_fills: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_fills")
+    include_regions: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_regions")
+    include_vias: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_vias")
+    include_component_pads: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_component_pads")
+    include_free_pads: bool = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_free_pads")
+    include_designators: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "include_designators")))
+    pad_color_rules: tuple[_PadColorRule, ...] = field(default_factory=lambda: tuple(domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "pad_color_rules")))
+    track_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "track_color")
+    track_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "track_body")
+    arc_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "arc_color")
+    arc_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "arc_body")
+    fill_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "fill_color")
+    fill_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "fill_body")
+    polygon_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "polygon_color")
+    polygon_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "polygon_body")
+    region_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "region_color")
+    region_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "region_body")
+    via_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "via_color")
+    via_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "via_body")
+    component_pad_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "component_pad_color")
+    component_pad_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "component_pad_body")
+    free_pad_color: str | None = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "free_pad_color")
+    free_pad_body: str = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "free_pad_body")
+    track_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "track_thickness_bias_mm")
+    arc_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "arc_thickness_bias_mm")
+    fill_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "fill_thickness_bias_mm")
+    polygon_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "polygon_thickness_bias_mm")
+    region_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "region_thickness_bias_mm")
+    via_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "via_thickness_bias_mm")
+    component_pad_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "component_pad_thickness_bias_mm")
+    free_pad_thickness_bias_mm: float = domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "free_pad_thickness_bias_mm")
+    outputs: tuple["PcbLayerStepConfig", ...] = field(default_factory=lambda: tuple(domain_default("pcb_layer_step_config", "PcbLayerStepConfig", "outputs")))
 
     @classmethod
     def default(cls) -> "PcbLayerStepConfig":
@@ -674,6 +568,9 @@ class PcbLayerStepConfig:
     def from_dict(cls, data: object) -> "PcbLayerStepConfig":
         if not isinstance(data, Mapping):
             raise ValueError("pcb-layer-step config root must be a JSON object")
+        from .contracts.workflows import decode_pcb_layer_step_config
+
+        data = decode_pcb_layer_step_config(dict(data))
         if "outputs" in data:
             return cls._from_outputs_dict(data)
         return cls._from_merged_dict(data)
@@ -1226,8 +1123,8 @@ class _Segment:
     center: tuple[float, float] | None = None
     sweep: str | None = None
 
-    def to_json(self) -> dict[str, Any]:
-        data: dict[str, Any] = {"kind": self.kind}
+    def to_json(self) -> dict[str, object]:
+        data: dict[str, object] = {"kind": self.kind}
         if self.center is not None:
             data["center"] = [self.center[0], self.center[1]]
         if self.sweep is not None:
@@ -1247,7 +1144,7 @@ class _Ring:
         if len(self.segments) != len(self.points):
             raise ValueError("ring segments must match ring points")
 
-    def to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, object]:
         return {
             "points": [[x, y] for x, y in self.points],
             "segments": [segment.to_json() for segment in self.segments],
@@ -1259,8 +1156,8 @@ class _Region:
     outer: _Ring
     holes: list[_Ring] = field(default_factory=list)
 
-    def to_json(self) -> dict[str, Any]:
-        data: dict[str, Any] = {"outer": self.outer.to_json()}
+    def to_json(self) -> dict[str, object]:
+        data: dict[str, object] = {"outer": self.outer.to_json()}
         if self.holes:
             data["holes"] = [hole.to_json() for hole in self.holes]
         return data
@@ -2949,7 +2846,7 @@ def _outline_ring(vertices: list[BoardOutlineVertex]) -> _Ring | None:
     return _Ring(points, segments)
 
 
-def _extended_vertices_ring(vertices: list[Any]) -> _Ring | None:
+def _extended_vertices_ring(vertices: list[PcbExtendedVertex | PcbSimpleVertex]) -> _Ring | None:
     if len(vertices) < 3:
         return None
     points: list[tuple[float, float]] = []
@@ -2957,43 +2854,52 @@ def _extended_vertices_ring(vertices: list[Any]) -> _Ring | None:
     count = len(vertices)
     for idx, current in enumerate(vertices):
         nxt = vertices[(idx + 1) % count]
-        points.append(
-            (_mils_to_mm(float(current.x_mils)), _mils_to_mm(float(current.y_mils)))
-        )
-        if (
+        current_point = (float(current.x_mils), float(current.y_mils))
+        next_point = (float(nxt.x_mils), float(nxt.y_mils))
+        is_arc = (
             bool(getattr(current, "is_round", False))
             and float(getattr(current, "radius_mils", 0.0) or 0.0) > 0.0
-        ):
-            raw_delta = float(getattr(current, "end_angle", 0.0) or 0.0) - float(
-                getattr(current, "start_angle", 0.0) or 0.0
-            )
-            current_point = (float(current.x_mils), float(current.y_mils))
-            next_point = (float(nxt.x_mils), float(nxt.y_mils))
-            sweep = _svg_like_board_sweep_degrees(
-                center_mils=(
-                    float(current.center_x_mils),
-                    float(current.center_y_mils),
-                ),
-                radius_mils=float(current.radius_mils),
-                start_point_mils=current_point,
-                end_point_mils=next_point,
-                start_degrees=float(getattr(current, "start_angle", 0.0) or 0.0),
-                end_degrees=float(getattr(current, "end_angle", 0.0) or 0.0),
-                default_sweep_flag=1 if raw_delta >= 0.0 else 0,
-            )
-            segments.append(
-                _Segment(
-                    "arc",
-                    center=(
-                        _mils_to_mm(float(current.center_x_mils)),
-                        _mils_to_mm(float(current.center_y_mils)),
-                    ),
-                    sweep="ccw" if sweep > 0.0 else "cw",
-                )
-            )
+        )
+        # Altium may repeat a vertex, including the closing vertex. Remove only
+        # its zero-length outgoing line, keeping the next vertex's arc metadata.
+        if current_point == next_point and not is_arc:
+            continue
+        points.append((_mils_to_mm(current_point[0]), _mils_to_mm(current_point[1])))
+        if is_arc:
+            segments.append(_extended_arc_segment(current, current_point, next_point))
         else:
             segments.append(_Segment("line"))
+    if len(points) < 3:
+        return None
     return _Ring(points, segments)
+
+
+def _extended_arc_segment(
+    current: PcbExtendedVertex, current_point: tuple[float, float], next_point: tuple[float, float],
+) -> _Segment:
+    raw_delta = float(getattr(current, "end_angle", 0.0) or 0.0) - float(
+        getattr(current, "start_angle", 0.0) or 0.0
+    )
+    sweep = _svg_like_board_sweep_degrees(
+        center_mils=(
+            float(current.center_x_mils),
+            float(current.center_y_mils),
+        ),
+        radius_mils=float(current.radius_mils),
+        start_point_mils=current_point,
+        end_point_mils=next_point,
+        start_degrees=float(getattr(current, "start_angle", 0.0) or 0.0),
+        end_degrees=float(getattr(current, "end_angle", 0.0) or 0.0),
+        default_sweep_flag=1 if raw_delta >= 0.0 else 0,
+    )
+    return _Segment(
+            "arc",
+            center=(
+                _mils_to_mm(float(current.center_x_mils)),
+                _mils_to_mm(float(current.center_y_mils)),
+            ),
+            sweep="ccw" if sweep > 0.0 else "cw",
+    )
 
 
 def _rotate_point(

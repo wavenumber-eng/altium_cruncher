@@ -7,7 +7,7 @@ import json
 import logging
 from pathlib import Path
 
-from altium_cruncher.altium_cruncher_cmd_mco import (
+from altium_cruncher.mco_cli_support import (
     execute_mco_for_cli,
     print_mco_execution_result,
 )
@@ -27,15 +27,22 @@ from altium_cruncher.altium_cruncher_document_configs import (
     render_schdoc_create_config,
 )
 
+from altium_cruncher.contracts.creation import creation_default, creation_integer
+
+_DEFAULT_SHEET_STYLE = str(creation_default("sheet_style"))
+_DEFAULT_TEMPLATE_VISUALS = bool(
+    creation_default("apply_template_visual_sheet_settings")
+)
+
 log = logging.getLogger(__name__)
 
 
 def build_schdoc_create_mco(
     output_file: Path | str,
     *,
-    sheet_style: str = "D",
+    sheet_style: str = _DEFAULT_SHEET_STYLE,
     template: Path | str | None = None,
-    apply_template_visual_sheet_settings: bool = False,
+    apply_template_visual_sheet_settings: bool = _DEFAULT_TEMPLATE_VISUALS,
     custom_sheet_mils: tuple[float, float] | None = None,
     overwrite: bool = False,
 ) -> JsonObject:
@@ -85,10 +92,14 @@ def build_schdoc_create_mco_from_config(
         )
     return build_schdoc_create_mco(
         _string(config.get("file"), "file"),
-        sheet_style=str(config.get("sheet_style") or "D"),
+        sheet_style=str(
+            creation_integer(config.get("sheet_style")) or _DEFAULT_SHEET_STYLE
+        ),
         template=_optional_path(config.get("template")),
         apply_template_visual_sheet_settings=bool(
-            config.get("apply_template_visual_sheet_settings", False)
+            config.get(
+                "apply_template_visual_sheet_settings", _DEFAULT_TEMPLATE_VISUALS
+            )
         ),
         custom_sheet_mils=custom_sheet_mils,
         overwrite=overwrite,
@@ -98,9 +109,9 @@ def build_schdoc_create_mco_from_config(
 def execute_schdoc_create_mco(
     output_file: Path | str,
     *,
-    sheet_style: str = "D",
+    sheet_style: str = _DEFAULT_SHEET_STYLE,
     template: Path | str | None = None,
-    apply_template_visual_sheet_settings: bool = False,
+    apply_template_visual_sheet_settings: bool = _DEFAULT_TEMPLATE_VISUALS,
     custom_sheet_mils: tuple[float, float] | None = None,
     overwrite: bool = False,
     dry_run: bool = False,
@@ -177,7 +188,9 @@ def _cmd_schdoc_create_from_config(
             )
             log.info("")
             log.info("Writing SchDoc create config template: %s", output_path)
-            log.info("Please edit it, then rerun `acr schdoc create` to create the document.")
+            log.info(
+                "Please edit it, then rerun `acr schdoc create` to create the document."
+            )
             return 0
 
         config = load_schdoc_create_config(config_path)
@@ -191,7 +204,9 @@ def _cmd_schdoc_create_from_config(
             _write_json(args.emit_mco, payload, overwrite=bool(args.force))
         result = execute_mco_for_cli(
             payload,
-            McoExecutionContext(work_dir=config_path.resolve().parent, dry_run=bool(args.dry_run)),
+            McoExecutionContext(
+                work_dir=config_path.resolve().parent, dry_run=bool(args.dry_run)
+            ),
             json_stdout=bool(args.json),
         )
     except Exception as exc:
@@ -321,7 +336,7 @@ def register_parser(
     )
     create_parser.add_argument(
         "--sheet-style",
-        default="D",
+        default=_DEFAULT_SHEET_STYLE,
         help="Altium SheetStyle enum name or integer (default: D)",
     )
     create_parser.add_argument(

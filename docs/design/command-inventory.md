@@ -1,328 +1,62 @@
-# Command Inventory
+# Current command capabilities
 
-Status: initial migration inventory
-Last updated: 2026-07-06
+Reviewed 2026-09-12. This is the standalone public package, not the stale monorepo
+copy. The [command manifest](../contracts/command_manifest.a0.json) owns public
+status and command documentation links. Parser registration is centralized in
+`src/py/altium_cruncher/cli_commands.py`; `version` is registered by `_cli.py`.
 
-This inventory records the command set migrated from the private
-`toolz/altium_cruncher` package into the standalone public repo.
+See the [architecture and Rust port map](architecture-porting-guide.md) for
+workflow boundaries, native dependencies, compatibility rules and test ownership.
 
-| Command | Initial status | Public test coverage | Notes |
-| --- | --- | --- | --- |
-| `version` | public | `L0_public_cli` | Package/CLI version reporting, including controlled runtime dependency versions for `altium-monkey` and `wn-geometer`. |
-| `sch-svg` | public | `L3_public_workflows` | Schematic SVG export with font substitution/fallback warnings from Altium Monkey. |
-| `sch-ir` | public | unit/CLI | Schematic gotIR JSON export for SchDoc, PrjPcb, and project-directory inputs using the onscreen IR profile. |
-| `pcb-svg` | public | `L3_public_workflows` | PCB SVG export and board-view generation. |
-| `pcb-layer-step` | public | unit/synthetic | Layer-to-STEP export using `wn-geometer`; Hydroscope CLI output is too large for the default fast lane. |
-| `svg` | public | `L3_public_workflows` | Combined schematic/project SVG wrapper with graph-scoped schematic and PCB artifact verification. |
-| `bom` | public | `L3_public_workflows` | Key BOM command. Keep and expand toward self-contained `bom_cruncher`-style JLC, flat raw JSON, grouped JSON, and grouped XLSX output with config-driven aliases, variants, DNP policy/highlighting, and source selection. |
-| `pnp` | public | `L3_public_workflows` | Keep. Expand toward self-contained PnP/CPL output with shared BOM/PnP normalization, CSV/JSON/XLSX formats, JLC CPL CSV/XLSX, units, variant/no-BOM filtering, and configurable sorting. |
-| `jlc` | public | `L3_public_workflows` | Meta command that generates both JLC BOM XLSX and JLC CPL XLSX through the shared BOM/PnP implementation paths. |
-| `design` | public | `L3_public_workflows` | Key command. Generates the design-review bundle and keeps root AltiumDesign JSON for schematic/project documents, including netlist data, components, hierarchy, SVG IDs, and lookup indexes. Aliases are `design-review` and `dr`. |
-| `json-dump` | experimental | unit/CLI | Dumps parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to compact JSON for reference inspection, with by-kind or flat output layouts. |
-| `extract` | public | `L3_public_workflows` | Keep. SchDoc/PcbDoc/PrjPcb extraction workflows plus IntLib source extraction must be tested against the same fixture surfaces and semantic checks as the underlying Altium Monkey extraction APIs. |
-| `easyeda-import` | public | fixture lane | First-class command backed by the normal `easyeda-monkey` runtime dependency; default output includes SchLib, PcbLib footprint, and downloaded 3D assets when available. 3D model placement into PcbLib is not implemented. |
-| `installs` | public | unit/CLI | Lists discovered Altium Designer `X2.exe` paths from Program Files, environment overrides, and registry rows. |
-| `launch` | public | unit/CLI/install smoke | Launches the selected Altium Designer install, optionally opening a file. The `ad` console script is a shortcut for this command. |
-| `pcblib` | public | unit/CLI | Creates PcbLib footprint libraries by compiling the workflow to small MCO operations. Initial surface creates a one-footprint library; pad/text/body insertion remains a future MCO extension. |
-| `schdoc` | public | unit/CLI | Creates blank SchDoc files by compiling to `schdoc.create`. Default sheets are D size; optional template and custom sheet-size inputs are supported. |
-| `schlib` | public | unit/CLI | Creates SchLib files with one empty symbol by compiling to `schlib.create` plus `schlib.add_symbol`. |
-| `pcbdoc` | public | unit/CLI | Creates simple rigid PcbDoc files by compiling to `pcbdoc.create`, including generated rigid stack rows, rectangular board outlines, and optional standard mechanical layer-kind profile. |
-| `prjpcb` | public | unit/CLI | Creates JSONC-driven PrjPcb skeletons by compiling config rows to project, SchDoc, PcbDoc, parameter, and document-link MCO operations. |
-| `split` | public | `L3_public_workflows` | Keep. SchLib/PcbLib split workflows should be tested against provided reference split outputs without complex interop/native parity requirements. |
-| `merge` | public | `L3_public_workflows` | Keep. SchLib/PcbLib merge workflows should use the same reference-output semantic test shape as split. |
-| `megamaid` | public | `L3_public_workflows` | Keep. Showcase project decomposition command; should have end-to-end fixture coverage for libs, BOM/PnP, netlist, manifest, document/library JSON, notes, and embedded assets. |
-| `notes` | public | unit/CLI | Extracts dedicated schematic notes, text frames, and free text strings to structured JSON for agent review workflows. |
-| `outjob` | public | unit/CLI | Runs project-referenced or explicit `.OutJob` files through the public `altium-monkey` OutJob runner. |
-| `variants` | public | `L0_public_cli`/unit | Inspects PrjPcb project variants and exposes MCO-backed delete, rename, clone, and DNP toggle operations. |
-| `mco` | experimental | unit/CLI | Executes Monkey Change Order JSONC operation files used by generated workflows. |
-| `mate` | beta | unit/CLI/example | Initial beta for Cricket Node-style fixture and debug mating-board workflows. Broader mate modes remain future work. |
-| `clean` | public | `L3_public_workflows` | Keep. Supports explicit non-mutating config generation plus config-driven schematic and PcbLib cleanup. Needs more fixture-backed CLI tests for actual clean application, output/backup behavior, and PcbLib removal rules. |
-| `profiles` | public | unit/CLI | Lists Altium ProgramData profiles and can clean selected extension module state with explicit targeting and dry-run support. |
+| Command | Capability |
+| --- | --- |
+| [`bom`](cli/bom.html) | BOM normalization and CSV/JSON/XLSX output. |
+| [`clean`](cli/clean.html) | Config-driven schematic/library cleanup. |
+| [`design`](cli/design.html) | Design-review bundle (aliases: design-review, dr). |
+| [`easyeda-import`](cli/easyeda-import.html) | EasyEDA symbol, footprint and 3D import. |
+| [`extract`](cli/extract.html) | Extract document and library assets. |
+| [`installs`](cli/installs.html) | Discover Altium installations. |
+| [`jlc`](cli/jlc.html) | JLC BOM and CPL bundle. |
+| [`json-dump`](cli/json-dump.html) | Parsed document/library inspection JSON. |
+| [`launch`](cli/launch.html) | Launch installed Altium (ad shortcut). |
+| [`libraries`](cli/libraries.html) | Scan symbol/footprint libraries. |
+| [`mate`](cli/mate.html) | Mating-board planning and generation. |
+| [`mco`](cli/mco.html) | Ordered change-order execution. |
+| [`megamaid`](cli/megamaid.html) | Project decomposition bundle. |
+| [`merge`](cli/merge.html) | Merge SchLib/PcbLib files. |
+| [`notes`](cli/notes.html) | Extract schematic note content. |
+| [`outjob`](cli/outjob.html) | Run Altium output jobs. |
+| [`pcb-layer-step`](cli/pcb-layer-step.html) | Generate a layer alignment STEP model. |
+| [`pcb-svg`](cli/pcb-svg.html) | Configurable physical/virtual SVG compositor. |
+| [`pcbdoc`](cli/pcbdoc.html) | Create a PCB through MCO. |
+| [`pcblib`](cli/pcblib.html) | Create a footprint library through MCO. |
+| [`pnp`](cli/pnp.html) | Placement CSV/JSON/XLSX/CPL output. |
+| [`prjpcb`](cli/prjpcb.html) | Create/init projects and add sheets. |
+| [`profiles`](cli/profiles.html) | Inspect/clean Altium profile state. |
+| [`sch-ir`](cli/sch-ir.html) | Export schematic gotIR. |
+| [`sch-svg`](cli/sch-svg.html) | Export schematic SVG. |
+| [`schdoc`](cli/schdoc.html) | Create a schematic through MCO. |
+| [`schlib`](cli/schlib.html) | Create a symbol library through MCO. |
+| [`split`](cli/split.html) | Split libraries into individual entries. |
+| [`svg`](cli/svg.html) | Combined schematic/PCB export wrapper. |
+| [`toon`](cli/toon.html) | Top/bottom illustrated PCB SVG presets. |
+| [`variants`](cli/variants.html) | Inspect and mutate project variants. |
+| [`version`](cli/version.html) | Report package and controlled dependency versions. |
 
-The command manifest lives at `docs/contracts/command_manifest.a0.json`. `L99` should
-eventually enforce that every manifest command has help, docs, and behavioral
-test ownership.
+`design-review` and `dr` alias `design`. `ad` is the launch console shortcut.
+The EasyEDA review modules are development helpers, intentionally unregistered.
+Command-specific guides and `--help` describe arguments and defaults; output
+policies differ between exports, document creation, environment tools and mutation.
 
-Shared help requirements for every command:
+Toon and PCB SVG share substrate, solder-mask film, illustration, designator,
+cutout and drill/slot virtual layers. Fast HLR detail and Fast mesh shadow are the
+default projection paths. Assembly labels honor `show_designator=false`; project
+variants omit DNP bodies/labels and apply parameter overrides. Alternative-part
+model substitutions remain unsupported. Diode line art/cathode overlays and the
+older general DNP styling config are not implemented merely because fields exist.
 
-- top-level and command-specific help should print the package version;
-- `version` and `--version` should report `altium-cruncher`,
-  `altium-monkey`, and `wn-geometer` versions;
-- command lists should be alphabetical;
-- help output should include readable spacing between version, usage, commands,
-  and options;
-- interactive help may highlight command and subcommand names through the shared
-  parser layer, while captured help remains plain text and `NO_COLOR` /
-  `TERM=dumb` are respected;
-- top-level help should explicitly show how to request command-specific help.
-- root-level logging controls are `--quiet`, `--verbose`, and `--log-level`;
-  normal command progress is INFO, while parser internals should stay DEBUG.
-
-Shared output naming requirements:
-
-- output-producing commands should use one filename-template resolver rather
-  than command-local naming rules;
-- the shared resolver applies to `svg`, `sch-svg`, `pcb-svg`, `design`, `bom`,
-  `pnp`, and the `jlc` command;
-- filename and output-folder templates should support stable placeholders,
-  fixed string fragments, `PrjPcb` project parameters, and the runtime
-  `VariantName` token for the current processed variant;
-- the resolver should return safe relative paths by default and reject path
-  traversal;
-- missing parameter behavior, filename/path sanitization, cross-platform
-  separator normalization, and manifest reporting of resolved output names must
-  be documented and tested.
-
-SVG command family notes:
-
-- `sch-svg`, `pcb-svg`, and `svg` all stay in the first public command set;
-- SchDoc and PrjPcb `sch-svg` inputs emit one SVG per compiled page occurrence;
-  SVG roots and source groups carry scoped references into a bundled Design b0
-  sidecar, `schematic_svg_manifest.b0` indexes those artifacts, and only SchLib
-  symbol previews remain logical and unscoped;
-- `svg` is a convenience command that runs schematic output, PCB output, or both
-  depending on the input type;
-- L3 runs the combined project path and verifies the Design b0 schematic
-  sidecar, exhaustive scoped graph-link closure, PCB manifests, and their
-  declared SVG artifacts;
-- `svg` help describes that routing behavior and avoids presenting the command
-  as a separate renderer;
-- `pcb-svg` has fixture-backed assembly-view coverage with HLR/geometer using
-  Hydroscope embedded STEP models, while the normal layer-output test remains
-  in place so HLR work cannot regress layer SVG output;
-- `pcb-svg` uses `pcb.svg.config`; user config files may contain JSONC
-  comments and trailing commas, while contracts remain strict JSON. Individual
-  layer outputs are separate
-  from composed views, and composed views have explicit layer tokens, durable
-  group ids, and output SVG paths;
-- synthetic layer tokens include `BOARD_OUTLINE`, `BOARD_CUTOUTS`, `DRILLS`,
-  `SLOTS`, `ASSEMBLY_HLR_TOP`, and `ASSEMBLY_HLR_BOTTOM`;
-- `ASSEMBLY_HLR_TOP`/`ASSEMBLY_HLR_BOTTOM` and `PIN1_TOP`/`PIN1_BOTTOM`
-  have initial A0 rendering implementations;
-- `ASSEMBLY_DESIGNATORS_TOP`/`ASSEMBLY_DESIGNATORS_BOTTOM`, DNP visual
-  treatment, diode line art/cathode overlays, and richer project-level SVG
-  metadata are planned but not implemented yet;
-- `BOARD_CUTOUTS` supports configurable hash spacing/direction/line width,
-  configurable outline line width, and solid or dashed outlines. A0 deliberately
-  omits generated cutout text labels;
-- board cutout hash rendering is implemented through reusable SVG pattern
-  helpers so future synthetic layers can fill arbitrary closed paths the same
-  way.
-
-PCB layer STEP notes:
-
-- `pcb-layer-step` stays in the first public command set;
-- first fixture-backed command test uses a minimized `cricket-node` PcbDoc and
-  generates bottom-layer copper through the command handler;
-- the documented example colors are copper `#3D85C6` and board outline
-  `#CCCCCC`;
-- command fixtures should use `input/`, `reference_output/`, and transient
-  `output/` folders.
-
-BOM notes:
-
-- `bom` stays in the first public command set;
-- first-release target is a self-contained version of the old
-  `bom_cruncher` behavior, not only the current flat CSV/JSON/XLSX command;
-- supported outputs are raw JSON, JLC BOM, grouped JSON BOM, and grouped XLSX
-  BOM; the generated default writes raw JSON and grouped XLSX;
-- default grouped XLSX BOM review output uses `mfg`, `mpn`, `description`,
-  `quantity`, and `designators`, omits the line-number `item` column unless
-  explicitly configured, keeps text cells spreadsheet-safe, uses inverse
-  knockout headers, and does not enable Excel filter dropdowns;
-- BOM config should be JSON with a schema/type field, auto-generated as
-  `bom.config`, overridable with `--config`, and covered by a machine-readable
-  contract;
-- config owns output fields, canonical parameter names, aliases, grouping
-  keys, source mode, variant selection, DNP handling, component-kind filtering,
-  and optional PCB-as-line-item behavior;
-- alias behavior should adapt the `wn-hw` library-policy concepts while keeping
-  the public package self-contained;
-- `node_test_array` is the required hierarchical design fixture for validating
-  resolved designators against Altium-generated BOM CSV reference output.
-
-PnP notes:
-
-- `pnp` stays in the first public command set;
-- current CSV/JSON behavior from `.PrjPcb` should be preserved while adding
-  XLSX, JLC CPL, and richer sorting controls;
-- implementation should share normalized component/placement records with
-  `bom` so PCB-derived BOM JSON and PnP JSON do not diverge;
-- sorting needs natural designator order, top/bottom grouping, and configurable
-  designator-prefix ordering;
-- test against `node_test_array`, including variant `B4`, because it exercises
-  hierarchical sheet instances and resolved designators;
-- tests should mirror core `AltiumDesign.to_pnp(...)` coverage for required
-  fields, numeric positions, `top`/`bottom` layers, mm/mils conversion, and
-  no-BOM filtering;
-- use the older `bom_cruncher` placement, JLC CPL, and natural designator
-  sorting code as reference material, but keep `altium-cruncher` self-contained.
-
-JLC notes:
-
-- `jlc` generates JLC BOM plus JLC CPL from one project/config
-  invocation;
-- default `jlc` output writes the paired BOM and CPL XLSX files as siblings in
-  the same output folder;
-- tests should prove meta-command output matches the equivalent independent
-  `bom` and `pnp` JLC modes.
-
-Design review notes:
-
-- `design` replaces the earlier `netlist` public command name in the first
-  public command set and now mirrors KiCad Cruncher's review-bundle shape;
-- preserve current `AltiumDesign.to_json()` model output from `.SchDoc`
-  and `.PrjPcb` inputs under the bundle `design/` folder;
-- `design-review` and `dr` are aliases for the same bundle contract;
-- output includes `README.md`, the
-  `altium_cruncher.design_review_manifest.b0` `design_review_manifest.json`, semantic
-  design/netlist JSON under `design/`, structured notes JSONC, serialized
-  SchDoc/PcbDoc JSON from `json-dump` under `json/schdoc/` and `json/pcbdoc/`,
-  enriched schematic SVGs under `sch/`, and PCB layer SVGs where a board
-  exists;
-- `.SchDoc` and `.PrjPcb` inputs enumerate Design b0 graph `page_occurrences`: `sch/`
-  contains resolved physical schematic SVGs, `sch-ir/` contains matching
-  physical IR JSON, and manifest entries include the canonical
-  `page_occurrence_ref` plus `artifact_key="sch.dwg_scene"`;
-- SVG review links use the scoped graph selector
-  `page_occurrence_ref + artifact_key + element_id`; a bare SVG id is not a
-  realized identity in repeated/channel hierarchy;
-- the generated README must explain compiled schematic views,
-  `compiled_schematic_graph`, `physical_page_metadata`, net
-  `aliases`/`name_sources`, and how scoped graphical links join back to
-  components, terminals, and local nets;
-- PCB layer SVGs use the default `pcb-svg` layer-output shape under
-  `pcb/layers/`, but limit physical layer outputs to copper layers, including
-  used inner copper layers;
-- normal command progress should log each generated SVG and JSON artifact as it
-  is written;
-- the help text must explain that this is a design review bundle with design
-  JSON, serialized document JSON, structured notes, and SVG artifacts;
-- keep `--no-indexes`;
-- treat the command as a first-class machine-consumable output surface in
-  design docs and L99 command coverage.
-
-Extract notes:
-
-- `extract` stays in the first public command set;
-- tests should mirror the Altium Monkey extraction tests rather than only
-  checking that files exist;
-- SchDoc extraction should cover split and combined `SchLib` output from
-  cleared `extract_symbols` fixtures;
-- PcbDoc extraction should cover split and combined `PcbLib` output from
-  cleared PcbDoc extraction fixtures;
-- `.PrjPcb` extraction should prove both `schlib/` and `pcblib/` fanout when a
-  project contains both source types, including per-SchDoc split `SchLib`
-  namespaces under `schlib/<SchDocStem>/` so duplicate symbols cannot overwrite
-  each other;
-- `.IntLib` extraction should expose the existing `AltiumIntLib.extract_sources`
-  behavior from the command line, writing individual source libraries, a
-  manifest, and the generated `.LibPkg`;
-- IntLib tests should use public fixtures such as `RT_SUPER_C1.IntLib` or
-  `loz-old-man.IntLib` and verify the extracted `SchLib`/`PcbLib` files reparse;
-- fixtures copied from `C:\eli\wn_test_corpus` require proprietary-information
-  review before check-in.
-
-EasyEDA command notes:
-
-- `easyeda-import` is a first-class public command and no longer requires a
-  separate install extra;
-- `easyeda-import` currently generates `SchLib` and `PcbLib` footprint output
-  by default;
-- `easyeda-import` downloads EasyEDA OBJ/STEP 3D model assets when a 3D model
-  reference exists and network fetches are enabled, but does not attach/place
-  those models into the generated Altium `PcbLib`;
-- tests cover saved JSON input, generated `SchLib`, generated
-  default `PcbLib`, reports, preview artifacts, mocked 3D model downloads, and
-  fixture-wide review HTML/SVG output;
-- live API/cache behavior still needs separate optional or network-marked
-  coverage;
-- `easyeda-review` and `easyeda-footprint-review` are not public CLI commands;
-  their implementation remains available only for tests and internal review
-  tooling;
-- `easyeda-monkey` stays a normal runtime dependency because `_cli` imports the
-  EasyEDA command directly.
-
-Split notes:
-
-- `split` stays in the first public command set;
-- tests should run the public CLI and compare generated split output against
-  checked-in reference outputs from cleared test projects;
-- SchLib coverage should include file-set matching, reparsing generated
-  `SchLib` files, output filename pattern behavior, and symbol filtering;
-- PcbLib coverage should include file-set matching and reparsing generated
-  `PcbLib` files;
-- PcbLib split filenames must sanitize Windows-invalid characters while keeping
-  the original footprint name inside the library content and result mapping;
-- heavy AD25/native/interop parity is not required for the public CLI split
-  test; stable semantic matching is enough.
-
-Merge notes:
-
-- `merge` stays in the first public command set;
-- tests should run the public CLI and compare generated merged libraries
-  against checked-in reference outputs from cleared test projects;
-- SchLib coverage should include reparse checks, symbol-name set matching,
-  selected primitive/stream counts, and conflict policies;
-- PcbLib coverage should include reparse checks, footprint-name set matching,
-  and rename-only conflict behavior;
-- heavy AD25/native/interop parity is not required for the public CLI merge
-  test; stable semantic matching is enough.
-
-Megamaid notes:
-
-- `megamaid` stays in the first public command set as a showcase command;
-- tests should run the public CLI against a representative project fixture;
-- required output coverage includes `schlib/`, `pcblib/`, `bom/`, `pnp/`,
-  `netlist/`, `json/`, `notes/`, `embedded_models/`, `embedded_fonts/`,
-  `sch_images/`, and `megamaid_manifest.json`;
-- `megamaid_manifest.json` uses the breaking output schema
-  `altium_cruncher.megamaid_manifest.b0` and conforms to
-  `docs/contracts/megamaid_manifest.b0.schema.json`;
-- generated combined libraries should reparse, split libraries should be flat
-  project-wide for SchLib and per board for PcbLib, combined and split library
-  JSON dumps should exist under `json/schlib/` and `json/pcblib/`, flat BOM
-  JSON and default BOM XLSX should use the shared BOM command path, PnP JSON/CSV
-  should use the shared PnP command path, netlist JSON must be the authoritative
-  Design b0 payload with its required compiled schematic graph, SchDoc/PcbDoc JSON under
-  `json/schdoc/` and `json/pcbdoc/`, and notes JSONC should exist, and manifest
-  counts/paths should be validated;
-- PcbLib split artifacts use filesystem-safe output filenames so extracted
-  footprint names with quotes, slashes, colons, or wildcard characters remain
-  exportable on Windows;
-- rerun behavior should clear megamaid-owned stale artifacts while preserving
-  unrelated files under the output root.
-
-OutJob notes:
-
-- `outjob run` wraps `altium_monkey.altium_outjob_runner.AltiumOutJobRunner`;
-- with no arguments, require exactly one `.PrjPcb` in the current directory and
-  run all existing `.OutJob` files referenced by that project;
-- explicit project and OutJob arguments may select one or more jobs; OutJob
-  names resolve through the project while relative/absolute paths are accepted;
-- the command requires Windows with Altium Designer installed;
-- by default it runs the project-registered OutJob path, restores the source
-  OutJob after temporary normalization, and auto-binds the single project
-  `.PcbDoc` into embedded `DocumentPath=` tokens unless disabled;
-- JSON output uses schema `altium_cruncher.outjob.run.a0`;
-- the underlying runner writes a temporary Pascal script project and invokes
-  Altium Designer's GenerateReport flow, so command tests mock the runner
-  instead of launching Altium.
-
-Clean notes:
-
-- `clean` stays in the first public command set;
-- release docs must explain both config schemas:
-  `altium_cruncher.clean.config.a0` for `SchDoc`/`SchLib`/`PrjPcb`, and
-  `altium_cruncher.pcblib.clean.config.a0` for `PcbLib`;
-- docs cover explicit `--init-config`, config auto-generation, output path behavior, backup
-  behavior, color/font/line-width/no-ERC value formats, every schematic
-  normalization section, and every PcbLib removal section;
-- current tests cover SchDoc template generation, explicit schematic/PcbLib
-  `--init-config`, per-option JSONC template comments, a few SchLib
-  helper-ordering cases, and PcbLib config-path discovery;
-- add CLI tests for actual SchLib/SchDoc clean application, project fanout when
-  cleared fixtures exist, PcbLib mechanical/text/region removal, generated
-  config contract conformance, and backup/output semantics;
-- before/after preview or GUI-assisted rule development is useful but should be
-  tracked as a post-release issue, not a first-release blocker.
+All Cruncher-owned JSON roots now have TypeSpec authority; native Monkey/Geometer
+payloads retain their upstream owners. See [contract authority](public-contract-authority.md).
+Release gates enforce command/help/docs coverage, contract consistency, Python
+hygiene and package build/install behavior. Existing baseline allowances remain
+visible; a clean incremental gate does not imply every legacy module is small.

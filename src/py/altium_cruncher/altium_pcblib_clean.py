@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from .contracts.workflows import domain_default
+
+from .contracts.workflows import decode_clean_config, workflow_metadata
+
 import os
 import re
 from dataclasses import dataclass, field
@@ -17,11 +21,11 @@ PcbLibCleanProfile = Literal["raw", "default"]
 
 @dataclass(slots=True)
 class PcbLibMechanicalPrimitiveRemovalConfig:
-    enabled: bool = True
-    primitive_types: tuple[str, ...] = ("tracks", "arcs", "fills", "texts")
-    layers: tuple[str, ...] = ("mechanical",)
-    preserve_regions: bool = True
-    preserve_component_bodies: bool = True
+    enabled: bool = domain_default("clean_config", "PcbLibMechanicalPrimitiveRemovalConfig", "enabled")
+    primitive_types: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("clean_config", "PcbLibMechanicalPrimitiveRemovalConfig", "primitive_types")))
+    layers: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("clean_config", "PcbLibMechanicalPrimitiveRemovalConfig", "layers")))
+    preserve_regions: bool = domain_default("clean_config", "PcbLibMechanicalPrimitiveRemovalConfig", "preserve_regions")
+    preserve_component_bodies: bool = domain_default("clean_config", "PcbLibMechanicalPrimitiveRemovalConfig", "preserve_component_bodies")
 
     @classmethod
     def from_dict(
@@ -67,10 +71,10 @@ class PcbLibMechanicalPrimitiveRemovalConfig:
 
 @dataclass(slots=True)
 class PcbLibTextStringRemovalConfig:
-    enabled: bool = True
-    layers: tuple[str, ...] = ("any",)
-    match: str = "regex"
-    patterns: tuple[str, ...] = (r"(?i)\bdesignator\b",)
+    enabled: bool = domain_default("clean_config", "PcbLibTextStringRemovalConfig", "enabled")
+    layers: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("clean_config", "PcbLibTextStringRemovalConfig", "layers")))
+    match: str = domain_default("clean_config", "PcbLibTextStringRemovalConfig", "match")
+    patterns: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("clean_config", "PcbLibTextStringRemovalConfig", "patterns")))
 
     @classmethod
     def from_dict(cls, data: object) -> PcbLibTextStringRemovalConfig:
@@ -118,13 +122,13 @@ class PcbLibTextStringRemovalConfig:
 
 @dataclass(slots=True)
 class PcbLibRegionRemovalConfig:
-    enabled: bool = True
-    layers: tuple[str, ...] = ("mechanical",)
-    preserve_component_linked: bool = True
-    preserve_model_associated: bool = True
-    preserve_keepouts: bool = True
-    preserve_board_cutouts: bool = True
-    preserve_custom_pad_regions: bool = True
+    enabled: bool = domain_default("clean_config", "PcbLibRegionRemovalConfig", "enabled")
+    layers: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("clean_config", "PcbLibRegionRemovalConfig", "layers")))
+    preserve_component_linked: bool = domain_default("clean_config", "PcbLibRegionRemovalConfig", "preserve_component_linked")
+    preserve_model_associated: bool = domain_default("clean_config", "PcbLibRegionRemovalConfig", "preserve_model_associated")
+    preserve_keepouts: bool = domain_default("clean_config", "PcbLibRegionRemovalConfig", "preserve_keepouts")
+    preserve_board_cutouts: bool = domain_default("clean_config", "PcbLibRegionRemovalConfig", "preserve_board_cutouts")
+    preserve_custom_pad_regions: bool = domain_default("clean_config", "PcbLibRegionRemovalConfig", "preserve_custom_pad_regions")
 
     @classmethod
     def from_dict(cls, data: object) -> PcbLibRegionRemovalConfig:
@@ -176,8 +180,8 @@ class PcbLibRegionRemovalConfig:
 
 @dataclass(slots=True)
 class PcbLibCleanConfig:
-    schema: str = PCBLIB_CLEAN_CONFIG_SCHEMA_V1
-    profile: str = "default"
+    schema: str = domain_default("clean_config", "PcbLibCleanConfig", "schema")
+    profile: str = domain_default("clean_config", "PcbLibCleanConfig", "profile")
     remove_mechanical_primitives: PcbLibMechanicalPrimitiveRemovalConfig = field(
         default_factory=PcbLibMechanicalPrimitiveRemovalConfig
     )
@@ -192,6 +196,7 @@ class PcbLibCleanConfig:
     def from_dict(cls, data: object) -> PcbLibCleanConfig:
         if not isinstance(data, dict):
             raise ValueError("PcbLib clean config must be a JSON object")
+        data = decode_clean_config(data)
         schema = str(
             data.get("schema", PCBLIB_CLEAN_CONFIG_SCHEMA_V1)
             or PCBLIB_CLEAN_CONFIG_SCHEMA_V1
@@ -215,7 +220,7 @@ class PcbLibCleanConfig:
 
     @classmethod
     def template(cls) -> PcbLibCleanConfig:
-        return cls()
+        return cls.from_dict(workflow_metadata("clean_config", "templates")["pcblib"])
 
     def to_dict(self) -> dict[str, object]:
         return {

@@ -15,6 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v8.2.0
+      - name: Set up Python
+        run: uv python install 3.14
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Verify generated public contracts
+        run: |
+          npm ci --ignore-scripts
+          npm run check:contracts
+          npm run check:typescript
+          npm run check:browser
       - name: Verify tag matches package version
         shell: bash
         run: |
@@ -30,6 +42,10 @@ jobs:
           grep -F "\`${VERSION}\`" "docs/releases/${RELEASE_DATE}.md"
       - name: Run Rack suite
         run: uv run --extra test rack run --all
+      - name: Check generated Python config consumer
+        run: |
+          uv run --extra test pytest -q tests/test_pcb_svg_config_contract.py tests/test_creation_config_contract.py tests/test_mco_contract.py tests/test_workflow_contracts.py tests/test_public_output_contracts.py
+          uv run --extra test pyright src/py/altium_cruncher/contracts/generated tests/support_scripts/config_type_consumer.py
       - name: Build package
         run: uv run --extra test python -m build
       - name: Check package

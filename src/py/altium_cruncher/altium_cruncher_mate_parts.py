@@ -130,6 +130,9 @@ def load_mate_known_parts_manifest(path: Path | str) -> JsonObject:
     """Load and validate a mate known-parts manifest."""
     payload = load_jsonc_file(path)
     root = _json_object(payload, "mate known-parts manifest")
+    from .contracts.generated.public import decode_contract
+
+    root = decode_contract("mate_parts_input", root)
     schema = root.get("schema")
     if schema != MATE_PARTS_CACHE_SCHEMA:
         raise ValueError(f"Unsupported mate parts-cache schema: {schema!r}")

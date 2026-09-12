@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import base64
 import os
 from pathlib import Path
 import subprocess
@@ -17,7 +18,9 @@ from altium_monkey.altium_schdoc import AltiumSchDoc as RealAltiumSchDoc
 from altium_monkey.altium_sch_image_payload import decode_sch_embedded_image_payload
 
 
-PNG_BYTES = b"\x89PNG\r\n\x1a\nembedded-png"
+PNG_BYTES = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg=="
+)
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 HYDROSCOPE_PROJECT = (
     PACKAGE_ROOT
@@ -42,14 +45,15 @@ def _assert_megamaid_manifest_contract(payload: object) -> None:
 def _minimal_bmp_preview() -> bytes:
     header = bytearray(54)
     header[0:2] = b"BM"
-    header[2:6] = (54).to_bytes(4, "little")
+    header[2:6] = (58).to_bytes(4, "little")
     header[10:14] = (54).to_bytes(4, "little")
     header[14:18] = (40).to_bytes(4, "little")
     header[18:22] = (1).to_bytes(4, "little", signed=True)
     header[22:26] = (1).to_bytes(4, "little", signed=True)
     header[26:28] = (1).to_bytes(2, "little")
     header[28:30] = (24).to_bytes(2, "little")
-    return bytes(header)
+    # One 24-bit pixel plus row padding is part of a valid BMP preview.
+    return bytes(header) + b"\x00\x00\x00\x00"
 
 
 def _wrapped_png_payload() -> bytes:

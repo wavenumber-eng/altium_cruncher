@@ -46,7 +46,7 @@ On macOS or Linux:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-The intended user install path is `uv tool install`:
+To install the published PyPI package:
 
 ```powershell
 uv tool install altium-cruncher
@@ -54,7 +54,40 @@ uv tool update-shell
 altium-cruncher --help
 ```
 
-During local development:
+### Install Directly From GitHub
+
+With Git and uv installed, install the latest merged source without waiting for
+a PyPI release:
+
+```powershell
+uv tool install --python 3.14 --force --reinstall-package altium-cruncher "git+https://github.com/wavenumber-eng/altium_cruncher.git@main"
+uv tool update-shell
+acr --help
+```
+
+Before the Toon PR is merged, install its preview branch instead:
+
+```powershell
+uv tool install --python 3.14 --force --reinstall-package altium-cruncher "git+https://github.com/wavenumber-eng/altium_cruncher.git@feature/pcb-illustration-preview"
+acr toon --help
+```
+
+Replace the reference after `@` with a full commit SHA to select an exact source
+revision, or with a release tag such as `v2026.9.7`. Rerun the branch command to
+pick up newer commits. These commands replace the existing standalone tool and
+its `acr`, `ad`, and `altium-cruncher` entry points. Git installs build Cruncher
+from the selected source and resolve its declared dependencies; they do not
+install the development environment from `uv.lock`.
+
+Unreleased source can still report the previous package version. Use the Git
+revision to identify a preview, and `acr toon --help` to check that Toon is present.
+The Windows wrapper above continues to install from PyPI. See the
+[uv tools guide](https://docs.astral.sh/uv/guides/tools/) for Git installation
+details.
+
+### Local Development
+
+Local development uses Python 3.14, selected by `.python-version`:
 
 ```powershell
 uv sync --extra test
@@ -63,8 +96,8 @@ uv run python -m altium_cruncher version
 ```
 
 The EasyEDA import command generates SchLib, PcbLib footprint, and downloaded
-3D model assets by default, but 3D model placement into the generated PcbLib is
-not implemented. During local EasyEDA development:
+3D model assets, placing available models by default unless disabled.
+During local EasyEDA development:
 
 ```powershell
 uv sync --extra test
@@ -81,6 +114,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `sch-svg` | Generate schematic SVG from SchDoc, PrjPcb, or SchLib inputs. | Public |
 | `sch-ir` | Export schematic gotIR JSON from SchDoc or PrjPcb inputs. | Public |
 | `pcb-svg` | Generate PCB SVG views from PcbDoc or PrjPcb inputs. | Public, with beta HLR/pin-view areas |
+| `toon` | Generate top/bottom PCB illustration and assembly SVGs. | Experimental |
 | `pcb-layer-step` | Generate a colored STEP model for one PCB layer, intended for fixture-alignment workflows. | Public |
 | `svg` | Run schematic SVG, PCB SVG, or both based on input. | Public |
 | `bom` | Generate BOM output as CSV, JSON, or XLSX. | Public |
@@ -96,7 +130,7 @@ Run `altium-cruncher <command> --help` for command-specific options.
 | `schlib` | Create one-symbol schematic libraries through MCO operations. | Public |
 | `pcbdoc` | Create generated rigid PCB documents through MCO operations. | Public |
 | `pcblib` | Create PcbLib footprint libraries through MCO operations. | Public |
-| `prjpcb` | Create JSONC-driven PrjPcb project skeletons through MCO operations. | Public |
+| `prjpcb` | Create/init JSONC-driven PrjPcb skeletons and add sheets through MCO operations. | Public |
 | `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
 | `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
 | `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |
@@ -115,6 +149,21 @@ synthetic `BOARD_CUTOUTS` layer for board-profile cutouts. The A0 PCB SVG
 config uses `pcb.svg.config` by default and fits SVGs tightly around the board
 outline while metadata preserves Altium-coordinate placement and transform data.
 User-editable config files may use JSONC comments and trailing commas.
+
+`toon` provides editable illustration presets on the same PCB SVG layer system.
+It preserves project parameters and variants without parsing schematics. Output is
+SVG only; users can convert the exported files with their preferred image tool:
+
+```powershell
+acr toon board.PrjPcb --theme white --all-variants
+acr toon board.PrjPcb --assembly --side top
+```
+
+The first run creates `toon.config` beside the input; later runs reuse it.
+See the [Toon command guide](docs/design/cli/toon.html) and
+[configuration examples](examples/pcb-svg/README.md) for colors, projected labels,
+caching and timing options. Progress messages report loading, variants, sides,
+component rendering and saved files while the command runs.
 
 The `pcb-svg` HLR and pin-oriented views are beta quality. Hidden-line
 rendering, embedded STEP projection, pin visibility, and related details are
@@ -152,16 +201,17 @@ uv run --extra test python tests\support_scripts\install_test.py
 Rack is the primary local gate. Current public strata are
 `L0_public_cli` for command registration and `L3_public_workflows` for
 fixture-backed CLI workflows. `L99_signoff` runs version-contract and Python
-hygiene checks. Additional command parity gates will be added as public fixtures
-and release policy are finalized. Signoff policy will cover command manifests,
-public command tests, PEP 257-style docstrings, architecture/design
-documentation, JSON/config contracts, and package build/install tests.
+hygiene checks. Signoff also enforces command manifests, command documentation,
+interface coverage, JSON/config contracts and generated artifact freshness.
+Build, distribution validation and installed-console checks complete release signoff.
 
 GitHub Actions runs CI for pull requests and pushes to `main` on Ubuntu and
 Windows. CI runs the Rack suite, builds the package, checks the distributions,
 and runs the installed-console smoke test.
 
 ## Architecture Docs
+
+- [Architecture and Rust port map](docs/design/architecture-porting-guide.md) covers every command, workflow ownership and native boundaries.
 
 - `docs/adrs/` records accepted architecture decisions.
 - `docs/design/` records durable interface, command, data-flow, and format
@@ -170,6 +220,11 @@ and runs the installed-console smoke test.
   and signoff tooling.
 - `docs/contracts/` stores stable schemas and conformance examples for public JSON
   or config formats.
+
+All Cruncher-owned JSON/JSONC contracts are authored in TypeSpec. The
+[contract authority guide](docs/design/public-contract-authority.md) lists the
+complete inventory, Python/browser consumers and upstream ownership boundaries.
+Use `npm run generate:contracts` after editing the sources.
 
 ## Release Policy
 

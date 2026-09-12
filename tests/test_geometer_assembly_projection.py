@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from dataclasses import replace
+
+import geometer
+import pytest
 
 from altium_cruncher.altium_cruncher_pcb_svg_assembly_projection import (
     AssemblyProjectionCache,
@@ -63,3 +67,54 @@ def test_assembly_projection_cache_uses_geometer_for_step_hlr() -> None:
     assert (
         len(bottom_geometry.simple_line_segments) + len(bottom_geometry.simple_arcs) > 0
     )
+
+
+@pytest.mark.parametrize("algorithm", [None, "exact", "poly"])
+def test_projection_backend_selection_preserves_legacy_override(monkeypatch, algorithm):
+    original = geometer.project_step_hlr
+    calls = []
+
+    def capture(*args, **kwargs):
+        calls.append(kwargs["options"])
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(geometer, "project_step_hlr", capture)
+    geometry = AssemblyProjectionCache().project(
+        model_hash="resistor", step_bytes=STEP_FIXTURE.read_bytes(),
+        pose_signature=(), transform_matrix=IDENTITY_MATRIX,
+        options=AssemblyProjectionOptions(side="top", projection_algorithm=algorithm),
+    )[1]
+    assert not geometry.is_empty
+    assert calls[0]["projection_algorithm"] == (algorithm or "fast")
+    if algorithm is None:
+        assert calls[0]["outline_algorithm"] == "fast-mesh-shadow"
+        assert calls[0]["curve_mode"] == "polyline"
+        assert not geometry.simple_arcs and not geometry.detail_arcs
+    else:
+        assert "outline_algorithm" not in calls[0]
+        assert calls[0]["curve_mode"] == "native_arcs"
+
+
+def test_outline_algorithm_invalidates_cached_projection():
+    cache = AssemblyProjectionCache()
+    options = AssemblyProjectionOptions(side="top")
+    kwargs = dict(model_hash="resistor", pose_signature=(0.0,))
+    assert cache.build_cache_key(**kwargs, options=options) != cache.build_cache_key(
+        **kwargs, options=replace(options, outline_algorithm="mesh-shadow")
+    )
+
+
+def test_fast_candidate_controls_and_legacy_controls_are_not_silently_ignored():
+    cache = AssemblyProjectionCache()
+    kwargs = dict(model_hash="resistor", step_bytes=STEP_FIXTURE.read_bytes(),
+                  pose_signature=(), transform_matrix=IDENTITY_MATRIX)
+    with pytest.raises(ValueError, match="Fast HLR uses"):
+        cache.project(**kwargs, options=AssemblyProjectionOptions(side="top", include_visible=False))
+    visible = cache.project(**kwargs, options=AssemblyProjectionOptions(side="top", fast={"include_hidden": False}))[1]
+    hidden = cache.project(**kwargs, options=AssemblyProjectionOptions(side="top", fast={"include_hidden": True}))[1]
+    assert len(hidden.detail_line_segments) > len(visible.detail_line_segments)
+    empty = cache.project(**kwargs, options=AssemblyProjectionOptions(side="top", fast={
+        "include_boundaries": False, "include_creases": False, "include_silhouettes": False,
+    }))[1]
+    assert not empty.detail_line_segments
+    assert empty.simple_line_segments

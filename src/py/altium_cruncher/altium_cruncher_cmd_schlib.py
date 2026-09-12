@@ -7,7 +7,7 @@ import json
 import logging
 from pathlib import Path
 
-from altium_cruncher.altium_cruncher_cmd_mco import (
+from altium_cruncher.mco_cli_support import (
     execute_mco_for_cli,
     print_mco_execution_result,
 )

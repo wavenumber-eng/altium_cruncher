@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.profiles.clean.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.profiles.clean.a0"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ProfileCleanAction"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "actions"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "ProfileCleanAction": {
+      "type": "object",
+      "properties": {
+        "profile_guid": {
+          "type": "string"
+        },
+        "profile_name": {
+          "type": "string"
+        },
+        "profile_path": {
+          "type": "string"
+        },
+        "module_name": {
+          "type": "string"
+        },
+        "module_dir": {
+          "type": "string"
+        },
+        "removed_module_dir": {
+          "type": "boolean"
+        },
+        "removed_registry_item": {
+          "type": "boolean"
+        },
+        "dry_run": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "profile_guid",
+        "profile_name",
+        "profile_path",
+        "module_name",
+        "module_dir",
+        "removed_module_dir",
+        "removed_registry_item",
+        "dry_run"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

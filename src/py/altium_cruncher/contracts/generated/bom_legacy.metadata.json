@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "bom_legacy",
+    "title": "Generic / legacy BOM",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.bom.a0"
+}

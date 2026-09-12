@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "mate_parts_input",
+    "title": "Editable mate parts",
+    "source": "mate-config",
+    "kind": "config"
+  },
+  "schema": "altium_cruncher.mate.parts_cache.a0"
+}

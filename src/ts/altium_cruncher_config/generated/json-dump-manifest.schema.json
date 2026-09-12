@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.json_dump.manifest.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.json_dump.manifest.a0"
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DumpOutput"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "outputs"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "DumpOutput": {
+      "type": "object",
+      "properties": {
+        "source_path": {
+          "type": "string"
+        },
+        "output_path": {
+          "type": "string"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "SchDoc"
+            },
+            {
+              "type": "string",
+              "const": "SchLib"
+            },
+            {
+              "type": "string",
+              "const": "PcbDoc"
+            },
+            {
+              "type": "string",
+              "const": "PcbLib"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source_path",
+        "output_path",
+        "kind"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/json-dump.tsp. Do not edit."
+}

@@ -1,0 +1,474 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.pcb_layer_step.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.pcb_layer_step.a0"
+    },
+    "backend": {
+      "type": "string",
+      "const": "geometer.planar_step"
+    },
+    "board": {
+      "type": "string"
+    },
+    "source_input": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "step_file": {
+      "type": "string"
+    },
+    "coordinate_origin": {
+      "$ref": "#/$defs/CoordinateOrigin"
+    },
+    "layer": {
+      "$ref": "#/$defs/Layer"
+    },
+    "options": {
+      "$ref": "#/$defs/Options"
+    },
+    "counts": {
+      "$ref": "#/$defs/RecordInteger"
+    },
+    "bytes": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "backend",
+    "board",
+    "source_input",
+    "step_file",
+    "coordinate_origin",
+    "layer",
+    "options",
+    "counts",
+    "bytes"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "CoordinateOrigin": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "const": "board_origin"
+        },
+        "origin_mils": {
+          "$ref": "#/$defs/Point"
+        },
+        "origin_mm": {
+          "$ref": "#/$defs/Point"
+        },
+        "geometry": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode",
+        "origin_mils",
+        "origin_mm",
+        "geometry"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Layer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "json_name": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "json_name",
+        "display_name"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Options": {
+      "type": "object",
+      "properties": {
+        "thickness_mm": {
+          "type": "number"
+        },
+        "z_mm": {
+          "type": "number"
+        },
+        "copper_color": {
+          "type": "string"
+        },
+        "outline_width_mm": {
+          "type": "number"
+        },
+        "outline_color": {
+          "type": "string"
+        },
+        "board_cutout_color": {
+          "type": "string"
+        },
+        "include_copper": {
+          "type": "boolean"
+        },
+        "include_board_outline": {
+          "type": "boolean"
+        },
+        "include_board_cutouts": {
+          "type": "boolean"
+        },
+        "include_poured_polygons": {
+          "type": "boolean"
+        },
+        "cut_holes": {
+          "type": "boolean"
+        },
+        "drill_hole_mode": {
+          "type": "string"
+        },
+        "effective_drill_hole_mode": {
+          "type": "string"
+        },
+        "max_boolean_drill_cuts": {
+          "type": "integer"
+        },
+        "drill_hole_color": {
+          "type": "string"
+        },
+        "drill_plated_hole_color": {
+          "type": "string"
+        },
+        "drill_non_plated_hole_color": {
+          "type": "string"
+        },
+        "drill_overlay_thickness_mm": {
+          "type": "number"
+        },
+        "drill_minimum_diameter_mm": {
+          "type": "number"
+        },
+        "drill_hole_shape": {
+          "type": "string"
+        },
+        "drill_ring_width_mm": {
+          "type": "number"
+        },
+        "drill_plated_ring_shape": {
+          "type": "string"
+        },
+        "drill_selected_component_mode": {
+          "type": "string"
+        },
+        "drill_other_component_mode": {
+          "type": "string"
+        },
+        "drill_free_pad_mode": {
+          "type": "string"
+        },
+        "drill_via_mode": {
+          "type": "string"
+        },
+        "fuse_copper": {
+          "type": "boolean"
+        },
+        "fuse_board_outline": {
+          "type": "boolean"
+        },
+        "arc_segments": {
+          "type": "integer"
+        },
+        "features": {
+          "$ref": "#/$defs/FeatureSwitches"
+        },
+        "pad_color_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PadColorRule"
+          }
+        },
+        "feature_color_rules": {
+          "$ref": "#/$defs/FeatureStyles"
+        },
+        "thickness_bias_mm": {
+          "$ref": "#/$defs/ThicknessBias"
+        },
+        "highlight_count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "thickness_mm",
+        "z_mm",
+        "copper_color",
+        "outline_width_mm",
+        "outline_color",
+        "board_cutout_color",
+        "include_copper",
+        "include_board_outline",
+        "include_board_cutouts",
+        "include_poured_polygons",
+        "cut_holes",
+        "drill_hole_mode",
+        "effective_drill_hole_mode",
+        "max_boolean_drill_cuts",
+        "drill_hole_color",
+        "drill_plated_hole_color",
+        "drill_non_plated_hole_color",
+        "drill_overlay_thickness_mm",
+        "drill_minimum_diameter_mm",
+        "drill_hole_shape",
+        "drill_ring_width_mm",
+        "drill_plated_ring_shape",
+        "drill_selected_component_mode",
+        "drill_other_component_mode",
+        "drill_free_pad_mode",
+        "drill_via_mode",
+        "fuse_copper",
+        "fuse_board_outline",
+        "arc_segments",
+        "features",
+        "pad_color_rules",
+        "feature_color_rules",
+        "thickness_bias_mm",
+        "highlight_count"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordInteger": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "integer"
+      }
+    },
+    "Point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "FeatureSwitches": {
+      "type": "object",
+      "properties": {
+        "tracks": {
+          "type": "boolean"
+        },
+        "arcs": {
+          "type": "boolean"
+        },
+        "fills": {
+          "type": "boolean"
+        },
+        "polygons": {
+          "type": "boolean"
+        },
+        "regions": {
+          "type": "boolean"
+        },
+        "vias": {
+          "type": "boolean"
+        },
+        "component_pads": {
+          "type": "boolean"
+        },
+        "free_pads": {
+          "type": "boolean"
+        },
+        "include_designators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "tracks",
+        "arcs",
+        "fills",
+        "polygons",
+        "regions",
+        "vias",
+        "component_pads",
+        "free_pads",
+        "include_designators"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PadColorRule": {
+      "type": "object",
+      "properties": {
+        "designators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "color": {
+          "type": "string"
+        },
+        "step_body_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "designators",
+        "color",
+        "step_body_name"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "FeatureStyles": {
+      "type": "object",
+      "properties": {
+        "tracks": {
+          "$ref": "#/$defs/FeatureStyle"
+        },
+        "arcs": {
+          "$ref": "#/$defs/FeatureStyle"
+        },
+        "fills": {
+          "$ref": "#/$defs/FeatureStyle"
+        },
+        "polygons": {
+          "$ref": "#/$defs/FeatureStyle"
+        },
+        "regions": {
+          "$ref": "#/$defs/FeatureStyle"
+        },
+        "vias": {
+          "$ref": "#/$defs/FeatureStyle"
+        },
+        "component_pads": {
+          "$ref": "#/$defs/FeatureStyle"
+        },
+        "free_pads": {
+          "$ref": "#/$defs/FeatureStyle"
+        }
+      },
+      "required": [
+        "tracks",
+        "arcs",
+        "fills",
+        "polygons",
+        "regions",
+        "vias",
+        "component_pads",
+        "free_pads"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ThicknessBias": {
+      "type": "object",
+      "properties": {
+        "tracks": {
+          "type": "number"
+        },
+        "arcs": {
+          "type": "number"
+        },
+        "fills": {
+          "type": "number"
+        },
+        "polygons": {
+          "type": "number"
+        },
+        "regions": {
+          "type": "number"
+        },
+        "vias": {
+          "type": "number"
+        },
+        "component_pads": {
+          "type": "number"
+        },
+        "free_pads": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "tracks",
+        "arcs",
+        "fills",
+        "polygons",
+        "regions",
+        "vias",
+        "component_pads",
+        "free_pads"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "FeatureStyle": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "step_body_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "color",
+        "step_body_name"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/pcb-layer-step.tsp. Do not edit."
+}

@@ -29,6 +29,7 @@ from altium_cruncher.altium_cruncher_pcb_layer_step import (
     resolve_pcb_layer_selector,
     _sample_svg_arc_points_mils,
     _svg_like_board_sweep_degrees,
+    _extended_vertices_ring,
 )
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -82,6 +83,23 @@ def _arc_segment_centers(region: dict[str, object]) -> list[list[float]]:
         assert isinstance(center, list)
         centers.append([float(center[0]), float(center[1])])
     return centers
+
+
+def test_extended_ring_repeated_vertices_preserve_outgoing_arc() -> None:
+    vertices = [
+        SimpleNamespace(x_mils=x, y_mils=y)
+        for x, y in [(0, 0), (100, 0), (100, 0), (100, 100), (0, 100), (0, 0)]
+    ]
+    vertices[2].__dict__.update(
+        is_round=True, radius_mils=50, center_x_mils=100, center_y_mils=50,
+        start_angle=-90, end_angle=90,
+    )
+    ring = _extended_vertices_ring(vertices)
+    assert ring is not None
+    assert ring.points == [(0, 0), (2.54, 0), (2.54, 2.54), (0, 2.54)]
+    assert [segment.kind for segment in ring.segments] == ["line", "arc", "line", "line"]
+    assert ring.segments[1].center == (2.54, 1.27)
+    assert ring.segments[1].sweep == "ccw"
 
 
 def test_resolve_pcb_layer_selector_accepts_common_names() -> None:

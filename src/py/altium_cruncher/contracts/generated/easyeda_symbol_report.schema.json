@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.easyeda.symbol_report.a0",
+  "type": "object",
+  "properties": {
+    "lcsc_id": {
+      "type": "string"
+    },
+    "symbol_name": {
+      "type": "string"
+    },
+    "designator": {
+      "type": "string"
+    },
+    "pin_count": {
+      "type": "integer"
+    },
+    "rectangle_count": {
+      "type": "integer"
+    },
+    "circle_count": {
+      "type": "integer"
+    },
+    "ellipse_count": {
+      "type": "integer"
+    },
+    "polyline_count": {
+      "type": "integer"
+    },
+    "polygon_count": {
+      "type": "integer"
+    },
+    "unsupported_count": {
+      "type": "integer"
+    },
+    "unsupported_graphics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "policy": {
+      "$ref": "#/$defs/SymbolPolicy"
+    },
+    "grid": {
+      "$ref": "#/$defs/HotspotGrid"
+    }
+  },
+  "required": [
+    "lcsc_id",
+    "symbol_name",
+    "designator",
+    "pin_count",
+    "rectangle_count",
+    "circle_count",
+    "ellipse_count",
+    "polyline_count",
+    "polygon_count",
+    "unsupported_count",
+    "unsupported_graphics",
+    "warnings",
+    "policy",
+    "grid"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "description": "Existing unversioned mapping report: this schema adds no field to the emitted wire object.",
+  "$defs": {
+    "SymbolPolicy": {
+      "type": "object",
+      "properties": {
+        "mils_per_easyeda_unit": {
+          "type": "number"
+        },
+        "invert_y": {
+          "type": "boolean"
+        },
+        "default_pin_length_mils": {
+          "type": "number"
+        },
+        "hotspot_grid_mils": {
+          "type": "number"
+        },
+        "align_hotspots_to_grid": {
+          "type": "boolean"
+        },
+        "body_color": {
+          "type": "integer"
+        },
+        "body_fill_color": {
+          "type": "integer"
+        },
+        "use_source_pin_electrical": {
+          "type": "boolean"
+        },
+        "use_source_pin_ieee_symbols": {
+          "type": "boolean"
+        },
+        "pin_name_visibility": {
+          "type": "string"
+        },
+        "pin_designator_visibility": {
+          "type": "string"
+        },
+        "pin_text_orientation": {
+          "type": "string"
+        },
+        "rotate_vertical_pin_text": {
+          "type": "boolean"
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "HotspotGrid": {
+      "type": "object",
+      "properties": {
+        "hotspot_grid_mils": {
+          "type": "number"
+        },
+        "align_hotspots_to_grid": {
+          "type": "boolean"
+        },
+        "anchor_adjusted_to_grid": {
+          "type": "boolean"
+        },
+        "source_grid_units": {
+          "type": "number"
+        },
+        "source_common_offset_possible": {
+          "type": "boolean"
+        },
+        "source_x_remainder": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_y_remainder": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hotspot_count": {
+          "type": "integer"
+        },
+        "off_grid_hotspot_count": {
+          "type": "integer"
+        },
+        "max_hotspot_error_mils": {
+          "type": "number"
+        },
+        "off_grid_hotspots_sample": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OffGridHotspot"
+          }
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "OffGridHotspot": {
+      "type": "object",
+      "properties": {
+        "pin": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "x_mils": {
+          "type": "number"
+        },
+        "y_mils": {
+          "type": "number"
+        },
+        "x_error_mils": {
+          "type": "number"
+        },
+        "y_error_mils": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "pin",
+        "name",
+        "x_mils",
+        "y_mils",
+        "x_error_mils",
+        "y_error_mils"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/easyeda.tsp. Do not edit."
+}

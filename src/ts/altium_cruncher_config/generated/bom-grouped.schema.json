@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.bom.grouped.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.bom.grouped.a0"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "variant": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "line_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "component_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "dnp_line_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GroupedBomLine"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "variant",
+    "line_count",
+    "component_count",
+    "dnp_line_count",
+    "lines"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "stem": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "name",
+        "stem"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "GroupedBomLine": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "type": "integer"
+        },
+        "quantity": {
+          "$ref": "#/$defs/Count"
+        },
+        "designators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dnp": {
+          "type": "boolean"
+        },
+        "fields": {
+          "$ref": "#/$defs/RecordString"
+        }
+      },
+      "required": [
+        "item",
+        "quantity",
+        "designators",
+        "dnp",
+        "fields"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

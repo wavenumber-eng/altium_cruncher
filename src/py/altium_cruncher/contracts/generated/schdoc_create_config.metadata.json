@@ -1,0 +1,26 @@
+{
+  "resolved-defaults": {
+    "sheet_style": "D",
+    "apply_template_visual_sheet_settings": false,
+    "board_outline_mils": {
+      "left": 0,
+      "bottom": 0,
+      "right": 3000,
+      "top": 2000
+    },
+    "layer_stack_template": "2-layer",
+    "mechanical_layer_profile": "none",
+    "mode": "generated_rigid"
+  },
+  "jsonc-comments": {
+    "schema": "SchDoc create config contract id.",
+    "file": "SchDoc file to create, relative to this config file unless absolute.",
+    "sheet_style": "Schematic sheet style. Options: Altium SheetStyle enum name or native enum id.",
+    "template": "Optional SchDot template file to copy settings from.",
+    "apply_template_visual_sheet_settings": "Whether to copy visual sheet settings from the template.",
+    "custom_sheet_mils": "Optional explicit sheet size in mils.",
+    "custom_sheet_mils.width": "Custom sheet width in mils.",
+    "custom_sheet_mils.height": "Custom sheet height in mils."
+  },
+  "schema": "altium_cruncher.schdoc.create.config.a0"
+}

@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "variants_list",
+    "title": "Project variant listing",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.variants.list.a0"
+}

@@ -1,0 +1,381 @@
+[
+  {
+    "name": "empty override",
+    "valid": true,
+    "value": {}
+  },
+  {
+    "name": "partial mask",
+    "valid": true,
+    "value": {
+      "global": {
+        "styles": {
+          "soldermask_film": {
+            "opacity": 0.5
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "null reset",
+    "valid": true,
+    "value": {
+      "global": {
+        "styles": null
+      },
+      "views": null
+    }
+  },
+  {
+    "name": "empty views",
+    "valid": true,
+    "value": {
+      "views": []
+    }
+  },
+  {
+    "name": "explicit false zero and inheritance",
+    "valid": true,
+    "value": {
+      "global": {
+        "include_metadata": false,
+        "canvas": {
+          "margin_mm": 0
+        }
+      },
+      "components": {
+        "J1": {
+          "show_designator": false,
+          "pin1_enabled": null
+        }
+      },
+      "views": [
+        {
+          "name": "top",
+          "mirror": null,
+          "layers": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "legacy spellings",
+    "valid": true,
+    "value": {
+      "global": {
+        "include_metadata": "YES",
+        "svg_scale": "2.5",
+        "canvas": {
+          "bounds": "BOARD",
+          "margin_mm": "0.5"
+        }
+      },
+      "components": {
+        "J1": {
+          "side": "TOP-LAYER",
+          "projection": "BBOX"
+        }
+      },
+      "views": [
+        {
+          "name": "top",
+          "assembly_hlr_mode": "DETAILED"
+        }
+      ]
+    }
+  },
+  {
+    "name": "extensions",
+    "valid": true,
+    "value": {
+      "note": "preserve",
+      "global": {
+        "styles": {
+          "illustration": {
+            "vendor_option": true
+          },
+          "my_style": {
+            "nested": {
+              "value": 7
+            }
+          }
+        }
+      },
+      "layer_outputs": {
+        "vendor_option": "keep"
+      }
+    }
+  },
+  {
+    "name": "explicit legacy hlr",
+    "valid": true,
+    "value": {
+      "global": {
+        "styles": {
+          "assembly_hlr": {
+            "projection_algorithm": "exact"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "root array",
+    "valid": false,
+    "value": []
+  },
+  {
+    "name": "wrong schema",
+    "valid": false,
+    "value": {
+      "schema": "pcb.svg.config.invalid"
+    }
+  },
+  {
+    "name": "styles array",
+    "valid": false,
+    "value": {
+      "global": {
+        "styles": []
+      }
+    }
+  },
+  {
+    "name": "custom style scalar",
+    "valid": false,
+    "value": {
+      "global": {
+        "styles": {
+          "my_style": 3
+        }
+      }
+    }
+  },
+  {
+    "name": "invalid boolean text",
+    "valid": false,
+    "value": {
+      "global": {
+        "include_metadata": "maybe"
+      }
+    }
+  },
+  {
+    "name": "negative numeric margin",
+    "valid": false,
+    "value": {
+      "global": {
+        "canvas": {
+          "margin_mm": -1
+        }
+      }
+    }
+  },
+  {
+    "name": "missing view name",
+    "valid": false,
+    "value": {
+      "views": [
+        {
+          "layers": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "invalid opacity",
+    "valid": false,
+    "value": {
+      "global": {
+        "styles": {
+          "soldermask_film": {
+            "opacity": 2
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "null special layer list",
+    "valid": true,
+    "value": {
+      "layer_outputs": {
+        "include_special_layers": null
+      }
+    }
+  },
+  {
+    "name": "layer aliases",
+    "valid": true,
+    "value": {
+      "layer_outputs": {
+        "include_special_layers": [
+          "outline",
+          "cutouts"
+        ],
+        "layers": [
+          "top"
+        ]
+      }
+    }
+  },
+  {
+    "name": "unit reset",
+    "valid": true,
+    "value": {
+      "global": {
+        "svg_size_unit": null
+      }
+    }
+  },
+  {
+    "name": "numeric style text",
+    "valid": true,
+    "value": {
+      "global": {
+        "styles": {
+          "board_outline": {
+            "line_width_mm": "0.25"
+          },
+          "drills": {
+            "outline": "false"
+          },
+          "board_cutouts": {
+            "outline_style": "DASHED"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "bad layer object",
+    "valid": false,
+    "value": {
+      "layer_outputs": {
+        "layers": {
+          "a": 1
+        }
+      }
+    }
+  },
+  {
+    "name": "negative text margin",
+    "valid": false,
+    "value": {
+      "global": {
+        "canvas": {
+          "margin_mm": "-1"
+        }
+      }
+    }
+  },
+  {
+    "name": "overflow text number",
+    "valid": false,
+    "value": {
+      "global": {
+        "svg_scale": "1e999"
+      }
+    }
+  },
+  {
+    "name": "null style width rejected",
+    "valid": false,
+    "value": {
+      "global": {
+        "styles": {
+          "board_outline": {
+            "line_width_mm": null
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "null cutout scope rejected",
+    "valid": false,
+    "value": {
+      "global": {
+        "styles": {
+          "board_cutouts": {
+            "scope": null
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "space padded auto layers",
+    "valid": true,
+    "value": {
+      "layer_outputs": {
+        "layers": " Auto "
+      }
+    }
+  },
+  {
+    "name": "null layer output reset",
+    "valid": true,
+    "value": {
+      "layer_outputs": {
+        "enabled": null,
+        "output_dir": null
+      }
+    }
+  },
+  {
+    "name": "null global boolean reset",
+    "valid": true,
+    "value": {
+      "global": {
+        "include_metadata": null
+      }
+    }
+  },
+  {
+    "name": "unpadded view mode only",
+    "valid": false,
+    "value": {
+      "views": [
+        {
+          "name": "x",
+          "assembly_hlr_mode": " detail "
+        }
+      ]
+    }
+  },
+  {
+    "name": "unpadded cutout outline only",
+    "valid": false,
+    "value": {
+      "global": {
+        "styles": {
+          "board_cutouts": {
+            "outline_style": " dashed "
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "removed raster settings",
+    "valid": false,
+    "value": {
+      "global": {
+        "png": {
+          "width": 4096
+        }
+      }
+    }
+  },
+  {
+    "name": "removed raster settings null",
+    "valid": false,
+    "value": {
+      "global": {
+        "png": null
+      }
+    }
+  }
+]

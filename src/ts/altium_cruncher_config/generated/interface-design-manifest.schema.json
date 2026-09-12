@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.interface_design_manifest.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.interface_design_manifest.a0"
+    },
+    "major_interfaces": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/$defs/NamedInterface"
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "major_interfaces"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "description": "Cruncher-owned interface inventory consumed by documentation signoff; command_manifest remains wn-dev-std-owned.",
+  "$defs": {
+    "NamedInterface": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

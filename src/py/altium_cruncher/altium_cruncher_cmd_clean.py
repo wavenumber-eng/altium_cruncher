@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .contracts.workflows import workflow_metadata
+
 import argparse
 import logging
 import shutil
@@ -28,174 +30,9 @@ DEFAULT_SCH_CLEAN_CONFIG_FILENAME = "altium-clean.json"
 _SCHEMATIC_CONFIG_SUFFIX = ".schdoc"
 _PCBLIB_CONFIG_SUFFIX = ".pcblib"
 
-_SCHEMATIC_CLEAN_COMMENTS: dict[str, tuple[str, ...]] = {
-    "schema": (
-        "Schematic clean config for .SchDoc, .SchLib, and .PrjPcb inputs.",
-        "This file is JSONC: // comments and trailing commas are accepted.",
-        "Use --init-config to write this template without cleaning an input.",
-        "Use --force-config with --init-config to overwrite an existing template.",
-    ),
-    "enabled": ("Set enabled=false to leave this rule family unchanged.",),
-    "font_name": ("Altium font family name to apply.",),
-    "size_pt": ("Font size in points.",),
-    "bold": ("Whether the generated font is bold.",),
-    "italic": ("Whether the generated font is italic.",),
-    "color_win32": (
-        "Win32/BGR integer color. The loader also accepts #RRGGBB or integer strings.",
-    ),
-    "normalize_pin_fonts": (
-        "Pin name/designator fonts inside symbols.",
-        "Set enabled=false if library pin text is already curated.",
-    ),
-    "normalize_pin_fonts.name_font": ("Style for visible pin names.",),
-    "normalize_pin_fonts.designator_font": (
-        "Style for visible pin designators/numbers.",
-    ),
-    "normalize_symbol_body_rectangles": (
-        "Main symbol body rectangles. Width/height thresholds avoid touching tiny graphics.",
-        "line_width options: smallest/zero, small, medium, large, or the Altium enum integer.",
-    ),
-    "normalize_symbol_body_rectangles.min_width_mils": (
-        "Only rectangles wider than this many mils are treated as symbol bodies.",
-    ),
-    "normalize_symbol_body_rectangles.min_height_mils": (
-        "Only rectangles taller than this many mils are treated as symbol bodies.",
-    ),
-    "normalize_symbol_body_rectangles.outline_color_win32": (
-        "Rectangle outline color.",
-    ),
-    "normalize_symbol_body_rectangles.line_width": (
-        "Outline width. Options: smallest/zero, small, medium, large, or enum integer.",
-    ),
-    "normalize_symbol_body_rectangles.fill_color_win32": ("Rectangle fill color.",),
-    "normalize_symbol_body_rectangles.is_solid": (
-        "Whether the rectangle fill is solid.",
-    ),
-    "normalize_symbol_body_rectangles.transparent": (
-        "Whether the rectangle fill should be transparent.",
-    ),
-    "normalize_power_symbols": (
-        "Power-port text and color normalization for schematic sheets.",
-        "Colors may be Win32/BGR integers, 0xRRGGBB-style strings, or #RRGGBB.",
-    ),
-    "normalize_power_symbols.font": ("Font applied to power-port text.",),
-    "normalize_net_labels": (
-        "Net-label text style and color normalization.",
-        "Use this to make copied/vendor sheets match the project drawing standard.",
-    ),
-    "normalize_net_labels.font": ("Font applied to net-label text.",),
-    "normalize_component_designators": (
-        "Placed component designator text, for example U1/R3/C10.",
-        "Font specs use font_name, size_pt, bold, italic, and optional color_win32/color.",
-    ),
-    "normalize_component_designators.font": (
-        "Font applied to component designator text.",
-    ),
-    "normalize_component_parameters": (
-        "Visible component parameter text such as value or part-number fields.",
-        "This does not rename parameter keys; it only normalizes displayed text style.",
-    ),
-    "normalize_component_parameters.font": (
-        "Font applied to visible component parameter text.",
-    ),
-    "normalize_component_free_text": (
-        "Free text owned by a component rather than board/sheet-level free text.",
-        "Useful for vendor symbols with inconsistent internal notes.",
-    ),
-    "normalize_component_free_text.font_name": (
-        "Font family applied to component-owned free text.",
-    ),
-    "normalize_wires": (
-        "Schematic wire color normalization.",
-        "This intentionally avoids net labels and power symbols; those have separate rules.",
-    ),
-    "normalize_no_erc": (
-        "No-ERC marker appearance.",
-        "symbol options: cross, thin cross, small cross, checkbox, triangle, or enum integer.",
-    ),
-    "normalize_no_erc.symbol": (
-        "Marker style. Options: cross, thin cross, small cross, checkbox, triangle, or enum integer.",
-    ),
-    "normalize_sheet_style": (
-        "Sheet border/area colors and document title-block font.",
-        "PrjPcb input applies this rule to every SchDoc listed by the project.",
-    ),
-    "normalize_sheet_style.line_color_win32": ("Sheet border line color.",),
-    "normalize_sheet_style.area_color_win32": ("Sheet background/area color.",),
-    "normalize_sheet_style.document_font": (
-        "Font applied to sheet document/title-block text.",
-    ),
-    "normalize_symbol_internal_graphics_monochrome": (
-        "Symbol-owned internal graphics, such as lines, polygons, arcs, and fills.",
-        "saturation=0 makes graphics monochrome while preserving relative intensity.",
-    ),
-    "normalize_symbol_internal_graphics_monochrome.saturation": (
-        "Target saturation from 0.0 monochrome to 1.0 unchanged.",
-    ),
-}
+_SCHEMATIC_CLEAN_COMMENTS = workflow_metadata("clean_config", "schematic-comments")
 
-_PCBLIB_CLEAN_COMMENTS: dict[str, tuple[str, ...]] = {
-    "schema": (
-        "PcbLib clean config for footprint-library cleanup.",
-        "This file is JSONC: // comments and trailing commas are accepted.",
-        "Use --init-config to write this template without cleaning an input.",
-        "Use --force-config with --init-config to overwrite an existing template.",
-        "The default profile removes vendor drafting noise while preserving 3D bodies.",
-    ),
-    "enabled": ("Set enabled=false to leave this rule family unchanged.",),
-    "profile": (
-        "Human-readable rule profile name written to clean reports.",
-        "Options: raw, default.",
-        "Use separate config files for different vendor/library cleanup policies.",
-    ),
-    "remove_mechanical_primitives": (
-        "Remove mechanical-layer tracks, arcs, fills, and similar drafting primitives.",
-        "Preserve options protect component bodies, board cutouts, keepouts, and custom pads.",
-    ),
-    "remove_mechanical_primitives.primitive_types": (
-        "Primitive collections to remove; supported values include tracks, arcs, fills, and texts.",
-    ),
-    "remove_mechanical_primitives.layers": (
-        "Layer policy for primitive removal. Options: any, mechanical, layer names, or layer ids.",
-    ),
-    "remove_mechanical_primitives.preserve_regions": (
-        "Keep regions even if mechanical primitive removal is enabled.",
-    ),
-    "remove_mechanical_primitives.preserve_component_bodies": (
-        "Keep component-body/3D-model related primitives.",
-    ),
-    "remove_text_strings": (
-        "Remove configured PcbLib text strings, often vendor labels on mechanical layers.",
-        "Match by layer, text content, or both depending on the nested rule options.",
-    ),
-    "remove_text_strings.layers": (
-        "Layer policy for text removal. Options: any, mechanical, layer names, or layer ids.",
-    ),
-    "remove_text_strings.match": (
-        "Text matching mode. Options: all, regex, contains, exact.",
-    ),
-    "remove_text_strings.patterns": (
-        "Text patterns used when match is regex, contains, or exact.",
-    ),
-    "remove_regions": (
-        "Remove configured mechanical regions.",
-        "Use cautiously: the rule has preservation flags for keepouts and custom-pad regions.",
-    ),
-    "remove_regions.layers": (
-        "Layer policy for region removal. Options: any, mechanical, layer names, or layer ids.",
-    ),
-    "remove_regions.preserve_component_linked": (
-        "Keep regions linked to a footprint component object.",
-    ),
-    "remove_regions.preserve_model_associated": (
-        "Keep regions associated with embedded or generated models.",
-    ),
-    "remove_regions.preserve_keepouts": ("Keep keepout regions.",),
-    "remove_regions.preserve_board_cutouts": ("Keep board-cutout regions.",),
-    "remove_regions.preserve_custom_pad_regions": (
-        "Keep regions used to represent custom pads.",
-    ),
-}
+_PCBLIB_CLEAN_COMMENTS = workflow_metadata("clean_config", "pcblib-comments")
 
 
 def _find_input_in_cwd() -> Path | None:

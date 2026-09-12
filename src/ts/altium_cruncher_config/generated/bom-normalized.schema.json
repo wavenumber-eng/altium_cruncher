@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.bom.raw.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.bom.raw.a0"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "variant": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "component_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "dnp_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NormalizedBomComponent"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "variant",
+    "component_count",
+    "dnp_count",
+    "components"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "stem": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "name",
+        "stem"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "NormalizedBomComponent": {
+      "type": "object",
+      "properties": {
+        "designator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "string"
+        },
+        "library_ref": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "dnp": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "$ref": "#/$defs/RecordString"
+        },
+        "canonical_fields": {
+          "$ref": "#/$defs/RecordString"
+        },
+        "field_sources": {
+          "$ref": "#/$defs/RecordString"
+        }
+      },
+      "required": [
+        "designator",
+        "value",
+        "footprint",
+        "library_ref",
+        "description",
+        "sheet",
+        "dnp",
+        "parameters",
+        "canonical_fields",
+        "field_sources"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

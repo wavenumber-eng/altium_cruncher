@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.bom.array.a0",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/RawBomComponent"
+  },
+  "$defs": {
+    "RawBomComponent": {
+      "type": "object",
+      "properties": {
+        "designator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "string"
+        },
+        "library_ref": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "dnp": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "Raw rows from the Altium Monkey BOM API, with source-dependent parameter columns preserved."
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

@@ -1,0 +1,8 @@
+{
+  "contract": {
+    "stem": "bom_array",
+    "title": "Raw BOM array (unwrapped wire format)",
+    "source": "../outputs/commands",
+    "kind": "output"
+  }
+}

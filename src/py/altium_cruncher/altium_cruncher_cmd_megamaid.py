@@ -17,11 +17,11 @@ from altium_cruncher.altium_cruncher_common import (
     find_prjpcb_in_cwd,
 )
 from altium_cruncher.altium_cruncher_pcblib_split import split_pcblib_filesystem_safe
-from altium_cruncher.altium_cruncher_cmd_bom import (
+from altium_cruncher.bom_artifacts import (
     _bom_from_configured_source,
     _configured_bom_artifacts,
 )
-from altium_cruncher.altium_cruncher_cmd_pnp import _configured_pnp_artifacts
+from altium_cruncher.pnp_artifacts import _configured_pnp_artifacts
 from altium_cruncher.altium_cruncher_json_dump import (
     build_json_dump_payload,
     document_json_output_path,

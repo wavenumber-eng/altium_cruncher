@@ -48,6 +48,8 @@ class CruncherPcbAssemblySvgRenderOptions(PcbSvgRenderOptions):
     assembly_samples_per_curve: int = 24
     assembly_round_digits: int = 3
     assembly_projection_algorithm: str | None = None
+    assembly_outline_algorithm: str | None = None
+    assembly_fast: dict[str, object] | None = None
     assembly_mesh_linear_deflection: float | None = None
     assembly_mesh_angular_deflection: float | None = None
     assembly_mesh_relative: bool | None = None
@@ -468,6 +470,8 @@ class CruncherPcbAssemblySvgRenderer(PcbSvgRenderer):
         projection_options = AssemblyProjectionOptions(
             side="bottom" if side == "bottom" else "top",
             projection_algorithm=options.assembly_projection_algorithm,
+            outline_algorithm=options.assembly_outline_algorithm,
+            fast=options.assembly_fast,
             curve_mode="polyline" if curve_mode == "polyline" else "native_arcs",
             samples_per_curve=samples_per_curve,
             round_digits=round_digits,

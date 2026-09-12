@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "json_dump_manifest",
+    "title": "JSON dump batch",
+    "source": "../outputs/json-dump",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.json_dump.manifest.a0"
+}

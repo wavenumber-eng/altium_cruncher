@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "notes",
+    "title": "Schematic notes",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.notes.a0"
+}

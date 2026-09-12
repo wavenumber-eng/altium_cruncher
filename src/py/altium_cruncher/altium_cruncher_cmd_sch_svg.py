@@ -10,7 +10,7 @@ from altium_cruncher.altium_cruncher_common import (
     _resolve_output_dir,
     find_prjpcb_in_cwd,
 )
-from altium_cruncher.altium_cruncher_cmd_sch_ir import (
+from altium_cruncher.schematic_diagnostics import (
     log_current_font_resolution_diagnostics,
 )
 

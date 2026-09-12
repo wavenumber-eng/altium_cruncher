@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "pcb_svg_manifest",
+    "title": "PCB SVG outputs",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "pcb.svg.manifest.a0"
+}

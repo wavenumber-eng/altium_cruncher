@@ -1,0 +1,8 @@
+{
+  "contract": {
+    "stem": "json_dump",
+    "title": "Document JSON dump",
+    "source": "../outputs/json-dump",
+    "kind": "output"
+  }
+}

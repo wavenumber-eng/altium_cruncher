@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.pcb_svg.enrichment_extension.a0",
+  "type": "object",
+  "properties": {
+    "canvas": {
+      "$ref": "#/$defs/Canvas"
+    },
+    "virtual_component_layers": {
+      "$ref": "#/$defs/ImportedPcbSvgComponentLayers"
+    }
+  },
+  "required": [
+    "canvas"
+  ],
+  "allOf": [
+    {
+      "$ref": "#/$defs/RecordUnknown"
+    }
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "description": "Cruncher fields embedded in the Altium Monkey PCB SVG enrichment payload. Other base fields remain upstream-owned; this does not introduce a new wire tag.",
+  "$defs": {
+    "Canvas": {
+      "type": "object",
+      "properties": {
+        "bounds_mode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "all_geometry"
+            },
+            {
+              "type": "string",
+              "const": "board_outline"
+            }
+          ]
+        },
+        "bounds_mils": {
+          "$ref": "#/$defs/Bounds"
+        },
+        "margin_mm": {
+          "type": "number"
+        },
+        "altium_origin_mils": {
+          "$ref": "#/$defs/Pair"
+        },
+        "svg_units": {
+          "type": "string",
+          "const": "mm"
+        },
+        "geometry_transform": {
+          "type": "object",
+          "properties": {
+            "x_svg_mm": {
+              "type": "string"
+            },
+            "y_svg_mm": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "x_svg_mm",
+            "y_svg_mm"
+          ],
+          "unevaluatedProperties": {
+            "not": {}
+          }
+        },
+        "metadata_coordinate_policy": {
+          "type": "string"
+        },
+        "view_box_mm": {
+          "$ref": "#/$defs/Bounds"
+        },
+        "scene_mirror_x": {
+          "type": "boolean"
+        },
+        "scene_mirror_width_mm": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "bounds_mode",
+        "bounds_mils",
+        "margin_mm",
+        "altium_origin_mils",
+        "svg_units",
+        "geometry_transform",
+        "metadata_coordinate_policy"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "Bounds": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "Pair": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "ImportedPcbSvgComponentLayers": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "pcb.svg.component-layers.a0"
+        },
+        "coordinate_policy": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImportedPcbSvgComponentLayers_PcbSvgComponentLayersLayersItem"
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "coordinate_policy",
+        "layers"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/ImportedPcbSvgComponentLayers_RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "title": "PCB SVG component layer metadata extension"
+    },
+    "ImportedPcbSvgComponentLayers_PcbSvgComponentLayersLayersItem": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "ILLUSTRATION_TOP"
+            },
+            {
+              "type": "string",
+              "const": "ILLUSTRATION_BOTTOM"
+            },
+            {
+              "type": "string",
+              "const": "ASSEMBLY_DESIGNATORS_TOP"
+            },
+            {
+              "type": "string",
+              "const": "ASSEMBLY_DESIGNATORS_BOTTOM"
+            }
+          ]
+        },
+        "group_id": {
+          "type": "string"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "top"
+            },
+            {
+              "type": "string",
+              "const": "bottom"
+            }
+          ]
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImportedPcbSvgComponentLayers_PcbSvgComponentLayersLayersItemInstancesItem"
+          }
+        },
+        "unique_symbols": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "token",
+        "group_id",
+        "side",
+        "instances"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/ImportedPcbSvgComponentLayers_RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedPcbSvgComponentLayers_RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "ImportedPcbSvgComponentLayers_PcbSvgComponentLayersLayersItemInstancesItem": {
+      "type": "object",
+      "properties": {
+        "group_id": {
+          "type": "string"
+        },
+        "component_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "designator": {
+          "type": "string"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "top"
+            },
+            {
+              "type": "string",
+              "const": "bottom"
+            }
+          ]
+        },
+        "symbol_id": {
+          "type": "string"
+        },
+        "anchor_svg_mm": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "anchor_board_mm": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "bounds_local_xyz_mm": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6
+        },
+        "bodies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImportedPcbSvgComponentLayers_PcbSvgComponentLayersLayersItemInstancesItemBodiesItem"
+          }
+        },
+        "paint_order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "geometry_source": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "model"
+            },
+            {
+              "type": "string",
+              "const": "pads"
+            }
+          ]
+        },
+        "center_view_mm": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2
+        },
+        "font_size_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rotation_degrees": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "group_id",
+        "component_index",
+        "designator"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/ImportedPcbSvgComponentLayers_RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedPcbSvgComponentLayers_PcbSvgComponentLayersLayersItemInstancesItemBodiesItem": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "step"
+            },
+            {
+              "type": "string",
+              "const": "extruded"
+            }
+          ]
+        },
+        "lower_z_mm": {
+          "type": "number"
+        },
+        "upper_z_mm": {
+          "type": "number"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "maxItems": 3,
+          "minItems": 3
+        },
+        "opacity": {
+          "type": "number",
+          "maximum": 1,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "index",
+        "kind",
+        "lower_z_mm",
+        "upper_z_mm",
+        "color",
+        "opacity"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/ImportedPcbSvgComponentLayers_RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/pcb-svg-enrichment.tsp. Do not edit."
+}

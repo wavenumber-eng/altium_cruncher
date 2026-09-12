@@ -73,6 +73,7 @@ def load_design_for_pcb_input(
     input_file: Path,
     *,
     project_context: str | None = "auto",
+    load_schematics: bool = True,
 ) -> tuple["AltiumDesign", str]:
     """
     Load an AltiumDesign from a PcbDoc/PrjPcb input.
@@ -80,6 +81,10 @@ def load_design_for_pcb_input(
     Returns ``(design, source_tag)`` where source_tag records whether the input
     was a project, a board-only document, or a PcbDoc with discovered project
     context.
+
+    PCB-only consumers can disable schematic parsing while retaining project
+    discovery, project parameters and variants. Other consumers keep the full
+    design-loading behavior by default.
     """
     from altium_monkey.altium_design import AltiumDesign
 
@@ -87,13 +92,24 @@ def load_design_for_pcb_input(
     context_mode = _normalize_pcb_project_context(project_context)
     suffix = resolved_input.suffix.lower()
     if suffix == ".prjpcb":
-        return _load_design_from_prjpcb(resolved_input, context_mode)
+        return _load_design_from_prjpcb(
+            resolved_input, context_mode, load_schematics=load_schematics
+        )
     if suffix != ".pcbdoc":
         raise ValueError(f"Unsupported PCB design input type: {suffix}")
 
     if context_mode == "none":
         return AltiumDesign.from_pcbdoc(resolved_input), "pcbdoc_board_only"
 
+    discovered = _discover_project_context(resolved_input, context_mode, load_schematics=load_schematics)
+    if discovered is not None:
+        return discovered, "pcbdoc_with_project_context"
+    return _load_pseudo_project(resolved_input, load_schematics=load_schematics)
+
+
+def _discover_project_context(
+    resolved_input: Path, context_mode: str, *, load_schematics: bool,
+) -> AltiumDesign | None:
     sibling_projects = sorted(
         [
             p
@@ -104,7 +120,9 @@ def load_design_for_pcb_input(
     )
     for prjpcb in sibling_projects:
         try:
-            design = AltiumDesign.from_prjpcb(prjpcb)
+            design, _ = _load_design_from_prjpcb(
+                prjpcb, context_mode, load_schematics=load_schematics
+            )
             pcb_paths = design.get_pcbdoc_paths()
         except Exception as exc:
             log.debug(
@@ -122,8 +140,15 @@ def load_design_for_pcb_input(
                     resolved_input.name,
                     prjpcb.name,
                 )
-                return design, "pcbdoc_with_project_context"
+                return design
 
+    return None
+
+
+def _load_pseudo_project(
+    resolved_input: Path, *, load_schematics: bool,
+) -> tuple[AltiumDesign, str]:
+    from altium_monkey.altium_design import AltiumDesign
     from altium_monkey.altium_netlist_options import NetlistOptions
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
     from altium_monkey.altium_schdoc import AltiumSchDoc
@@ -143,6 +168,8 @@ def load_design_for_pcb_input(
         key=lambda p: p.name.lower(),
     ):
         pseudo_project.add_document(schdoc_path.name)
+        if not load_schematics:
+            continue
         try:
             schdocs.append(AltiumSchDoc(schdoc_path))
         except Exception as exc:
@@ -174,11 +201,15 @@ def load_design_for_pcb_input(
 def _load_design_from_prjpcb(
     input_file: Path,
     context_mode: str,
+    *,
+    load_schematics: bool = True,
 ) -> tuple["AltiumDesign", str]:
     from altium_monkey.altium_design import AltiumDesign
 
     if context_mode == "none":
         return _load_prjpcb_board_only_design(input_file), "prjpcb_board_only"
+    if not load_schematics:
+        return _load_prjpcb_board_only_design(input_file), "prjpcb_input"
     return AltiumDesign.from_prjpcb(input_file), "prjpcb_input"
 
 
@@ -197,7 +228,7 @@ def _load_prjpcb_board_only_design(input_file: Path) -> "AltiumDesign":
 
 
 def iter_pcb_render_inputs(
-    design,
+    design: AltiumDesign,
     *,
     pcbdoc_selector: Path | str | None = None,
 ) -> list[CruncherPcbRenderInput]:

@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pcb.svg.timings.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "pcb.svg.timings.a0"
+    },
+    "clock": {
+      "type": "string",
+      "const": "wall"
+    },
+    "workers": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "notes": {
+      "type": "string"
+    },
+    "model_cache": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PcbSvgTimingsModelCacheObject"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PcbSvgTimingsEventsItem"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "clock",
+    "notes",
+    "events"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "title": "PCB SVG job wall timings",
+  "$defs": {
+    "PcbSvgTimingsModelCacheObject": {
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": "string"
+        },
+        "counts": {
+          "$ref": "#/$defs/PcbSvgTimingsModelCacheObjectCounts"
+        },
+        "read_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "write_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "directory",
+        "counts",
+        "read_seconds",
+        "write_seconds"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbSvgTimingsEventsItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "minimum": 0
+        },
+        "stage": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "board": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "view": {
+          "type": "string"
+        },
+        "side": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "top"
+            },
+            {
+              "type": "string",
+              "const": "bottom"
+            },
+            {
+              "type": "string",
+              "const": "both"
+            },
+            {
+              "type": "string",
+              "const": "board"
+            }
+          ]
+        },
+        "layer": {
+          "type": "string"
+        },
+        "part": {
+          "type": "string"
+        },
+        "cache": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "string",
+              "const": "built"
+            },
+            {
+              "type": "string",
+              "const": "hit"
+            },
+            {
+              "type": "string",
+              "const": "assembled"
+            },
+            {
+              "type": "string",
+              "const": "disabled"
+            }
+          ]
+        },
+        "failed": {
+          "type": "boolean"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "exclusive_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "parent_id",
+        "stage",
+        "cache",
+        "failed",
+        "seconds",
+        "exclusive_seconds"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbSvgTimingsModelCacheObjectCounts": {
+      "type": "object",
+      "properties": {
+        "hits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "misses": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "writes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invalid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evictions": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "hits",
+        "misses",
+        "writes",
+        "invalid",
+        "evictions"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/pcb-svg-timings.tsp. Do not edit."
+}

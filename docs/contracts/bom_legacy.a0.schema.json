@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.bom.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.bom.a0"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "variant": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "component_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "dnp_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "parameter_columns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecordString"
+      }
+    },
+    "raw_components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RawBomComponent"
+      }
+    },
+    "normalized": {
+      "$ref": "#/$defs/ImportedBomNormalized"
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "variant",
+    "component_count",
+    "dnp_count",
+    "columns",
+    "parameter_columns",
+    "components",
+    "raw_components",
+    "normalized"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "stem": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "name",
+        "stem"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    },
+    "RawBomComponent": {
+      "type": "object",
+      "properties": {
+        "designator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "string"
+        },
+        "library_ref": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "dnp": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "Raw rows from the Altium Monkey BOM API, with source-dependent parameter columns preserved."
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "ImportedBomNormalized": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "altium_cruncher.bom.raw.a0"
+        },
+        "source": {
+          "$ref": "#/$defs/ImportedBomNormalized_Source"
+        },
+        "variant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "component_count": {
+          "$ref": "#/$defs/ImportedBomNormalized_Count"
+        },
+        "dnp_count": {
+          "$ref": "#/$defs/ImportedBomNormalized_Count"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImportedBomNormalized_NormalizedBomComponent"
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "source",
+        "variant",
+        "component_count",
+        "dnp_count",
+        "components"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedBomNormalized_Source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "stem": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "name",
+        "stem"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedBomNormalized_Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ImportedBomNormalized_NormalizedBomComponent": {
+      "type": "object",
+      "properties": {
+        "designator": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "string"
+        },
+        "library_ref": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "dnp": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "$ref": "#/$defs/ImportedBomNormalized_RecordString"
+        },
+        "canonical_fields": {
+          "$ref": "#/$defs/ImportedBomNormalized_RecordString"
+        },
+        "field_sources": {
+          "$ref": "#/$defs/ImportedBomNormalized_RecordString"
+        }
+      },
+      "required": [
+        "designator",
+        "value",
+        "footprint",
+        "library_ref",
+        "description",
+        "sheet",
+        "dnp",
+        "parameters",
+        "canonical_fields",
+        "field_sources"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ImportedBomNormalized_RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

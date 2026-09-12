@@ -1,0 +1,8 @@
+emit:
+  - "@typespec/json-schema"
+options:
+  "@typespec/json-schema":
+    emitter-output-dir: "{output-dir}/schema"
+    file-type: json
+    seal-object-schemas: true
+warn-as-error: true
