@@ -16,7 +16,8 @@ import math
 import re
 from typing import TYPE_CHECKING, Literal, TypedDict, cast
 from collections.abc import Sequence
-from concurrent.futures import Future, wait
+from concurrent.futures import Future, as_completed
+from pathlib import Path
 
 if TYPE_CHECKING:
     from .pcb_svg_model_cache import PcbSvgModelCache
@@ -46,6 +47,20 @@ _COORDINATE_SPAN = 1_000_000
 
 class ModelGeometryError(Exception):
     """A single authored model cannot supply illustration geometry."""
+
+
+def _unavailable_step_reason(name: str) -> str:
+    extension = Path(name.strip().strip("\x00")).suffix.lower()
+    formats = {
+        ".x_t": "Parasolid text", ".x_b": "Parasolid binary",
+        ".sldprt": "SolidWorks part", ".sldasm": "SolidWorks assembly",
+    }
+    if extension and extension not in {".step", ".stp"}:
+        return (
+            f"unsupported model format {formats.get(extension, 'unknown')} ({extension}); "
+            "Toon supports embedded STEP (.step/.stp) and Altium extruded bodies"
+        )
+    return "embedded STEP unavailable or unreadable"
 
 
 def _geometer_failure_message(error: g.GeometerOperationError | g.GeometerError) -> str:
@@ -528,12 +543,10 @@ class IllustrationJob:
             )
             self.counts["tessellation_disk_hits"] += 1
             self._warn_tessellation(key, context)
-            log.info("Reused cached model: %s", context or key[:12])
+            log.debug("Reused cached model: %s", context or key[:12])
             return meshes
-        log.info(
-            "Tessellating unique component model %d",
-            self.counts["tessellations"] + len(self._tessellation_failures) + 1,
-        )
+        if prepared is None:
+            log.info("Tessellating model: %s", context or key[:12])
         result = self._tessellate_native(key, payload, prepared)
         self._tessellation_warnings[key] = tuple(result.metadata.warnings)
         self._warn_tessellation(key, context)
@@ -586,7 +599,7 @@ class IllustrationJob:
         workers: PcbSvgNativeWorkers,
         cached_bodies: CachedBodies | tuple[()] = (),
     ) -> None:
-        futures = []
+        futures = {}
         for index, body in enumerate(pcbdoc.component_bodies):
             if index in cached_bodies:
                 continue
@@ -616,9 +629,12 @@ class IllustrationJob:
             else:
                 future = workers.submit(_model_tessellation, entry["step_bytes"])
                 self._prepared_tessellations[key] = "native", future
-                futures.append(future)
+                component = _owning_component(pcbdoc, body)
+                owner = component.designator if component is not None else f"free-body-{index}"
+                futures[future] = f"{entry['name']} ({owner})"
         if futures:
-            log.info(
+            log.info("Preparing %s STEP models: %d unique models", side, len(futures))
+            log.debug(
                 "Tessellating %d unique %s STEP models across up to %d native workers",
                 len(futures),
                 side,
@@ -626,8 +642,15 @@ class IllustrationJob:
             )
             # Finish the batch before serial extrusions use the collection
             # client: do not run a fifth native operation beside four workers.
-            # wait does not raise task errors; source-order consumption does.
-            wait(futures)
+            # Observe completion without raising task errors here; source-order
+            # consumption below still supplies body-specific warnings/errors.
+            for completed, future in enumerate(as_completed(futures), 1):
+                failed = future.cancelled() or future.exception() is not None
+                log.info(
+                    "%s %s STEP model %d/%d: %s",
+                    "Failed" if failed else "Completed",
+                    side, completed, len(futures), futures[future],
+                )
 
     @staticmethod
     def _prefetch_entry(
@@ -769,10 +792,11 @@ class IllustrationJob:
         )
         try:
             geometry = self._body_geometry(
-                body, component, anchor, helper, by_id, by_name, designator, is_bottom
+                body, component, anchor, helper, by_id, by_name, f"{designator} body {index}", is_bottom
             )
         except ModelGeometryError as error:
-            name = str(body.properties.get("MODEL.NAME") or "extruded body")
+            fallback = "extruded body" if body.model_type == 0 else "unnamed model"
+            name = str(body.properties.get("MODEL.NAME") or fallback)
             self.warn(f"{designator} body {index} ({name}): {error}; omitted")
             return None
         if geometry is None:
@@ -848,9 +872,8 @@ class IllustrationJob:
                 body.properties, models_by_id=by_id, models_by_name=by_name
             )
             if entry is None:
-                raise ModelGeometryError(
-                    "embedded STEP unavailable or model format unsupported"
-                )
+                name = str(body.properties.get("MODEL.NAME") or "")
+                raise ModelGeometryError(_unavailable_step_reason(name))
             meshes = self._tessellate(
                 entry["hash"],
                 entry["step_bytes"],
@@ -1101,7 +1124,7 @@ class IllustrationJob:
                     illustrate,
                 )
                 submitted += 1
-        log.info(
+        log.debug(
             "Scheduled %d unique %s component requests across up to %d native workers",
             submitted,
             side,

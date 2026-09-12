@@ -64,6 +64,7 @@ def test_failed_and_unsupported_bodies_warn_and_preserve_other_bodies(monkeypatc
     assert "partial meshes are not returned" in job.warnings[0]
     assert "J2 body 1 (bad.step)" in job.warnings[1]
     assert "part.x_t" in job.warnings[2] and "unsupported" in job.warnings[2]
+    assert "Parasolid text (.x_t)" in job.warnings[2]
     assert "unsupported model type 2" in job.warnings[3]
     assert all(warning in caplog.text for warning in job.warnings)
 

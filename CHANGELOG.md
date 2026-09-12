@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep Toon progress readable by reserving timing, worker and cache diagnostics
+  for `--verbose`. Show completed STEP filenames, identify unsupported model
+  formats in warnings, and end with success and the output location.
+
 - Fix design-review SVG metadata joins to use source identity within the rendered
   physical document, preventing value and variant-state leakage between repeated
   labels. Include compact compiler metadata and clarify agent guidance for

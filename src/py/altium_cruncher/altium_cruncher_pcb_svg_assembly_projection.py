@@ -125,7 +125,8 @@ class AssemblyProjectionCache:
             return cache_key, cached
 
         label = str(model_label or "").strip() or f"hash:{str(model_hash)[:12]}"
-        log.info(
+        log.info("Projecting %s STEP model: %s", options.side, label)
+        log.debug(
             "Computing Geometer HLR STEP projection: %s (hash=%s, side=%s, pose=%s)",
             label,
             str(model_hash)[:12],

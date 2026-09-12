@@ -60,44 +60,46 @@ def _resolve_inputs(file: str | None) -> list[Path]:
     return inputs
 
 
-def _cmd_toon(args: argparse.Namespace, render_job: PcbSvgRenderJob) -> int:
-    """Resolve preset/config, render each view once, and write its SVG."""
-    try:
-        if args.write_config:
-            config = _resolve_config(args)
-            args.write_config.parent.mkdir(parents=True, exist_ok=True)
-            args.write_config.write_text(pcb_svg_config_text(config), encoding="utf-8")
-            log.info("Wrote toon SVG config: %s", args.write_config)
-            return 0
-        inputs = _resolve_inputs(args.file)
-        output_dir = args.output.resolve()
-        written = 0
-        for input_file in inputs:
-            config = _resolve_config(args, input_file)
-            written += render_project(
-                input_file, config, output_dir, render_job=render_job,
-                variant_name=args.variant, all_variants=args.all_variants,
-            )
-        log.info("Wrote %s illustration file(s) into %s", written, output_dir)
-        return 0
-    except (ValueError, OSError, RuntimeError) as exc:
-        log.error("toon: %s", exc)
-        return 1
+def _cmd_toon(args: argparse.Namespace, render_job: PcbSvgRenderJob) -> str:
+    """Write the requested output and return its final user-facing summary."""
+    if args.write_config:
+        config = _resolve_config(args)
+        args.write_config.parent.mkdir(parents=True, exist_ok=True)
+        args.write_config.write_text(pcb_svg_config_text(config), encoding="utf-8")
+        return f"Success: wrote toon SVG config to {args.write_config.resolve()}"
+    inputs = _resolve_inputs(args.file)
+    output_dir = args.output.resolve()
+    written = 0
+    for input_file in inputs:
+        config = _resolve_config(args, input_file)
+        written += render_project(
+            input_file, config, output_dir, render_job=render_job,
+            variant_name=args.variant, all_variants=args.all_variants,
+        )
+    if not written:
+        return "No SVG files written: no views are enabled in the selected config."
+    noun = "file" if written == 1 else "files"
+    return f"Success: wrote {written} SVG {noun} to {output_dir}"
 
 
 def cmd_toon(args: argparse.Namespace) -> int:
     render_job = PcbSvgRenderJob.from_args(args)
     try:
-        with render_job.measure("job", command="toon") as timing:
-            try:
-                result = _cmd_toon(args, render_job)
-            finally:
-                render_job.finish()
-            timing["failed"] = result != 0
-            return result
-    finally:
-        if getattr(args, "timings", None):
-            render_job.write_timings(args.timings)
+        try:
+            with render_job.measure("job", command="toon"):
+                try:
+                    summary = _cmd_toon(args, render_job)
+                finally:
+                    render_job.finish()
+        finally:
+            if getattr(args, "timings", None):
+                render_job.write_timings(args.timings)
+                log.info("Wrote timing report: %s", args.timings.resolve())
+    except (ValueError, OSError, RuntimeError) as exc:
+        log.error("toon: %s", exc)
+        return 1
+    log.info(summary)
+    return 0
 
 
 def register_parser(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:

@@ -223,7 +223,7 @@ class ComponentLayerSession:
             if artwork is None:
                 parts = self._parts[parts_key]
             log.info(
-                "Materializing %s component layer: %d components", side, len(parts)
+                "Rendering %s component illustrations: %d components", side, len(parts)
             )
             placed = self.job.render_many(
                 parts, side=side, illustrate=illustrate, workers=self.workers
@@ -231,6 +231,9 @@ class ComponentLayerSession:
             if artwork is not None:
                 artwork.store(placed)
             log.info(
+                "Completed %s component illustrations: %d/%d", side, len(placed), len(parts)
+            )
+            log.debug(
                 "Completed %s components: %d/%d (%d new, %d disk-cached illustrations in job)",
                 side,
                 len(placed),

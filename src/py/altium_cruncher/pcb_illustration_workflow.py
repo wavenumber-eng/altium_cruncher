@@ -37,7 +37,7 @@ def render_project(
     log.info("Loading project/board context: %s", input_file)
     with render_job.measure("project", board=str(input_file)):
         design, source = load_design_for_pcb_input(input_file, load_schematics=False)
-    log.info("Loaded design context: %s", source)
+    log.debug("Loaded design context: %s", source)
     variants = illustration_variants(
         design, variant=variant_name, all_variants=all_variants
     )
@@ -56,7 +56,7 @@ def render_project(
     for render_input in boards:
         render_job.register_board(render_input.pcbdoc, excluded_designators=common_dnp)
         for variant in variants:
-            log.info(
+            log.debug(
                 "Variant %s: %d DNP components",
                 variant.name or "base",
                 len(variant.excluded_designators),

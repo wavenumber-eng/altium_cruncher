@@ -280,7 +280,7 @@ class ComponentArtworkCache:
                 index = body["index"]
                 cached_bodies[index] = (part if ordinal == 0 else None, events[index])
         log.info(
-            "Reused %d %s component placements before mesh loading",
+            "Reusing illustrations for %d %s components",
             len(self.hit_owners),
             self.side,
         )

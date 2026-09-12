@@ -74,14 +74,14 @@ class PcbSvgRenderJob:
 
     def finish(self) -> None:
         self.native_workers.close()
-        log.info(
+        log.debug(
             "SVG native workers: limit %d, started %d clients",
             self.native_workers.count,
             self.native_workers.started_clients,
         )
         if self.model_cache is not None:
             self.model_cache.prune()
-            log.info("SVG disk cache: %s", self.model_cache.counts)
+            log.debug("SVG disk cache: %s", self.model_cache.counts)
 
     def __enter__(self) -> Self:
         return self
@@ -188,7 +188,7 @@ class PcbSvgRenderJob:
                     for k in ("board", "variant", "view", "layer")
                     if context.get(k) is not None
                 )
-                log.info(
+                log.debug(
                     "Render timing %s: %s %.3fs (%s)",
                     stage,
                     label,
