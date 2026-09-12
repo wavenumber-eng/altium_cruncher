@@ -76,3 +76,28 @@ uv run --extra test python tests/support_scripts/install_test.py
 
 GitHub Actions reruns the same Rack, package build, distribution check, and
 installed-console smoke tests before a published release can upload to PyPI.
+
+## Documentation-Only CI
+
+Documentation-only edits bypass test/build CI, including edits to generated
+documentation. This applies to the root `README.md`, `CONTRIBUTING.md`,
+`CHANGELOG.md`, `AGENTS.md`, and documentation under `docs/`: Markdown, HTML,
+reStructuredText, text, CSS, SVG, PNG, JPEG, GIF, WebP, ICO, and PDF files.
+There are no dependency installations, documentation checks, contract checks,
+tests, or builds on this path.
+
+Machine-readable contracts (including JSON schemas), governance TOML, source,
+tests, workflows, and other files still run full CI. Mixed changes also run full
+CI. Updating a documentation generator runs full CI; updating only its Markdown
+or HTML output does not. The classifier examines the complete Git diff,
+including both paths of renames. Missing history, empty diffs, and manual
+workflow dispatches use full CI.
+
+GitHub still starts a minimal workflow to detect the changed files and report
+the existing required statuses. For documentation-only changes, the matrix
+statuses use short Ubuntu jobs, skipping checkout and all validation steps.
+Existing PR metadata checks still apply. A failed scope check explicitly fails
+the required jobs. The workflow itself is never filtered out, which avoids
+leaving required checks pending. Release publishing always runs full validation.
+The policy lives in `tests/support_scripts/ci_scope.py` and
+`.github/workflows/ci.yml`.
