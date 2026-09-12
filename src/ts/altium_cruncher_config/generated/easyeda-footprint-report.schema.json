@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.easyeda.footprint_report.a0",
+  "type": "object",
+  "properties": {
+    "lcsc_id": {
+      "type": "string"
+    },
+    "footprint_name": {
+      "type": "string"
+    },
+    "source_pad_count": {
+      "type": "integer"
+    },
+    "generated_pad_count": {
+      "type": "integer"
+    },
+    "generated_hole_pad_count": {
+      "type": "integer"
+    },
+    "custom_pad_count": {
+      "type": "integer"
+    },
+    "slotted_pad_count": {
+      "type": "integer"
+    },
+    "track_count": {
+      "type": "integer"
+    },
+    "track_segment_count": {
+      "type": "integer"
+    },
+    "circle_count": {
+      "type": "integer"
+    },
+    "arc_count": {
+      "type": "integer"
+    },
+    "rectangle_count": {
+      "type": "integer"
+    },
+    "region_count": {
+      "type": "integer"
+    },
+    "text_count": {
+      "type": "integer"
+    },
+    "unsupported_count": {
+      "type": "integer"
+    },
+    "unsupported_graphics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "layers": {
+      "$ref": "#/$defs/RecordInteger"
+    },
+    "policy": {
+      "$ref": "#/$defs/FootprintPolicy"
+    },
+    "transform": {
+      "$ref": "#/$defs/FootprintTransform"
+    },
+    "model_3d_attached": {
+      "type": "boolean"
+    },
+    "model_3d_centered_fallback": {
+      "type": "boolean"
+    },
+    "model_3d_placement_verdict": {
+      "type": "string"
+    },
+    "model_3d": {
+      "$ref": "#/$defs/ModelAttachment"
+    }
+  },
+  "required": [
+    "lcsc_id",
+    "footprint_name",
+    "source_pad_count",
+    "generated_pad_count",
+    "generated_hole_pad_count",
+    "custom_pad_count",
+    "slotted_pad_count",
+    "track_count",
+    "track_segment_count",
+    "circle_count",
+    "arc_count",
+    "rectangle_count",
+    "region_count",
+    "text_count",
+    "unsupported_count",
+    "unsupported_graphics",
+    "warnings",
+    "layers",
+    "policy",
+    "transform",
+    "model_3d_attached",
+    "model_3d_centered_fallback",
+    "model_3d_placement_verdict",
+    "model_3d"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "description": "Existing unversioned mapping report: this schema adds no field to the emitted wire object.",
+  "$defs": {
+    "RecordInteger": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "integer"
+      }
+    },
+    "FootprintPolicy": {
+      "type": "object",
+      "properties": {
+        "mils_per_easyeda_unit": {
+          "type": "number"
+        },
+        "invert_y": {
+          "type": "boolean"
+        },
+        "include_source_graphics": {
+          "type": "boolean"
+        },
+        "include_source_text": {
+          "type": "boolean"
+        },
+        "include_non_pad_holes": {
+          "type": "boolean"
+        },
+        "default_graphic_width_mils": {
+          "type": "number"
+        },
+        "curve_approximation_segments": {
+          "type": "integer"
+        },
+        "arc_approximation_max_degrees": {
+          "type": "number"
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "FootprintTransform": {
+      "type": "object",
+      "properties": {
+        "anchor_x": {
+          "type": "number"
+        },
+        "anchor_y": {
+          "type": "number"
+        },
+        "mils_per_easyeda_unit": {
+          "type": "number"
+        },
+        "invert_y": {
+          "type": "boolean"
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ModelAttachment": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "location_mils": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "raw_location_mils": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "centered_fallback": {
+          "type": "boolean"
+        },
+        "rotation_degrees": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "standoff_mils": {
+          "type": "number"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "placement_check": {
+          "$ref": "#/$defs/PlacementCheck"
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PlacementCheck": {
+      "type": "object",
+      "properties": {
+        "verdict": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "ok"
+            },
+            {
+              "type": "string",
+              "const": "needs_checking"
+            }
+          ]
+        },
+        "checked": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "center_distance_mils": {
+          "type": "number"
+        },
+        "distance_ratio": {
+          "type": "number"
+        },
+        "model_bounds_mils": {
+          "$ref": "#/$defs/BoundsArray"
+        },
+        "pad_bounds_mils": {
+          "$ref": "#/$defs/BoundsArray"
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "BoundsArray": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/easyeda.tsp. Do not edit."
+}

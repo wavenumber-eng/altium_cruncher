@@ -1,0 +1,138 @@
+{
+  "source_corpus": "NXP_FRDM_IMX93/input",
+  "project": "NXP_FRDM_IMX93.PrjPcb",
+  "imported": "2026-09-11",
+  "files": [
+    {
+      "path": "A-01 COVER.SchDoc",
+      "bytes": 65536,
+      "sha256": "d0665d4f95852f1f025ef2d8745166187bcc284e56b4dc6d0315530fc12bf4b6"
+    },
+    {
+      "path": "A-02 BLOCK DIAGRAM.SchDoc",
+      "bytes": 174592,
+      "sha256": "76d35d4c6a56ec679e5e592430115c080381ec8b7fae43eb4cb734c5ac47cba7"
+    },
+    {
+      "path": "A-03 PWR TREE.SchDoc",
+      "bytes": 88576,
+      "sha256": "0972b1ba7a8ddf5e0ed68655108f9d40e94e5aa24e25f735c8a3f399fa0e4841"
+    },
+    {
+      "path": "E-04 CPU PWR.SchDoc",
+      "bytes": 600064,
+      "sha256": "c4a87a1db0ab8bb8a0752e9de133131871087030544b55a483e6b96dc97f822e"
+    },
+    {
+      "path": "E-05 LPDDR4_x.SchDoc",
+      "bytes": 728064,
+      "sha256": "b97eeffcb9f83c6eb80ec7730187ed4cbbc6c18c3841f1fb78ed4fc91af54c3a"
+    },
+    {
+      "path": "E-06 CPU IO_PHY.SchDoc",
+      "bytes": 769024,
+      "sha256": "d2c9e90d83af6ed56103e582a4caa084b857593705e440a93c87418094cbdce8"
+    },
+    {
+      "path": "E-07 CPU MISC.SchDoc",
+      "bytes": 468992,
+      "sha256": "48715d3d75d6d0ed72832822e55755e3755c7377cef8bde448ff3b5cbad68486"
+    },
+    {
+      "path": "E-08 eMMC.SchDoc",
+      "bytes": 381952,
+      "sha256": "af8a55a0d325eeb6bf4430dd0e55b29ee3c650636da478b61a179bc8bc5dbc47"
+    },
+    {
+      "path": "E-09 BOOT_CFG.SchDoc",
+      "bytes": 372736,
+      "sha256": "355d410083ec4ec92d5d6016cfbee894b377c26fc0ba1388e953aac0bbab1ae5"
+    },
+    {
+      "path": "E-10 PMIC.SchDoc",
+      "bytes": 912384,
+      "sha256": "2c263947811ba9d20b801e03f52ffc1c09765d14b9672d2b7f60745c2b35c263"
+    },
+    {
+      "path": "E-11 SYS PWR.SchDoc",
+      "bytes": 700928,
+      "sha256": "c7c4656c24d62c0422961486c295e4b73af1841df4689869004ab303b2cbe3c3"
+    },
+    {
+      "path": "E-12 USB PD.SchDoc",
+      "bytes": 521728,
+      "sha256": "961f4ec4a4754343661497a27767e1341c99bd99cbbd6f42de79839e33d601f8"
+    },
+    {
+      "path": "E-13 USB2 C.SchDoc",
+      "bytes": 759296,
+      "sha256": "b8b36844b25260de61d023a73d462ec60d8ef00c0d77924463be8d01ae88fd34"
+    },
+    {
+      "path": "E-14 ENET1.SchDoc",
+      "bytes": 503296,
+      "sha256": "b3dba82f2ee47e83e582505be4bcbd53e283a81d53cf95292535b18293486107"
+    },
+    {
+      "path": "E-15 ENET2.SchDoc",
+      "bytes": 517120,
+      "sha256": "3fa684bb575323c493a2b85e10439e70ff5b4e6443a1ea15bff9075b400b276c"
+    },
+    {
+      "path": "E-16 LVDS to HDMI.SchDoc",
+      "bytes": 595968,
+      "sha256": "3d10cefd1d7b73762ef7b9d18897edb6cb4ebd77fd531fb432cfdf37b4e58c53"
+    },
+    {
+      "path": "E-17 MIPI DSI_MIPI CSI.SchDoc",
+      "bytes": 864768,
+      "sha256": "739f7ed11a9c3572ab8fa1c5370e058bfdd3f12e51f5b6f0124897dd89437357"
+    },
+    {
+      "path": "E-18 M.2.SchDoc",
+      "bytes": 1216512,
+      "sha256": "0d9d1f5200eb0b3236ee08b23c692f15203e48c909e9a8d8fc4515aa5e44cdd4"
+    },
+    {
+      "path": "E-19 WIFI_BT_802.15.4.SchDoc",
+      "bytes": 505856,
+      "sha256": "81551738da1a8f822b76427bf624e602c5ee00964d5f6664eddb5b4ec582bfc9"
+    },
+    {
+      "path": "E-20 EXP_MicroSD_ADC.SchDoc",
+      "bytes": 832512,
+      "sha256": "bf3775a97e222bb6c5944bd293f5dfe15947c8238f9ce36a4ab63f1dc4e131fb"
+    },
+    {
+      "path": "E-21 DEBUG_RTC_USB A_CAN.SchDoc",
+      "bytes": 786944,
+      "sha256": "ff48e9b558c1db89da0f56e3d8b84bb3757c24e86bf16378906502ba42e1a8e6"
+    },
+    {
+      "path": "LAY-94611_B.PcbDoc",
+      "bytes": 36822528,
+      "sha256": "6af9a29424a6706b57089495f727bd13e4ca9e004578b1d9c80f9b99b530df24"
+    },
+    {
+      "path": "NXP_FRDM_IMX93.PrjPcb",
+      "bytes": 40228,
+      "sha256": "6570024db36672942eba7ad5439cbed8983f78a56dee9630dfe1f21ab6c93d13"
+    },
+    {
+      "path": "X-22 NOTE.SchDoc",
+      "bytes": 131584,
+      "sha256": "8407bb4c3f8b25005e791cfa5dc420542294eaec58f6c590de2d8cf332c20178"
+    },
+    {
+      "path": "X-23 IOMUX.SchDoc",
+      "bytes": 133632,
+      "sha256": "58e5ab574059677ee7eee79eb2a3a6987c06ab67f6d76e51abdbbc369476767a"
+    },
+    {
+      "path": "reference_gen.OutJob",
+      "bytes": 9214,
+      "sha256": "191fb0bb8a969a97d183422ab59dc63fa9ee37304e2a03f10ff445e84f035c97"
+    }
+  ],
+  "missing_source_references": []
+}

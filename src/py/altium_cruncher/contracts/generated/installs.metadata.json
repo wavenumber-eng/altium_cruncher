@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "installs",
+    "title": "Altium install discovery",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.installs.a0"
+}

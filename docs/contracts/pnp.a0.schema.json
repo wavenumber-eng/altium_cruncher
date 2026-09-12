@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.pnp.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.pnp.a0"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "variant": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "units": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "mm"
+        },
+        {
+          "type": "string",
+          "const": "mils"
+        }
+      ]
+    },
+    "position_mode": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "altium-pick-place"
+        },
+        {
+          "type": "string",
+          "const": "component-origin"
+        }
+      ]
+    },
+    "placement_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Placement"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "variant",
+    "units",
+    "position_mode",
+    "placement_count",
+    "placements"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "stem": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "name",
+        "stem"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Placement": {
+      "type": "object",
+      "properties": {
+        "designator": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "string"
+        },
+        "center_x": {
+          "type": "number"
+        },
+        "center_y": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "units": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/RecordString"
+        },
+        "canonical_fields": {
+          "$ref": "#/$defs/RecordString"
+        },
+        "field_sources": {
+          "$ref": "#/$defs/RecordString"
+        }
+      },
+      "required": [
+        "designator",
+        "comment",
+        "layer",
+        "footprint",
+        "center_x",
+        "center_y",
+        "rotation",
+        "units",
+        "description",
+        "parameters",
+        "canonical_fields",
+        "field_sources"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

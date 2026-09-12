@@ -41,10 +41,13 @@ def test_command_manifest_lists_registered_cli_commands() -> None:
 
 
 def test_command_manifest_has_docs_anchor() -> None:
-    """README command list should mention every manifest command."""
+    """README links to the complete manifest-backed command inventory."""
     readme = (PACKAGE_ROOT / "README.md").read_text(encoding="utf-8")
+    inventory_path = "docs/design/command-inventory.md"
+    assert f"]({inventory_path})" in readme
+    inventory = (PACKAGE_ROOT / inventory_path).read_text(encoding="utf-8")
     for command in _manifest_commands():
-        assert f"`{command}`" in readme
+        assert f"`{command}`" in inventory
 
 
 def test_each_manifest_command_has_help() -> None:

@@ -88,6 +88,18 @@ def run_install_test(wheel: Path) -> None:
             raise SystemExit(f"Unexpected legacy console script after install: {legacy_executable}")
 
         _run([str(python), "-m", "altium_cruncher", "version"], cwd=temp_dir, env=env)
+        _run([str(python), "-c", "\n".join([
+            "import json",
+            "from importlib.resources import files",
+            "from altium_cruncher.contracts._runtime import _validator, config_metadata",
+            "from altium_cruncher.contracts.generated.public import decode_contract",
+            "catalog = json.loads(files('altium_cruncher.contracts.generated').joinpath('catalog.json').read_text())",
+            "assert any(row['stem'] == 'interface_design_manifest' for row in catalog)",
+            "for row in catalog:",
+            "    _validator(row['stem'])",
+            "    config_metadata(row['stem'])",
+            "assert decode_contract('mate_config', {}) == {}",
+        ])], cwd=temp_dir, env=env)
         prjpcb_dir = temp_dir / "prjpcb_smoke"
         prjpcb_dir.mkdir()
         _run(["acr", "prjpcb", "create"], cwd=prjpcb_dir, env=env)

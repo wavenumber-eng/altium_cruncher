@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.mate.parts_cache.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.mate.parts_cache.a0"
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AuthoredKnownPart"
+      }
+    },
+    "source": {
+      "$ref": "#/$defs/PartSource"
+    },
+    "designator_normalization": {
+      "$ref": "#/$defs/RecordRecordString"
+    }
+  },
+  "required": [
+    "schema",
+    "parts"
+  ],
+  "allOf": [
+    {
+      "$ref": "#/$defs/RecordUnknown"
+    }
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "AuthoredKnownPart": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "symbol_name": {
+          "type": "string"
+        },
+        "symbol_library": {
+          "type": "string"
+        },
+        "footprint_name": {
+          "type": "string"
+        },
+        "footprint_library": {
+          "type": "string"
+        },
+        "target_kinds": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/StringArray"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "designator_prefix": {
+          "type": "string"
+        },
+        "signal_pad_designator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PartSource": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "project"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordRecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "#/$defs/RecordString"
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "StringArray": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/config/mate-config.tsp. Do not edit."
+}

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from .contracts.workflows import domain_default
+
+from .contracts.workflows import workflow_comments, workflow_metadata, decode_bom_pnp_config
+
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -93,94 +97,7 @@ _PNP_POSITION_MODES = frozenset(PNP_POSITION_MODES)
 _DNP_PLACEMENTS = frozenset({"inline", "end", "separate"})
 _VARIANT_MODES = frozenset({"base", "all", "named"})
 
-_BOM_PNP_CONFIG_COMMENTS: dict[tuple[str, ...], str | tuple[str, ...]] = {
-    ("schema",): "BOM/PnP config contract id.",
-    ("field_aliases",): (
-        "Canonical BOM field aliases used to normalize project parameters.",
-        "Each key is a canonical output field; each value lists accepted source names.",
-    ),
-    ("variants",): "Variant selection policy for BOM and PnP outputs.",
-    ("variants", "mode"): enum_help(
-        "Variant mode.",
-        tuple(sorted(_VARIANT_MODES)),
-    ),
-    ("variants", "names"): "Variant names used when mode is named.",
-    (
-        "variants",
-        "include_base",
-    ): "Include the base/no-variant output alongside named variants.",
-    ("bom",): "BOM normalization and artifact output settings.",
-    ("bom", "source_mode"): enum_help(
-        "BOM source mode.",
-        tuple(sorted(_BOM_SOURCE_MODES)),
-    ),
-    ("bom", "outputs"): enum_help(
-        "BOM artifacts to generate.",
-        tuple(sorted(_BOM_OUTPUT_KINDS)),
-    ),
-    (
-        "bom",
-        "group_fields",
-    ): "Canonical fields used to group fitted parts into BOM rows.",
-    ("bom", "output_fields"): "Columns emitted in grouped BOM table outputs.",
-    (
-        "bom",
-        "include_dnp",
-    ): "Include do-not-populate components in normalized BOM data.",
-    (
-        "bom",
-        "split_dnp",
-    ): "Keep fitted and DNP components in separate grouped BOM lines.",
-    ("bom", "dnp_placement"): enum_help(
-        "Placement for DNP rows in grouped outputs.",
-        tuple(sorted(_DNP_PLACEMENTS)),
-    ),
-    ("bom", "highlight_dnp_rows"): "Apply DNP row highlighting in spreadsheet outputs.",
-    (
-        "bom",
-        "prefix_order",
-    ): "Designator prefix ordering for grouped BOM row designators.",
-    ("bom", "pcb_line_item"): "Optional synthetic PCB line item added to BOM outputs.",
-    ("bom", "pcb_line_item", "enabled"): "Enable the synthetic PCB line item.",
-    (
-        "bom",
-        "pcb_line_item",
-        "designator",
-    ): "Designator text for the synthetic PCB line item.",
-    (
-        "bom",
-        "pcb_line_item",
-        "fields",
-    ): "Field templates for the synthetic PCB line item.",
-    ("pnp",): "Pick-and-place normalization and artifact output settings.",
-    ("pnp", "outputs"): enum_help(
-        "PnP artifacts to generate.",
-        tuple(sorted(_PNP_OUTPUT_KINDS)),
-    ),
-    ("pnp", "output_fields"): "Columns emitted in PnP table outputs.",
-    ("pnp", "units"): enum_help(
-        "Output coordinate units.",
-        ("mils", "mm"),
-    ),
-    ("pnp", "position_mode"): enum_help(
-        "How component centers are derived.",
-        tuple(sorted(_PNP_POSITION_MODES)),
-    ),
-    ("pnp", "exclude_no_bom"): "Exclude placements for components marked no-BOM.",
-    ("pnp", "layer_order"): "Layer ordering for PnP rows. Common values: top, bottom.",
-    ("pnp", "prefix_order"): "Designator prefix ordering for PnP rows.",
-    ("output",): "Output path template settings shared by BOM and PnP artifacts.",
-    ("output", "dir_template"): (
-        "Output directory template. Supported tokens include {Command}, "
-        "{SourceName}, {SourceStem}, {VariantName}, {OutputKind}, "
-        "{OutputKindStem}, and {OutputKindSuffix}."
-    ),
-    ("output", "name_template"): (
-        "Output filename stem template. Supported tokens include {Command}, "
-        "{SourceName}, {SourceStem}, {VariantName}, {OutputKind}, "
-        "{OutputKindStem}, and {OutputKindSuffix}."
-    ),
-}
+_BOM_PNP_CONFIG_COMMENTS = workflow_comments("bom_pnp_config")
 
 _DESIGNATOR_TOKEN_RE = re.compile(r"\d+|[A-Za-z]+|[^A-Za-z\d]+")
 _LEADING_PREFIX_RE = re.compile(r"^[A-Za-z]+")
@@ -197,55 +114,14 @@ _BOM_FIELD_NAME_ALIASES = {
 
 
 def _default_aliases() -> dict[str, tuple[str, ...]]:
-    """Return the default canonical field alias mapping."""
-    return {
-        "manufacturer": (
-            "Manufacturer",
-            "Mfr",
-            "MFG",
-            "Manufacturer Name",
-            "Mfr Name",
-        ),
-        "manufacturer_part_number": (
-            "Manufacturer Part Number",
-            "MPN",
-            "Mfr Part Number",
-            "Mfr PN",
-            "MFG PN",
-            "Part Number",
-        ),
-        "jlcpcb_part_number": (
-            "JLCPCB Part #",
-            "JLCPCB Part Number",
-            "JLC Part #",
-            "JLC Part Number",
-            "LCSC Part #",
-            "LCSC Part Number",
-            "LCSC",
-        ),
-        "value": (
-            "Value",
-            "Comment",
-        ),
-        "description": (
-            "Description",
-            "Desc",
-        ),
-        "footprint": (
-            "Footprint",
-            "Pattern",
-            "Package",
-        ),
-    }
+    return {k: tuple(v) for k, v in workflow_metadata("bom_pnp_config", "resolved-defaults")["field_aliases"].items()}
 
 
 @dataclass(frozen=True, slots=True)
 class FieldAliasConfig:
     """Canonical parameter aliases used by BOM and PnP normalization."""
 
-    canonical_fields: dict[str, tuple[str, ...]] = field(
-        default_factory=_default_aliases
-    )
+    canonical_fields: dict[str, tuple[str, ...]] = field(default_factory=_default_aliases)
 
     @classmethod
     def from_mapping(
@@ -278,39 +154,37 @@ class FieldAliasConfig:
 class BomPnpConfig:
     """Versioned BOM/PnP command configuration."""
 
-    schema: str = BOM_PNP_CONFIG_SCHEMA
+    schema: str = domain_default("bom_pnp_config", "BomPnpConfig", "schema")
     field_aliases: FieldAliasConfig = field(default_factory=FieldAliasConfig)
-    variant_mode: str = "all"
-    variant_names: tuple[str, ...] = ()
-    include_base_variant: bool = True
-    bom_source_mode: str = "schematic"
-    bom_outputs: tuple[str, ...] = ("raw-json", "grouped-xlsx")
-    bom_group_fields: tuple[str, ...] = (
-        "mfg",
-        "mpn",
-        "description",
-    )
-    bom_output_fields: tuple[str, ...] = BOM_GROUPED_DEFAULT_COLUMNS
-    include_dnp: bool = True
-    split_dnp: bool = True
-    dnp_placement: str = "inline"
-    highlight_dnp_rows: bool = True
-    pcb_line_item_enabled: bool = False
-    pcb_line_item_designator: str = "PCB"
-    pcb_line_item_fields: dict[str, str] = field(default_factory=dict)
-    pnp_outputs: tuple[str, ...] = ("json", "csv")
-    pnp_output_fields: tuple[str, ...] = PNP_DEFAULT_COLUMNS
-    pnp_units: str = "mm"
-    pnp_position_mode: PnpPositionMode = PNP_POSITION_MODE_ALTIUM_PICK_PLACE
-    pnp_exclude_no_bom: bool = False
-    layer_order: tuple[str, ...] = ("top", "bottom")
-    prefix_order: tuple[str, ...] = ()
-    output_dir_template: str = "{Command}"
-    output_name_template: str = "{SourceStem}_{VariantName}{OutputKindSuffix}"
+    variant_mode: str = domain_default("bom_pnp_config", "BomPnpConfig", "variant_mode")
+    variant_names: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "variant_names")))
+    include_base_variant: bool = domain_default("bom_pnp_config", "BomPnpConfig", "include_base_variant")
+    bom_source_mode: str = domain_default("bom_pnp_config", "BomPnpConfig", "bom_source_mode")
+    bom_outputs: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "bom_outputs")))
+    bom_group_fields: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "bom_group_fields")))
+    bom_output_fields: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "bom_output_fields")))
+    include_dnp: bool = domain_default("bom_pnp_config", "BomPnpConfig", "include_dnp")
+    split_dnp: bool = domain_default("bom_pnp_config", "BomPnpConfig", "split_dnp")
+    dnp_placement: str = domain_default("bom_pnp_config", "BomPnpConfig", "dnp_placement")
+    highlight_dnp_rows: bool = domain_default("bom_pnp_config", "BomPnpConfig", "highlight_dnp_rows")
+    pcb_line_item_enabled: bool = domain_default("bom_pnp_config", "BomPnpConfig", "pcb_line_item_enabled")
+    pcb_line_item_designator: str = domain_default("bom_pnp_config", "BomPnpConfig", "pcb_line_item_designator")
+    pcb_line_item_fields: dict[str, str] = field(default_factory=lambda: domain_default("bom_pnp_config", "BomPnpConfig", "pcb_line_item_fields"))
+    pnp_outputs: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "pnp_outputs")))
+    pnp_output_fields: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "pnp_output_fields")))
+    pnp_units: str = domain_default("bom_pnp_config", "BomPnpConfig", "pnp_units")
+    pnp_position_mode: PnpPositionMode = domain_default("bom_pnp_config", "BomPnpConfig", "pnp_position_mode")
+    pnp_exclude_no_bom: bool = domain_default("bom_pnp_config", "BomPnpConfig", "pnp_exclude_no_bom")
+    layer_order: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "layer_order")))
+    prefix_order: tuple[str, ...] = field(default_factory=lambda: tuple(domain_default("bom_pnp_config", "BomPnpConfig", "prefix_order")))
+    output_dir_template: str = domain_default("bom_pnp_config", "BomPnpConfig", "output_dir_template")
+    output_name_template: str = domain_default("bom_pnp_config", "BomPnpConfig", "output_name_template")
 
     @classmethod
     def from_mapping(cls, payload: Mapping[str, object]) -> "BomPnpConfig":
         """Build a config from a JSON-style mapping."""
+        default = cls()
+        payload = decode_bom_pnp_config(dict(payload))
         if payload.get("schema") not in {None, BOM_PNP_CONFIG_SCHEMA}:
             raise ValueError(
                 f"Unsupported BOM/PnP config schema: {payload.get('schema')}"
@@ -327,87 +201,87 @@ class BomPnpConfig:
             if aliases
             else FieldAliasConfig(),
             variant_mode=_choice(
-                _string_value(variants.get("mode") or "all"),
+                _string_value(variants.get("mode") or default.variant_mode),
                 _VARIANT_MODES,
                 "variant mode",
             ),
             variant_names=_string_tuple(variants.get("names")),
             include_base_variant=_bool_value(
                 variants.get("include_base"),
-                default=True,
+                default=default.include_base_variant,
             ),
             bom_source_mode=_choice(
-                _string_value(bom.get("source_mode") or "schematic"),
+                _string_value(bom.get("source_mode") or default.bom_source_mode),
                 _BOM_SOURCE_MODES,
                 "BOM source mode",
             ),
             bom_outputs=_choices_tuple(
                 bom.get("outputs"),
                 _BOM_OUTPUT_KINDS,
-                ("raw-json", "grouped-xlsx"),
+                default.bom_outputs,
                 "BOM output",
             ),
             bom_group_fields=_string_tuple(
                 bom.get("group_fields"),
-                default=("mfg", "mpn", "description"),
+                default=default.bom_group_fields,
             ),
             bom_output_fields=_string_tuple(
                 bom.get("output_fields"),
-                default=BOM_GROUPED_DEFAULT_COLUMNS,
+                default=default.bom_output_fields,
             ),
-            include_dnp=_bool_value(bom.get("include_dnp"), default=True),
-            split_dnp=_bool_value(bom.get("split_dnp"), default=True),
+            include_dnp=_bool_value(bom.get("include_dnp"), default=default.include_dnp),
+            split_dnp=_bool_value(bom.get("split_dnp"), default=default.split_dnp),
             dnp_placement=_choice(
-                _string_value(bom.get("dnp_placement") or "inline"),
+                _string_value(bom.get("dnp_placement") or default.dnp_placement),
                 _DNP_PLACEMENTS,
                 "DNP placement",
             ),
             highlight_dnp_rows=_bool_value(
                 bom.get("highlight_dnp_rows"),
-                default=True,
+                default=default.highlight_dnp_rows,
             ),
             pcb_line_item_enabled=_bool_value(
                 pcb_line_item.get("enabled"),
-                default=False,
+                default=default.pcb_line_item_enabled,
             ),
             pcb_line_item_designator=_string_value(
-                pcb_line_item.get("designator") or "PCB"
+                pcb_line_item.get("designator") or default.pcb_line_item_designator
             ),
             pcb_line_item_fields=_string_mapping(pcb_line_item.get("fields")),
             pnp_outputs=_choices_tuple(
                 pnp.get("outputs"),
                 _PNP_OUTPUT_KINDS,
-                ("json", "csv"),
+                default.pnp_outputs,
                 "PnP output",
             ),
             pnp_output_fields=_string_tuple(
                 pnp.get("output_fields"),
-                default=PNP_DEFAULT_COLUMNS,
+                default=default.pnp_output_fields,
             ),
             pnp_units=_choice(
-                _string_value(pnp.get("units") or "mm"),
+                _string_value(pnp.get("units") or default.pnp_units),
                 frozenset({"mm", "mils"}),
                 "PnP units",
             ),
             pnp_position_mode=_pnp_position_mode_from_config(pnp),
             pnp_exclude_no_bom=_bool_value(
                 pnp.get("exclude_no_bom"),
-                default=False,
+                default=default.pnp_exclude_no_bom,
             ),
             layer_order=_string_tuple(
                 pnp.get("layer_order"),
-                default=("top", "bottom"),
+                default=default.layer_order,
             ),
             prefix_order=_string_tuple(
                 pnp.get("prefix_order"),
-                default=_string_tuple(bom.get("prefix_order")),
+                default=_string_tuple(bom.get("prefix_order"), default=default.prefix_order),
             ),
             output_dir_template=_string_value(
-                output.get("dir_template") or "{Command}"
+                output.get("dir_template") or default.output_dir_template
             ),
             output_name_template=_string_value(
                 output.get("name_template")
-                or "{SourceStem}_{VariantName}{OutputKindSuffix}"
+                or default.output_name_template
             ),
         )
 
@@ -487,7 +361,7 @@ def bom_pnp_config_text(config: BomPnpConfig | None = None) -> str:
 def _pnp_position_mode_from_config(pnp: Mapping[str, object]) -> PnpPositionMode:
     """Return the configured PnP position mode."""
     raw_mode = _string_value(
-        pnp.get("position_mode") or PNP_POSITION_MODE_ALTIUM_PICK_PLACE
+        pnp.get("position_mode") or domain_default("bom_pnp_config", "BomPnpConfig", "pnp_position_mode")
     )
     return normalize_pnp_position_mode(
         _choice(raw_mode, _PNP_POSITION_MODES, "PnP position mode")

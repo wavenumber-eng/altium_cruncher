@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "libraries_scan",
+    "title": "Library scan",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.libraries.scan.a0"
+}

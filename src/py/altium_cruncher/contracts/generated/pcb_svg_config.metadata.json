@@ -1,0 +1,595 @@
+{
+  "toon-themes": {
+    "saved": {
+      "mask": "auto",
+      "silk": "#F5F5F5"
+    },
+    "white": {
+      "mask": "#EEEEEE",
+      "silk": "#000000"
+    },
+    "black": {
+      "mask": "#000000",
+      "silk": "#F5F5F5"
+    },
+    "green": {
+      "mask": "#176B3A",
+      "silk": "#F5F5F5"
+    }
+  },
+  "toon-preset": {
+    "schema": "pcb.svg.config.a0",
+    "global": {
+      "include_metadata": true,
+      "styles": {
+        "board_substrate": {
+          "enabled": true,
+          "color": "#B6A26B"
+        },
+        "board_outline": {
+          "color": "#000000",
+          "line_width_mm": 0.25
+        },
+        "soldermask_film": {
+          "color": "auto",
+          "opacity": 0.9
+        },
+        "board_cutouts": {
+          "scope": "interior",
+          "color": "#555555",
+          "outline_width_mm": 0.24,
+          "outline_opacity": 0.25,
+          "hatch": true,
+          "hatch_spacing_mm": 1,
+          "hatch_angle_deg": 45,
+          "hatch_line_width_mm": 0.12,
+          "hatch_color": "#777777",
+          "hatch_opacity": 0.18,
+          "label": "CUTOUT",
+          "label_color": "#444444",
+          "label_opacity": 0.25,
+          "label_max_font_size_mm": 3,
+          "label_fill_ratio": 0.72
+        },
+        "smd_pads": {
+          "enabled": true,
+          "color": "#DFC951"
+        },
+        "through_hole_pads": {
+          "enabled": true,
+          "color": "#DFC951"
+        },
+        "copper_traces": {
+          "enabled": true,
+          "color": "#DFC951"
+        },
+        "vias": {
+          "enabled": true,
+          "color": "#DFC951"
+        },
+        "copper_polygons": {
+          "enabled": true,
+          "color": "#DFC951"
+        },
+        "drills": {
+          "plated_color": "#D3D3D3",
+          "non_plated_color": "#D3D3D3",
+          "outline": false,
+          "respect_tenting": true
+        },
+        "slots": {
+          "plated_color": "#D3D3D3",
+          "non_plated_color": "#D3D3D3",
+          "outline": false,
+          "respect_tenting": true
+        },
+        "silkscreen_component_graphics": {
+          "enabled": true,
+          "color": "#F5F5F5"
+        },
+        "silkscreen_designators": {
+          "enabled": true,
+          "color": "#F5F5F5"
+        },
+        "silkscreen_board_graphics": {
+          "enabled": true,
+          "color": "#F5F5F5"
+        }
+      }
+    },
+    "layer_outputs": {
+      "enabled": false
+    },
+    "views": [
+      {
+        "name": "top",
+        "mirror": false,
+        "group_id": "toon-top",
+        "output_svg": "{board}__{view}.svg",
+        "layers": [
+          "BOARD_SUBSTRATE",
+          "TOP",
+          "SOLDERMASK_FILM_TOP",
+          "TOPOVERLAY",
+          "BOARD_CUTOUTS",
+          "DRILLS",
+          "SLOTS",
+          "BOARD_OUTLINE",
+          "ILLUSTRATION_TOP"
+        ]
+      },
+      {
+        "name": "bottom",
+        "mirror": true,
+        "group_id": "toon-bottom",
+        "output_svg": "{board}__{view}.svg",
+        "layers": [
+          "BOARD_SUBSTRATE",
+          "BOTTOM",
+          "SOLDERMASK_FILM_BOTTOM",
+          "BOTTOMOVERLAY",
+          "BOARD_CUTOUTS",
+          "DRILLS",
+          "SLOTS",
+          "BOARD_OUTLINE",
+          "ILLUSTRATION_BOTTOM"
+        ]
+      }
+    ]
+  },
+  "resolved-defaults": {
+    "view": {
+      "enabled": true,
+      "group_id": null,
+      "output_svg": null,
+      "layers": [],
+      "mirror": null,
+      "assembly_hlr_mode": "detail",
+      "styles": {},
+      "description": null
+    },
+    "component": {
+      "side": null,
+      "projection": null,
+      "assembly_hlr": {},
+      "pin1_enabled": null,
+      "pin1_pad": null,
+      "cathode_pad": null,
+      "diode": null,
+      "diode_line_art": null,
+      "show_designator": null
+    },
+    "schema": "pcb.svg.config.a0",
+    "global": {
+      "pcbdoc": null,
+      "canvas": {
+        "bounds": "board_outline",
+        "margin_mm": 1
+      },
+      "include_metadata": true,
+      "show_empty_layers": false,
+      "clip_to_outline": true,
+      "clip_holes_from_copper": true,
+      "mirror_bottom_view": true,
+      "svg_scale": 10,
+      "svg_size_unit": "",
+      "clean_output": false,
+      "styles": {
+        "board_substrate": {
+          "enabled": true,
+          "color": "#B6A26B"
+        },
+        "illustration": {
+          "enabled": true,
+          "line_width_mm": 0.025,
+          "opacity": 1
+        },
+        "assembly_designators": {
+          "enabled": true,
+          "fill_ratio": 0.8,
+          "max_font_size_mm": 2.5,
+          "opacity": 1,
+          "stroke_color": "#FFFFFF",
+          "stroke_width_mm": 0
+        },
+        "soldermask_film": {
+          "enabled": true,
+          "color": "auto",
+          "opacity": 1
+        },
+        "board_outline": {
+          "enabled": true,
+          "color": "#000000",
+          "line_width_mm": 0.1
+        },
+        "board_cutouts": {
+          "enabled": true,
+          "scope": "all",
+          "color": "#FF0000",
+          "hatch": true,
+          "hatch_spacing_mm": 2,
+          "hatch_angle_deg": 45,
+          "hatch_line_width_mm": 0.08,
+          "hatch_opacity": 0.55,
+          "outline_opacity": 1,
+          "label": "",
+          "label_opacity": 1,
+          "label_max_font_size_mm": 3,
+          "label_fill_ratio": 0.72,
+          "label_rotation_min_gain": 0.25,
+          "outline_style": "solid",
+          "outline_dash_mm": 1.5,
+          "outline_width_mm": 0.15
+        },
+        "drills": {
+          "enabled": true,
+          "plated_color": "#90EE90",
+          "non_plated_color": "#ADD8E6",
+          "opacity": 1,
+          "outline": false,
+          "outline_width_mm": 0.1,
+          "respect_tenting": false
+        },
+        "slots": {
+          "enabled": true,
+          "plated_color": "#90EE90",
+          "non_plated_color": "#ADD8E6",
+          "opacity": 1,
+          "outline": false,
+          "outline_width_mm": 0.1,
+          "respect_tenting": false
+        },
+        "copper_traces": {
+          "enabled": true,
+          "color": "#000000"
+        },
+        "vias": {
+          "enabled": true,
+          "color": "#000000"
+        },
+        "copper_polygons": {
+          "enabled": true,
+          "color": "#888888"
+        },
+        "smd_pads": {
+          "enabled": true,
+          "color": "#000000"
+        },
+        "through_hole_pads": {
+          "enabled": true,
+          "color": "#000000"
+        },
+        "silkscreen_component_graphics": {
+          "enabled": true,
+          "color": "#000000"
+        },
+        "silkscreen_designators": {
+          "enabled": true,
+          "color": "#000000"
+        },
+        "silkscreen_board_graphics": {
+          "enabled": true,
+          "color": "#000000"
+        },
+        "pin1_marker": {
+          "enabled": true,
+          "color": "#2563EB",
+          "dot_diameter_mm": 0.55,
+          "min_dot_diameter_mm": 0.25
+        },
+        "keepout": {
+          "enabled": true,
+          "color": "#CC00CC"
+        },
+        "assembly_hlr": {
+          "enabled": true,
+          "color": "#F59E0B",
+          "line_width_mm": 0.12,
+          "curve_mode": "native_arcs",
+          "samples_per_curve": 24,
+          "round_digits": 3,
+          "include_visible": true,
+          "include_outline": true,
+          "union_polygons": true
+        }
+      }
+    },
+    "pin1": {
+      "exclude_designator_prefixes": [
+        "R",
+        "C",
+        "L"
+      ]
+    },
+    "layer_outputs": {
+      "enabled": true,
+      "layers": "auto",
+      "include_special_layers": [
+        "BOARD_OUTLINE",
+        "BOARD_CUTOUTS",
+        "DRILLS",
+        "SLOTS"
+      ],
+      "output_dir": "layers"
+    },
+    "views": [
+      {
+        "name": "top_view",
+        "enabled": true,
+        "group_id": "pcb-svg-view-top",
+        "output_svg": "views/{board}__top_view.svg",
+        "layers": [
+          "BOARD_OUTLINE",
+          "TOP",
+          "TOPOVERLAY",
+          "BOARD_CUTOUTS",
+          "DRILLS",
+          "SLOTS",
+          "ASSEMBLY_HLR_TOP"
+        ],
+        "assembly_hlr_mode": "detail",
+        "mirror": false,
+        "description": "Top view"
+      },
+      {
+        "name": "bottom_view",
+        "enabled": true,
+        "group_id": "pcb-svg-view-bottom",
+        "output_svg": "views/{board}__bottom_view.svg",
+        "layers": [
+          "BOARD_OUTLINE",
+          "BOTTOM",
+          "BOTTOMOVERLAY",
+          "BOARD_CUTOUTS",
+          "DRILLS",
+          "SLOTS",
+          "ASSEMBLY_HLR_BOTTOM"
+        ],
+        "assembly_hlr_mode": "detail",
+        "mirror": true,
+        "description": "Bottom view"
+      },
+      {
+        "name": "board_cutouts",
+        "enabled": true,
+        "group_id": "pcb-svg-view-board-cutouts",
+        "output_svg": "views/{board}__board_cutouts.svg",
+        "layers": [
+          "BOARD_OUTLINE",
+          "BOARD_CUTOUTS"
+        ],
+        "assembly_hlr_mode": "detail",
+        "mirror": false,
+        "description": "Board cutouts"
+      },
+      {
+        "name": "top_hlr_bounding_boxes",
+        "enabled": true,
+        "group_id": "pcb-svg-view-top-hlr-bounding-boxes",
+        "output_svg": "views/{board}__top_hlr_bounding_boxes.svg",
+        "layers": [
+          "BOARD_OUTLINE",
+          "TOP",
+          "ASSEMBLY_HLR_TOP"
+        ],
+        "assembly_hlr_mode": "bounding_box",
+        "mirror": false,
+        "description": "Top copper with HLR pad bounding boxes"
+      },
+      {
+        "name": "bottom_hlr_bounding_boxes",
+        "enabled": true,
+        "group_id": "pcb-svg-view-bottom-hlr-bounding-boxes",
+        "output_svg": "views/{board}__bottom_hlr_bounding_boxes.svg",
+        "layers": [
+          "BOARD_OUTLINE",
+          "BOTTOM",
+          "ASSEMBLY_HLR_BOTTOM"
+        ],
+        "assembly_hlr_mode": "bounding_box",
+        "mirror": true,
+        "description": "Bottom copper with HLR pad bounding boxes"
+      },
+      {
+        "name": "top_pin1_view",
+        "enabled": true,
+        "group_id": "pcb-svg-view-top-pin1",
+        "output_svg": "views/{board}__top_pin1_view.svg",
+        "layers": [
+          "BOARD_OUTLINE",
+          "TOP",
+          "DRILLS",
+          "SLOTS",
+          "PIN1_TOP",
+          "ASSEMBLY_HLR_TOP"
+        ],
+        "assembly_hlr_mode": "outline",
+        "mirror": false,
+        "description": "Top copper with pin-1 overlay"
+      },
+      {
+        "name": "bottom_pin1_view",
+        "enabled": true,
+        "group_id": "pcb-svg-view-bottom-pin1",
+        "output_svg": "views/{board}__bottom_pin1_view.svg",
+        "layers": [
+          "BOARD_OUTLINE",
+          "BOTTOM",
+          "DRILLS",
+          "SLOTS",
+          "PIN1_BOTTOM",
+          "ASSEMBLY_HLR_BOTTOM"
+        ],
+        "assembly_hlr_mode": "outline",
+        "mirror": true,
+        "description": "Bottom copper with pin-1 overlay"
+      }
+    ],
+    "assembly": {
+      "default_projection": "detail",
+      "dnp_projection": "bounding_box",
+      "designator_color": "#FF0000",
+      "dnp_designator_color": "#FF0000"
+    },
+    "dnp": {
+      "color": "#FF0000",
+      "hatch": true,
+      "hatch_spacing_mm": 1.5,
+      "hatch_angle_deg": 45,
+      "hatch_line_width_mm": 0.08
+    },
+    "diodes": {
+      "enabled": true,
+      "line_art": true,
+      "marker_color": "#FF0000",
+      "numeric_cathode_pad": "2",
+      "cathode_pad_names": [
+        "K",
+        "C"
+      ],
+      "designator_prefixes": [
+        "D",
+        "LED"
+      ],
+      "parameter_terms": [
+        "diode",
+        "schottky",
+        "zener",
+        "tvs",
+        "led"
+      ]
+    },
+    "components": {}
+  },
+  "style-order": [
+    "board_substrate",
+    "board_outline",
+    "board_cutouts",
+    "soldermask_film",
+    "drills",
+    "slots",
+    "copper_traces",
+    "vias",
+    "copper_polygons",
+    "smd_pads",
+    "through_hole_pads",
+    "silkscreen_component_graphics",
+    "silkscreen_designators",
+    "silkscreen_board_graphics",
+    "pin1_marker",
+    "keepout",
+    "assembly_hlr",
+    "illustration",
+    "assembly_designators"
+  ],
+  "jsonc-key-comments": {
+    "enabled": "Enable this rendering rule.",
+    "color": "SVG color value, usually #RRGGBB.",
+    "plated_color": "SVG color for plated drill/slot features.",
+    "non_plated_color": "SVG color for non-plated drill/slot features.",
+    "outline": "Draw drill/slot boundaries with unfilled centers instead of filled marks.",
+    "respect_tenting": "Hide plated drill/slot marks covered by solder mask on the rendered side.",
+    "line_width_mm": "Stroke width in millimeters.",
+    "hatch": "Enable hatch fill for this layer/style.",
+    "scope": "Board cutouts used by clipping, film and cutout artwork; interior excludes boundary-touching/outside contours. Options: all, interior.",
+    "hatch_spacing_mm": "Hatch spacing in millimeters.",
+    "hatch_angle_deg": "Hatch angle in degrees.",
+    "hatch_line_width_mm": "Hatch stroke width in millimeters.",
+    "hatch_color": "Hatch color; omitted uses the cutout outline color.",
+    "hatch_opacity": "Hatch opacity from 0.0 to 1.0, independent of the outline.",
+    "outline_opacity": "Cutout outline opacity from 0.0 to 1.0.",
+    "label": "Cutout label text; an empty string disables labels.",
+    "label_color": "Label color; omitted uses the cutout outline color.",
+    "label_opacity": "Cutout label opacity from 0.0 to 1.0.",
+    "label_max_font_size_mm": "Maximum fitted cutout label font size in millimeters.",
+    "label_fill_ratio": "Fraction of cutout width/height available to the fitted label (0 to 1).",
+    "outline_style": "Outline stroke style. Options: solid, dashed.",
+    "outline_dash_mm": "Dash length in millimeters when outline_style is dashed.",
+    "outline_width_mm": "Outline stroke width in millimeters.",
+    "opacity": "Layer opacity from 0.0 to 1.0.",
+    "dot_diameter_mm": "Pin-1 marker dot diameter in millimeters.",
+    "min_dot_diameter_mm": "Minimum pin-1 marker dot diameter in millimeters.",
+    "curve_mode": "Legacy HLR curve serialization mode; Fast always emits polylines. Options: native_arcs, polyline.",
+    "samples_per_curve": "Polyline sample count when curves are sampled.",
+    "round_digits": "Decimal places retained in generated SVG path coordinates.",
+    "include_visible": "Legacy poly/exact visible-edge control; leave true for Fast.",
+    "include_outline": "Legacy poly/exact silhouette control; leave true for Fast.",
+    "union_polygons": "Union projected polygons before converting to SVG paths."
+  },
+  "jsonc-comments": {
+    "schema": "PCB SVG config contract id.",
+    "global": "Global settings applied to layer outputs and composed views.",
+    "global.pcbdoc": "Optional PcbDoc selector when a PrjPcb contains multiple boards.",
+    "global.canvas": "SVG viewBox normalization policy.",
+    "global.canvas.bounds": "Canvas bounds mode. Options: all_geometry, board_outline.",
+    "global.canvas.margin_mm": "Canvas margin added around the chosen bounds.",
+    "global.include_metadata": "Include Altium/source metadata in SVG data attributes.",
+    "global.show_empty_layers": "Emit empty physical layers when no primitives are present.",
+    "global.clip_to_outline": "Clip rendered geometry to the board outline.",
+    "global.clip_holes_from_copper": "Clip drills and slots out of copper layers.",
+    "global.mirror_bottom_view": "Mirror bottom-side views into assembly-view orientation.",
+    "global.svg_scale": "Multiplier for SVG width and height attributes.",
+    "global.svg_size_unit": "Optional SVG size unit suffix, such as mm or px.",
+    "global.clean_output": "Reserved cleanup flag for generated output directories.",
+    "global.styles": "Default style table for physical and synthetic layers.",
+    "global.styles.illustration": "Component illustration enabled, line_width_mm and opacity. Views inherit global values and override only the supplied fields.",
+    "global.styles.assembly_designators": "Projected labels: enabled, color (assembly.designator_color fallback), opacity, fill_ratio, max_font_size_mm, stroke_color and stroke_width_mm.",
+    "global.styles.assembly_designators.stroke_color": "Text outline CSS color, painted behind the fill. Default: #FFFFFF.",
+    "global.styles.assembly_designators.stroke_width_mm": "Full outline stroke width in board millimetres; 0 disables it. Label fitting is unchanged.",
+    "global.styles.board_substrate": "Bare board fill for BOARD_SUBSTRATE. Place before copper and film; physical bores and scoped cutouts remain open.",
+    "global.styles.board_substrate.color": "Substrate CSS color. Default: #B6A26B (muted tan).",
+    "global.styles.soldermask_film": "Inverted solder mask clipped to the board profile and cutouts.",
+    "global.styles.soldermask_film.color": "CSS color or auto (default): saved Altium 3D mask color for this side, falling back to #176B3A when unavailable.",
+    "global.styles.soldermask_film.opacity": "Film opacity from 0 (transparent) to 1 (opaque, default).",
+    "pin1": "Pin-1 marker detection and display policy.",
+    "pin1.exclude_designator_prefixes": "Component designator prefixes excluded from automatic pin-1 markers.",
+    "assembly": "Assembly projection defaults for component virtual layers.",
+    "assembly.default_projection": "Projection mode for fitted components. Options: bounding_box, detail, none, outline, simple.",
+    "assembly.dnp_projection": "Projection mode for DNP components. Options: bounding_box, detail, none, outline, simple.",
+    "assembly.designator_color": "Text color for fitted component designators.",
+    "assembly.dnp_designator_color": "Text color for DNP component designators.",
+    "dnp": "DNP marker style.",
+    "diodes": "Diode/cathode marker detection policy.",
+    "diodes.enabled": "Enable diode/cathode marker detection.",
+    "diodes.line_art": "Draw diode line art when possible.",
+    "diodes.marker_color": "Cathode marker color.",
+    "diodes.numeric_cathode_pad": "Default numeric cathode pad designator.",
+    "diodes.cathode_pad_names": "Pad names treated as cathode pads.",
+    "diodes.designator_prefixes": "Designator prefixes treated as diode-like parts.",
+    "diodes.parameter_terms": "Parameter text terms treated as diode-like parts.",
+    "components": "Per-designator overrides keyed by component designator.",
+    "layer_outputs": "Config-driven physical layer SVG output policy.",
+    "layer_outputs.enabled": "Enable individual physical layer SVG outputs.",
+    "layer_outputs.layers": "Physical PCB layers to render. Options: auto, native PCB layer name, layer id, TOP, BOTTOM, TOPOVERLAY, BOTTOMOVERLAY, MECHANICAL_1..MECHANICAL_32.",
+    "layer_outputs.include_special_layers": "Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.",
+    "layer_outputs.output_dir": "Output directory for physical layer SVG files.",
+    "views": "Explicit composed SVG views. Each item has its own draw-order layer list.",
+    "views.name": "Stable view name used by --views and output token replacement.",
+    "views.enabled": "Enable this composed view.",
+    "views.group_id": "SVG group id used for this composed view.",
+    "views.output_svg": "Output SVG path template. Supports {board} and {view}.",
+    "views.layers": "Draw-order layer list. Options: native PCB layer names, layer ids, BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, and PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.",
+    "views.mirror": "Mirror this view horizontally into assembly orientation.",
+    "views.assembly_hlr_mode": "Assembly projection mode for this view. Options: detail, outline, bounding_box, none, simple.",
+    "views.styles": "Style overrides applied only to this composed view.",
+    "views.description": "Human-readable view description."
+  },
+  "schema": "pcb.svg.config.a0",
+  "special-layers": [
+    "BOARD_SUBSTRATE",
+    "BOARD_OUTLINE",
+    "BOARD_CUTOUTS",
+    "DRILLS",
+    "SLOTS",
+    "ASSEMBLY_HLR_TOP",
+    "ASSEMBLY_HLR_BOTTOM",
+    "ASSEMBLY_DESIGNATORS_TOP",
+    "ASSEMBLY_DESIGNATORS_BOTTOM",
+    "PIN1_TOP",
+    "PIN1_BOTTOM",
+    "SOLDERMASK_FILM_TOP",
+    "SOLDERMASK_FILM_BOTTOM",
+    "ILLUSTRATION_TOP",
+    "ILLUSTRATION_BOTTOM"
+  ]
+}

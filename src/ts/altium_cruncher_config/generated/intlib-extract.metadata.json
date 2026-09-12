@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "intlib_extract",
+    "title": "IntLib extraction",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.extract.intlib.a0"
+}

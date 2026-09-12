@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import xml.etree.ElementTree as ET
+
+import pytest
 from altium_monkey.altium_board import (
     AltiumBoard,
     AltiumBoardOutline,
@@ -155,3 +158,73 @@ def test_cutout_layer_renderer_skips_boards_without_cutouts() -> None:
     renderer = CruncherPcbCutoutLayerRenderer(PcbSvgRenderOptions())
 
     assert renderer.render_board_cutout_layer(pcbdoc) is None
+
+
+@pytest.mark.parametrize("bottom", [False, True])
+def test_autodoc_cutout_styles_fit_labels_and_keep_bottom_text_readable(bottom, tmp_path) -> None:
+    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
+        PcbSvgA0Renderer,
+        write_or_update_view_svg,
+    )
+    from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
+
+    pcb = _pcbdoc_with_cutout()
+    for width in (100, 1):
+        pcb.board.outline.cutouts.append([
+            BoardOutlineVertex.line(x, y)
+            for x, y in [(600, 100), (600 + width, 100), (600 + width, 700), (600, 700)]
+        ])
+    style = {
+        "color": "#555555", "outline_opacity": 0.25,
+        "hatch": True, "hatch_color": "#777777", "hatch_opacity": 0.18,
+        "hatch_spacing_mm": 1.0, "hatch_line_width_mm": 0.12,
+        "label": "CUTOUT", "label_color": "#444444", "label_opacity": 0.35,
+    }
+    view = PcbSvgViewConfig(name="cutouts", layers=["BOARD_CUTOUTS"], styles={"board_cutouts": style})
+    config = PcbSvgConfig.default()
+    svg = PcbSvgA0Renderer(config).render_view_svg(
+        pcb, view, project_parameters=None, layers=view.layers,
+        group_id="cutouts", mirror=bottom, styles=config.resolved_styles_for_view(view),
+    )
+    root = ET.fromstring(svg)
+    ns = {"s": "http://www.w3.org/2000/svg"}
+    paths = root.findall(".//s:path[@data-feature='board-cutout']", ns)
+    assert len(paths) == 3
+    assert all(p.get("stroke") == "#555555" and p.get("stroke-opacity") == "0.25" for p in paths)
+    hatch = root.find(".//s:pattern/s:line", ns)
+    assert hatch.get("stroke") == "#777777"
+    assert hatch.get("opacity") == "0.18"
+    labels = root.findall(".//s:text[@data-feature='board-cutout-label']", ns)
+    assert len(labels) == 2  # Reference skips labels smaller than 0.2 mm.
+    assert all(t.text == "CUTOUT" and t.get("fill-opacity") == "0.35" for t in labels)
+    assert float(labels[1].get("font-size")) == pytest.approx(1.8288, abs=0.003)  # 12-step silhouette fit, then SVG rounding
+    assert labels[1].get("transform").startswith("rotate(-90 ")
+    wrappers = root.findall(".//s:g[@data-feature='board-cutout-label-orientation']", ns)
+    assert len(wrappers) == (2 if bottom else 0)
+    if bottom:
+        assert all("scale(-1 1)" in w.get("transform") for w in wrappers)
+    target = tmp_path / "cutouts.svg"
+    write_or_update_view_svg(target, svg, group_id="cutouts")
+    write_or_update_view_svg(target, svg, group_id="cutouts")
+    refreshed = ET.parse(target).getroot()
+    assert len(refreshed.findall(".//s:text[@data-feature='board-cutout-label']", ns)) == 2
+
+
+@pytest.mark.parametrize("field, value", [
+    ("outline_opacity", 2), ("hatch_opacity", -0.1), ("label_opacity", -1),
+    ("label_fill_ratio", 2), ("label_fill_ratio", 0),
+    ("label_max_font_size_mm", float("inf")), ("label_max_font_size_mm", -1),
+])
+def test_cutout_presentation_rejects_invalid_values_on_render(field, value) -> None:
+    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
+
+    config = PcbSvgConfig.default()
+    view = PcbSvgViewConfig(name="cutouts", layers=["BOARD_CUTOUTS"])
+    styles = config.resolved_styles_for_view(view)
+    styles["board_cutouts"][field] = value
+    with pytest.raises(ValueError, match=f"board_cutouts.{field}"):
+        PcbSvgA0Renderer(config).render_view_svg(
+            _pcbdoc_with_cutout(), view, project_parameters=None, layers=view.layers,
+            group_id="cutouts", mirror=False, styles=styles,
+        )

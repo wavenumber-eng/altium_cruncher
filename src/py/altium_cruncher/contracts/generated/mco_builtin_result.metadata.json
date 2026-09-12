@@ -1,0 +1,8 @@
+{
+  "contract": {
+    "stem": "mco_builtin_result",
+    "title": "Built-in MCO operation results",
+    "source": "../outputs/mco-builtins",
+    "kind": "output"
+  }
+}

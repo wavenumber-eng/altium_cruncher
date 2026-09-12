@@ -22,6 +22,11 @@ oracle. The `cutouts` project is the primary `pcb-svg` fixture for board
 profile cutouts; it contains four interior cutouts covering line and arc
 geometry.
 
+`nxp-frdm-imx93` and `ov-tech-pimx8` are opt-in toon/SVG stress cases imported
+from the supplied real-world corpus. They retain complete project-referenced
+source documents and embedded STEP models. Each fixture records source hashes;
+generated reviews and individual-model profiles belong in its `output/` folder.
+
 Generated test or review artifacts should go under each project fixture's
 `output/` folder, organized by command, variant, and output kind when needed,
 for example `tests/assets/projects/node_test_array/output/bom/B4/raw-json`.

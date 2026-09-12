@@ -1,0 +1,518 @@
+[
+  {
+    "name": "minimal schematic",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc"
+    },
+    "valid": true
+  },
+  {
+    "name": "schematic integer enum",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "sheet_style": 3
+    },
+    "valid": true
+  },
+  {
+    "name": "schematic null resets",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "sheet_style": null,
+      "template": null,
+      "custom_sheet_mils": null
+    },
+    "valid": true
+  },
+  {
+    "name": "legacy template truthiness",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "template": "a.SchDot",
+      "apply_template_visual_sheet_settings": "false"
+    },
+    "valid": true
+  },
+  {
+    "name": "custom dimensions",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "custom_sheet_mils": {
+        "width": 1100,
+        "height": 850
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "missing dimension",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "custom_sheet_mils": {
+        "width": 1100
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "text dimension rejected",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "custom_sheet_mils": {
+        "width": "1100",
+        "height": 850
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "missing file",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0"
+    },
+    "valid": false
+  },
+  {
+    "name": "blank template",
+    "family": "schdoc",
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "template": ""
+    },
+    "valid": false
+  },
+  {
+    "name": "wrong schema",
+    "family": "schdoc",
+    "value": {
+      "schema": "other",
+      "file": "a.SchDoc"
+    },
+    "valid": false
+  },
+  {
+    "name": "minimal pcb",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc"
+    },
+    "valid": true
+  },
+  {
+    "name": "pcb null sections",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "board_outline_mils": null,
+      "layer_stack": null,
+      "stackupx_file": null,
+      "layer_stack_template": null,
+      "mechanical_layer_profile": null,
+      "mechanical_layers": null,
+      "mechanical_layer_pairs": null,
+      "mechanical_layer_kinds": null
+    },
+    "valid": true
+  },
+  {
+    "name": "profile alias",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_profile": " V7-MECHANICAL-53 "
+    },
+    "valid": true
+  },
+  {
+    "name": "bad profile",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_profile": "not-a-profile"
+    },
+    "valid": false
+  },
+  {
+    "name": "implicit stack mode",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "layer_stack": {
+        "copper_layers": [
+          {
+            "name": "Top"
+          },
+          {
+            "name": "Bottom"
+          }
+        ],
+        "dielectrics_between": [
+          {
+            "name": "Core",
+            "material": "FR-4",
+            "thickness_mils": 58.9,
+            "dielectric_constant": 4.8
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "legacy flat pair",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_pairs": [
+        {
+          "layer_1": "MECHANICAL10",
+          "layer_2": "MECHANICAL11",
+          "pair_index": 2
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "grouped pair",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_pairs": [
+        {
+          "top": {
+            "layer": "MECHANICAL10",
+            "kind": "BODY_3D_TOP"
+          },
+          "bottom": {
+            "layer": "MECHANICAL11",
+            "kind": "BODY_3D_BOTTOM"
+          }
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "incomplete grouped pair cannot fall back",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_pairs": [
+        {
+          "layer_1": "MECHANICAL10",
+          "layer_2": "MECHANICAL11",
+          "top": {
+            "layer": "MECHANICAL10",
+            "kind": "BODY_3D_TOP"
+          }
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "grouped takes precedence over flat",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_pairs": [
+        {
+          "top": {
+            "layer": "MECHANICAL10",
+            "kind": "BODY_3D_TOP"
+          },
+          "bottom": {
+            "layer": "MECHANICAL11",
+            "kind": "BODY_3D_BOTTOM"
+          },
+          "layer_1": "ignored",
+          "layer_2": "ignored"
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "empty project sheets",
+    "family": "project",
+    "value": {
+      "schema": "altium_cruncher.project_skeleton.a0",
+      "project": {
+        "file": "a.PrjPcb"
+      },
+      "schematics": []
+    },
+    "valid": true
+  },
+  {
+    "name": "null optional board",
+    "family": "project",
+    "value": {
+      "schema": "altium_cruncher.project_skeleton.a0",
+      "project": {
+        "file": "a.PrjPcb"
+      },
+      "schematics": [],
+      "pcb": null
+    },
+    "valid": true
+  },
+  {
+    "name": "missing required sheets",
+    "family": "project",
+    "value": {
+      "schema": "altium_cruncher.project_skeleton.a0",
+      "project": {
+        "file": "a.PrjPcb"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "null sheets rejected",
+    "family": "project",
+    "value": {
+      "schema": "altium_cruncher.project_skeleton.a0",
+      "project": {
+        "file": "a.PrjPcb"
+      },
+      "schematics": null
+    },
+    "valid": false
+  },
+  {
+    "name": "parameter and root extensions",
+    "family": "project",
+    "value": {
+      "schema": "altium_cruncher.project_skeleton.a0",
+      "project": {
+        "file": "a.PrjPcb",
+        "parameters": {
+          "Flag": false,
+          "Voltage": 3.3,
+          "Tags": [
+            "a",
+            "b"
+          ],
+          "Unset": null
+        }
+      },
+      "schematics": [],
+      "editor": {
+        "section": "pcb"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "nested child extension",
+    "family": "project",
+    "value": {
+      "schema": "altium_cruncher.project_skeleton.a0",
+      "project": {
+        "file": "a.PrjPcb"
+      },
+      "schematics": [
+        {
+          "file": "a.SchDoc",
+          "editor": {
+            "fold": false
+          }
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "parameter map required",
+    "family": "project",
+    "value": {
+      "schema": "altium_cruncher.project_skeleton.a0",
+      "project": {
+        "file": "a.PrjPcb",
+        "parameters": null
+      },
+      "schematics": []
+    },
+    "valid": false
+  },
+  {
+    "name": "null and integral pair index",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_pairs": [
+        {
+          "layer_1": "MECHANICAL10",
+          "layer_2": "MECHANICAL11",
+          "pair_index": null
+        },
+        {
+          "layer_1": "MECHANICAL12",
+          "layer_2": "MECHANICAL13",
+          "pair_index": 1.0
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "native kind id",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "mechanical_layer_kinds": [
+        {
+          "layer": "MECHANICAL2",
+          "kind": 0
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "missing dielectric rows",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "layer_stack": {
+        "copper_layers": [
+          {
+            "name": "Top"
+          },
+          {
+            "name": "Bottom"
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "missing dielectric material",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "layer_stack": {
+        "copper_layers": [
+          {
+            "name": "Top"
+          },
+          {
+            "name": "Bottom"
+          }
+        ],
+        "dielectrics_between": [
+          {
+            "name": "Core",
+            "thickness_mils": 58.9,
+            "dielectric_constant": 4.8
+          }
+        ]
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "empty stack mode",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "layer_stack": {
+        "copper_layers": [
+          {
+            "name": "Top"
+          },
+          {
+            "name": "Bottom"
+          }
+        ],
+        "dielectrics_between": [
+          {
+            "name": "Core",
+            "material": "FR-4",
+            "thickness_mils": 58.9,
+            "dielectric_constant": 4.8
+          }
+        ],
+        "mode": ""
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "native layer ids and loss",
+    "family": "pcbdoc",
+    "value": {
+      "schema": "altium_cruncher.pcbdoc.create.config.a0",
+      "file": "a.PcbDoc",
+      "layer_stack": {
+        "copper_layers": [
+          {
+            "name": "Top",
+            "component_placement": 0.0,
+            "copper_orientation": 1
+          },
+          {
+            "name": "Bottom"
+          }
+        ],
+        "dielectrics_between": [
+          {
+            "name": "Core",
+            "material": "FR-4",
+            "thickness_mils": 58.9,
+            "dielectric_constant": 4.8,
+            "dielectric_type": 0.0,
+            "loss_tangent": 0.02
+          }
+        ]
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "legacy collection truthiness",
+    "family": "schdoc",
+    "valid": true,
+    "value": {
+      "schema": "altium_cruncher.schdoc.create.config.a0",
+      "file": "a.SchDoc",
+      "template": "a.SchDot",
+      "apply_template_visual_sheet_settings": {
+        "legacy": true
+      }
+    }
+  }
+]

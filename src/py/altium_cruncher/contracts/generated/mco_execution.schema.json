@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.mco.execution.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.mco.a0",
+      "description": "Existing execution reports reuse the input schema tag; the contract file distinguishes the result shape."
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "dry_run": {
+      "type": "boolean"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/McoOperationResult"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "ok",
+    "dry_run",
+    "results"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "McoOperationResult": {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "ok"
+            },
+            {
+              "type": "string",
+              "const": "fail"
+            }
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "outputs": {
+          "$ref": "#/$defs/RecordUnknown",
+          "description": "Operation-specific results; custom registries own their output payloads."
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "status",
+        "message",
+        "outputs"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

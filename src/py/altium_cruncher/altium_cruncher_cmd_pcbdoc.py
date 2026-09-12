@@ -6,8 +6,9 @@ import argparse
 import json
 import logging
 from pathlib import Path
+from typing import cast
 
-from altium_cruncher.altium_cruncher_cmd_mco import (
+from altium_cruncher.mco_cli_support import (
     execute_mco_for_cli,
     print_mco_execution_result,
 )
@@ -33,6 +34,12 @@ from altium_cruncher.altium_cruncher_project_profiles import (
     mechanical_profile_args,
 )
 
+from altium_cruncher.contracts.creation import creation_default
+
+_DEFAULT_BOARD = cast(dict[str, float], creation_default("board_outline_mils"))
+_DEFAULT_WIDTH_MILS = _DEFAULT_BOARD["right"] - _DEFAULT_BOARD["left"]
+_DEFAULT_HEIGHT_MILS = _DEFAULT_BOARD["top"] - _DEFAULT_BOARD["bottom"]
+
 log = logging.getLogger(__name__)
 
 
@@ -42,8 +49,8 @@ def build_pcbdoc_create_mco(
     layers: int = 2,
     layer_stack_template: str | None = None,
     stackupx_file: Path | str | None = None,
-    width_mils: float = 3000.0,
-    height_mils: float = 2000.0,
+    width_mils: float = _DEFAULT_WIDTH_MILS,
+    height_mils: float = _DEFAULT_HEIGHT_MILS,
     mechanical_layer_profile: str | None = STANDARD_MECHANICAL_LAYER_PROFILE,
     overwrite: bool = False,
 ) -> JsonObject:
@@ -87,7 +94,7 @@ def build_pcbdoc_create_mco_from_config(
     overwrite: bool = False,
 ) -> JsonObject:
     """Build the MCO payload for creating a PcbDoc from config."""
-    from altium_cruncher.altium_cruncher_cmd_prjpcb import _pcb_create_args, _string
+    from altium_cruncher.project_creation import _pcb_create_args, _string
 
     pcb_file = _string(config.get("file"), "file")
     return {
@@ -109,8 +116,8 @@ def execute_pcbdoc_create_mco(
     layers: int = 2,
     layer_stack_template: str | None = None,
     stackupx_file: Path | str | None = None,
-    width_mils: float = 3000.0,
-    height_mils: float = 2000.0,
+    width_mils: float = _DEFAULT_WIDTH_MILS,
+    height_mils: float = _DEFAULT_HEIGHT_MILS,
     mechanical_layer_profile: str | None = None,
     overwrite: bool = False,
     dry_run: bool = False,
@@ -331,13 +338,13 @@ def register_parser(
     create_parser.add_argument(
         "--width-mils",
         type=float,
-        default=3000.0,
+        default=_DEFAULT_WIDTH_MILS,
         help="rectangular board width in mils (default: 3000)",
     )
     create_parser.add_argument(
         "--height-mils",
         type=float,
-        default=2000.0,
+        default=_DEFAULT_HEIGHT_MILS,
         help="rectangular board height in mils (default: 2000)",
     )
     create_parser.add_argument(

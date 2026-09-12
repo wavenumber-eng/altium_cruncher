@@ -1,0 +1,681 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.json_dump.a0",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/SchdocDump"
+    },
+    {
+      "$ref": "#/$defs/SchlibDump"
+    },
+    {
+      "$ref": "#/$defs/PcbdocDump"
+    },
+    {
+      "$ref": "#/$defs/PcblibDump"
+    }
+  ],
+  "$defs": {
+    "SchdocDump": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "altium_cruncher.json_dump.a0"
+        },
+        "kind": {
+          "type": "string",
+          "const": "SchDoc"
+        },
+        "document": {
+          "$ref": "#/$defs/SchDoc"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "document"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchlibDump": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "altium_cruncher.json_dump.a0"
+        },
+        "kind": {
+          "type": "string",
+          "const": "SchLib"
+        },
+        "document": {
+          "$ref": "#/$defs/SchLib"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "document"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbdocDump": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "altium_cruncher.json_dump.a0"
+        },
+        "kind": {
+          "type": "string",
+          "const": "PcbDoc"
+        },
+        "document": {
+          "$ref": "#/$defs/PcbDoc"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "document"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcblibDump": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "altium_cruncher.json_dump.a0"
+        },
+        "kind": {
+          "type": "string",
+          "const": "PcbLib"
+        },
+        "document": {
+          "$ref": "#/$defs/PcbLib"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "document"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SchDoc": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "const": "altium_monkey.schdoc.interop.a0"
+        }
+      },
+      "required": [
+        "format"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "The full SchDoc interop payload comes from Altium Monkey to_json(). Cruncher only supplies its format tag."
+    },
+    "SchLib": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "const": "altium_monkey.schlib.interop.a0"
+        }
+      },
+      "required": [
+        "format"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      },
+      "description": "The full SchLib interop payload comes from Altium Monkey to_json(). Cruncher only supplies its format tag."
+    },
+    "PcbDoc": {
+      "type": "object",
+      "properties": {
+        "pads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "vias": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "arcs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "fills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "shapebased_regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "component_bodies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "format": {
+          "type": "string",
+          "const": "altium_monkey.pcbdoc.structural.a0"
+        },
+        "counts": {
+          "$ref": "#/$defs/RecordCount"
+        },
+        "raw_streams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RawStream"
+          }
+        },
+        "board": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "union_name_records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "smart_unions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "user_unions": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/UserUnion"
+              },
+              {
+                "$ref": "#/$defs/UnionError"
+              }
+            ]
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "nets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "net_classes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "differential_pairs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "extended_primitive_information": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "custom_shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "via_structures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "via_structure_links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "board_regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "shapebased_component_bodies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "embedded_fonts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "embedded_models": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        }
+      },
+      "required": [
+        "pads",
+        "vias",
+        "tracks",
+        "arcs",
+        "texts",
+        "fills",
+        "regions",
+        "shapebased_regions",
+        "component_bodies",
+        "models",
+        "format",
+        "counts",
+        "raw_streams",
+        "board",
+        "union_name_records",
+        "smart_unions",
+        "user_unions",
+        "components",
+        "nets",
+        "net_classes",
+        "differential_pairs",
+        "polygons",
+        "rules",
+        "dimensions",
+        "extended_primitive_information",
+        "custom_shapes",
+        "via_structures",
+        "via_structure_links",
+        "board_regions",
+        "shapebased_component_bodies",
+        "embedded_fonts",
+        "embedded_models"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PcbLib": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "const": "altium_monkey.pcblib.structural.a0"
+        },
+        "footprint_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "footprints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Footprint"
+          }
+        },
+        "models_3d": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "raw_streams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RawStream"
+          }
+        }
+      },
+      "required": [
+        "format",
+        "footprint_count",
+        "footprints",
+        "models_3d",
+        "raw_streams"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "NativeValue": {
+      "anyOf": [
+        {}
+      ],
+      "description": "Native Altium Monkey record reflection, including enum/bytes summaries, properties and depth/cycle fallbacks. Upstream record fields are not owned by Cruncher."
+    },
+    "RecordCount": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "#/$defs/Count"
+      }
+    },
+    "RawStream": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "byte_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "name",
+        "byte_count",
+        "sha256"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "UserUnion": {
+      "type": "object",
+      "properties": {
+        "union_index": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "member_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UnionMember"
+          }
+        }
+      },
+      "required": [
+        "union_index",
+        "name",
+        "member_count",
+        "members"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "UnionError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Footprint": {
+      "type": "object",
+      "properties": {
+        "pads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "vias": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "arcs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "fills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "shapebased_regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "component_bodies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeValue"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "counts": {
+          "$ref": "#/$defs/RecordCount"
+        }
+      },
+      "required": [
+        "pads",
+        "vias",
+        "tracks",
+        "arcs",
+        "texts",
+        "fills",
+        "regions",
+        "shapebased_regions",
+        "component_bodies",
+        "models",
+        "name",
+        "counts"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "UnionMember": {
+      "type": "object",
+      "properties": {
+        "collection": {
+          "type": "string"
+        },
+        "object_index": {
+          "type": "integer"
+        },
+        "union_index": {
+          "type": "integer"
+        },
+        "object_summary": {
+          "$ref": "#/$defs/MemberSummary"
+        }
+      },
+      "required": [
+        "collection",
+        "object_index",
+        "union_index",
+        "object_summary"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "MemberSummary": {
+      "type": "object",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "designator": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "name": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "text_content": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "footprint": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "comment": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "x_mils": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "y_mils": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "start_x_mils": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "start_y_mils": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "end_x_mils": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "end_y_mils": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "center_x_mils": {
+          "$ref": "#/$defs/NativeValue"
+        },
+        "center_y_mils": {
+          "$ref": "#/$defs/NativeValue"
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/json-dump.tsp. Do not edit."
+}

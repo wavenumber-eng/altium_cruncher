@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "easyeda_models",
+    "title": "EasyEDA model downloads",
+    "source": "../outputs/easyeda",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.easyeda.3d_models.a0"
+}

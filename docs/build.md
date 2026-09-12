@@ -9,7 +9,8 @@ status = "accepted"
 
 ## Tools And Setup
 
-Use `uv` with Python 3.12. The normal setup command is:
+Use `uv` with Python 3.14. The repository's `.python-version` selects this
+interpreter, matching the package requirement and CI. The normal setup command is:
 
 ```bash
 uv sync --extra test
@@ -17,6 +18,26 @@ uv sync --extra test
 
 The project uses Hatchling through `pyproject.toml`, and `uv.lock` is the
 checked-in dependency lock for local and CI runs.
+
+All public JSON contract generation uses Node 24 and the
+checked-in npm lockfile:
+
+```powershell
+npm ci --ignore-scripts
+npm run check:contracts
+npm run check:typescript
+npm run check:browser
+```
+
+After editing any source under `src/tsp/altium_cruncher`,
+run `npm run generate:contracts`.
+The [SVG config guide](design/pcb-svg-config-authority.md) and
+[creation config guide](design/creation-config-authority.md) and
+[MCO guide](design/mco-contract-authority.md) document generated
+resources and compatibility boundaries. CI and release publishing check
+these artifacts before packaging. Installed Python CLI users do not need Node.
+The [complete authority inventory](design/public-contract-authority.md) includes
+remaining workflow configs, output contracts and explicit upstream boundaries.
 
 ## Commands And Invocation
 

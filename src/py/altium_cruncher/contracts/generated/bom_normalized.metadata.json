@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "bom_normalized",
+    "title": "Normalized BOM",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.bom.raw.a0"
+}

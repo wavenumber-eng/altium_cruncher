@@ -1,0 +1,8 @@
+{
+  "contract": {
+    "stem": "easyeda_symbol_report",
+    "title": "EasyEDA symbol mapping",
+    "source": "../outputs/easyeda",
+    "kind": "output"
+  }
+}

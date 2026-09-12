@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "mco_execution",
+    "title": "MCO execution result",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.mco.a0"
+}

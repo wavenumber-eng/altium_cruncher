@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.mate.inspect.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.mate.inspect.a0"
+    },
+    "source": {
+      "type": "string"
+    },
+    "source_tag": {
+      "type": "string"
+    },
+    "boards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Board"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "source_tag",
+    "boards"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Board": {
+      "type": "object",
+      "properties": {
+        "board_key": {
+          "type": "string"
+        },
+        "pcb_path": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Component"
+          }
+        },
+        "free_pads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FreePad"
+          }
+        },
+        "board_outline_mils": {
+          "$ref": "#/$defs/Bounds"
+        },
+        "board_outline": {
+          "$ref": "#/$defs/Outline"
+        },
+        "board_origin_mils": {
+          "$ref": "#/$defs/Point"
+        }
+      },
+      "required": [
+        "board_key",
+        "pcb_path",
+        "components",
+        "free_pads"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Component": {
+      "type": "object",
+      "properties": {
+        "designator": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "footprint": {
+          "type": "string"
+        },
+        "x_mils": {
+          "type": "number"
+        },
+        "y_mils": {
+          "type": "number"
+        },
+        "net_name": {
+          "type": "string"
+        },
+        "source_power_port": {
+          "$ref": "#/$defs/PowerPort"
+        },
+        "source_pad_geometries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PadGeometry"
+          }
+        }
+      },
+      "required": [
+        "designator",
+        "kind",
+        "layer",
+        "footprint",
+        "x_mils",
+        "y_mils"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "FreePad": {
+      "type": "object",
+      "properties": {
+        "designator": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "integer"
+        },
+        "x_mils": {
+          "type": "number"
+        },
+        "y_mils": {
+          "type": "number"
+        },
+        "width_mils": {
+          "type": "number"
+        },
+        "height_mils": {
+          "type": "number"
+        },
+        "hole_size_mils": {
+          "type": "number"
+        },
+        "plated": {
+          "type": "boolean"
+        },
+        "shape": {
+          "type": "integer"
+        },
+        "net_name": {
+          "type": "string"
+        },
+        "source_power_port": {
+          "$ref": "#/$defs/PowerPort"
+        }
+      },
+      "required": [
+        "designator",
+        "kind",
+        "layer",
+        "x_mils",
+        "y_mils",
+        "width_mils",
+        "height_mils",
+        "hole_size_mils",
+        "plated",
+        "shape"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Bounds": {
+      "type": "object",
+      "properties": {
+        "left": {
+          "type": "number"
+        },
+        "bottom": {
+          "type": "number"
+        },
+        "right": {
+          "type": "number"
+        },
+        "top": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "left",
+        "bottom",
+        "right",
+        "top"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Outline": {
+      "type": "object",
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LineVertex"
+              },
+              {
+                "$ref": "#/$defs/ArcVertex"
+              }
+            ]
+          }
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "cutouts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Outline"
+          }
+        }
+      },
+      "required": [
+        "vertices",
+        "closed"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PowerPort": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "style": {
+          "type": "string"
+        },
+        "show_net_name": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "style",
+        "show_net_name"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PadGeometry": {
+      "type": "object",
+      "properties": {
+        "x_mils": {
+          "type": "number"
+        },
+        "y_mils": {
+          "type": "number"
+        },
+        "width_mils": {
+          "type": "number"
+        },
+        "height_mils": {
+          "type": "number"
+        },
+        "shape": {
+          "type": "integer"
+        },
+        "layer": {
+          "type": "integer"
+        },
+        "rotation_degrees": {
+          "type": "number"
+        },
+        "corner_radius_mils": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x_mils",
+        "y_mils",
+        "width_mils",
+        "height_mils",
+        "shape",
+        "layer",
+        "rotation_degrees"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "LineVertex": {
+      "type": "object",
+      "properties": {
+        "x_mils": {
+          "type": "number"
+        },
+        "y_mils": {
+          "type": "number"
+        },
+        "segment": {
+          "type": "string",
+          "const": "line"
+        }
+      },
+      "required": [
+        "x_mils",
+        "y_mils",
+        "segment"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ArcVertex": {
+      "type": "object",
+      "properties": {
+        "x_mils": {
+          "type": "number"
+        },
+        "y_mils": {
+          "type": "number"
+        },
+        "segment": {
+          "type": "string",
+          "const": "arc"
+        },
+        "center_mils": {
+          "$ref": "#/$defs/Pair"
+        },
+        "radius_mils": {
+          "type": "number"
+        },
+        "start_angle_degrees": {
+          "type": "number"
+        },
+        "end_angle_degrees": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x_mils",
+        "y_mils",
+        "segment",
+        "center_mils",
+        "radius_mils",
+        "start_angle_degrees",
+        "end_angle_degrees"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Pair": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/mate.tsp. Do not edit."
+}

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.easyeda.3d_models.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.easyeda.3d_models.a0"
+    },
+    "lcsc_id": {
+      "type": "string"
+    },
+    "placement_implemented": {
+      "type": "boolean"
+    },
+    "placement_note": {
+      "type": "string"
+    },
+    "models": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ModelReference"
+      }
+    },
+    "placement_verdict": {
+      "type": "string"
+    },
+    "placement_check": {
+      "$ref": "#/$defs/PlacementCheck"
+    }
+  },
+  "required": [
+    "schema",
+    "lcsc_id",
+    "placement_implemented",
+    "placement_note",
+    "models"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "ModelReference": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string"
+        },
+        "z": {
+          "type": "string"
+        },
+        "rotation": {
+          "type": "string"
+        },
+        "files": {
+          "$ref": "#/$defs/RecordString"
+        },
+        "errors": {
+          "$ref": "#/$defs/RecordString"
+        },
+        "placement_status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid",
+        "title",
+        "origin",
+        "z",
+        "rotation",
+        "files",
+        "errors",
+        "placement_status"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "PlacementCheck": {
+      "type": "object",
+      "properties": {
+        "verdict": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "ok"
+            },
+            {
+              "type": "string",
+              "const": "needs_checking"
+            }
+          ]
+        },
+        "checked": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "center_distance_mils": {
+          "type": "number"
+        },
+        "distance_ratio": {
+          "type": "number"
+        },
+        "model_bounds_mils": {
+          "$ref": "#/$defs/BoundsArray"
+        },
+        "pad_bounds_mils": {
+          "$ref": "#/$defs/BoundsArray"
+        }
+      },
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    },
+    "BoundsArray": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/easyeda.tsp. Do not edit."
+}

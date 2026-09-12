@@ -1,0 +1,63 @@
+{
+  "schema": "pcb.svg.config.a0",
+  "global": {
+    "include_metadata": false,
+    "clip_to_outline": true,
+    "clip_holes_from_copper": true,
+    "styles": {
+      "smd_pads": { "enabled": true, "color": "#DFC951" },
+      "through_hole_pads": { "enabled": true, "color": "#DFC951" },
+      "copper_traces": { "enabled": true, "color": "#DFC951" },
+      "vias": { "enabled": true, "color": "#DFC951" },
+      "copper_polygons": { "enabled": false },
+      "soldermask_film": { "color": "auto", "opacity": 0.85 },
+      "drills": {
+        "plated_color": "#000000", "non_plated_color": "#000000",
+        "outline": true, "outline_width_mm": 0.025, "respect_tenting": true
+      },
+      "slots": {
+        "plated_color": "#000000", "non_plated_color": "#000000",
+        "outline": true, "outline_width_mm": 0.025, "respect_tenting": true
+      },
+      "board_cutouts": { "color": "#000000", "hatch": false, "outline_width_mm": 0.025 }
+    }
+  },
+  "layer_outputs": { "enabled": false },
+  "views": [
+    {
+      "name": "top_copper_pads",
+      "layers": ["TOP", "SOLDERMASK_FILM_TOP", "BOARD_CUTOUTS", "DRILLS", "SLOTS"],
+      "group_id": "pcb-svg-copper-pads",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false,
+      "styles": {
+        "copper_traces": { "enabled": false },
+        "vias": { "enabled": false },
+        "soldermask_film": { "opacity": 1.0 }
+      }
+    },
+    {
+      "name": "top_copper_white",
+      "layers": ["TOP", "SOLDERMASK_FILM_TOP", "BOARD_CUTOUTS", "DRILLS", "SLOTS"],
+      "group_id": "pcb-svg-copper-white",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false
+    },
+    {
+      "name": "top_copper_green",
+      "layers": ["TOP", "SOLDERMASK_FILM_TOP", "BOARD_CUTOUTS", "DRILLS", "SLOTS"],
+      "group_id": "pcb-svg-copper-green",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false,
+      "styles": { "soldermask_film": { "color": "#176B3A", "opacity": 0.9 } }
+    },
+    {
+      "name": "top_copper_translucent",
+      "layers": ["TOP", "SOLDERMASK_FILM_TOP", "BOARD_CUTOUTS", "DRILLS", "SLOTS"],
+      "group_id": "pcb-svg-copper-translucent",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false,
+      "styles": { "soldermask_film": { "color": "#176B3A", "opacity": 0.65 } }
+    }
+  ]
+}

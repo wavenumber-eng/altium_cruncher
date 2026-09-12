@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
+
+from .contracts.pcb_svg import config_default, config_metadata
 
 from altium_monkey.altium_pcb_layer_ref import PcbLayerRef
 from altium_monkey.altium_record_types import PcbLayer
@@ -12,177 +15,26 @@ from altium_monkey.altium_record_types import PcbLayer
 from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
     resolve_pcb_layer_ref,
 )
-from altium_cruncher.config_json import enum_help, render_commented_jsonc
+from altium_cruncher.config_json import JsoncCommentMap, render_commented_jsonc
 
 PCB_SVG_CONFIG_FILENAME = "pcb.svg.config"
-PCB_SVG_CONFIG_SCHEMA = "pcb.svg.config.a0"
-PCB_DEFAULT_SVG_SCALE = 10.0
+PCB_SVG_CONFIG_SCHEMA = cast(str, config_metadata()["schema"])
+PCB_DEFAULT_SVG_SCALE = cast(float, config_default("global", "svg_scale"))
 PCB_SVG_CANVAS_BOUNDS_MODES = frozenset({"board_outline", "all_geometry"})
 PCB_SVG_COMPONENT_PROJECTION_MODES = frozenset(
     {"detail", "outline", "simple", "bounding_box", "none"}
 )
 PCB_SVG_COMPONENT_SIDES = frozenset({"top", "bottom"})
 
-PCB_SVG_SPECIAL_LAYERS = frozenset(
-    {
-        "BOARD_OUTLINE",
-        "BOARD_CUTOUTS",
-        "DRILLS",
-        "SLOTS",
-        "ASSEMBLY_HLR_TOP",
-        "ASSEMBLY_HLR_BOTTOM",
-        "ASSEMBLY_DESIGNATORS_TOP",
-        "ASSEMBLY_DESIGNATORS_BOTTOM",
-        "PIN1_TOP",
-        "PIN1_BOTTOM",
-    }
+PCB_SVG_SPECIAL_LAYERS = frozenset(cast(list[str], config_metadata()["special-layers"]))
+
+_STYLE_ORDER = tuple(cast(list[str], config_metadata()["style-order"]))
+
+_PCB_SVG_CONFIG_COMMENTS = cast(JsoncCommentMap, config_metadata()["jsonc-comments"])
+
+_PCB_SVG_CONFIG_KEY_COMMENTS = cast(
+    Mapping[str, str | Sequence[str]], config_metadata()["jsonc-key-comments"]
 )
-
-_STYLE_ORDER = (
-    "board_outline",
-    "board_cutouts",
-    "drills",
-    "slots",
-    "copper_traces",
-    "vias",
-    "copper_polygons",
-    "smd_pads",
-    "through_hole_pads",
-    "silkscreen_component_graphics",
-    "silkscreen_designators",
-    "silkscreen_board_graphics",
-    "pin1_marker",
-    "keepout",
-    "assembly_hlr",
-)
-
-_PCB_SVG_CONFIG_COMMENTS: dict[tuple[str, ...], str | tuple[str, ...]] = {
-    ("schema",): "PCB SVG config contract id.",
-    ("global",): "Global settings applied to layer outputs and composed views.",
-    (
-        "global",
-        "pcbdoc",
-    ): "Optional PcbDoc selector when a PrjPcb contains multiple boards.",
-    ("global", "canvas"): "SVG viewBox normalization policy.",
-    ("global", "canvas", "bounds"): enum_help(
-        "Canvas bounds mode.",
-        tuple(sorted(PCB_SVG_CANVAS_BOUNDS_MODES)),
-    ),
-    ("global", "canvas", "margin_mm"): "Canvas margin added around the chosen bounds.",
-    (
-        "global",
-        "include_metadata",
-    ): "Include Altium/source metadata in SVG data attributes.",
-    (
-        "global",
-        "show_empty_layers",
-    ): "Emit empty physical layers when no primitives are present.",
-    ("global", "clip_to_outline"): "Clip rendered geometry to the board outline.",
-    ("global", "clip_holes_from_copper"): "Clip drills and slots out of copper layers.",
-    (
-        "global",
-        "mirror_bottom_view",
-    ): "Mirror bottom-side views into assembly-view orientation.",
-    ("global", "svg_scale"): "Multiplier for SVG width and height attributes.",
-    ("global", "svg_size_unit"): "Optional SVG size unit suffix, such as mm or px.",
-    (
-        "global",
-        "clean_output",
-    ): "Reserved cleanup flag for generated output directories.",
-    ("global", "styles"): "Default style table for physical and synthetic layers.",
-    ("pin1",): "Pin-1 marker detection and display policy.",
-    ("pin1", "exclude_designator_prefixes"): (
-        "Component designator prefixes excluded from automatic pin-1 markers."
-    ),
-    ("assembly",): "Assembly projection defaults for component virtual layers.",
-    ("assembly", "default_projection"): enum_help(
-        "Projection mode for fitted components.",
-        tuple(sorted(PCB_SVG_COMPONENT_PROJECTION_MODES)),
-    ),
-    ("assembly", "dnp_projection"): enum_help(
-        "Projection mode for DNP components.",
-        tuple(sorted(PCB_SVG_COMPONENT_PROJECTION_MODES)),
-    ),
-    ("assembly", "designator_color"): "Text color for fitted component designators.",
-    ("assembly", "dnp_designator_color"): "Text color for DNP component designators.",
-    ("dnp",): "DNP marker style.",
-    ("diodes",): "Diode/cathode marker detection policy.",
-    ("diodes", "enabled"): "Enable diode/cathode marker detection.",
-    ("diodes", "line_art"): "Draw diode line art when possible.",
-    ("diodes", "marker_color"): "Cathode marker color.",
-    ("diodes", "numeric_cathode_pad"): "Default numeric cathode pad designator.",
-    ("diodes", "cathode_pad_names"): "Pad names treated as cathode pads.",
-    (
-        "diodes",
-        "designator_prefixes",
-    ): "Designator prefixes treated as diode-like parts.",
-    ("diodes", "parameter_terms"): "Parameter text terms treated as diode-like parts.",
-    ("components",): "Per-designator overrides keyed by component designator.",
-    ("layer_outputs",): "Config-driven physical layer SVG output policy.",
-    ("layer_outputs", "enabled"): "Enable individual physical layer SVG outputs.",
-    ("layer_outputs", "layers"): (
-        "Physical PCB layers to render. Options: auto, native PCB layer name, "
-        "layer id, TOP, BOTTOM, TOPOVERLAY, BOTTOMOVERLAY, MECHANICAL_1..MECHANICAL_32."
-    ),
-    ("layer_outputs", "include_special_layers"): (
-        "Synthetic layers also emitted with layer outputs. Options: "
-        "BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, "
-        "ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, "
-        "ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, and PIN1_BOTTOM."
-    ),
-    ("layer_outputs", "output_dir"): "Output directory for physical layer SVG files.",
-    (
-        "views",
-    ): "Explicit composed SVG views. Each item has its own draw-order layer list.",
-    ("views", "name"): "Stable view name used by --views and output token replacement.",
-    ("views", "enabled"): "Enable this composed view.",
-    ("views", "group_id"): "SVG group id used for this composed view.",
-    ("views", "output_svg"): "Output SVG path template. Supports {board} and {view}.",
-    ("views", "layers"): (
-        "Draw-order layer list. Options: native PCB layer names, layer ids, "
-        "BOARD_OUTLINE, "
-        "BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, "
-        "ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, and "
-        "PIN1_BOTTOM."
-    ),
-    ("views", "mirror"): "Mirror this view horizontally into assembly orientation.",
-    ("views", "assembly_hlr_mode"): enum_help(
-        "Assembly projection mode for this view.",
-        ("detail", "outline", "bounding_box", "none", "simple"),
-    ),
-    ("views", "styles"): "Style overrides applied only to this composed view.",
-    ("views", "description"): "Human-readable view description.",
-}
-
-_PCB_SVG_CONFIG_KEY_COMMENTS: dict[str, str] = {
-    "enabled": "Enable this rendering rule.",
-    "color": "SVG color value, usually #RRGGBB.",
-    "plated_color": "SVG color for plated drill/slot features.",
-    "non_plated_color": "SVG color for non-plated drill/slot features.",
-    "line_width_mm": "Stroke width in millimeters.",
-    "hatch": "Enable hatch fill for this layer/style.",
-    "hatch_spacing_mm": "Hatch spacing in millimeters.",
-    "hatch_angle_deg": "Hatch angle in degrees.",
-    "hatch_line_width_mm": "Hatch stroke width in millimeters.",
-    "outline_style": enum_help(
-        "Outline stroke style.",
-        ("solid", "dashed"),
-    ),
-    "outline_dash_mm": "Dash length in millimeters when outline_style is dashed.",
-    "outline_width_mm": "Outline stroke width in millimeters.",
-    "opacity": "Layer opacity from 0.0 to 1.0.",
-    "dot_diameter_mm": "Pin-1 marker dot diameter in millimeters.",
-    "min_dot_diameter_mm": "Minimum pin-1 marker dot diameter in millimeters.",
-    "curve_mode": enum_help(
-        "HLR curve serialization mode.",
-        ("native_arcs", "polyline"),
-    ),
-    "samples_per_curve": "Polyline sample count when curves are sampled.",
-    "round_digits": "Decimal places retained in generated SVG path coordinates.",
-    "include_visible": "Include visible HLR edges.",
-    "include_outline": "Include outline/silhouette HLR edges.",
-    "union_polygons": "Union projected polygons before converting to SVG paths.",
-}
 
 
 def _coerce_bool(value: object, default: bool) -> bool:
@@ -375,63 +227,8 @@ def pcb_svg_physical_layer_from_token(token: str) -> PcbLayer | None:
 
 
 def default_pcb_svg_styles() -> dict[str, dict[str, object]]:
-    """Return the default A0 style table."""
-    return {
-        "board_outline": {
-            "enabled": True,
-            "color": "#000000",
-            "line_width_mm": 0.10,
-        },
-        "board_cutouts": {
-            "enabled": True,
-            "color": "#FF0000",
-            "hatch": True,
-            "hatch_spacing_mm": 2.0,
-            "hatch_angle_deg": 45.0,
-            "hatch_line_width_mm": 0.08,
-            "outline_style": "solid",
-            "outline_dash_mm": 1.5,
-            "outline_width_mm": 0.15,
-        },
-        "drills": {
-            "enabled": True,
-            "plated_color": "#90EE90",
-            "non_plated_color": "#ADD8E6",
-            "opacity": 1.0,
-        },
-        "slots": {
-            "enabled": True,
-            "plated_color": "#90EE90",
-            "non_plated_color": "#ADD8E6",
-            "opacity": 1.0,
-        },
-        "copper_traces": {"enabled": True, "color": "#000000"},
-        "vias": {"enabled": True, "color": "#000000"},
-        "copper_polygons": {"enabled": True, "color": "#888888"},
-        "smd_pads": {"enabled": True, "color": "#000000"},
-        "through_hole_pads": {"enabled": True, "color": "#000000"},
-        "silkscreen_component_graphics": {"enabled": True, "color": "#000000"},
-        "silkscreen_designators": {"enabled": True, "color": "#000000"},
-        "silkscreen_board_graphics": {"enabled": True, "color": "#000000"},
-        "pin1_marker": {
-            "enabled": True,
-            "color": "#2563EB",
-            "dot_diameter_mm": 0.55,
-            "min_dot_diameter_mm": 0.25,
-        },
-        "keepout": {"enabled": True, "color": "#CC00CC"},
-        "assembly_hlr": {
-            "enabled": True,
-            "color": "#F59E0B",
-            "line_width_mm": 0.12,
-            "curve_mode": "native_arcs",
-            "samples_per_curve": 24,
-            "round_digits": 3,
-            "include_visible": True,
-            "include_outline": True,
-            "union_polygons": True,
-        },
-    }
+    """Copy the TypeSpec-authored default style table."""
+    return cast(dict[str, dict[str, object]], config_default("global", "styles"))
 
 
 def merge_pcb_svg_styles(
@@ -440,6 +237,8 @@ def merge_pcb_svg_styles(
 ) -> dict[str, dict[str, object]]:
     """Merge an A0 style table while preserving default style keys."""
     merged = {name: dict(base.get(name, {})) for name in _STYLE_ORDER}
+    # Styles are extensible; keep every supplied group through view resolution.
+    merged.update({name: dict(style) for name, style in base.items()})
     if override:
         for name, raw_style in override.items():
             if not isinstance(raw_style, dict):
@@ -463,8 +262,8 @@ def _coerce_object_mapping(
 class PcbSvgCanvasConfig:
     """Canvas normalization policy for PCB SVG viewBox coordinates."""
 
-    bounds: str = "board_outline"
-    margin_mm: float = 1.0
+    bounds: str = cast(str, config_default("global", "canvas", "bounds"))
+    margin_mm: float = cast(float, config_default("global", "canvas", "margin_mm"))
 
     @classmethod
     def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgCanvasConfig":
@@ -472,8 +271,9 @@ class PcbSvgCanvasConfig:
             return cls()
         if not isinstance(data, dict):
             raise ValueError("pcb-svg config field 'global.canvas' must be an object")
+        default = cls()
         bounds = (
-            str(data.get("bounds", "board_outline") or "board_outline").strip().lower()
+            str(data.get("bounds", default.bounds) or default.bounds).strip().lower()
         )
         aliases = {
             "board": "board_outline",
@@ -494,7 +294,7 @@ class PcbSvgCanvasConfig:
             bounds=bounds,
             margin_mm=_coerce_nonnegative_float(
                 data.get("margin_mm"),
-                1.0,
+                default.margin_mm,
                 field_name="global.canvas.margin_mm",
             ),
         )
@@ -510,16 +310,20 @@ class PcbSvgCanvasConfig:
 class PcbSvgGlobalConfig:
     """Global pcb-svg A0 options applied to layer outputs and views."""
 
-    pcbdoc: str | None = None
+    pcbdoc: str | None = cast(str | None, config_default("global", "pcbdoc"))
     canvas: PcbSvgCanvasConfig = field(default_factory=PcbSvgCanvasConfig)
-    include_metadata: bool = True
-    show_empty_layers: bool = False
-    clip_to_outline: bool = True
-    clip_holes_from_copper: bool = True
-    mirror_bottom_view: bool = True
-    svg_scale: float = PCB_DEFAULT_SVG_SCALE
-    svg_size_unit: str = ""
-    clean_output: bool = False
+    include_metadata: bool = cast(bool, config_default("global", "include_metadata"))
+    show_empty_layers: bool = cast(bool, config_default("global", "show_empty_layers"))
+    clip_to_outline: bool = cast(bool, config_default("global", "clip_to_outline"))
+    clip_holes_from_copper: bool = cast(
+        bool, config_default("global", "clip_holes_from_copper")
+    )
+    mirror_bottom_view: bool = cast(
+        bool, config_default("global", "mirror_bottom_view")
+    )
+    svg_scale: float = cast(float, config_default("global", "svg_scale"))
+    svg_size_unit: str = cast(str, config_default("global", "svg_size_unit"))
+    clean_output: bool = cast(bool, config_default("global", "clean_output"))
     styles: dict[str, dict[str, object]] = field(default_factory=default_pcb_svg_styles)
 
     @classmethod
@@ -581,14 +385,20 @@ class PcbSvgViewConfig:
     """One explicit A0 composed PCB SVG view."""
 
     name: str
-    enabled: bool = True
-    group_id: str | None = None
-    output_svg: str | None = None
-    layers: list[str] = field(default_factory=list)
-    mirror: bool | None = None
-    assembly_hlr_mode: str = "detail"
-    styles: dict[str, dict[str, object]] = field(default_factory=dict)
-    description: str | None = None
+    enabled: bool = cast(bool, config_default("view", "enabled"))
+    group_id: str | None = cast(str | None, config_default("view", "group_id"))
+    output_svg: str | None = cast(str | None, config_default("view", "output_svg"))
+    layers: list[str] = field(
+        default_factory=lambda: cast(list[str], config_default("view", "layers"))
+    )
+    mirror: bool | None = cast(bool | None, config_default("view", "mirror"))
+    assembly_hlr_mode: str = cast(str, config_default("view", "assembly_hlr_mode"))
+    styles: dict[str, dict[str, object]] = field(
+        default_factory=lambda: cast(
+            dict[str, dict[str, object]], config_default("view", "styles")
+        )
+    )
+    description: str | None = cast(str | None, config_default("view", "description"))
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> "PcbSvgViewConfig":
@@ -597,7 +407,11 @@ class PcbSvgViewConfig:
         name = _coerce_optional_str(data.get("name"))
         if not name:
             raise ValueError("Each pcb-svg view must include a non-empty 'name'")
-        mode = str(data.get("assembly_hlr_mode", "detail") or "detail").lower()
+        default = cls(name=name)
+        mode = str(
+            data.get("assembly_hlr_mode", default.assembly_hlr_mode)
+            or default.assembly_hlr_mode
+        ).lower()
         aliases = {
             "detailed": "detail",
             "simple": "outline",
@@ -622,11 +436,11 @@ class PcbSvgViewConfig:
         )
         return cls(
             name=name,
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             group_id=_coerce_optional_str(data.get("group_id")),
             output_svg=_coerce_optional_str(data.get("output_svg")),
             layers=_coerce_str_list(
-                data.get("layers"), field_name=f"views.{name}.layers"
+                data.get("layers", default.layers), field_name=f"views.{name}.layers"
             ),
             mirror=(
                 None
@@ -666,10 +480,14 @@ class PcbSvgViewConfig:
 class PcbSvgAssemblyConfig:
     """Component assembly projection defaults for PCB SVG virtual layers."""
 
-    default_projection: str = "detail"
-    dnp_projection: str = "bounding_box"
-    designator_color: str = "#111111"
-    dnp_designator_color: str = "#FF0000"
+    default_projection: str = cast(
+        str, config_default("assembly", "default_projection")
+    )
+    dnp_projection: str = cast(str, config_default("assembly", "dnp_projection"))
+    designator_color: str = cast(str, config_default("assembly", "designator_color"))
+    dnp_designator_color: str = cast(
+        str, config_default("assembly", "dnp_designator_color")
+    )
 
     @classmethod
     def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgAssemblyConfig":
@@ -712,11 +530,13 @@ class PcbSvgAssemblyConfig:
 class PcbSvgDnpConfig:
     """DNP projection and hatching defaults for PCB SVG component overlays."""
 
-    color: str = "#FF0000"
-    hatch: bool = True
-    hatch_spacing_mm: float = 1.5
-    hatch_angle_deg: float = 45.0
-    hatch_line_width_mm: float = 0.08
+    color: str = cast(str, config_default("dnp", "color"))
+    hatch: bool = cast(bool, config_default("dnp", "hatch"))
+    hatch_spacing_mm: float = cast(float, config_default("dnp", "hatch_spacing_mm"))
+    hatch_angle_deg: float = cast(float, config_default("dnp", "hatch_angle_deg"))
+    hatch_line_width_mm: float = cast(
+        float, config_default("dnp", "hatch_line_width_mm")
+    )
 
     @classmethod
     def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgDnpConfig":
@@ -756,14 +576,26 @@ class PcbSvgDnpConfig:
 class PcbSvgDiodeConfig:
     """Diode detection and cathode-marker defaults for PCB SVG overlays."""
 
-    enabled: bool = True
-    line_art: bool = True
-    marker_color: str = "#FF0000"
-    numeric_cathode_pad: str = "2"
-    cathode_pad_names: list[str] = field(default_factory=lambda: ["K", "C"])
-    designator_prefixes: list[str] = field(default_factory=lambda: ["D", "LED"])
+    enabled: bool = cast(bool, config_default("diodes", "enabled"))
+    line_art: bool = cast(bool, config_default("diodes", "line_art"))
+    marker_color: str = cast(str, config_default("diodes", "marker_color"))
+    numeric_cathode_pad: str = cast(
+        str, config_default("diodes", "numeric_cathode_pad")
+    )
+    cathode_pad_names: list[str] = field(
+        default_factory=lambda: cast(
+            list[str], config_default("diodes", "cathode_pad_names")
+        )
+    )
+    designator_prefixes: list[str] = field(
+        default_factory=lambda: cast(
+            list[str], config_default("diodes", "designator_prefixes")
+        )
+    )
     parameter_terms: list[str] = field(
-        default_factory=lambda: ["diode", "schottky", "zener", "tvs", "led"]
+        default_factory=lambda: cast(
+            list[str], config_default("diodes", "parameter_terms")
+        )
     )
 
     @classmethod
@@ -817,7 +649,9 @@ class PcbSvgPin1Config:
     """Pin-1 overlay behavior defaults."""
 
     exclude_designator_prefixes: list[str] = field(
-        default_factory=lambda: ["R", "C", "L"]
+        default_factory=lambda: cast(
+            list[str], config_default("pin1", "exclude_designator_prefixes")
+        )
     )
 
     @classmethod
@@ -848,15 +682,27 @@ class PcbSvgPin1Config:
 class PcbSvgComponentOverride:
     """Per-designator PCB SVG virtual assembly override."""
 
-    side: str | None = None
-    projection: str | None = None
-    assembly_hlr: dict[str, object] = field(default_factory=dict)
-    pin1_enabled: bool | None = None
-    pin1_pad: str | None = None
-    cathode_pad: str | None = None
-    diode: bool | None = None
-    diode_line_art: bool | None = None
-    show_designator: bool | None = None
+    side: str | None = cast(str | None, config_default("component", "side"))
+    projection: str | None = cast(str | None, config_default("component", "projection"))
+    assembly_hlr: dict[str, object] = field(
+        default_factory=lambda: cast(
+            dict[str, object], config_default("component", "assembly_hlr")
+        )
+    )
+    pin1_enabled: bool | None = cast(
+        bool | None, config_default("component", "pin1_enabled")
+    )
+    pin1_pad: str | None = cast(str | None, config_default("component", "pin1_pad"))
+    cathode_pad: str | None = cast(
+        str | None, config_default("component", "cathode_pad")
+    )
+    diode: bool | None = cast(bool | None, config_default("component", "diode"))
+    diode_line_art: bool | None = cast(
+        bool | None, config_default("component", "diode_line_art")
+    )
+    show_designator: bool | None = cast(
+        bool | None, config_default("component", "show_designator")
+    )
 
     @classmethod
     def from_dict(
@@ -940,28 +786,19 @@ class PcbSvgComponentOverride:
 
 
 def _default_layer_outputs() -> dict[str, object]:
-    return {
-        "enabled": True,
-        "layers": "auto",
-        "include_special_layers": [
-            "BOARD_OUTLINE",
-            "BOARD_CUTOUTS",
-            "DRILLS",
-            "SLOTS",
-        ],
-        "output_dir": "layers",
-    }
+    return cast(dict[str, object], config_default("layer_outputs"))
 
 
 def _normalize_layer_outputs(data: dict[str, object] | None) -> dict[str, object]:
-    merged = _default_layer_outputs()
+    defaults = _default_layer_outputs()
+    merged = dict(defaults)
     if data is None:
         return merged
     if not isinstance(data, dict):
         raise ValueError("pcb-svg config field 'layer_outputs' must be an object")
     merged.update(data)
-    merged["enabled"] = _coerce_bool(merged.get("enabled"), True)
-    layers = merged.get("layers", "auto")
+    merged["enabled"] = _coerce_bool(merged.get("enabled"), bool(defaults["enabled"]))
+    layers = merged.get("layers", defaults["layers"])
     if isinstance(layers, str) and layers.strip().lower() == "auto":
         merged["layers"] = "auto"
     else:
@@ -970,7 +807,7 @@ def _normalize_layer_outputs(data: dict[str, object] | None) -> dict[str, object
         merged.get("include_special_layers"),
         field_name="layer_outputs.include_special_layers",
     )
-    merged["output_dir"] = str(merged.get("output_dir") or "layers")
+    merged["output_dir"] = str(merged.get("output_dir") or defaults["output_dir"])
     return merged
 
 
@@ -999,98 +836,8 @@ def _normalize_component_overrides(
 
 def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
     return [
-        PcbSvgViewConfig(
-            name="top_view",
-            group_id="pcb-svg-view-top",
-            output_svg="views/{board}__top_view.svg",
-            layers=[
-                "BOARD_OUTLINE",
-                "TOP",
-                "TOPOVERLAY",
-                "BOARD_CUTOUTS",
-                "DRILLS",
-                "SLOTS",
-                "ASSEMBLY_HLR_TOP",
-            ],
-            mirror=False,
-            assembly_hlr_mode="detail",
-            description="Top view",
-        ),
-        PcbSvgViewConfig(
-            name="bottom_view",
-            group_id="pcb-svg-view-bottom",
-            output_svg="views/{board}__bottom_view.svg",
-            layers=[
-                "BOARD_OUTLINE",
-                "BOTTOM",
-                "BOTTOMOVERLAY",
-                "BOARD_CUTOUTS",
-                "DRILLS",
-                "SLOTS",
-                "ASSEMBLY_HLR_BOTTOM",
-            ],
-            mirror=True,
-            assembly_hlr_mode="detail",
-            description="Bottom view",
-        ),
-        PcbSvgViewConfig(
-            name="board_cutouts",
-            group_id="pcb-svg-view-board-cutouts",
-            output_svg="views/{board}__board_cutouts.svg",
-            layers=["BOARD_OUTLINE", "BOARD_CUTOUTS"],
-            mirror=False,
-            description="Board cutouts",
-        ),
-        PcbSvgViewConfig(
-            name="top_hlr_bounding_boxes",
-            group_id="pcb-svg-view-top-hlr-bounding-boxes",
-            output_svg="views/{board}__top_hlr_bounding_boxes.svg",
-            layers=["BOARD_OUTLINE", "TOP", "ASSEMBLY_HLR_TOP"],
-            mirror=False,
-            assembly_hlr_mode="bounding_box",
-            description="Top copper with HLR pad bounding boxes",
-        ),
-        PcbSvgViewConfig(
-            name="bottom_hlr_bounding_boxes",
-            group_id="pcb-svg-view-bottom-hlr-bounding-boxes",
-            output_svg="views/{board}__bottom_hlr_bounding_boxes.svg",
-            layers=["BOARD_OUTLINE", "BOTTOM", "ASSEMBLY_HLR_BOTTOM"],
-            mirror=True,
-            assembly_hlr_mode="bounding_box",
-            description="Bottom copper with HLR pad bounding boxes",
-        ),
-        PcbSvgViewConfig(
-            name="top_pin1_view",
-            group_id="pcb-svg-view-top-pin1",
-            output_svg="views/{board}__top_pin1_view.svg",
-            layers=[
-                "BOARD_OUTLINE",
-                "TOP",
-                "DRILLS",
-                "SLOTS",
-                "PIN1_TOP",
-                "ASSEMBLY_HLR_TOP",
-            ],
-            mirror=False,
-            assembly_hlr_mode="outline",
-            description="Top copper with pin-1 overlay",
-        ),
-        PcbSvgViewConfig(
-            name="bottom_pin1_view",
-            group_id="pcb-svg-view-bottom-pin1",
-            output_svg="views/{board}__bottom_pin1_view.svg",
-            layers=[
-                "BOARD_OUTLINE",
-                "BOTTOM",
-                "DRILLS",
-                "SLOTS",
-                "PIN1_BOTTOM",
-                "ASSEMBLY_HLR_BOTTOM",
-            ],
-            mirror=True,
-            assembly_hlr_mode="outline",
-            description="Bottom copper with pin-1 overlay",
-        ),
+        PcbSvgViewConfig.from_dict(view)
+        for view in cast(list[dict[str, object]], config_default("views"))
     ]
 
 

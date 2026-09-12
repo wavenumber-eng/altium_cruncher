@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.variants.list.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.variants.list.a0"
+    },
+    "project": {
+      "type": "string"
+    },
+    "current_variant": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "variant_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Variant"
+      }
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/VariantRow"
+      }
+    },
+    "index_errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "project",
+    "current_variant",
+    "variant_count",
+    "variants",
+    "rows",
+    "index_errors"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "Variant": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "unique_id": {
+          "type": "string"
+        },
+        "allow_fabrication": {
+          "type": "boolean"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "dnp": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "parameter_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "param_variation_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VariantRow"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "unique_id",
+        "allow_fabrication",
+        "current",
+        "dnp",
+        "variation_count",
+        "parameter_count",
+        "param_variation_count",
+        "rows"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "VariantRow": {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "designator": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "component_value": {
+          "type": "string"
+        },
+        "parameter_name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "unique_id": {
+          "type": "string"
+        },
+        "alternate_part": {
+          "type": "string"
+        },
+        "alternate_part_resolved": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "variant",
+        "sheet",
+        "designator",
+        "operation",
+        "detail",
+        "component_value",
+        "parameter_name",
+        "value",
+        "unique_id"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

@@ -1,0 +1,407 @@
+[
+  {
+    "stem": "pcb_svg_config",
+    "model": "PcbSvgConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/pcb-svg.tsp",
+    "schema": "docs/contracts/pcb_svg_config.a0.schema.json",
+    "validator": "validate",
+    "slug": "pcb-svg"
+  },
+  {
+    "stem": "schdoc_create_config",
+    "model": "SchdocCreateConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/creation.tsp",
+    "schema": "docs/contracts/schdoc_create_config.a0.schema.json",
+    "validator": "validate-schdoc-create",
+    "slug": "schdoc-create"
+  },
+  {
+    "stem": "pcbdoc_create_config",
+    "model": "PcbdocCreateConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/creation.tsp",
+    "schema": "docs/contracts/pcbdoc_create_config.a0.schema.json",
+    "validator": "validate-pcbdoc-create",
+    "slug": "pcbdoc-create"
+  },
+  {
+    "stem": "project_skeleton_config",
+    "model": "ProjectSkeletonConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/creation.tsp",
+    "schema": "docs/contracts/project_skeleton_config.a0.schema.json",
+    "validator": "validate-project-skeleton",
+    "slug": "project-skeleton"
+  },
+  {
+    "stem": "mco_input",
+    "model": "McoInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/mco/main.tsp",
+    "schema": "docs/contracts/mco_input.a0.schema.json",
+    "validator": "validate-mco",
+    "slug": "mco"
+  },
+  {
+    "stem": "mco_envelope",
+    "model": "McoEnvelopeInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/mco/main.tsp",
+    "schema": "docs/contracts/mco_envelope.a0.schema.json",
+    "validator": "validate-mco-envelope",
+    "slug": "mco-envelope"
+  },
+  {
+    "stem": "bom_pnp_config",
+    "model": "BomPnpConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/bom-pnp-config.tsp",
+    "schema": "docs/contracts/bom_pnp_config.a0.schema.json",
+    "validator": "validate-bom-pnp",
+    "slug": "bom-pnp"
+  },
+  {
+    "stem": "clean_config",
+    "model": "CleanConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/clean-config.tsp",
+    "schema": "docs/contracts/clean_config.a0.schema.json",
+    "validator": "validate-clean",
+    "slug": "clean"
+  },
+  {
+    "stem": "mate_config",
+    "model": "MateConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/mate-config.tsp",
+    "schema": "docs/contracts/mate_config.a0.schema.json",
+    "validator": "validate-mate",
+    "slug": "mate"
+  },
+  {
+    "stem": "pcb_layer_step_config",
+    "model": "PcbLayerStepConfigInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/pcb-layer-step-config.tsp",
+    "schema": "docs/contracts/pcb_layer_step_config.a0.schema.json",
+    "validator": "validate-pcb-layer-step",
+    "slug": "pcb-layer-step"
+  },
+  {
+    "stem": "design_review_manifest",
+    "model": "DesignReviewManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/design-review-manifest.tsp",
+    "schema": "docs/contracts/design_review_manifest.b0.schema.json",
+    "validator": "validate-design-review-manifest",
+    "slug": "design-review-manifest"
+  },
+  {
+    "stem": "megamaid_manifest",
+    "model": "MegamaidManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/megamaid-manifest.tsp",
+    "schema": "docs/contracts/megamaid_manifest.b0.schema.json",
+    "validator": "validate-megamaid-manifest",
+    "slug": "megamaid-manifest"
+  },
+  {
+    "stem": "schematic_svg_enrichment",
+    "model": "SchematicSvgEnrichment",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/schematic-svg-enrichment.tsp",
+    "schema": "docs/contracts/schematic_svg_enrichment.b0.schema.json",
+    "validator": "validate-schematic-svg-enrichment",
+    "slug": "schematic-svg-enrichment"
+  },
+  {
+    "stem": "schematic_svg_manifest",
+    "model": "SchematicSvgManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/schematic-svg-manifest.tsp",
+    "schema": "docs/contracts/schematic_svg_manifest.b0.schema.json",
+    "validator": "validate-schematic-svg-manifest",
+    "slug": "schematic-svg-manifest"
+  },
+  {
+    "stem": "pcb_svg_component_layers",
+    "model": "PcbSvgComponentLayers",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/pcb-svg-component-layers.tsp",
+    "schema": "docs/contracts/pcb_svg_component_layers.a0.schema.json",
+    "validator": "validate-pcb-svg-component-layers",
+    "slug": "pcb-svg-component-layers"
+  },
+  {
+    "stem": "pcb_svg_timings",
+    "model": "PcbSvgTimings",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/pcb-svg-timings.tsp",
+    "schema": "docs/contracts/pcb_svg_timings.a0.schema.json",
+    "validator": "validate-pcb-svg-timings",
+    "slug": "pcb-svg-timings"
+  },
+  {
+    "stem": "bom_array",
+    "model": "BomArray",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/bom_array.a0.schema.json",
+    "validator": "validate-bom-array",
+    "slug": "bom-array"
+  },
+  {
+    "stem": "bom_grouped",
+    "model": "BomGrouped",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/bom_grouped.a0.schema.json",
+    "validator": "validate-bom-grouped",
+    "slug": "bom-grouped"
+  },
+  {
+    "stem": "bom_legacy",
+    "model": "BomLegacy",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/bom_legacy.a0.schema.json",
+    "validator": "validate-bom-legacy",
+    "slug": "bom-legacy"
+  },
+  {
+    "stem": "bom_normalized",
+    "model": "BomNormalized",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/bom_normalized.a0.schema.json",
+    "validator": "validate-bom-normalized",
+    "slug": "bom-normalized"
+  },
+  {
+    "stem": "easyeda_footprint_report",
+    "model": "EasyedaFootprintReport",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/easyeda.tsp",
+    "schema": "docs/contracts/easyeda_footprint_report.a0.schema.json",
+    "validator": "validate-easyeda-footprint-report",
+    "slug": "easyeda-footprint-report"
+  },
+  {
+    "stem": "easyeda_models",
+    "model": "EasyedaModels",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/easyeda.tsp",
+    "schema": "docs/contracts/easyeda_models.a0.schema.json",
+    "validator": "validate-easyeda-models",
+    "slug": "easyeda-models"
+  },
+  {
+    "stem": "easyeda_symbol_report",
+    "model": "EasyedaSymbolReport",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/easyeda.tsp",
+    "schema": "docs/contracts/easyeda_symbol_report.a0.schema.json",
+    "validator": "validate-easyeda-symbol-report",
+    "slug": "easyeda-symbol-report"
+  },
+  {
+    "stem": "installs",
+    "model": "Installs",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/installs.a0.schema.json",
+    "validator": "validate-installs",
+    "slug": "installs"
+  },
+  {
+    "stem": "interface_design_manifest",
+    "model": "InterfaceDesignManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/interface_design_manifest.a0.schema.json",
+    "validator": "validate-interface-design-manifest",
+    "slug": "interface-design-manifest"
+  },
+  {
+    "stem": "intlib_extract",
+    "model": "IntlibExtract",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/intlib_extract.a0.schema.json",
+    "validator": "validate-intlib-extract",
+    "slug": "intlib-extract"
+  },
+  {
+    "stem": "json_dump",
+    "model": "JsonDump",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/json-dump.tsp",
+    "schema": "docs/contracts/json_dump.a0.schema.json",
+    "validator": "validate-json-dump",
+    "slug": "json-dump"
+  },
+  {
+    "stem": "json_dump_manifest",
+    "model": "JsonDumpManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/json-dump.tsp",
+    "schema": "docs/contracts/json_dump_manifest.a0.schema.json",
+    "validator": "validate-json-dump-manifest",
+    "slug": "json-dump-manifest"
+  },
+  {
+    "stem": "launch",
+    "model": "Launch",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/launch.a0.schema.json",
+    "validator": "validate-launch",
+    "slug": "launch"
+  },
+  {
+    "stem": "libraries_scan",
+    "model": "LibrariesScan",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/libraries_scan.a0.schema.json",
+    "validator": "validate-libraries-scan",
+    "slug": "libraries-scan"
+  },
+  {
+    "stem": "mate_inspection",
+    "model": "MateInspection",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/mate.tsp",
+    "schema": "docs/contracts/mate_inspection.a0.schema.json",
+    "validator": "validate-mate-inspection",
+    "slug": "mate-inspection"
+  },
+  {
+    "stem": "mate_parts_input",
+    "model": "MatePartsInput",
+    "kind": "config",
+    "source": "src/tsp/altium_cruncher/config/mate-config.tsp",
+    "schema": "docs/contracts/mate_parts_input.a0.schema.json",
+    "validator": "validate-mate-parts-input",
+    "slug": "mate-parts-input"
+  },
+  {
+    "stem": "mate_parts_manifest",
+    "model": "MatePartsManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/mate.tsp",
+    "schema": "docs/contracts/mate_parts_manifest.a0.schema.json",
+    "validator": "validate-mate-parts-manifest",
+    "slug": "mate-parts-manifest"
+  },
+  {
+    "stem": "mco_builtin_result",
+    "model": "McoBuiltinResult",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/mco-builtins.tsp",
+    "schema": "docs/contracts/mco_builtin_result.a0.schema.json",
+    "validator": "validate-mco-builtin-result",
+    "slug": "mco-builtin-result"
+  },
+  {
+    "stem": "mco_execution",
+    "model": "McoExecution",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/mco_execution.a0.schema.json",
+    "validator": "validate-mco-execution",
+    "slug": "mco-execution"
+  },
+  {
+    "stem": "mco_operations",
+    "model": "McoOperations",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/mco_operations.a0.schema.json",
+    "validator": "validate-mco-operations",
+    "slug": "mco-operations"
+  },
+  {
+    "stem": "notes",
+    "model": "Notes",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/notes.a0.schema.json",
+    "validator": "validate-notes",
+    "slug": "notes"
+  },
+  {
+    "stem": "outjob_run",
+    "model": "OutjobRun",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/outjob_run.a0.schema.json",
+    "validator": "validate-outjob-run",
+    "slug": "outjob-run"
+  },
+  {
+    "stem": "pcb_layer_step",
+    "model": "PcbLayerStepManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/pcb-layer-step.tsp",
+    "schema": "docs/contracts/pcb_layer_step.a0.schema.json",
+    "validator": "validate-pcb-layer-step-output",
+    "slug": "pcb-layer-step-output"
+  },
+  {
+    "stem": "pcb_svg_enrichment",
+    "model": "PcbSvgEnrichment",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/pcb-svg-enrichment.tsp",
+    "schema": "docs/contracts/pcb_svg_enrichment.a0.schema.json",
+    "validator": "validate-pcb-svg-enrichment",
+    "slug": "pcb-svg-enrichment"
+  },
+  {
+    "stem": "pcb_svg_manifest",
+    "model": "PcbSvgManifest",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/pcb_svg_manifest.a0.schema.json",
+    "validator": "validate-pcb-svg-manifest",
+    "slug": "pcb-svg-manifest"
+  },
+  {
+    "stem": "pnp",
+    "model": "Pnp",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/pnp.a0.schema.json",
+    "validator": "validate-pnp",
+    "slug": "pnp"
+  },
+  {
+    "stem": "profiles",
+    "model": "Profiles",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/profiles.a0.schema.json",
+    "validator": "validate-profiles",
+    "slug": "profiles"
+  },
+  {
+    "stem": "profiles_clean",
+    "model": "ProfilesClean",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/profiles_clean.a0.schema.json",
+    "validator": "validate-profiles-clean",
+    "slug": "profiles-clean"
+  },
+  {
+    "stem": "variants_list",
+    "model": "VariantsList",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/commands.tsp",
+    "schema": "docs/contracts/variants_list.a0.schema.json",
+    "validator": "validate-variants-list",
+    "slug": "variants-list"
+  }
+]

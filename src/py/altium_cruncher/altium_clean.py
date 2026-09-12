@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from .contracts.workflows import domain_default
+
+from .contracts.workflows import decode_clean_config, workflow_metadata
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -166,9 +170,9 @@ def _coerce_no_erc_symbol(value: Any, *, field_name: str) -> NoErcSymbol:
 class CleanFontSpec:
     font_name: str
     size_pt: int
-    bold: bool = False
-    italic: bool = False
-    color_win32: int | None = None
+    bold: bool = workflow_metadata("clean_config", "font-defaults")["bold"]
+    italic: bool = workflow_metadata("clean_config", "font-defaults")["italic"]
+    color_win32: int | None = workflow_metadata("clean_config", "font-defaults")["color_win32"]
 
     @classmethod
     def from_dict(cls, data: dict[str, Any], *, field_name: str) -> CleanFontSpec:
@@ -178,9 +182,9 @@ class CleanFontSpec:
         return cls(
             font_name=_coerce_non_empty_str(data.get("font_name", data.get("font")), field_name=f"{field_name}.font_name"),
             size_pt=_coerce_int(data.get("size_pt", data.get("size")), field_name=f"{field_name}.size_pt"),
-            bold=_coerce_bool(data.get("bold"), False),
-            italic=_coerce_bool(data.get("italic"), False),
-            color_win32=_coerce_color(color_raw, field_name=f"{field_name}.color") if color_raw is not None else None,
+            bold=_coerce_bool(data.get("bold"), workflow_metadata("clean_config", "font-defaults")["bold"]),
+            italic=_coerce_bool(data.get("italic"), workflow_metadata("clean_config", "font-defaults")["italic"]),
+            color_win32=_coerce_color(color_raw, field_name=f"{field_name}.color") if color_raw is not None else workflow_metadata("clean_config", "font-defaults")["color_win32"],
         )
 
     def to_dict(self, *, include_color: bool = True) -> dict[str, Any]:
@@ -195,25 +199,26 @@ class CleanFontSpec:
         return payload
 
 def _default_component_designator_font() -> CleanFontSpec:
-    return CleanFontSpec(font_name="Arial", size_pt=12, bold=True, italic=False, color_win32=0x000000)
+    return CleanFontSpec.from_dict(workflow_metadata("clean_config", "templates")["schematic"]["normalize_component_designators"]["font"], field_name="normalize_component_designators.font")
 
 
 def _default_component_parameter_font() -> CleanFontSpec:
-    return CleanFontSpec(font_name="Arial", size_pt=10, bold=False, italic=False, color_win32=0x000000)
+    return CleanFontSpec.from_dict(workflow_metadata("clean_config", "templates")["schematic"]["normalize_component_parameters"]["font"], field_name="normalize_component_parameters.font")
 
 
 def _default_sheet_document_font() -> CleanFontSpec:
-    return CleanFontSpec(font_name="Times New Roman", size_pt=10, bold=False, italic=False)
+    return CleanFontSpec.from_dict(workflow_metadata("clean_config", "templates")["schematic"]["normalize_sheet_style"]["document_font"], field_name="normalize_sheet_style.document_font")
 
 
 @dataclass(slots=True)
 class PinFontNormalizationConfig:
-    enabled: bool = True
-    name_font: CleanFontSpec | None = None
-    designator_font: CleanFontSpec | None = None
+    enabled: bool = domain_default("clean_config", "PinFontNormalizationConfig", "enabled")
+    name_font: CleanFontSpec | None = domain_default("clean_config", "PinFontNormalizationConfig", "name_font")
+    designator_font: CleanFontSpec | None = domain_default("clean_config", "PinFontNormalizationConfig", "designator_font")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> PinFontNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
@@ -228,7 +233,7 @@ class PinFontNormalizationConfig:
             else None
         )
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             name_font=name_font,
             designator_font=designator_font,
         )
@@ -243,25 +248,26 @@ class PinFontNormalizationConfig:
 
 @dataclass(slots=True)
 class SymbolBodyRectangleNormalizationConfig:
-    enabled: bool = True
-    min_width_mils: float = 40.0
-    min_height_mils: float = 40.0
-    outline_color_win32: int = 0x000000
-    line_width: LineWidth = LineWidth.SMALL
-    fill_color_win32: int = 0xFFFFFF
-    is_solid: bool = True
-    transparent: bool = False
+    enabled: bool = domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "enabled")
+    min_width_mils: float = domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "min_width_mils")
+    min_height_mils: float = domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "min_height_mils")
+    outline_color_win32: int = domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "outline_color_win32")
+    line_width: LineWidth = LineWidth(domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "line_width"))
+    fill_color_win32: int = domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "fill_color_win32")
+    is_solid: bool = domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "is_solid")
+    transparent: bool = domain_default("clean_config", "SymbolBodyRectangleNormalizationConfig", "transparent")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> SymbolBodyRectangleNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
             raise ValueError("Clean config field 'normalize_symbol_body_rectangles' must be an object")
 
-        min_width_mils = _coerce_float(data.get("min_width_mils", 40.0), field_name="normalize_symbol_body_rectangles.min_width_mils")
+        min_width_mils = _coerce_float(data.get("min_width_mils", default.min_width_mils), field_name="normalize_symbol_body_rectangles.min_width_mils")
         min_height_mils = _coerce_float(
-            data.get("min_height_mils", 40.0),
+            data.get("min_height_mils", default.min_height_mils),
             field_name="normalize_symbol_body_rectangles.min_height_mils",
         )
         if min_width_mils < 0:
@@ -270,23 +276,23 @@ class SymbolBodyRectangleNormalizationConfig:
             raise ValueError("normalize_symbol_body_rectangles.min_height_mils must be >= 0")
 
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             min_width_mils=min_width_mils,
             min_height_mils=min_height_mils,
             outline_color_win32=_coerce_color(
-                data.get("outline_color_win32", data.get("outline_color", data.get("color", "#000000"))),
+                data.get("outline_color_win32", data.get("outline_color", data.get("color", default.outline_color_win32))),
                 field_name="normalize_symbol_body_rectangles.outline_color",
             ),
             line_width=_coerce_line_width(
-                data.get("line_width", "small"),
+                data.get("line_width", default.line_width),
                 field_name="normalize_symbol_body_rectangles.line_width",
             ),
             fill_color_win32=_coerce_color(
-                data.get("fill_color_win32", data.get("fill_color", data.get("area_color", "#FFFFFF"))),
+                data.get("fill_color_win32", data.get("fill_color", data.get("area_color", default.fill_color_win32))),
                 field_name="normalize_symbol_body_rectangles.fill_color",
             ),
-            is_solid=_coerce_bool(data.get("is_solid"), True),
-            transparent=_coerce_bool(data.get("transparent"), False),
+            is_solid=_coerce_bool(data.get("is_solid"), default.is_solid),
+            transparent=_coerce_bool(data.get("transparent"), default.transparent),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -304,15 +310,16 @@ class SymbolBodyRectangleNormalizationConfig:
 
 @dataclass(slots=True)
 class PowerSymbolNormalizationConfig:
-    enabled: bool = True
-    color_win32: int = 0x000000
-    font_name: str = "Arial"
-    size_pt: int = 10
-    bold: bool = True
-    italic: bool = False
+    enabled: bool = domain_default("clean_config", "PowerSymbolNormalizationConfig", "enabled")
+    color_win32: int = domain_default("clean_config", "PowerSymbolNormalizationConfig", "color_win32")
+    font_name: str = domain_default("clean_config", "PowerSymbolNormalizationConfig", "font_name")
+    size_pt: int = domain_default("clean_config", "PowerSymbolNormalizationConfig", "size_pt")
+    bold: bool = domain_default("clean_config", "PowerSymbolNormalizationConfig", "bold")
+    italic: bool = domain_default("clean_config", "PowerSymbolNormalizationConfig", "italic")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> PowerSymbolNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
@@ -324,23 +331,23 @@ class PowerSymbolNormalizationConfig:
 
         font_payload = font_data or {}
         font_name = _coerce_non_empty_str(
-            font_payload.get("font_name", font_payload.get("font", "Arial")),
+            font_payload.get("font_name", font_payload.get("font", default.font_name)),
             field_name="normalize_power_symbols.font.font_name",
         )
         size_pt = _coerce_int(
-            font_payload.get("size_pt", font_payload.get("size", 10)),
+            font_payload.get("size_pt", font_payload.get("size", default.size_pt)),
             field_name="normalize_power_symbols.font.size_pt",
         )
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             color_win32=_coerce_color(
-                data.get("color_win32", data.get("color", "#000000")),
+                data.get("color_win32", data.get("color", default.color_win32)),
                 field_name="normalize_power_symbols.color",
             ),
             font_name=font_name,
             size_pt=size_pt,
-            bold=_coerce_bool(font_payload.get("bold"), True),
-            italic=_coerce_bool(font_payload.get("italic"), False),
+            bold=_coerce_bool(font_payload.get("bold"), default.bold),
+            italic=_coerce_bool(font_payload.get("italic"), default.italic),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -358,15 +365,16 @@ class PowerSymbolNormalizationConfig:
 
 @dataclass(slots=True)
 class NetLabelNormalizationConfig:
-    enabled: bool = True
-    color_win32: int = 0x000000
-    font_name: str = "Arial"
-    size_pt: int = 8
-    bold: bool = True
-    italic: bool = False
+    enabled: bool = domain_default("clean_config", "NetLabelNormalizationConfig", "enabled")
+    color_win32: int = domain_default("clean_config", "NetLabelNormalizationConfig", "color_win32")
+    font_name: str = domain_default("clean_config", "NetLabelNormalizationConfig", "font_name")
+    size_pt: int = domain_default("clean_config", "NetLabelNormalizationConfig", "size_pt")
+    bold: bool = domain_default("clean_config", "NetLabelNormalizationConfig", "bold")
+    italic: bool = domain_default("clean_config", "NetLabelNormalizationConfig", "italic")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> NetLabelNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
@@ -378,21 +386,21 @@ class NetLabelNormalizationConfig:
         font_payload = font_data or {}
 
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             color_win32=_coerce_color(
-                data.get("color_win32", data.get("color", "#000000")),
+                data.get("color_win32", data.get("color", default.color_win32)),
                 field_name="normalize_net_labels.color",
             ),
             font_name=_coerce_non_empty_str(
-                font_payload.get("font_name", font_payload.get("font", "Arial")),
+                font_payload.get("font_name", font_payload.get("font", default.font_name)),
                 field_name="normalize_net_labels.font.font_name",
             ),
             size_pt=_coerce_int(
-                font_payload.get("size_pt", font_payload.get("size", 8)),
+                font_payload.get("size_pt", font_payload.get("size", default.size_pt)),
                 field_name="normalize_net_labels.font.size_pt",
             ),
-            bold=_coerce_bool(font_payload.get("bold"), True),
-            italic=_coerce_bool(font_payload.get("italic"), False),
+            bold=_coerce_bool(font_payload.get("bold"), default.bold),
+            italic=_coerce_bool(font_payload.get("italic"), default.italic),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -410,11 +418,12 @@ class NetLabelNormalizationConfig:
 
 @dataclass(slots=True)
 class ComponentDesignatorNormalizationConfig:
-    enabled: bool = True
+    enabled: bool = domain_default("clean_config", "ComponentDesignatorNormalizationConfig", "enabled")
     font: CleanFontSpec = field(default_factory=_default_component_designator_font)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> ComponentDesignatorNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
@@ -425,7 +434,7 @@ class ComponentDesignatorNormalizationConfig:
             raise ValueError("Clean config field 'normalize_component_designators.font' must be an object")
 
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             font=(
                 CleanFontSpec.from_dict(font_data, field_name="normalize_component_designators.font")
                 if font_data
@@ -442,11 +451,12 @@ class ComponentDesignatorNormalizationConfig:
 
 @dataclass(slots=True)
 class ComponentParameterNormalizationConfig:
-    enabled: bool = True
+    enabled: bool = domain_default("clean_config", "ComponentParameterNormalizationConfig", "enabled")
     font: CleanFontSpec = field(default_factory=_default_component_parameter_font)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> ComponentParameterNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
@@ -457,7 +467,7 @@ class ComponentParameterNormalizationConfig:
             raise ValueError("Clean config field 'normalize_component_parameters.font' must be an object")
 
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             font=(
                 CleanFontSpec.from_dict(font_data, field_name="normalize_component_parameters.font")
                 if font_data
@@ -474,13 +484,14 @@ class ComponentParameterNormalizationConfig:
 
 @dataclass(slots=True)
 class SheetStyleNormalizationConfig:
-    enabled: bool = True
-    line_color_win32: int = 0x000000
-    area_color_win32: int = 0xFFFFFF
+    enabled: bool = domain_default("clean_config", "SheetStyleNormalizationConfig", "enabled")
+    line_color_win32: int = domain_default("clean_config", "SheetStyleNormalizationConfig", "line_color_win32")
+    area_color_win32: int = domain_default("clean_config", "SheetStyleNormalizationConfig", "area_color_win32")
     document_font: CleanFontSpec = field(default_factory=_default_sheet_document_font)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> SheetStyleNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
@@ -491,13 +502,13 @@ class SheetStyleNormalizationConfig:
             raise ValueError("Clean config field 'normalize_sheet_style.document_font' must be an object")
 
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             line_color_win32=_coerce_color(
-                data.get("line_color_win32", data.get("line_color", data.get("color", "#000000"))),
+                data.get("line_color_win32", data.get("line_color", data.get("color", default.line_color_win32))),
                 field_name="normalize_sheet_style.line_color",
             ),
             area_color_win32=_coerce_color(
-                data.get("area_color_win32", data.get("area_color", "#FFFFFF")),
+                data.get("area_color_win32", data.get("area_color", default.area_color_win32)),
                 field_name="normalize_sheet_style.area_color",
             ),
             document_font=(
@@ -518,24 +529,25 @@ class SheetStyleNormalizationConfig:
 
 @dataclass(slots=True)
 class ComponentFreeTextNormalizationConfig:
-    enabled: bool = True
-    font_name: str = "Arial"
-    color_win32: int = 0x000000
+    enabled: bool = domain_default("clean_config", "ComponentFreeTextNormalizationConfig", "enabled")
+    font_name: str = domain_default("clean_config", "ComponentFreeTextNormalizationConfig", "font_name")
+    color_win32: int = domain_default("clean_config", "ComponentFreeTextNormalizationConfig", "color_win32")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> ComponentFreeTextNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
             raise ValueError("Clean config field 'normalize_component_free_text' must be an object")
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             font_name=_coerce_non_empty_str(
-                data.get("font_name", data.get("font", "Arial")),
+                data.get("font_name", data.get("font", default.font_name)),
                 field_name="normalize_component_free_text.font_name",
             ),
             color_win32=_coerce_color(
-                data.get("color_win32", data.get("color", "#000000")),
+                data.get("color_win32", data.get("color", default.color_win32)),
                 field_name="normalize_component_free_text.color",
             ),
         )
@@ -550,19 +562,20 @@ class ComponentFreeTextNormalizationConfig:
 
 @dataclass(slots=True)
 class WireNormalizationConfig:
-    enabled: bool = True
-    color_win32: int = 0x434343
+    enabled: bool = domain_default("clean_config", "WireNormalizationConfig", "enabled")
+    color_win32: int = domain_default("clean_config", "WireNormalizationConfig", "color_win32")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> WireNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
             raise ValueError("Clean config field 'normalize_wires' must be an object")
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             color_win32=_coerce_color(
-                data.get("color_win32", data.get("color", "#434343")),
+                data.get("color_win32", data.get("color", default.color_win32)),
                 field_name="normalize_wires.color",
             ),
         )
@@ -576,24 +589,25 @@ class WireNormalizationConfig:
 
 @dataclass(slots=True)
 class NoErcNormalizationConfig:
-    enabled: bool = True
-    color_win32: int = 0x000000
-    symbol: NoErcSymbol = NoErcSymbol.CROSS_SMALL
+    enabled: bool = domain_default("clean_config", "NoErcNormalizationConfig", "enabled")
+    color_win32: int = domain_default("clean_config", "NoErcNormalizationConfig", "color_win32")
+    symbol: NoErcSymbol = NoErcSymbol(domain_default("clean_config", "NoErcNormalizationConfig", "symbol"))
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> NoErcNormalizationConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
             raise ValueError("Clean config field 'normalize_no_erc' must be an object")
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             color_win32=_coerce_color(
-                data.get("color_win32", data.get("color", "#000000")),
+                data.get("color_win32", data.get("color", default.color_win32)),
                 field_name="normalize_no_erc.color",
             ),
             symbol=_coerce_no_erc_symbol(
-                data.get("symbol", data.get("style", "small_cross")),
+                data.get("symbol", data.get("style", default.symbol)),
                 field_name="normalize_no_erc.symbol",
             ),
         )
@@ -608,25 +622,26 @@ class NoErcNormalizationConfig:
 
 @dataclass(slots=True)
 class SymbolInternalGraphicsMonochromeConfig:
-    enabled: bool = True
-    saturation: float = 0.0
+    enabled: bool = domain_default("clean_config", "SymbolInternalGraphicsMonochromeConfig", "enabled")
+    saturation: float = domain_default("clean_config", "SymbolInternalGraphicsMonochromeConfig", "saturation")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> SymbolInternalGraphicsMonochromeConfig:
+        default = cls()
         if data is None:
             return cls()
         if not isinstance(data, dict):
             raise ValueError("Clean config field 'normalize_symbol_internal_graphics_monochrome' must be an object")
 
         saturation = _coerce_float(
-            data.get("saturation", 0.0),
+            data.get("saturation", default.saturation),
             field_name="normalize_symbol_internal_graphics_monochrome.saturation",
         )
         if saturation < 0.0 or saturation > 1.0:
             raise ValueError("normalize_symbol_internal_graphics_monochrome.saturation must be in range [0.0, 1.0]")
 
         return cls(
-            enabled=_coerce_bool(data.get("enabled"), True),
+            enabled=_coerce_bool(data.get("enabled"), default.enabled),
             saturation=saturation,
         )
 
@@ -639,7 +654,7 @@ class SymbolInternalGraphicsMonochromeConfig:
 
 @dataclass(slots=True)
 class AltiumCleanConfig:
-    schema: str = CLEAN_CONFIG_SCHEMA_V1
+    schema: str = domain_default("clean_config", "AltiumCleanConfig", "schema")
     normalize_pin_fonts: PinFontNormalizationConfig = field(default_factory=PinFontNormalizationConfig)
     normalize_symbol_body_rectangles: SymbolBodyRectangleNormalizationConfig = field(
         default_factory=SymbolBodyRectangleNormalizationConfig
@@ -666,6 +681,7 @@ class AltiumCleanConfig:
     def from_dict(cls, data: dict[str, Any]) -> AltiumCleanConfig:
         if not isinstance(data, dict):
             raise ValueError("Clean config must be a JSON object")
+        data = decode_clean_config(data)
         schema = str(data.get("schema", CLEAN_CONFIG_SCHEMA_V1) or CLEAN_CONFIG_SCHEMA_V1).strip()
         if schema != CLEAN_CONFIG_SCHEMA_V1:
             raise ValueError(f"Unsupported clean config schema: {schema!r}")
@@ -696,72 +712,7 @@ class AltiumCleanConfig:
 
     @classmethod
     def template(cls) -> AltiumCleanConfig:
-        return cls(
-            schema=CLEAN_CONFIG_SCHEMA_V1,
-            normalize_pin_fonts=PinFontNormalizationConfig(
-                enabled=True,
-                name_font=CleanFontSpec(font_name="Arial", size_pt=10, color_win32=0x000000),
-                designator_font=CleanFontSpec(font_name="Arial", size_pt=10, color_win32=0x000000),
-            ),
-            normalize_symbol_body_rectangles=SymbolBodyRectangleNormalizationConfig(
-                enabled=True,
-                min_width_mils=40.0,
-                min_height_mils=40.0,
-                outline_color_win32=0x000000,
-                line_width=LineWidth.SMALL,
-                fill_color_win32=0xFFFFFF,
-                is_solid=True,
-                transparent=False,
-            ),
-            normalize_power_symbols=PowerSymbolNormalizationConfig(
-                enabled=True,
-                color_win32=0x000000,
-                font_name="Arial",
-                size_pt=10,
-                bold=True,
-                italic=False,
-            ),
-            normalize_net_labels=NetLabelNormalizationConfig(
-                enabled=True,
-                color_win32=0x000000,
-                font_name="Arial",
-                size_pt=8,
-                bold=True,
-                italic=False,
-            ),
-            normalize_component_designators=ComponentDesignatorNormalizationConfig(
-                enabled=True,
-                font=_default_component_designator_font(),
-            ),
-            normalize_component_parameters=ComponentParameterNormalizationConfig(
-                enabled=True,
-                font=_default_component_parameter_font(),
-            ),
-            normalize_component_free_text=ComponentFreeTextNormalizationConfig(
-                enabled=True,
-                font_name="Arial",
-                color_win32=0x000000,
-            ),
-            normalize_wires=WireNormalizationConfig(
-                enabled=True,
-                color_win32=0x434343,
-            ),
-            normalize_no_erc=NoErcNormalizationConfig(
-                enabled=True,
-                color_win32=0x000000,
-                symbol=NoErcSymbol.CROSS_SMALL,
-            ),
-            normalize_sheet_style=SheetStyleNormalizationConfig(
-                enabled=True,
-                line_color_win32=0x000000,
-                area_color_win32=0xFFFFFF,
-                document_font=_default_sheet_document_font(),
-            ),
-            normalize_symbol_internal_graphics_monochrome=SymbolInternalGraphicsMonochromeConfig(
-                enabled=True,
-                saturation=0.0,
-            ),
-        )
+        return cls.from_dict(workflow_metadata("clean_config", "templates")["schematic"])
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -1462,8 +1413,12 @@ def _move_body_rectangles_behind_symbol_objects(symbol: Any, body_rectangle_ids:
 
     reordered = body_rectangles + [obj for obj in objects if id(obj) not in body_rectangle_ids]
 
-    objects_collection.clear()
-    objects_collection.extend(reordered)
+    # Monkey exposes objects as a query view. Reordering retains membership,
+    # identity and raw bindings; remove/add would detach and recreate them.
+    # Use the owning collection until Monkey exposes a public ordering API.
+    owned_objects = getattr(symbol, "_objects", objects_collection)
+    owned_objects.clear()
+    owned_objects.extend(reordered)
     return len(body_rectangles)
 
 

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/mco_envelope.a0.schema.json",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/McoEnvelopeDocument"
+    },
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OpenOperation"
+      }
+    }
+  ],
+  "$defs": {
+    "McoEnvelopeDocument": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "altium_cruncher.mco.a0"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpenOperation"
+          }
+        }
+      },
+      "required": [
+        "operations"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "OpenOperation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stable operation ID; omission, null or empty generates opN in source order."
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional human-readable operation message."
+        },
+        "on_fail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Operation ID to jump to on failure. Null/omission stops on failure."
+        },
+        "op": {
+          "$ref": "#/$defs/McoString"
+        },
+        "args": {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "McoString": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/mco/main.tsp. Do not edit."
+}

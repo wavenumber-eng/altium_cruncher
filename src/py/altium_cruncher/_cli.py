@@ -1,12 +1,7 @@
-"""
-Altium Cruncher - High-level CLI for Altium file operations.
+"""Root CLI parsing, logging and dispatch.
 
-Output policy:
-    - Every command accepts -o/--output as an output directory.
-    - If omitted, artifacts are written under ./output/<command>/.
-    - pcb-svg is config-driven: uses pcb.svg.config (or --config) for view/options policy.
-    - pcb-svg emits contract SVG geometry/metadata only; presentation labels live in HTML/report layers.
-    - clean normalizes SchDoc/SchLib style attributes using JSON config; PrjPcb inputs apply to all project SchDocs.
+Command modules own their arguments and output policies. Registration order is
+explicit in cli_commands.py; handlers translate Namespace values into workflows.
 """
 
 import argparse
@@ -29,96 +24,7 @@ from colorama import Fore, Style
 from altium_cruncher.logging_utils import setup_cli_logging
 from altium_cruncher._version import cli_version_report, cli_version_text
 
-from altium_cruncher.altium_cruncher_cmd_bom import (
-    register_parser as register_bom_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_clean import (
-    register_parser as register_clean_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_design import (
-    register_parser as register_design_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_easyeda_import import (
-    register_parser as register_easyeda_import_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_extract import (
-    register_parser as register_extract_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_installs import (
-    register_parser as register_installs_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_jlc import (
-    register_parser as register_jlc_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_json_dump import (
-    register_parser as register_json_dump_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_launch import (
-    register_parser as register_launch_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_libraries import (
-    register_parser as register_libraries_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_mate import (
-    register_parser as register_mate_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_merge import (
-    register_parser as register_merge_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_megamaid import (
-    register_parser as register_megamaid_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_mco import (
-    register_parser as register_mco_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_notes import (
-    register_parser as register_notes_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_outjob import (
-    register_parser as register_outjob_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_pcb_layer_step import (
-    register_parser as register_pcb_layer_step_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
-    register_parser as register_pcb_svg_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_pcbdoc import (
-    register_parser as register_pcbdoc_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_pcblib import (
-    register_parser as register_pcblib_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_pnp import (
-    register_parser as register_pnp_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_profiles import (
-    register_parser as register_profiles_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_prjpcb import (
-    register_parser as register_prjpcb_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_sch_ir import (
-    register_parser as register_sch_ir_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_sch_svg import (
-    register_parser as register_sch_svg_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_schdoc import (
-    register_parser as register_schdoc_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_schlib import (
-    register_parser as register_schlib_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_split import (
-    register_parser as register_split_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_svg import (
-    register_parser as register_svg_parser,
-)
-from altium_cruncher.altium_cruncher_cmd_variants import (
-    register_parser as register_variants_parser,
-)
+from altium_cruncher.cli_commands import register_commands
 
 LOG_LEVEL_BY_NAME = {
     "debug": logging.DEBUG,
@@ -247,8 +153,8 @@ def _cli_log_level(args: argparse.Namespace) -> int:
     return logging.INFO
 
 
-def main() -> None:
-    """Main entry point for the altium-cruncher CLI tool."""
+def build_parser() -> CruncherArgumentParser:
+    """Build the complete public command tree without executing a workflow."""
     parser = CruncherArgumentParser(
         prog="altium-cruncher",
         description="High-level CLI for Altium file operations",
@@ -287,41 +193,18 @@ def main() -> None:
         subparsers,
     )
 
-    register_bom_parser(command_subparsers)
-    register_clean_parser(command_subparsers)
-    register_design_parser(command_subparsers)
-    register_easyeda_import_parser(command_subparsers)
-    register_extract_parser(command_subparsers)
-    register_installs_parser(command_subparsers)
-    register_jlc_parser(command_subparsers)
-    register_json_dump_parser(command_subparsers)
-    register_launch_parser(command_subparsers)
-    register_libraries_parser(command_subparsers)
-    register_mate_parser(command_subparsers)
-    register_mco_parser(command_subparsers)
-    register_megamaid_parser(command_subparsers)
-    register_merge_parser(command_subparsers)
-    register_notes_parser(command_subparsers)
-    register_outjob_parser(command_subparsers)
-    register_pcb_layer_step_parser(command_subparsers)
-    register_pcb_svg_parser(command_subparsers)
-    register_pcbdoc_parser(command_subparsers)
-    register_pcblib_parser(command_subparsers)
-    register_pnp_parser(command_subparsers)
-    register_prjpcb_parser(command_subparsers)
-    register_profiles_parser(command_subparsers)
-    register_sch_ir_parser(command_subparsers)
-    register_sch_svg_parser(command_subparsers)
-    register_schdoc_parser(command_subparsers)
-    register_schlib_parser(command_subparsers)
-    register_split_parser(command_subparsers)
-    register_svg_parser(command_subparsers)
-    register_variants_parser(command_subparsers)
+    register_commands(command_subparsers)
 
     version_parser = subparsers.add_parser("version", help="Print version information")
     version_parser.set_defaults(handler=_cmd_version)
     _configure_root_help_color(parser, subparsers)
 
+    return parser
+
+
+def main() -> None:
+    """Main entry point for the altium-cruncher CLI tool."""
+    parser = build_parser()
     args, unknown_args = parser.parse_known_args()
     if unknown_args:
         parser.error(f"unrecognized arguments: {' '.join(unknown_args)}")

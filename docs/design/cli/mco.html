@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>mco command</title><link rel="stylesheet" href="../styles.css"></head>
-<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="mco" data-config-contract="none">
+<body data-doc-status="accepted" data-doc-kind="cli-design" data-command="mco" data-config-contract="docs/contracts/mco_input.a0.schema.json">
 <main>
   <nav class="nav"><a href="../index.html">Design Index</a><a href="index.html">CLI</a></nav>
   <header><p class="status">CLI command design</p><h1>mco</h1><p class="lede">Executes Monkey Change Order JSONC operation files for generated CAD automation.</p></header>
@@ -15,7 +15,7 @@ altium-cruncher mco run mate.mco.jsonc --dry-run
 altium-cruncher mco run mate.mco.jsonc --json-output output/mco-result.json
 altium-cruncher mco run mate.mco.jsonc --json</code></pre></section>
 
-  <section id="arguments"><h2>Arguments</h2><table><tr><th>Area</th><th>Contract</th></tr>
+  <section id="arguments"><h2>Arguments</h2><p>Each built-in operation and its argument model are authored in TypeSpec and composed into a shared container. The same source generates the catalog and Python/browser contracts. See the <a href="../mco-contract-authority.md">MCO contract guide</a> for authoring, validation timing and custom registries.</p><table><tr><th>Area</th><th>Contract</th></tr>
     <tr><td><code>schema</code></td><td>MCO files use <code>altium_cruncher.mco.a0</code>. JSONC comments, trailing commas, and UTF-8 BOM are accepted. <code>mco init</code> writes a commented JSONC starter file through the shared renderer. Generated comments follow ADR-0007 and list options for string/enum-style fields such as <code>op</code> and <code>sheet_style</code>.</td></tr>
     <tr><td><code>operations[]</code></td><td>Ordered operation objects with required <code>op</code> then <code>id</code>, optional human <code>message</code>, required-or-empty <code>args</code>, and optional <code>on_fail</code> branch target. Generated files write keys in that order for reviewability.</td></tr>
     <tr><td>Core ops</td><td><code>mco.message</code>, <code>mco.fail</code>, and <code>file.copy</code>.</td></tr>

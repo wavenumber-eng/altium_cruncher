@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.mate.parts_cache.output.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.mate.parts_cache.a0"
+    },
+    "source": {
+      "$ref": "#/$defs/PartSource"
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/KnownPart"
+      }
+    },
+    "designator_normalization": {
+      "$ref": "#/$defs/RecordRecordString"
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "parts",
+    "designator_normalization"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "PartSource": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "project"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "KnownPart": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "symbol_name": {
+          "type": "string"
+        },
+        "symbol_library": {
+          "type": "string"
+        },
+        "footprint_name": {
+          "type": "string"
+        },
+        "footprint_library": {
+          "type": "string"
+        },
+        "target_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "designator_prefix": {
+          "type": "string"
+        },
+        "signal_pad_designator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "role",
+        "description",
+        "symbol_name",
+        "symbol_library",
+        "footprint_name",
+        "footprint_library",
+        "target_kinds",
+        "designator_prefix",
+        "signal_pad_designator"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordRecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "#/$defs/RecordString"
+      }
+    },
+    "RecordString": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/mate.tsp. Do not edit."
+}

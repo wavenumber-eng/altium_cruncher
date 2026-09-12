@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.notes.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.notes.a0"
+    },
+    "input": {
+      "type": "string"
+    },
+    "source_kind": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "schdoc"
+        },
+        {
+          "type": "string",
+          "const": "prjpcb"
+        }
+      ]
+    },
+    "path_base": {
+      "type": "string",
+      "const": "input_directory"
+    },
+    "schdoc_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "filters": {
+      "$ref": "#/$defs/NoteFilters"
+    },
+    "schdocs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NotesPage"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "input",
+    "source_kind",
+    "path_base",
+    "schdoc_count",
+    "filters",
+    "schdocs"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "NoteFilters": {
+      "type": "object",
+      "properties": {
+        "include_sheet_template_text": {
+          "type": "boolean"
+        },
+        "default_suppression": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "include_sheet_template_text",
+        "default_suppression"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "NotesPage": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Note"
+          }
+        },
+        "text_frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Note"
+          }
+        },
+        "free_text": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Note"
+          }
+        }
+      },
+      "required": [
+        "file"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Note": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "position_mils": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Point"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unique_id": {
+          "type": "string"
+        },
+        "bounds_mils": {
+          "$ref": "#/$defs/Bounds"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "text",
+        "position_mils"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Point": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Bounds": {
+      "type": "object",
+      "properties": {
+        "x_min": {
+          "type": "number"
+        },
+        "y_min": {
+          "type": "number"
+        },
+        "x_max": {
+          "type": "number"
+        },
+        "y_max": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x_min",
+        "y_min",
+        "x_max",
+        "y_max"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

@@ -11,11 +11,11 @@ from altium_monkey.altium_pnp_position import (
     normalize_pnp_position_mode,
 )
 
-from altium_cruncher.altium_cruncher_cmd_bom import (
+from altium_cruncher.bom_artifacts import (
     _bom_from_configured_source,
     _configured_bom_artifacts,
 )
-from altium_cruncher.altium_cruncher_cmd_pnp import (
+from altium_cruncher.pnp_artifacts import (
     _configured_pnp_artifacts,
     _pnp_format_option_error,
 )

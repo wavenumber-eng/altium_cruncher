@@ -1,0 +1,791 @@
+{
+  "jsonc-comments": {
+    "schema": "MCO config contract id.",
+    "operations": "Operations execute in order. Use on_fail to jump to another operation id.",
+    "operations.args": "Operation-specific arguments. Use altium-cruncher mco ops to inspect each contract.",
+    "operations.args.board_outline_mils": "Board outline rectangle in mils."
+  },
+  "jsonc-key-comments": {
+    "id": "Stable operation id used by logs and on_fail jumps.",
+    "message": "Free-form human-readable operation message.",
+    "file": "Path to the target Altium document or project file.",
+    "name": "Free-form generated object or project name.",
+    "overwrite": "Allow replacing an existing output object/file.",
+    "document": "Project-relative document path to add to a .PrjPcb.",
+    "footprint": "PcbLib footprint pattern name.",
+    "height": "Footprint height string, for example \"0mil\".",
+    "description": "Human-readable footprint description.",
+    "primitive_parameters": "Footprint PrimitiveParameters side-stream values.",
+    "sheet_style": "Schematic sheet style. Options: Altium SheetStyle enum name or native enum id.",
+    "custom_sheet_mils": "Custom schematic sheet size object with width and height in mils.",
+    "template": "Optional .SchDot template path for SchDoc creation.",
+    "layer_stack_template": "Layer stack template id. Options are supplied by altium-monkey; the generated default uses 2-layer.",
+    "rigid_stack": "Generated rigid layer-stack object for new PcbDoc creation.",
+    "stackupx_file": "Path to a .stackupx file to import as the PcbDoc layer-stack document.",
+    "mechanical_layer_profile": "Mechanical layer profile. Options: standard_component_pairs, v7_mechanical_53.",
+    "mechanical_layers": "Editable mechanical layer display-name/enabled rows.",
+    "mechanical_layer_pairs": "Editable mechanical layer top/bottom pair rows.",
+    "mechanical_layer_kinds": "Editable mechanical layer kind assignment rows.",
+    "layer": "PCB layer selector. Legacy PcbLayer names/ids remain supported; with a V7-aware altium-monkey, primitive ops also accept semantic tokens such as MECHANICAL33. Raw serialized V7 saved-layer ids are diagnostics, not layer selectors.",
+    "layer_start": "Start layer selector for legacy pad/via span operations.",
+    "layer_end": "End layer selector for legacy pad/via span operations.",
+    "left": "Rectangle left coordinate in mils.",
+    "bottom": "Rectangle bottom coordinate in mils.",
+    "right": "Rectangle right coordinate in mils.",
+    "top": "Rectangle top coordinate in mils."
+  },
+  "template": {
+    "schema": "altium_cruncher.mco.a0",
+    "operations": [
+      {
+        "op": "project.create",
+        "id": "create_project",
+        "message": "Create a blank Altium project",
+        "args": {
+          "file": "output/mate/mate.PrjPcb",
+          "name": "mate",
+          "overwrite": false
+        }
+      },
+      {
+        "op": "schdoc.create",
+        "id": "create_schematic",
+        "message": "Create a blank schematic",
+        "args": {
+          "file": "output/mate/mate.SchDoc",
+          "sheet_style": "D",
+          "overwrite": false
+        }
+      },
+      {
+        "op": "pcbdoc.create",
+        "id": "create_board",
+        "message": "Create a blank board",
+        "args": {
+          "file": "output/mate/mate.PcbDoc",
+          "layer_stack_template": "2-layer",
+          "overwrite": false,
+          "board_outline_mils": {
+            "left": 0,
+            "bottom": 0,
+            "right": 3000,
+            "top": 2000
+          }
+        }
+      },
+      {
+        "op": "project.add_document",
+        "id": "add_schematic_to_project",
+        "message": "Add schematic to project",
+        "args": {
+          "file": "output/mate/mate.PrjPcb",
+          "document": "mate.SchDoc"
+        }
+      },
+      {
+        "op": "project.add_document",
+        "id": "add_board_to_project",
+        "message": "Add board to project",
+        "args": {
+          "file": "output/mate/mate.PrjPcb",
+          "document": "mate.PcbDoc"
+        }
+      }
+    ]
+  },
+  "schema": "altium_cruncher.mco.a0",
+  "operations": [
+    {
+      "name": "file.copy",
+      "group": "file",
+      "summary": "Copy one file into the workflow output tree.",
+      "model": "FileCopyOperation",
+      "args_ref": "#/$defs/FileCopyArgs",
+      "required_args": [
+        "source",
+        "destination"
+      ],
+      "optional_args": [
+        "overwrite"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "mco.fail",
+      "group": "mco",
+      "summary": "Fail intentionally, usually for control-flow tests.",
+      "model": "McoFailOperation",
+      "args_ref": "#/$defs/McoFailArgs",
+      "required_args": [],
+      "optional_args": [
+        "message"
+      ],
+      "aliases": [
+        "fail"
+      ]
+    },
+    {
+      "name": "mco.message",
+      "group": "mco",
+      "summary": "Emit a human-readable message.",
+      "model": "McoMessageOperation",
+      "args_ref": "#/$defs/McoMessageArgs",
+      "required_args": [],
+      "optional_args": [
+        "text"
+      ],
+      "aliases": [
+        "message"
+      ]
+    },
+    {
+      "name": "pcbdoc.add_arc",
+      "group": "pcbdoc",
+      "summary": "Add a PCB arc.",
+      "model": "PcbdocAddArcOperation",
+      "args_ref": "#/$defs/PcbdocAddArcArgs",
+      "required_args": [
+        "file",
+        "center_mils",
+        "radius_mils",
+        "start_angle_degrees",
+        "end_angle_degrees",
+        "width_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "layer",
+        "net"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_component",
+      "group": "pcbdoc",
+      "summary": "Insert a PCB component from a PcbLib.",
+      "model": "PcbdocAddComponentOperation",
+      "args_ref": "#/$defs/PcbdocAddComponentArgs",
+      "required_args": [
+        "file",
+        "library",
+        "footprint",
+        "designator",
+        "position_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "layer",
+        "source_unique_id",
+        "source_hierarchical_path",
+        "source_component_library",
+        "source_lib_reference",
+        "source_description",
+        "channel_offset",
+        "comment_text",
+        "component_parameters",
+        "pad_nets",
+        "rotation_degrees",
+        "source_footprint_library",
+        "comment_visible",
+        "source_designator"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_embedded_3d_model",
+      "group": "pcbdoc",
+      "summary": "Embed a 3D model in a PCB document.",
+      "model": "PcbdocAddEmbedded3dModelOperation",
+      "args_ref": "#/$defs/PcbdocAddEmbedded3dModelArgs",
+      "required_args": [
+        "file",
+        "model_file"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "model_name",
+        "name",
+        "layer",
+        "side",
+        "location_mils",
+        "rotation_x_degrees",
+        "rotation_y_degrees",
+        "rotation_z_degrees",
+        "z_mm",
+        "bounds_mils",
+        "projection_outline_mils",
+        "overall_height_mils",
+        "opacity",
+        "z_mils"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_fill",
+      "group": "pcbdoc",
+      "summary": "Add a rectangular PCB fill.",
+      "model": "PcbdocAddFillOperation",
+      "args_ref": "#/$defs/PcbdocAddFillArgs",
+      "required_args": [
+        "file",
+        "corner1_mils",
+        "corner2_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "rotation_degrees",
+        "layer",
+        "net"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_pad",
+      "group": "pcbdoc",
+      "summary": "Add a free PCB pad.",
+      "model": "PcbdocAddPadOperation",
+      "args_ref": "#/$defs/PcbdocAddPadArgs",
+      "required_args": [
+        "file",
+        "designator",
+        "position_mils",
+        "width_mils",
+        "height_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "shape",
+        "corner_radius_percent",
+        "rotation_degrees",
+        "hole_size_mils",
+        "plated",
+        "layer",
+        "net",
+        "solder_mask_expansion_mils",
+        "paste_mask_expansion_mils",
+        "tenting_top",
+        "tenting_bottom",
+        "solder_mask_expansion_mode",
+        "paste_mask_expansion_mode"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_region",
+      "group": "pcbdoc",
+      "summary": "Add a PCB region.",
+      "model": "PcbdocAddRegionOperation",
+      "args_ref": "#/$defs/PcbdocAddRegionArgs",
+      "required_args": [
+        "file",
+        "outline_points_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "layer",
+        "hole_points_mils",
+        "is_keepout",
+        "keepout_restrictions",
+        "net",
+        "is_board_cutout"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_text",
+      "group": "pcbdoc",
+      "summary": "Add PCB text.",
+      "model": "PcbdocAddTextOperation",
+      "args_ref": "#/$defs/PcbdocAddTextArgs",
+      "required_args": [
+        "file",
+        "text",
+        "position_mils",
+        "height_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "layer",
+        "font_kind",
+        "font_name",
+        "bold",
+        "italic",
+        "rotation_degrees",
+        "stroke_width_mils",
+        "is_comment",
+        "is_designator",
+        "is_mirrored",
+        "is_inverted",
+        "inverted_margin_mils",
+        "use_inverted_rectangle",
+        "inverted_rectangle_size_mils",
+        "is_frame",
+        "frame_size_mils",
+        "barcode_full_size_mils",
+        "barcode_margin_mils",
+        "barcode_min_width_mils",
+        "barcode_show_text",
+        "barcode_inverted",
+        "text_justification",
+        "barcode_kind",
+        "barcode_render_mode"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_track",
+      "group": "pcbdoc",
+      "summary": "Add a PCB track.",
+      "model": "PcbdocAddTrackOperation",
+      "args_ref": "#/$defs/PcbdocAddTrackArgs",
+      "required_args": [
+        "file",
+        "start_mils",
+        "end_mils",
+        "width_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "layer",
+        "net"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.add_via",
+      "group": "pcbdoc",
+      "summary": "Add a PCB via.",
+      "model": "PcbdocAddViaOperation",
+      "args_ref": "#/$defs/PcbdocAddViaArgs",
+      "required_args": [
+        "file",
+        "position_mils",
+        "diameter_mils",
+        "hole_size_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "layer_start",
+        "layer_end",
+        "net"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.arrange_designators",
+      "group": "pcbdoc",
+      "summary": "Position generated PCB designator text.",
+      "model": "PcbdocArrangeDesignatorsOperation",
+      "args_ref": "#/$defs/PcbdocArrangeDesignatorsArgs",
+      "required_args": [
+        "file"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "designators",
+        "placement",
+        "offset_mils",
+        "height_mils",
+        "layer",
+        "stroke_width_mils",
+        "width_factor",
+        "bold",
+        "italic",
+        "font_name",
+        "font_kind"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.create",
+      "group": "pcbdoc",
+      "summary": "Create an empty PCB document.",
+      "model": "PcbdocCreateOperation",
+      "args_ref": "#/$defs/PcbdocCreateArgs",
+      "required_args": [
+        "file"
+      ],
+      "optional_args": [
+        "layer_stack_template",
+        "rigid_stack",
+        "stackupx_file",
+        "board_outline_mils",
+        "board_origin_mils",
+        "sheet_frame_mils",
+        "mechanical_layer_profile",
+        "mechanical_layers",
+        "mechanical_layer_pairs",
+        "mechanical_layer_kinds",
+        "overwrite"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.create_user_union",
+      "group": "pcbdoc",
+      "summary": "Create a user union over generated PCB objects.",
+      "model": "PcbdocCreateUserUnionOperation",
+      "args_ref": "#/$defs/PcbdocCreateUserUnionArgs",
+      "required_args": [
+        "file",
+        "name"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "members"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcbdoc.export_layer_step",
+      "group": "pcbdoc",
+      "summary": "Export a PCB layer STEP artifact.",
+      "model": "PcbdocExportLayerStepOperation",
+      "args_ref": "#/$defs/PcbdocExportLayerStepArgs",
+      "required_args": [
+        "file",
+        "output_file"
+      ],
+      "optional_args": [
+        "layer",
+        "board_name",
+        "highlights",
+        "overwrite"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcblib.add_footprint",
+      "group": "pcblib",
+      "summary": "Add one empty footprint container to a PcbLib.",
+      "model": "PcblibAddFootprintOperation",
+      "args_ref": "#/$defs/PcblibAddFootprintArgs",
+      "required_args": [
+        "file",
+        "name"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "height",
+        "description",
+        "item_guid",
+        "revision_guid",
+        "parameters",
+        "primitive_parameters"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "pcblib.create",
+      "group": "pcblib",
+      "summary": "Initialize a new PCB footprint library for later PcbLib operations.",
+      "model": "PcblibCreateOperation",
+      "args_ref": "#/$defs/PcblibCreateArgs",
+      "required_args": [
+        "file"
+      ],
+      "optional_args": [
+        "overwrite"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "project.add_document",
+      "group": "project",
+      "summary": "Append a document entry to a .PrjPcb file.",
+      "model": "ProjectAddDocumentOperation",
+      "args_ref": "#/$defs/ProjectAddDocumentArgs",
+      "required_args": [
+        "file",
+        "document"
+      ],
+      "optional_args": [
+        "unique_id"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "project.add_parameter",
+      "group": "project",
+      "summary": "Set one project parameter.",
+      "model": "ProjectAddParameterOperation",
+      "args_ref": "#/$defs/ProjectAddParameterArgs",
+      "required_args": [
+        "file",
+        "name",
+        "value"
+      ],
+      "optional_args": [],
+      "aliases": []
+    },
+    {
+      "name": "project.add_variant",
+      "group": "project",
+      "summary": "Add one project variant.",
+      "model": "ProjectAddVariantOperation",
+      "args_ref": "#/$defs/ProjectAddVariantArgs",
+      "required_args": [
+        "file",
+        "name"
+      ],
+      "optional_args": [
+        "unique_id",
+        "allow_fabrication",
+        "current"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "project.add_variant_dnp",
+      "group": "project",
+      "summary": "Mark one designator Not Fitted in a project variant.",
+      "model": "ProjectAddVariantDnpOperation",
+      "args_ref": "#/$defs/ProjectAddVariantDnpArgs",
+      "required_args": [
+        "file",
+        "variant",
+        "designator"
+      ],
+      "optional_args": [
+        "unique_id",
+        "alternate_part"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "project.clone_variant",
+      "group": "project",
+      "summary": "Clone an existing project variant under a new name.",
+      "model": "ProjectCloneVariantOperation",
+      "args_ref": "#/$defs/ProjectCloneVariantArgs",
+      "required_args": [
+        "file",
+        "source_name",
+        "name"
+      ],
+      "optional_args": [
+        "unique_id",
+        "allow_fabrication",
+        "current"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "project.create",
+      "group": "project",
+      "summary": "Create an empty .PrjPcb file.",
+      "model": "ProjectCreateOperation",
+      "args_ref": "#/$defs/ProjectCreateArgs",
+      "required_args": [
+        "file"
+      ],
+      "optional_args": [
+        "name",
+        "project_name",
+        "overwrite"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "project.delete_variant",
+      "group": "project",
+      "summary": "Delete one project variant.",
+      "model": "ProjectDeleteVariantOperation",
+      "args_ref": "#/$defs/ProjectDeleteVariantArgs",
+      "required_args": [
+        "file",
+        "name"
+      ],
+      "optional_args": [],
+      "aliases": []
+    },
+    {
+      "name": "project.list_variants",
+      "group": "project",
+      "summary": "List project variants, DNP rows, and parameter changes.",
+      "model": "ProjectListVariantsOperation",
+      "args_ref": "#/$defs/ProjectListVariantsArgs",
+      "required_args": [
+        "file"
+      ],
+      "optional_args": [],
+      "aliases": []
+    },
+    {
+      "name": "project.rename_variant",
+      "group": "project",
+      "summary": "Rename one project variant.",
+      "model": "ProjectRenameVariantOperation",
+      "args_ref": "#/$defs/ProjectRenameVariantArgs",
+      "required_args": [
+        "file",
+        "name",
+        "new_name"
+      ],
+      "optional_args": [],
+      "aliases": []
+    },
+    {
+      "name": "project.toggle_variant_dnp",
+      "group": "project",
+      "summary": "Toggle one designator between fitted and Not Fitted in a project variant.",
+      "model": "ProjectToggleVariantDnpOperation",
+      "args_ref": "#/$defs/ProjectToggleVariantDnpArgs",
+      "required_args": [
+        "file",
+        "variant",
+        "designator"
+      ],
+      "optional_args": [
+        "unique_id",
+        "alternate_part"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "schdoc.add_component",
+      "group": "schdoc",
+      "summary": "Insert a schematic component from a SchLib.",
+      "model": "SchdocAddComponentOperation",
+      "args_ref": "#/$defs/SchdocAddComponentArgs",
+      "required_args": [
+        "file",
+        "library",
+        "symbol",
+        "designator",
+        "position_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "unique_id",
+        "design_item_id",
+        "footprint_model",
+        "footprint_library",
+        "parameters",
+        "orientation",
+        "mirrored",
+        "part_id",
+        "display_mode",
+        "designator_style",
+        "comment_style",
+        "footprint_description"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "schdoc.add_net_label",
+      "group": "schdoc",
+      "summary": "Add a schematic net label.",
+      "model": "SchdocAddNetLabelOperation",
+      "args_ref": "#/$defs/SchdocAddNetLabelArgs",
+      "required_args": [
+        "file",
+        "text",
+        "location_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "orientation",
+        "justification"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "schdoc.add_power_port",
+      "group": "schdoc",
+      "summary": "Add a schematic power port.",
+      "model": "SchdocAddPowerPortOperation",
+      "args_ref": "#/$defs/SchdocAddPowerPortArgs",
+      "required_args": [
+        "file",
+        "text",
+        "location_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite",
+        "style",
+        "orientation",
+        "show_net_name"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "schdoc.add_wire",
+      "group": "schdoc",
+      "summary": "Add a schematic wire.",
+      "model": "SchdocAddWireOperation",
+      "args_ref": "#/$defs/SchdocAddWireArgs",
+      "required_args": [
+        "file",
+        "points_mils"
+      ],
+      "optional_args": [
+        "output_file",
+        "overwrite"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "schdoc.create",
+      "group": "schdoc",
+      "summary": "Create an empty schematic document.",
+      "model": "SchdocCreateOperation",
+      "args_ref": "#/$defs/SchdocCreateArgs",
+      "required_args": [
+        "file"
+      ],
+      "optional_args": [
+        "template",
+        "sheet_style",
+        "apply_template_visual_sheet_settings",
+        "custom_sheet_mils",
+        "overwrite"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "schlib.add_symbol",
+      "group": "schlib",
+      "summary": "Add one empty schematic symbol to a SchLib.",
+      "model": "SchlibAddSymbolOperation",
+      "args_ref": "#/$defs/SchlibAddSymbolArgs",
+      "required_args": [
+        "file",
+        "name"
+      ],
+      "optional_args": [
+        "description"
+      ],
+      "aliases": []
+    },
+    {
+      "name": "schlib.create",
+      "group": "schlib",
+      "summary": "Create an empty schematic library.",
+      "model": "SchlibCreateOperation",
+      "args_ref": "#/$defs/SchlibCreateArgs",
+      "required_args": [
+        "file"
+      ],
+      "optional_args": [
+        "overwrite"
+      ],
+      "aliases": []
+    }
+  ]
+}

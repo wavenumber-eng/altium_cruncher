@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "interface_design_manifest",
+    "title": "Interface design inventory",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.interface_design_manifest.a0"
+}

@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "profiles",
+    "title": "Altium profiles",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.profiles.a0"
+}

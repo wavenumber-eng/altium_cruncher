@@ -12,3 +12,7 @@
 *.SchDoc binary
 *.step binary
 *.STEP binary
+
+# Preserve imported Altium stress fixtures byte-for-byte on every platform.
+tests/assets/projects/nxp-frdm-imx93/input/** binary
+tests/assets/projects/ov-tech-pimx8/input/** binary

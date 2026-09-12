@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "mate_parts_manifest",
+    "title": "Generated mate parts manifest",
+    "source": "../outputs/mate",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.mate.parts_cache.a0"
+}

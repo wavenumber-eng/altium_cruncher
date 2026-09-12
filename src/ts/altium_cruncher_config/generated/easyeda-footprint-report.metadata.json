@@ -1,0 +1,8 @@
+{
+  "contract": {
+    "stem": "easyeda_footprint_report",
+    "title": "EasyEDA footprint mapping",
+    "source": "../outputs/easyeda",
+    "kind": "output"
+  }
+}

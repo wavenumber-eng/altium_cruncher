@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "mco_operations",
+    "title": "MCO operation catalog",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.mco.operations.a0"
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "pcb.svg.config.a0",
+  "global": {
+    "include_metadata": false,
+    "styles": {
+      "soldermask_film": { "color": "auto", "opacity": 1.0 },
+      "drills": {
+        "plated_color": "#000000", "non_plated_color": "#000000",
+        "outline": true, "outline_width_mm": 0.025, "respect_tenting": true
+      },
+      "slots": {
+        "plated_color": "#000000", "non_plated_color": "#000000",
+        "outline": true, "outline_width_mm": 0.025, "respect_tenting": true
+      },
+      "board_cutouts": { "color": "#000000", "hatch": false, "outline_width_mm": 0.025 }
+    }
+  },
+  "layer_outputs": { "enabled": false },
+  "views": [
+    {
+      "name": "top_drill_preview",
+      "layers": ["SOLDERMASK_FILM_TOP", "BOARD_CUTOUTS", "DRILLS", "SLOTS"],
+      "group_id": "pcb-svg-drill-preview-top",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": false
+    },
+    {
+      "name": "bottom_drill_preview",
+      "layers": ["SOLDERMASK_FILM_BOTTOM", "BOARD_CUTOUTS", "DRILLS", "SLOTS"],
+      "group_id": "pcb-svg-drill-preview-bottom",
+      "output_svg": "{board}__{view}.svg",
+      "mirror": true
+    }
+  ]
+}

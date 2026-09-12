@@ -1,0 +1,15 @@
+[[artifacts]]
+id = "generated-public-contracts"
+kind = "generated_source"
+paths = [
+    "src/py/altium_cruncher/contracts/generated/**",
+    "src/ts/altium_cruncher_config/generated/**",
+    "docs/contracts/*.schema.json",
+    "docs/design/*-config-fields.md",
+]
+tracked = "required"
+produced_by = "scripts/generate-config-contracts.mjs using the pinned TypeSpec toolchain"
+included_in_release = "Python bindings and resources in wheels; all generated contracts and field guides in source distributions"
+retention = "Committed and checked for freshness whenever the TypeSpec authority or generator changes"
+source_of_truth = "src/tsp/altium_cruncher"
+regeneration_command = "npm run generate:contracts"

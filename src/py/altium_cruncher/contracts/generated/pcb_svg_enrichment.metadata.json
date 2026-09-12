@@ -1,0 +1,8 @@
+{
+  "contract": {
+    "stem": "pcb_svg_enrichment",
+    "title": "Cruncher PCB SVG metadata extensions",
+    "source": "../outputs/pcb-svg-enrichment",
+    "kind": "output"
+  }
+}

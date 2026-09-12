@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pcb.svg.manifest.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "pcb.svg.manifest.a0"
+    },
+    "board": {
+      "type": "string"
+    },
+    "source_input": {
+      "type": "string"
+    },
+    "layer_outputs": {
+      "$ref": "#/$defs/RecordSvgLayerOutput"
+    },
+    "views": {
+      "$ref": "#/$defs/RecordSvgViewOutput"
+    }
+  },
+  "required": [
+    "schema",
+    "board",
+    "source_input",
+    "layer_outputs",
+    "views"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "RecordSvgLayerOutput": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "#/$defs/SvgLayerOutput"
+      }
+    },
+    "RecordSvgViewOutput": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "#/$defs/SvgViewOutput"
+      }
+    },
+    "SvgLayerOutput": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "group_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "layers",
+        "group_id"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SvgViewOutput": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "group_id": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mirrored": {
+          "type": "boolean"
+        },
+        "assembly_hlr_mode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "group_id",
+        "layers",
+        "mirrored",
+        "assembly_hlr_mode"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

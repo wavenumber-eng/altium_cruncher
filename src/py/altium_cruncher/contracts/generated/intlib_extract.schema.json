@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.extract.intlib.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.extract.intlib.a0"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "output_dir": {
+      "type": "string"
+    },
+    "component_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "component_parse_error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_count": {
+      "$ref": "#/$defs/Count"
+    },
+    "libpkg_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ExtractedSource"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "output_dir",
+    "component_count",
+    "component_parse_error",
+    "source_count",
+    "libpkg_path",
+    "sources"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "stem": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "name",
+        "stem"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ExtractedSource": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "stream_path": {
+          "type": "string"
+        },
+        "original_path": {
+          "type": "string"
+        },
+        "suggested_filename": {
+          "type": "string"
+        },
+        "output_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_relative_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "stream_path",
+        "original_path",
+        "suggested_filename",
+        "output_path",
+        "output_relative_path"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

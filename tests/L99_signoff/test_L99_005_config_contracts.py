@@ -18,7 +18,7 @@ from altium_cruncher.altium_cruncher_cmd_clean import (
     _render_jsonc_template,
 )
 from altium_cruncher.altium_cruncher_mate_templates import mate_template_text
-from altium_cruncher.altium_cruncher_mco import _mco_template_text
+from altium_cruncher.altium_cruncher_mco import _mco_template_text, _mco_template_payload
 from altium_cruncher.altium_cruncher_cmd_prjpcb import (
     default_project_config,
     render_project_config,
@@ -127,6 +127,11 @@ def _validation_failures(
 def _config_cases() -> list[tuple[str, str, Any]]:
     return [
         (
+            "mco generated template",
+            "mco_input.a0.schema.json",
+            _mco_template_payload(),
+        ),
+        (
             "bom/pnp generated default",
             "bom_pnp_config.a0.schema.json",
             jsonc.loads(bom_pnp_config_text()),
@@ -201,7 +206,7 @@ def _generated_template_comment_cases() -> list[tuple[str, str, list[str]]]:
             [
                 "/* Canvas bounds mode. Options: all_geometry, board_outline. */",
                 "/* Projection mode for fitted components. Options: bounding_box, detail, none, outline, simple. */",
-                "/* HLR curve serialization mode. Options: native_arcs, polyline. */",
+                "/* Legacy HLR curve serialization mode; Fast always emits polylines. Options: native_arcs, polyline. */",
             ],
         ),
         (

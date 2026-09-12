@@ -1,43 +1,18 @@
 # Altium Cruncher
 
-`altium-cruncher` is a cross-platform command-line application for Altium file
-workflows. It is intended for users who want useful Altium utilities without
-writing Python.
+Command-line tools for working with Altium projects, schematics, boards and
+libraries on Windows, macOS and Linux. Export SVGs, generate BOM and pick-and-place
+files, extract library assets, and inspect or modify designs.
 
-The package consumes the public `altium-monkey` library and keeps higher-level
-command behavior here: SVG export, PCB layer STEP export, extraction, BOM/PnP
-output, design JSON export, cleanup, project decomposition, and EasyEDA import
-workflows.
+## Install uv
 
-## Install
+[uv](https://docs.astral.sh/uv/) installs the application and manages its Python
+runtime and dependencies.
 
-### Windows Quick Install
-
-For Windows users who are not already using Python tooling, the repository
-includes a PowerShell installer wrapper. It installs `uv` if needed, installs
-`altium-cruncher` as a `uv` tool, updates the shell PATH, and verifies the
-install with `altium-cruncher version`.
-
-From a source checkout or release source archive:
+On Windows, open PowerShell and run:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-altium-cruncher.ps1
-```
-
-To reinstall or update the tool:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-altium-cruncher.ps1 -Force
-```
-
-The EasyEDA import workflow is installed by default with the package.
-
-### Manual Install
-
-Install `uv` first if it is not already available:
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 On macOS or Linux:
@@ -46,140 +21,85 @@ On macOS or Linux:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-The intended user install path is `uv tool install`:
+Restart your terminal after installing uv.
 
-```powershell
+## Install Altium Cruncher
+
+To install the published package:
+
+```sh
 uv tool install altium-cruncher
 uv tool update-shell
-altium-cruncher --help
 ```
 
-During local development:
+To install directly from GitHub, with Git installed:
 
-```powershell
-uv sync --extra test
-uv run altium-cruncher --help
-uv run python -m altium_cruncher version
+```sh
+uv tool install --force "git+https://github.com/wavenumber-eng/altium_cruncher.git@main"
+uv tool update-shell
 ```
 
-The EasyEDA import command generates SchLib, PcbLib footprint, and downloaded
-3D model assets by default, but 3D model placement into the generated PcbLib is
-not implemented. During local EasyEDA development:
+For a specific branch, tag or commit, replace `main` in the URL with that
+reference. Both installation methods provide the same command names:
+`altium-cruncher` and its shorter alias, `acr`.
 
-```powershell
-uv sync --extra test
-uv run altium-cruncher easyeda-import --help
+Open a new terminal if the command is not found, then verify the installation:
+
+```sh
+acr version
+acr --help
 ```
 
-## Commands
+## Update
 
-Run `altium-cruncher <command> --help` for command-specific options.
+For an installation from PyPI:
 
-| Command | Purpose | Status |
-| --- | --- | --- |
-| `version` | Print `altium-cruncher` and controlled dependency versions. | Public |
-| `sch-svg` | Generate schematic SVG from SchDoc, PrjPcb, or SchLib inputs. | Public |
-| `sch-ir` | Export schematic gotIR JSON from SchDoc or PrjPcb inputs. | Public |
-| `pcb-svg` | Generate PCB SVG views from PcbDoc or PrjPcb inputs. | Public, with beta HLR/pin-view areas |
-| `pcb-layer-step` | Generate a colored STEP model for one PCB layer, intended for fixture-alignment workflows. | Public |
-| `svg` | Run schematic SVG, PCB SVG, or both based on input. | Public |
-| `bom` | Generate BOM output as CSV, JSON, or XLSX. | Public |
-| `pnp` | Generate pick-and-place output as CSV, JSON, XLSX, or JLC CPL. | Public |
-| `jlc` | Generate JLCPCB BOM and CPL outputs from an Altium project. | Public |
-| `design` / `design-review` / `dr` | Generate an agent-facing design review bundle with design JSON, document JSON, notes JSONC, schematic SVGs, and PCB copper-layer review SVGs. | Public |
-| `json-dump` | Dump parsed SchDoc, SchLib, PcbDoc, and PcbLib contents to JSON for inspection. | Experimental |
-| `extract` | Extract symbols, footprints, or IntLib sources from Altium design documents. | Public |
-| `installs` | List discovered Altium Designer install paths. | Public |
-| `launch` | Launch Altium Designer, optionally opening a file. | Public |
-| `libraries` | List symbol and footprint names in Altium SchLib/PcbLib files. | Public |
-| `schdoc` | Create blank schematic documents through MCO operations. | Public |
-| `schlib` | Create one-symbol schematic libraries through MCO operations. | Public |
-| `pcbdoc` | Create generated rigid PCB documents through MCO operations. | Public |
-| `pcblib` | Create PcbLib footprint libraries through MCO operations. | Public |
-| `prjpcb` | Create JSONC-driven PrjPcb project skeletons through MCO operations. | Public |
-| `split` | Split a multi-symbol SchLib or multi-footprint PcbLib into individual files. | Public |
-| `merge` | Merge multiple SchLib or PcbLib files into one library. | Public |
-| `megamaid` | Decompose a PrjPcb into libraries, BOM/PnP, netlist, split/combined document-library JSON dumps, notes JSONC, and embedded assets. | Public |
-| `notes` | Extract schematic note objects, text frames, and free text to structured JSON. | Public |
-| `outjob` | Run project OutJob files through Altium Designer. | Public |
-| `variants` | Inspect and edit PrjPcb project variants. | Public |
-| `mco` | Execute Monkey Change Order JSONC operation files. | Experimental |
-| `mate` | Generate fixture mating-board plans and runnable MCO files from a DUT PCB selection. | Beta |
-| `clean` | Normalize SchDoc, SchLib, or PcbLib assets using JSON/JSONC config. | Public |
-| `profiles` | Inspect and clean Altium ProgramData profile extension state. | Public |
-| `easyeda-import` | Generate Altium SchLib, PcbLib footprint, and downloaded 3D assets from EasyEDA/LCSC data. | Public |
-
-`pcb-svg` includes normal layer SVG output, top/bottom assembly SVG views with
-geometer-backed HLR projection of embedded STEP models, and an optional
-synthetic `BOARD_CUTOUTS` layer for board-profile cutouts. The A0 PCB SVG
-config uses `pcb.svg.config` by default and fits SVGs tightly around the board
-outline while metadata preserves Altium-coordinate placement and transform data.
-User-editable config files may use JSONC comments and trailing commas.
-
-The `pcb-svg` HLR and pin-oriented views are beta quality. Hidden-line
-rendering, embedded STEP projection, pin visibility, and related details are
-expected to improve, and current output may contain errors or omissions.
-
-The `mate` command is an initial beta intended for Cricket Node-style fixture
-and debug mating-board testing. Broader mating modes, richer library metadata,
-header and multi-pin connector workflows, and GUI-assisted config authoring are
-planned future work.
-
-Compact JSON output is a core direction for machine-consumable Altium design
-data, but the first standalone milestone prioritizes command parity and
-cross-platform packaging.
-
-New commands should keep the top-level CLI as an orchestrator. Command-specific
-parser setup and behavior belong in command modules, including simple commands.
-New commands, features, and external dependencies need explicit justification in
-the commit, PR, or linked plan. Minimize dependencies unless there is a clear
-install, licensing, and maintenance case.
-
-## Tests
-
-Run the Rack suite:
-
-```powershell
-uv run --extra test rack run --all
+```sh
+uv tool upgrade altium-cruncher
 ```
 
-Run the built-wheel install test after `python -m build`:
+For an installation from a GitHub branch, rerun the install command with
+`--reinstall-package` to refresh the source:
 
-```powershell
-uv run --extra test python tests\support_scripts\install_test.py
+```sh
+uv tool install --force --reinstall-package altium-cruncher "git+https://github.com/wavenumber-eng/altium_cruncher.git@main"
 ```
 
-Rack is the primary local gate. Current public strata are
-`L0_public_cli` for command registration and `L3_public_workflows` for
-fixture-backed CLI workflows. `L99_signoff` runs version-contract and Python
-hygiene checks. Additional command parity gates will be added as public fixtures
-and release policy are finalized. Signoff policy will cover command manifests,
-public command tests, PEP 257-style docstrings, architecture/design
-documentation, JSON/config contracts, and package build/install tests.
+Use the same branch reference you selected when installing.
 
-GitHub Actions runs CI for pull requests and pushes to `main` on Ubuntu and
-Windows. CI runs the Rack suite, builds the package, checks the distributions,
-and runs the installed-console smoke test.
+## Use
 
-## Architecture Docs
+Get help for any command:
 
-- `docs/adrs/` records accepted architecture decisions.
-- `docs/design/` records durable interface, command, data-flow, and format
-  design notes.
-- `docs/design/index.html` is the master design-doc entry point used by humans
-  and signoff tooling.
-- `docs/contracts/` stores stable schemas and conformance examples for public JSON
-  or config formats.
+```sh
+acr pcb-svg --help
+acr bom --help
+```
 
-## Release Policy
+For example, export a board SVG or a project BOM:
 
-Versioning, tagging, release, and traceability are defined in
-`docs/adrs/ADR-0001-versioning-tagging-release-policy.md`. The intended
-release workflow is GitHub Actions plus PyPI Trusted Publishing/OIDC. Local
-Twine upload is fallback only.
+```sh
+acr pcb-svg board.PcbDoc
+acr bom project.PrjPcb
+```
 
-Current release notes are available in
-`docs/releases/2026-08-10.md`.
+See the [command guide](docs/design/command-inventory.md) for the complete command
+list and links to individual usage instructions. Some commands, such as launching
+Altium Designer and running OutJobs, require Altium Designer on Windows.
 
-`altium-cruncher` remains AGPL-3.0-or-later because it imports and depends on
-the AGPL `altium-monkey` package for normal operation.
+## Uninstall
+
+```sh
+uv tool uninstall altium-cruncher
+```
+
+## Documentation
+
+- [Command reference](docs/design/cli/index.html)
+- [Examples](examples/)
+- [Development and testing](docs/build.md)
+- [Contributing](CONTRIBUTING.md)
+- [Architecture](docs/design/architecture-porting-guide.md)
+- [Release notes](CHANGELOG.md)
+
+Altium Cruncher is licensed under [AGPL-3.0-or-later](LICENSE).

@@ -115,6 +115,9 @@ def _write_annotation_schdoc(path: Path) -> None:
 
 def _write_annotation_schdoc_with_template_text(path: Path) -> None:
     doc = AltiumSchDoc()
+    from altium_monkey.altium_record_sch__template import AltiumSchTemplate
+    template = AltiumSchTemplate()
+    doc.add_object(template)
     doc.add_object(
         make_sch_text_frame(
             bounds_mils=SchRectMils(100, 200, 500, 420),
@@ -131,14 +134,12 @@ def _write_annotation_schdoc_with_template_text(path: Path) -> None:
         bounds_mils=SchRectMils(1000, 200, 1400, 420),
         text="=TITLE_BLOCK_FIELD",
     )
-    template_frame._owner_index = 1
-    doc.add_object(template_frame)
+    doc.add_object(template_frame, owner=template)
     template_text = make_sch_text_string(
         location_mils=SchPointMils(1500, 240),
         text="Sheet Number",
     )
-    template_text._owner_index = 1
-    doc.add_object(template_text)
+    doc.add_object(template_text, owner=template)
     assert doc.save(path)
 
 

@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "mate_inspection",
+    "title": "Mate inspection",
+    "source": "../outputs/mate",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.mate.inspect.a0"
+}

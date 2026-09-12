@@ -82,7 +82,7 @@
       "name": "mco",
       "status": "experimental",
       "design_doc": "docs/design/cli/mco.html",
-      "summary": "Run the altium-cruncher mco command.",
+      "summary": "Execute ordered CAD change operations using TypeSpec-owned operation contracts, generated catalog metadata and Python handlers.",
       "surface_ref": "docs/design/cli/mco.html"
     },
     {
@@ -114,6 +114,13 @@
       "surface_ref": "docs/design/cli/outjob.html"
     },
     {
+      "name": "toon",
+      "status": "experimental",
+      "design_doc": "docs/design/cli/toon.html",
+      "summary": "Generate top/bottom PCB illustration SVGs. Raster conversion is left to consumers; no PNG or output-format options are provided. Report progressive loading, variant, side, component-rendering and output status. Use the shared TypeSpec-authored PCB SVG config, generated structural codecs and editable presets. Load project metadata and discover sibling projects without parsing schematics, preserving PCB project parameters and variants. Reuse artwork across project variants and successful cached placements before mesh loading; expose --workers (default 4) for STEP tessellation and component HLR/illustration, --timings JSON and --cache-dir/--no-cache for persistent model/artwork reuse. Unsupported or failed models warn and are omitted.",
+      "surface_ref": "docs/design/cli/toon.html"
+    },
+    {
       "name": "pcb-layer-step",
       "status": "public",
       "design_doc": "docs/design/cli/pcb-layer-step.html",
@@ -124,7 +131,7 @@
       "name": "pcbdoc",
       "status": "public",
       "design_doc": "docs/design/cli/pcbdoc.html",
-      "summary": "Run the altium-cruncher pcbdoc command.",
+      "summary": "Create Altium documents through MCO with TypeSpec-owned pcbdoc configuration contracts.",
       "surface_ref": "docs/design/cli/pcbdoc.html"
     },
     {
@@ -138,7 +145,7 @@
       "name": "pcb-svg",
       "status": "public",
       "design_doc": "docs/design/cli/pcb-svg.html",
-      "summary": "Run the altium-cruncher pcb-svg command.",
+      "summary": "Render composable PCB SVG layers, solder-mask film, native component illustrations and autodoc-fitted assembly designators, using --workers (default 4) for STEP tessellation and component HLR/illustration, Fast projection, shared contexts and persistent model/artwork reuse controlled by --cache-dir/--no-cache. Successful cached placements bypass mesh loading. Optional --timings JSON records layer/view wall times and cache outcomes.",
       "surface_ref": "docs/design/cli/pcb-svg.html"
     },
     {
@@ -152,7 +159,7 @@
       "name": "prjpcb",
       "status": "public",
       "design_doc": "docs/design/cli/prjpcb.html",
-      "summary": "Run the altium-cruncher prjpcb command.",
+      "summary": "Create Altium documents through MCO with TypeSpec-owned prjpcb configuration contracts.",
       "surface_ref": "docs/design/cli/prjpcb.html"
     },
     {
@@ -173,7 +180,7 @@
       "name": "schdoc",
       "status": "public",
       "design_doc": "docs/design/cli/schdoc.html",
-      "summary": "Run the altium-cruncher schdoc command.",
+      "summary": "Create Altium documents through MCO with TypeSpec-owned schdoc configuration contracts.",
       "surface_ref": "docs/design/cli/schdoc.html"
     },
     {

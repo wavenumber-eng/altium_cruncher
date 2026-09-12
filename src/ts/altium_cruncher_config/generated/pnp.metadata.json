@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "pnp",
+    "title": "Pick and place",
+    "source": "../outputs/commands",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.pnp.a0"
+}

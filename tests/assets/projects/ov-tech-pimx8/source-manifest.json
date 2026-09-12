@@ -1,0 +1,178 @@
+{
+  "source_corpus": "OV_TECH_PIMX8/input",
+  "project": "PiMX8MP_r0.3_release.PrjPcb",
+  "imported": "2026-09-11",
+  "files": [
+    {
+      "path": "PCB/PiMX8MP_r0.3.PcbDoc",
+      "bytes": 17123840,
+      "sha256": "2112c75d0181dee7f41dc5f40c9e50ceab6379180a751811fad24c6f51005ab2"
+    },
+    {
+      "path": "PCB/PiMX8MP_r0.3.stackup",
+      "bytes": 42645,
+      "sha256": "034692ce95ffeae053eb0b845ca4c3df047e8526b6ef9d589cb0558ca10c68d7"
+    },
+    {
+      "path": "PiMX8MP_r0.3_release.PrjPcb",
+      "bytes": 74005,
+      "sha256": "353dd775e01b3ab487fe2ce46ef54c238957511382215fa031068a6f9ef65cc3"
+    },
+    {
+      "path": "PiMX8MP_r0.3_release.PrjPcbVariants",
+      "bytes": 4096,
+      "sha256": "eb5e35d59378cbb55165809d55e342f49ecc4e272d6a11998850e991df21ccb9"
+    },
+    {
+      "path": "SCH/01_Block_Diagram.SchDoc",
+      "bytes": 315392,
+      "sha256": "1658cd660ff82df80b9c3215c28f0a21b1c4ffc673af385b8f6d6c0689f70bfb"
+    },
+    {
+      "path": "SCH/02_8MPLUS_PMIC.SchDoc",
+      "bytes": 873472,
+      "sha256": "01dad0caf2c349614deb0e4548c29a9328be5a52d0308ba3e70defe6041ad143"
+    },
+    {
+      "path": "SCH/03_8MPLUS_PWR.SchDoc",
+      "bytes": 1078272,
+      "sha256": "5de2be1c6b481ab12796d9d2401c795e07a0698d77143b42786d4706c565862f"
+    },
+    {
+      "path": "SCH/04_8MPLUS_DRAM.Harness",
+      "bytes": 918,
+      "sha256": "3f170d42a15ef2b76576fedf5220889689e36472234cb14a9118341f661db9e9"
+    },
+    {
+      "path": "SCH/04_8MPLUS_DRAM.SchDoc",
+      "bytes": 583168,
+      "sha256": "e488f8198d42670a0029be1cc1996aec2f630a75599717d533493eae0ed65148"
+    },
+    {
+      "path": "SCH/05_8MPLUS_CFG.SchDoc",
+      "bytes": 658944,
+      "sha256": "80b51fde77626cd1039430c1cfaced6b9a42c5011bee566bfe11d0f0ba7c369e"
+    },
+    {
+      "path": "SCH/06_8MPLUS_IO.Harness",
+      "bytes": 697,
+      "sha256": "ade7c5098745ab5324b721e22956f139be61cdf7080d305da65ad8da676b1db4"
+    },
+    {
+      "path": "SCH/06_8MPLUS_IO.SchDoc",
+      "bytes": 1630720,
+      "sha256": "0ae15d0446fb5cf45595e703e379ecce1dd5b3f7968c978f05ee68143d773124"
+    },
+    {
+      "path": "SCH/07_8MPLUS_PHY.Harness",
+      "bytes": 1029,
+      "sha256": "a0f0164ee9cd08270965d2fcaef4e29fa76b045a16f34996e7dba0a53706274d"
+    },
+    {
+      "path": "SCH/07_8MPLUS_PHY.SchDoc",
+      "bytes": 1864704,
+      "sha256": "8e16755bf73ed6d52e5825e15b590c0956cbc6ec54426ad0cf01ad49bf5b617f"
+    },
+    {
+      "path": "SCH/08_DRAM_LPDDR4.Harness",
+      "bytes": 914,
+      "sha256": "3c658c53cc13dbc719ed6174b63cedbcac535a2287855b4b6c0eef8569beee6e"
+    },
+    {
+      "path": "SCH/08_DRAM_LPDDR4.SchDoc",
+      "bytes": 613376,
+      "sha256": "586887ca1552083954bc4ee02218d5dc012e3616b785ecb637249bce2e793068"
+    },
+    {
+      "path": "SCH/09_eMMC_Flash.Harness",
+      "bytes": 306,
+      "sha256": "fa6e94719b856935b40d856140ff07ce7b7087eaec0a351a85fddef60f2c9f8b"
+    },
+    {
+      "path": "SCH/09_eMMC_Flash.SchDoc",
+      "bytes": 431104,
+      "sha256": "94771298a522d689e3d2315c68e74dde495e5a3413e20014eed0d79b859db8fd"
+    },
+    {
+      "path": "SCH/10_Gbit_Ethernet.Harness",
+      "bytes": 230,
+      "sha256": "e099198be842b6df5f9545e533bd2fd5a443a750eea57f2e39d69ffe4c82caec"
+    },
+    {
+      "path": "SCH/10_Gbit_Ethernet.SchDoc",
+      "bytes": 714240,
+      "sha256": "6950d6c500a8412810b410d7f867366147cdb553871005cfc35374f556c46ba7"
+    },
+    {
+      "path": "SCH/11_WIFI_BLE_Module.Harness",
+      "bytes": 187,
+      "sha256": "4de7d6c370535b28ffe89ae914b089208add7934916d18cf39f8f2254a610fa9"
+    },
+    {
+      "path": "SCH/11_WIFI_BLE_Module.SchDoc",
+      "bytes": 602112,
+      "sha256": "29518a30c98a1325c2bf32ad3f7d602129457989b63f6318ef5380756b4e38fe"
+    },
+    {
+      "path": "SCH/12_Coral_Edge_TPU.Harness",
+      "bytes": 96,
+      "sha256": "9e7f5670f28f31b183a0a68da508cd8e091e30b8f9439fda6748f1fb99c7ce00"
+    },
+    {
+      "path": "SCH/12_Coral_Edge_TPU.SchDoc",
+      "bytes": 537088,
+      "sha256": "cc44aba459c63a9a03b7c3d72dfb710b2c44256e46bce8cac66b6317cca4cf04"
+    },
+    {
+      "path": "SCH/13_BTB_Connector_P1-P100.Harness",
+      "bytes": 92,
+      "sha256": "fbd2305f91914b710518278f0074afbc9e4c4fd18d33f140b52a3a53c8b269a7"
+    },
+    {
+      "path": "SCH/13_Interface_Options.Harness",
+      "bytes": 743,
+      "sha256": "facd34e4b295269bfcbbfb8ca1676ed944071558a983ed840faa076a86823316"
+    },
+    {
+      "path": "SCH/13_Interface_Options.SchDoc",
+      "bytes": 410624,
+      "sha256": "09c61a694b5138594ab6cfe354988d28ab327af2a14a9c55b1650d8b5fb6516f"
+    },
+    {
+      "path": "SCH/14_BTB_Connector_P1-P100.Harness",
+      "bytes": 163,
+      "sha256": "6895753db8c223ed5c60ce854e72bb12bdd99c321e6cdcb9654be61bbecd5c18"
+    },
+    {
+      "path": "SCH/14_BTB_Connector_P1-P100.SchDoc",
+      "bytes": 646656,
+      "sha256": "d3f397f0943f646a81c1c1f2c0463609b390f25dde17683f9705a70909beb703"
+    },
+    {
+      "path": "SCH/15_BTB_Connector_P101-P200.Harness",
+      "bytes": 936,
+      "sha256": "c4967b517687bb0135ee4089939f0776ac20a77c44b7a325ab5d6fcb88bd73bc"
+    },
+    {
+      "path": "SCH/15_BTB_Connector_P101-P200.SchDoc",
+      "bytes": 607744,
+      "sha256": "5e2e265e3208d717e22d03bfe6a58cef1d9bd9eeba3a741ce214386df1d3332e"
+    },
+    {
+      "path": "SCH/16_FPC_Connector_Debug.Harness",
+      "bytes": 198,
+      "sha256": "3f56d65ec0ad753100a643457fa12589f686d838f870658d455cb22b2579a81e"
+    },
+    {
+      "path": "SCH/16_FPC_Connector_Debug.SchDoc",
+      "bytes": 303104,
+      "sha256": "0ffea110605e81b354bb5065d66ed3c239b6704c733156d5e0aa7fc990bf46e9"
+    },
+    {
+      "path": "reference_gen.OutJob",
+      "bytes": 9220,
+      "sha256": "6fb69b84e1d780ab2dc062d3b70cfecea4926f39db7c9f540501bc9ae39caba7"
+    }
+  ],
+  "missing_source_references": []
+}

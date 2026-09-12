@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.profiles.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.profiles.a0"
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Profile"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "profiles"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "$defs": {
+    "Profile": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "guid": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "extensions_root": {
+          "type": "string"
+        },
+        "registry_path": {
+          "type": "string"
+        },
+        "registry_exists": {
+          "type": "boolean"
+        },
+        "module_name": {
+          "type": "string"
+        },
+        "module_dir": {
+          "type": "string"
+        },
+        "module_dir_exists": {
+          "type": "boolean"
+        },
+        "registered": {
+          "type": "boolean"
+        },
+        "registry_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dll_path": {
+          "type": "string"
+        },
+        "dll_exists": {
+          "type": "boolean"
+        },
+        "last_write_time_utc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "guid",
+        "path",
+        "extensions_root",
+        "registry_path",
+        "registry_exists",
+        "module_name",
+        "module_dir",
+        "module_dir_exists",
+        "registered",
+        "registry_version",
+        "dll_path",
+        "dll_exists",
+        "last_write_time_utc"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/commands.tsp. Do not edit."
+}

@@ -48,6 +48,35 @@ def _enabled_views(config: PcbSvgConfig) -> set[str]:
     return {view.name for view in config.views if view.enabled}
 
 
+def test_copper_view_renders_goomba_embedded_truetype_artwork() -> None:
+    import xml.etree.ElementTree as ET
+
+    pcb = AltiumPcbDoc.from_file(ROOT / "tests/assets/projects/goomba/input/SB0041B.PCBDOC")
+    assert any(font.name == "goomba" for font in pcb.embedded_fonts)
+    source = [text for text in pcb.texts if int(text.layer) == 32]
+    assert [(text.font_type, text.font_name, text.text_content) for text in source] == [(1, "goomba", "a")]
+    config = PcbSvgConfig.default()
+    view = PcbSvgViewConfig(name="bottom_copper", layers=["BOTTOM"])
+    styles = config.resolved_styles_for_view(view)
+    styles["copper_traces"]["color"] = "#123456"
+    renderer = PcbSvgA0Renderer(config)
+
+    def copper_texts():
+        svg = renderer.render_view_svg(
+            pcb, view, project_parameters=None, layers=view.layers,
+            group_id="copper", mirror=True, styles=styles,
+        )
+        return ET.fromstring(svg).findall(".//{http://www.w3.org/2000/svg}path[@data-primitive='text']")
+
+    texts = copper_texts()
+    assert len(texts) == 1
+    assert texts[0].get("data-font-type") == "1"
+    assert texts[0].get("fill") == "#123456"
+    assert len(texts[0].get("d", "")) > 500  # Embedded glyph becomes standalone vector artwork.
+    styles["copper_traces"]["enabled"] = False
+    assert copper_texts() == []
+
+
 def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
     config = PcbSvgConfig.default()
     payload = config.to_dict()
@@ -110,7 +139,7 @@ def test_pcb_svg_default_cutout_style_has_no_text_label() -> None:
 
     assert payload["hatch"] is True
     assert "label_text" not in payload
-    assert "label" not in payload
+    assert payload["label"] == ""
 
 
 def test_pcb_svg_default_canvas_uses_board_outline_bounds() -> None:
@@ -1006,6 +1035,7 @@ def test_pcb_svg_hlr_component_style_override_builds_projection_options() -> Non
                         "color": "#123456",
                         "line_width_mm": 0.22,
                         "projection_algorithm": "exact",
+                        "outline_algorithm": "hlr-close",
                         "curve_mode": "polyline",
                         "samples_per_curve": 18,
                         "round_digits": 4,
@@ -1047,6 +1077,7 @@ def test_pcb_svg_hlr_component_style_override_builds_projection_options() -> Non
     component_options = (options.assembly_component_projection_options or {})["U1"]
     component_stroke = (options.assembly_component_stroke_styles or {})["U1"]
     assert component_options.projection_algorithm == "exact"
+    assert component_options.outline_algorithm == "hlr-close"
     assert component_options.curve_mode == "polyline"
     assert component_options.samples_per_curve == 18
     assert component_options.round_digits == 4
@@ -1120,6 +1151,35 @@ def test_pcb_svg_view_style_override_merges_with_global() -> None:
     assert styles["drills"]["plated_color"] == "#333333"
     assert styles["drills"]["non_plated_color"] == "#222222"
     assert styles["slots"]["plated_color"] == "#444444"
+
+
+def test_component_styles_inherit_globals_and_partial_view_overrides() -> None:
+    config = PcbSvgConfig.from_dict({
+        "schema": PCB_SVG_CONFIG_SCHEMA,
+        "global": {"styles": {
+            "illustration": {"opacity": 0.3, "line_width_mm": 0.06},
+            "assembly_designators": {"color": "#00FF00", "max_font_size_mm": 1.2},
+            "custom_style": {"color": "#123456"},
+        }},
+        "views": [
+            {"name": "top", "layers": ["ILLUSTRATION_TOP"],
+             "styles": {"illustration": {"opacity": 0.5}}},
+            {"name": "bottom", "layers": ["ILLUSTRATION_BOTTOM"]},
+        ],
+    })
+    top = config.resolved_styles_for_view(config.views[0])
+    bottom = config.resolved_styles_for_view(config.views[1])
+    assert top["illustration"] == {"enabled": True, "opacity": 0.5, "line_width_mm": 0.06}
+    assert bottom["illustration"] == {"enabled": True, "opacity": 0.3, "line_width_mm": 0.06}
+    assert top["assembly_designators"] == {
+        "enabled": True, "color": "#00FF00", "max_font_size_mm": 1.2,
+        "fill_ratio": 0.8, "opacity": 1.0,
+        "stroke_color": "#FFFFFF", "stroke_width_mm": 0.0,
+    }
+    assert top["custom_style"] == {"color": "#123456"}
+    top["illustration"]["line_width_mm"] = 0.2
+    assert config.global_options.styles["illustration"]["line_width_mm"] == 0.06
+    assert bottom["illustration"]["line_width_mm"] == 0.06
 
 
 def test_pcb_svg_config_validates_cutout_style_options() -> None:
