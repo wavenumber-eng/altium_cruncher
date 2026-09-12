@@ -39,15 +39,21 @@ title = "Obtain independent external review"
 status = "done"
 depends_on = ["bundle-qualification", "design-doc-intent-audit", "test-runtime-impact-audit"]
 
+[[steps]]
+id = "ci-signoff"
+title = "Pass normal PR CI before landing and retire the completed plan"
+status = "active"
+depends_on = ["external-review"]
+
 [[exit_criteria]]
 id = "identity-correctness"
 title = "No metadata crosses distinct component identities; multipart and repeated-page joins remain correct"
-status = "done"
+status = "met"
 
 [[exit_criteria]]
 id = "review-evidence"
 title = "Compiler context and agent guidance describe released semantics without inventing evidence"
-status = "done"
+status = "met"
 
 [[exit_criteria]]
 id = "signoff"
@@ -57,17 +63,17 @@ status = "pending"
 [[exit_criteria]]
 id = "design-doc-intent-audit"
 title = "Design docs, ADRs, and requirements match implementation"
-status = "done"
+status = "met"
 
 [[exit_criteria]]
 id = "test-runtime-impact-audit"
 title = "New tests are listed and runtime impact is reviewed"
-status = "done"
+status = "met"
 
 [[exit_criteria]]
 id = "external-review"
 title = "Independent external review is complete"
-status = "done"
+status = "met"
 +++
 
 # DR current-release contract alignment
