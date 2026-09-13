@@ -1759,7 +1759,6 @@ class IllustrationJob:
         side: Literal["top", "bottom"],
         illustrate: bool,
     ) -> IllustrationSymbol:
-        bottom = side == "bottom"
         if component.direct is not None:
             return self._render_direct(component, side, illustrate)
         return self._render_meshes(component, side, illustrate)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
 import xml.etree.ElementTree as ET
 
 _SVG = "http://www.w3.org/2000/svg"
