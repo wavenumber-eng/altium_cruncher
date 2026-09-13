@@ -15,12 +15,16 @@ from altium_monkey.altium_record_pcb__shapebased_region import PcbExtendedVertex
 from altium_cruncher.altium_cruncher_pcb_illustration import (
     IllustrationComponent,
     IllustrationJob,
+    _digest,
     combine_components,
+    _cylinder_mesh,
+    _extrusion_request,
     extrusion_extents_mm,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
 SVG = "http://www.w3.org/2000/svg"
+INKSCAPE = "http://www.inkscape.org/namespaces/inkscape"
 
 
 def _body(length_mils, lower_mils, upper_mils, color, component_index=None):
@@ -122,7 +126,9 @@ def test_rt_components_include_extrusions_and_omit_parts_without_models():
 
 
 def test_component_svg_cache_reuses_instances_and_keeps_material_variants():
-    pcb = SimpleNamespace(components=[], component_bodies=[_body(200, 0, 100, 0x00CC33)])
+    pcb = SimpleNamespace(
+        components=[], component_bodies=[_body(200, 0, 100, 0x00CC33)]
+    )
     with g.GeometerClient() as client:
         job = IllustrationJob(client)
         part = job.collect_top(pcb)[0]
@@ -139,7 +145,12 @@ def test_component_svg_cache_reuses_instances_and_keeps_material_variants():
         red = replace(
             instance,
             meshes=tuple(
-                replace(mesh, materials=tuple(replace(mat, color=(1, 0, 0)) for mat in mesh.materials))
+                replace(
+                    mesh,
+                    materials=tuple(
+                        replace(mat, color=(1, 0, 0)) for mat in mesh.materials
+                    ),
+                )
                 for mesh in instance.meshes
             ),
         )
@@ -250,6 +261,47 @@ def test_extrusion_legacy_heights_are_elevations():
         extrusion_extents_mm(body)
 
 
+def test_rotated_extrusion_occurrences_share_canonical_geometry():
+    canonical = _body(200, 0, 100, 0x00CC33)
+    occurrence = _body(200, 0, 100, 0x00CC33)
+    anchor_mils = (1000.0, 2000.0)
+    for vertex in occurrence.outline:
+        local_x, local_y = vertex.x / 10000, vertex.y / 10000
+        vertex.x = round((anchor_mils[0] - local_y) * 10000)
+        vertex.y = round((anchor_mils[1] + local_x) * 10000)
+
+    canonical_request = _extrusion_request(canonical, (0.0, 0.0))
+    occurrence_request = _extrusion_request(
+        occurrence,
+        tuple(value * 0.0254 for value in anchor_mils),
+        component_rotation_degrees=90.0,
+    )
+    assert _digest(occurrence_request) == _digest(canonical_request)
+
+
+def test_altium_cylinder_uses_analytic_dimensions_without_native_tessellation():
+    body = AltiumPcbComponentBody()
+    body.model_cylinder_radius = 500_000
+    body.model_cylinder_height = 1_000_000
+    body.standoff_height = 250_000
+    body.model_2d_x = 1_000_000
+    body.model_2d_y = 2_000_000
+    key, top = _cylinder_mesh(body, (90.0, 180.0))
+    same_key, bottom = _cylinder_mesh(body, (90.0, 180.0), is_bottom=True)
+    assert key != same_key
+    assert len(top.indices) // 3 == 48 * 4
+    assert (min(top.positions[2::3]), max(top.positions[2::3])) == pytest.approx(
+        (0.635, 3.175)
+    )
+    assert (min(bottom.positions[2::3]), max(bottom.positions[2::3])) == pytest.approx(
+        (-3.175, -0.635)
+    )
+    assert (
+        sum(top.positions[0::3]) / (len(top.positions) // 3),
+        sum(top.positions[1::3]) / (len(top.positions) // 3),
+    ) == pytest.approx((0.254, 0.508))
+
+
 @pytest.mark.parametrize("side", ["top", "bottom"])
 def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path):
     import json
@@ -257,14 +309,27 @@ def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path
     from altium_monkey.altium_pcb_component import AltiumPcbComponent
     from altium_monkey.altium_record_pcb__pad import AltiumPcbPad
     from altium_monkey.altium_record_types import PcbLayer
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer, write_or_update_view_svg
-    from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
+    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
+        PcbSvgA0Renderer,
+        write_or_update_view_svg,
+    )
+    from altium_cruncher.altium_cruncher_pcb_svg_config import (
+        PcbSvgConfig,
+        PcbSvgViewConfig,
+    )
 
     pcb = AltiumPcbDoc()
-    pcb.board = AltiumBoard(outline=AltiumBoardOutline.rectangle_mils(
-        left_mils=-100, bottom_mils=-100, right_mils=800, top_mils=800))
-    pcb.components = [AltiumPcbComponent(name, "test", side.upper(), "0mil", "0mil", unique_id=name+"-UID")
-                      for name in ("U1", "U2", "J1")]
+    pcb.board = AltiumBoard(
+        outline=AltiumBoardOutline.rectangle_mils(
+            left_mils=-100, bottom_mils=-100, right_mils=800, top_mils=800
+        )
+    )
+    pcb.components = [
+        AltiumPcbComponent(
+            name, "test", side.upper(), "0mil", "0mil", unique_id=name + "-UID"
+        )
+        for name in ("U1", "U2", "J1")
+    ]
     for index in (0, 1):
         body = _body(200, 0, 100, 0x00CC33, component_index=index)
         body.properties["BODYPROJECTION"] = "1" if side == "bottom" else "0"
@@ -279,17 +344,40 @@ def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path
     pcb.pads.append(pad)
     config = PcbSvgConfig.default()
     renderer = PcbSvgA0Renderer(config)
-    view = PcbSvgViewConfig(name="preview", layers=["DRILLS", "ILLUSTRATION_"+side.upper()])
+    view = PcbSvgViewConfig(
+        name="preview", layers=["DRILLS", "ILLUSTRATION_" + side.upper()]
+    )
+
     def render(active):
-        return renderer.render_view_svg(pcb, active, project_parameters=None, layers=active.layers,
-            group_id="review", mirror=side == "bottom", styles=config.resolved_styles_for_view(active))
+        return renderer.render_view_svg(
+            pcb,
+            active,
+            project_parameters=None,
+            layers=active.layers,
+            group_id="review",
+            mirror=side == "bottom",
+            styles=config.resolved_styles_for_view(active),
+        )
+
     render(view)
     calls = dict(renderer.component_layers.job.counts)
-    assembly = replace(view, layers=view.layers + ["ASSEMBLY_DESIGNATORS_"+side.upper()])
+    assembly = replace(
+        view, layers=view.layers + ["ASSEMBLY_DESIGNATORS_" + side.upper()]
+    )
     svg = render(assembly)
-    assert renderer.component_layers.job.counts == calls  # No new HLR or painted SVG calls.
+    assert (
+        renderer.component_layers.job.counts == calls
+    )  # No new HLR or painted SVG calls.
     assert renderer.component_layers.layer_hits == 1
     root = ET.fromstring(svg)
+    view_group = root.find(f"{{{SVG}}}g/{{{SVG}}}g")
+    assert view_group.get(f"{{{INKSCAPE}}}groupmode") == "layer"
+    illustration_layer = root.find(
+        f".//{{{SVG}}}g[@data-layer-name='ILLUSTRATION_{side.upper()}']"
+    )
+    assert illustration_layer.get(f"{{{INKSCAPE}}}label") == (
+        f"Illustration {side.title()}"
+    )
     ids = [node.get("id") for node in root.iter() if node.get("id")]
     assert len(ids) == len(set(ids))
     uses = root.findall(f".//{{{SVG}}}use")
@@ -297,12 +385,19 @@ def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path
     assert uses[0].get("href")[1:] in ids
     metadata = json.loads(root.find(f"{{{SVG}}}metadata").text)
     from jsonschema import Draft202012Validator
-    schema = json.loads((ROOT / "docs/contracts/pcb_svg_component_layers.a0.schema.json").read_text())
+
+    schema = json.loads(
+        (ROOT / "docs/contracts/pcb_svg_component_layers.a0.schema.json").read_text()
+    )
     Draft202012Validator(schema).validate(metadata["virtual_component_layers"])
     layers = metadata["virtual_component_layers"]["layers"]
     assert [len(layer["instances"]) for layer in layers] == [2, 3]
     assert layers[1]["instances"][2]["geometry_source"] == "pads"
-    label = root.find(f".//{{{SVG}}}g[@data-feature='assembly-designator'][@data-component-index='0']")
+    label = root.find(
+        f".//{{{SVG}}}g[@data-feature='assembly-designator'][@data-component-index='0']"
+    )
+    assert label.get(f"{{{INKSCAPE}}}label") == "U1"
+    assert label.get("aria-label") == "U1 assembly designator"
     assert label.get("data-component-uid") == "U1-UID"
     assert label.find(f"{{{SVG}}}text").get("fill") == "#FF0000"
     assert (label.get("transform") is not None) == (side == "bottom")
@@ -316,3 +411,7 @@ def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path
     write_or_update_view_svg(target, svg, group_id="review")
     refreshed = ET.parse(target).getroot()
     assert len(refreshed.findall(f".//{{{SVG}}}use")) == 2
+    refreshed_component = refreshed.find(
+        f".//{{{SVG}}}g[@data-feature='component-illustration']"
+    )
+    assert refreshed_component.get(f"{{{INKSCAPE}}}label") == "U1"

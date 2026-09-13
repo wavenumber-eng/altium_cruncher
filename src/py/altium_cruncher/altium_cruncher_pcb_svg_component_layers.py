@@ -52,7 +52,9 @@ COMPONENT_LAYER_IDS = {
     "ILLUSTRATION_BOTTOM": 9013,
 }
 SVG = "http://www.w3.org/2000/svg"
+INKSCAPE = "http://www.inkscape.org/namespaces/inkscape"
 ET.register_namespace("", SVG)
+ET.register_namespace("inkscape", INKSCAPE)
 log = logging.getLogger(__name__)
 
 
@@ -103,6 +105,7 @@ def _number(
 
 def _layer(token: str, role: str) -> ET.Element:
     layer_id = COMPONENT_LAYER_IDS[token]
+    display_name = token.replace("_", " ").title()
     return ET.Element(
         f"{{{SVG}}}g",
         {
@@ -110,8 +113,11 @@ def _layer(token: str, role: str) -> ET.Element:
             "data-layer-id": str(layer_id),
             "data-layer-key": token,
             "data-layer-name": token,
-            "data-layer-display-name": token.replace("_", " ").title(),
+            "data-layer-display-name": display_name,
             "data-layer-role": role,
+            f"{{{INKSCAPE}}}groupmode": "layer",
+            f"{{{INKSCAPE}}}label": display_name,
+            "aria-label": display_name,
         },
     )
 
@@ -130,6 +136,8 @@ def _component_attrs(
         "data-component-designator": designator,
         "data-designator": designator,
         "data-side": side,
+        f"{{{INKSCAPE}}}label": designator,
+        "aria-label": f"{designator} {feature.replace('-', ' ')}",
     }
     if ctx.options.include_metadata and index is not None:
         attrs.update({"data-component-index": str(index), "data-component": designator})
