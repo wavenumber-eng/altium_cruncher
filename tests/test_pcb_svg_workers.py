@@ -184,8 +184,9 @@ def test_interrupted_shutdown_still_closes_clients_and_allows_cleanup_retry():
 
 @pytest.mark.parametrize("failed_second", [False, True])
 def test_step_prefetch_commits_in_body_order_and_reuses_positive_disk_results(
-    tmp_path, monkeypatch, failed_second,
+    tmp_path, monkeypatch, failed_second, caplog,
 ):
+    caplog.set_level("INFO")
     barrier = threading.Barrier(2)
     second_finished = threading.Event()
     completed = []
@@ -214,7 +215,7 @@ def test_step_prefetch_commits_in_body_order_and_reuses_positive_disk_results(
     helper = SimpleNamespace(
         _component_body_is_bottom=lambda *args: False,
         _resolve_component_body_model_entry=lambda props, **kwargs:
-            dict(hash=props["model"], step_bytes=props["model"].encode()),
+            dict(hash=props["model"], name=props["model"] + ".step", step_bytes=props["model"].encode()),
     )
 
     def cache():
@@ -223,6 +224,9 @@ def test_step_prefetch_commits_in_body_order_and_reuses_positive_disk_results(
     with PcbSvgNativeWorkers(2, client_factory=TessellationClient) as workers:
         job = IllustrationJob(None, cache=cache())
         job._prefetch_steps(pcb, helper, {}, {}, "top", frozenset(), workers)
+        assert "Preparing top STEP models: 2 unique models" in caplog.text
+        assert "a.step (U1)" in caplog.text and "b.step (U2)" in caplog.text
+        assert ("Failed top STEP model" in caplog.text) == failed_second
         assert completed == [b"b", b"a"]
         assert job.counts["tessellations"] == 0 and job.warnings == []
         first = job._tessellate("a", b"a", context="U1")

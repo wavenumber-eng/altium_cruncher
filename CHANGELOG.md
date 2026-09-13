@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 2026.9.12
+
+- Keep Toon progress readable by reserving timing, worker and cache diagnostics
+  for `--verbose`. Show completed STEP filenames, identify unsupported model
+  formats in warnings, and end with success and the output location.
+- Render authored Altium cylinder bodies directly from their analytic radius,
+  height, standoff and color. Reuse their compact illustration meshes without
+  invoking OCCT, including mirrored bottom-side placement.
+- Normalize authored extrusions into component-local coordinates so rotated
+  occurrences of the same body reuse one native tessellation and disk entry.
+- Label composed views, PCB layers and component groups for SVG editors.
+  Inkscape sees the hierarchy as named layers and each illustration/designator
+  object by its component designator; standard ARIA labels carry the same names.
+
 - Fix design-review SVG metadata joins to use source identity within the rendered
   physical document, preventing value and variant-state leakage between repeated
   labels. Include compact compiler metadata and clarify agent guidance for
@@ -29,8 +43,9 @@
   output-format flags and the runtime rasterizer dependency; users can convert
   exported SVGs independently. Preserve progressive status and timing output.
 - Move the package, development environment, and CI to Python 3.14.
-- Update Altium Monkey to 2026.9.12 and Geometer to 2026.9.11 and remove the temporary
-  Geometer dependency override.
+- Update Altium Monkey to 2026.9.12.post2 and Geometer to 2026.9.12 and remove
+  the temporary Geometer dependency override. The Geometer update accepts large
+  governed illustration attachments and complex same-color surface fusion.
 - Require EasyEDA Monkey 2026.9.11 or newer for Python 3.14 compatibility.
 
 ## 2026.9.7

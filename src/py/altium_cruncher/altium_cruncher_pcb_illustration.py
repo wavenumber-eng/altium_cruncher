@@ -16,13 +16,8 @@ import math
 import re
 from typing import TYPE_CHECKING, Literal, TypedDict, cast
 from collections.abc import Sequence
-from concurrent.futures import Future, wait
-
-if TYPE_CHECKING:
-    from .pcb_svg_model_cache import PcbSvgModelCache
-    from .pcb_svg_workers import PcbSvgNativeWorkers
-
-log = logging.getLogger(__name__)
+from concurrent.futures import Future, as_completed
+from pathlib import Path
 
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 from altium_monkey.altium_pcb_component import AltiumPcbComponent
@@ -38,6 +33,12 @@ import geometer as g
 from .altium_cruncher_pcb_assembly_model_helper import PcbAssemblyModelHelper
 from .altium_cruncher_pcb_layer_step import _extended_vertices_ring
 
+if TYPE_CHECKING:
+    from .pcb_svg_model_cache import PcbSvgModelCache
+    from .pcb_svg_workers import PcbSvgNativeWorkers
+
+log = logging.getLogger(__name__)
+
 _IU_MM = 0.00000254
 _MIL_MM = 0.0254
 _SVG = "http://www.w3.org/2000/svg"
@@ -46,6 +47,52 @@ _COORDINATE_SPAN = 1_000_000
 
 class ModelGeometryError(Exception):
     """A single authored model cannot supply illustration geometry."""
+
+
+def _unavailable_step_reason(name: str) -> str:
+    extension = Path(name.strip().strip("\x00")).suffix.lower()
+    formats = {
+        ".x_t": "Parasolid text",
+        ".x_b": "Parasolid binary",
+        ".sldprt": "SolidWorks part",
+        ".sldasm": "SolidWorks assembly",
+    }
+    if extension and extension not in {".step", ".stp"}:
+        return (
+            f"unsupported model format {formats.get(extension, 'unknown')} ({extension}); "
+            "Toon supports embedded STEP (.step/.stp), Altium extruded bodies, "
+            "and Altium cylinder bodies"
+        )
+    return "embedded STEP unavailable or unreadable"
+
+
+def _body_model_label(body: AltiumPcbComponentBody) -> str:
+    labels = {0: "extruded body", 2: "cylinder body", 3: "sphere body"}
+    fallback = labels.get(body.model_type, "unnamed model")
+    return str(body.properties.get("MODEL.NAME") or fallback)
+
+
+def _report_step_completions(
+    futures: dict[
+        Future[g.ModelTessellation], tuple[str, AltiumPcbComponent | None, int]
+    ],
+    side: str,
+) -> None:
+    # Observe completion without raising task errors here; source-order
+    # consumption still supplies body-specific warnings/errors.
+    for completed, future in enumerate(as_completed(futures), 1):
+        name, component, index = futures[future]
+        owner = component.designator if component is not None else f"free-body-{index}"
+        failed = future.cancelled() or future.exception() is not None
+        log.info(
+            "%s %s STEP model %d/%d: %s (%s)",
+            "Failed" if failed else "Completed",
+            side,
+            completed,
+            len(futures),
+            name,
+            owner,
+        )
 
 
 def _geometer_failure_message(error: g.GeometerOperationError | g.GeometerError) -> str:
@@ -250,6 +297,29 @@ def _transform_mesh(
 
 def _translation(x: float, y: float, z: float = 0) -> list[list[float]]:
     return [[1, 0, 0, x], [0, 1, 0, y], [0, 0, 1, z], [0, 0, 0, 1]]
+
+
+def _rotation_z(degrees: float) -> list[list[float]]:
+    radians = math.radians(degrees)
+    cosine, sine = math.cos(radians), math.sin(radians)
+    return [
+        [cosine, -sine, 0, 0],
+        [sine, cosine, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+    ]
+
+
+def _component_rotation_degrees(
+    component: AltiumPcbComponent | None,
+) -> float:
+    degrees = float(component.rotation or 0) if component is not None else 0.0
+    if not math.isfinite(degrees):
+        raise ModelGeometryError(
+            f"component rotation must be finite; received {degrees}"
+        )
+    degrees %= 360.0
+    return 0.0 if math.isclose(degrees, 0.0, abs_tol=1e-12) else degrees
 
 
 def _visible_mesh(
@@ -528,13 +598,9 @@ class IllustrationJob:
             )
             self.counts["tessellation_disk_hits"] += 1
             self._warn_tessellation(key, context)
-            log.info("Reused cached model: %s", context or key[:12])
+            log.debug("Reused cached model: %s", context or key[:12])
             return meshes
-        log.info(
-            "Tessellating unique component model %d",
-            self.counts["tessellations"] + len(self._tessellation_failures) + 1,
-        )
-        result = self._tessellate_native(key, payload, prepared)
+        result = self._tessellate_native(key, payload, prepared, context)
         self._tessellation_warnings[key] = tuple(result.metadata.warnings)
         self._warn_tessellation(key, context)
         self.counts["tessellations"] += 1
@@ -555,11 +621,13 @@ class IllustrationJob:
         key: str,
         payload: bytes | dict[str, object],
         prepared: tuple[Literal["native"], Future[g.ModelTessellation]] | None,
+        context: str | None,
     ) -> g.ModelTessellation:
         try:
             if prepared is not None:
                 result = prepared[1].result()
             else:
+                log.info("Tessellating model: %s", context or key[:12])
                 step = payload if isinstance(payload, bytes) else g.planar_step(payload)
                 result = _model_tessellation(self.client, step)
         except (g.GeometerOperationError, g.GeometerError) as error:
@@ -586,7 +654,7 @@ class IllustrationJob:
         workers: PcbSvgNativeWorkers,
         cached_bodies: CachedBodies | tuple[()] = (),
     ) -> None:
-        futures = []
+        futures = {}
         for index, body in enumerate(pcbdoc.component_bodies):
             if index in cached_bodies:
                 continue
@@ -616,9 +684,10 @@ class IllustrationJob:
             else:
                 future = workers.submit(_model_tessellation, entry["step_bytes"])
                 self._prepared_tessellations[key] = "native", future
-                futures.append(future)
+                futures[future] = entry["name"], _owning_component(pcbdoc, body), index
         if futures:
-            log.info(
+            log.info("Preparing %s STEP models: %d unique models", side, len(futures))
+            log.debug(
                 "Tessellating %d unique %s STEP models across up to %d native workers",
                 len(futures),
                 side,
@@ -626,8 +695,7 @@ class IllustrationJob:
             )
             # Finish the batch before serial extrusions use the collection
             # client: do not run a fifth native operation beside four workers.
-            # wait does not raise task errors; source-order consumption does.
-            wait(futures)
+            _report_step_completions(futures, side)
 
     @staticmethod
     def _prefetch_entry(
@@ -769,10 +837,17 @@ class IllustrationJob:
         )
         try:
             geometry = self._body_geometry(
-                body, component, anchor, helper, by_id, by_name, designator, is_bottom
+                body,
+                component,
+                anchor,
+                helper,
+                by_id,
+                by_name,
+                f"{designator} body {index}",
+                is_bottom,
             )
         except ModelGeometryError as error:
-            name = str(body.properties.get("MODEL.NAME") or "extruded body")
+            name = _body_model_label(body)
             self.warn(f"{designator} body {index} ({name}): {error}; omitted")
             return None
         if geometry is None:
@@ -832,14 +907,18 @@ class IllustrationJob:
     ):
         color = _colorref(body.body_color_3d)
         if body.model_type == 0:
+            rotation = _component_rotation_degrees(component)
             payload = _extrusion_request(
-                body, (anchor[0] * _MIL_MM, anchor[1] * _MIL_MM), is_bottom=is_bottom
+                body,
+                (anchor[0] * _MIL_MM, anchor[1] * _MIL_MM),
+                component_rotation_degrees=rotation,
+                is_bottom=is_bottom,
             )
             return (
                 self._tessellate(
                     _digest(payload), payload, context=f"{designator} (extruded body)"
                 ),
-                _translation(0, 0),
+                _rotation_z(rotation),
                 color,
                 "extruded",
             )
@@ -848,9 +927,8 @@ class IllustrationJob:
                 body.properties, models_by_id=by_id, models_by_name=by_name
             )
             if entry is None:
-                raise ModelGeometryError(
-                    "embedded STEP unavailable or model format unsupported"
-                )
+                name = str(body.properties.get("MODEL.NAME") or "")
+                raise ModelGeometryError(_unavailable_step_reason(name))
             meshes = self._tessellate(
                 entry["hash"],
                 entry["step_bytes"],
@@ -858,6 +936,16 @@ class IllustrationJob:
             )
             matrix = _step_matrix(helper, body, component, anchor, is_bottom=is_bottom)
             return meshes, matrix, color if body.body_override_color else None, "step"
+        if body.model_type == 2:
+            rotation = _component_rotation_degrees(component)
+            key, mesh = _cylinder_mesh(
+                body,
+                anchor,
+                component_rotation_degrees=rotation,
+                is_bottom=is_bottom,
+            )
+            meshes = self._tessellations.setdefault(key, (mesh,))
+            return meshes, _rotation_z(rotation), color, "cylinder"
         raise ModelGeometryError(f"unsupported model type {body.model_type}")
 
     def _place_body(
@@ -1101,7 +1189,7 @@ class IllustrationJob:
                     illustrate,
                 )
                 submitted += 1
-        log.info(
+        log.debug(
             "Scheduled %d unique %s component requests across up to %d native workers",
             submitted,
             side,
@@ -1317,19 +1405,31 @@ def _placed_meshes(
 def _extrusion_ring(
     vertices: Sequence[PcbExtendedVertex | PcbSimpleVertex],
     anchor_mm: tuple[float, float],
+    component_rotation_degrees: float = 0.0,
 ) -> dict[str, object]:
     ring = _extended_vertices_ring(list(vertices))
     if ring is None:
         raise ValueError("Invalid extrusion ring")
     value = ring.to_json()
-    value["points"] = [
-        [round(p[a] - anchor_mm[a], 9) for a in range(2)] for p in value["points"]
-    ]
-    for segment in value["segments"]:
+    radians = math.radians(component_rotation_degrees)
+    cosine, sine = math.cos(radians), math.sin(radians)
+
+    def component_local(point: Sequence[float]) -> list[float]:
+        x, y = point[0] - anchor_mm[0], point[1] - anchor_mm[1]
+        result = [
+            round((cosine * x) + (sine * y), 9),
+            round((-sine * x) + (cosine * y), 9),
+        ]
+        return [0.0 if coordinate == 0 else coordinate for coordinate in result]
+
+    points = cast(list[list[float]], value["points"])
+    segments = cast(list[dict[str, object]], value["segments"])
+    value["points"] = [component_local(point) for point in points]
+    for segment in segments:
         if "center" in segment:
-            segment["center"] = [
-                round(segment["center"][a] - anchor_mm[a], 9) for a in range(2)
-            ]
+            segment["center"] = component_local(
+                cast(Sequence[float], segment["center"])
+            )
     return value
 
 
@@ -1337,12 +1437,16 @@ def _extrusion_request(
     body: AltiumPcbComponentBody,
     anchor_mm: tuple[float, float],
     *,
+    component_rotation_degrees: float = 0.0,
     is_bottom: bool = False,
 ) -> dict[str, object]:
     lower, upper = extrusion_extents_mm(body)
     region = {
-        "outer": _extrusion_ring(body.outline, anchor_mm),
-        "holes": [_extrusion_ring(hole, anchor_mm) for hole in body.holes],
+        "outer": _extrusion_ring(body.outline, anchor_mm, component_rotation_degrees),
+        "holes": [
+            _extrusion_ring(hole, anchor_mm, component_rotation_degrees)
+            for hole in body.holes
+        ],
     }
     return dict(
         schema="geometry.planar_step.request.a0",
@@ -1357,6 +1461,79 @@ def _extrusion_request(
                 regions=[region],
             )
         ],
+    )
+
+
+def _cylinder_mesh(
+    body: AltiumPcbComponentBody,
+    anchor_mils: tuple[float, float],
+    *,
+    component_rotation_degrees: float = 0.0,
+    is_bottom: bool = False,
+) -> tuple[str, g.MeshIllustrationMesh]:
+    """Lower an Altium Z-axis cylinder directly to the illustration mesh boundary."""
+    radius = float(body.model_cylinder_radius) * _IU_MM
+    height = float(body.model_cylinder_height) * _IU_MM
+    lower = float(body.standoff_height) * _IU_MM
+    if not math.isfinite(radius + height + lower) or radius <= 0 or height <= 0:
+        raise ModelGeometryError(
+            f"cylinder requires positive finite radius and height; received {radius:g}, {height:g} mm"
+        )
+    upper = lower + height
+    if is_bottom:
+        lower, upper = -upper, -lower
+    board_center = (
+        float(body.model_2d_x) * _IU_MM - anchor_mils[0] * _MIL_MM,
+        float(body.model_2d_y) * _IU_MM - anchor_mils[1] * _MIL_MM,
+    )
+    if not math.isfinite(board_center[0] + board_center[1]):
+        raise ModelGeometryError("cylinder requires a finite 2D center")
+    radians = math.radians(component_rotation_degrees)
+    cosine, sine = math.cos(radians), math.sin(radians)
+    center = (
+        round((cosine * board_center[0]) + (sine * board_center[1]), 10),
+        round((-sine * board_center[0]) + (cosine * board_center[1]), 10),
+    )
+    center = tuple(0.0 if coordinate == 0 else coordinate for coordinate in center)
+
+    # The cylinder is already analytic Altium topology. A small local prism is
+    # only the common interchange used by illustration for lighting, overlap,
+    # and Z ordering; no STEP generation or OCCT tessellation is involved.
+    segments = 48
+    ring = tuple(
+        (
+            round(center[0] + radius * math.cos(2 * math.pi * index / segments), 10),
+            round(center[1] + radius * math.sin(2 * math.pi * index / segments), 10),
+        )
+        for index in range(segments)
+    )
+    positions = tuple(
+        coordinate for z in (lower, upper) for x, y in ring for coordinate in (x, y, z)
+    ) + (center[0], center[1], lower, center[0], center[1], upper)
+    bottom_center, top_center = 2 * segments, 2 * segments + 1
+    indices: list[int] = []
+    for index in range(segments):
+        following = (index + 1) % segments
+        bottom, next_bottom = index, following
+        top, next_top = segments + index, segments + following
+        indices.extend((bottom_center, next_bottom, bottom))
+        indices.extend((top_center, top, next_top))
+        indices.extend((bottom, next_bottom, next_top, bottom, next_top, top))
+    key = _digest(
+        {
+            "kind": "altium-cylinder",
+            "center_mm": center,
+            "radius_mm": radius,
+            "lower_z_mm": lower,
+            "upper_z_mm": upper,
+            "segments": segments,
+        }
+    )
+    return key, g.MeshIllustrationMesh(
+        id="cylinder",
+        positions=positions,
+        indices=tuple(indices),
+        materials=(g.MeshIllustrationMaterial(color=(0.5, 0.5, 0.5)),),
     )
 
 

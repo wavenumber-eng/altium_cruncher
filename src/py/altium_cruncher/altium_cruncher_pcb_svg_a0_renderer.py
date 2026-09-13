@@ -6,7 +6,6 @@ import html
 import json
 import logging
 import math
-import xml.etree.ElementTree as ET
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from pathlib import Path
@@ -81,6 +80,7 @@ from altium_cruncher.altium_cruncher_pcb_workflow import (
     load_design_for_pcb_input,
 )
 from .pcb_svg_render_job import PcbSvgRenderJob, layer_style_key, layer_text_key, layer_side, view_side
+from .svg_editor_metadata import decorate_editor_layer
 
 if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -103,6 +103,7 @@ _HLR_TOKENS = {"ASSEMBLY_HLR_TOP", "ASSEMBLY_HLR_BOTTOM"}
 _HOLE_TOKENS = {"DRILLS", "SLOTS"}
 _PIN1_TOKENS = {"PIN1_TOP", "PIN1_BOTTOM"}
 _SVG_NS = "http://www.w3.org/2000/svg"
+_INKSCAPE_NS = "http://www.inkscape.org/namespaces/inkscape"
 _MM_TO_MIL = 1.0 / _MIL_TO_MM
 _ASSEMBLY_HLR_EDGE_FLAG_KEYS = {
     "edge_v_sharp",
@@ -644,6 +645,7 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         svg_attrs = [attr for attr in svg_attrs if not attr.startswith("viewBox=")]
         svg_attrs.append('viewBox="' + " ".join(f"{v:.12g}" for v in self._view_box_mm) + '"')
         svg_attrs.extend(self._canvas_metadata_attrs(ctx, pcbdoc))
+        svg_attrs.append(f'xmlns:inkscape="{_INKSCAPE_NS}"')
 
         lines = [f"<svg {' '.join(svg_attrs)}>"]
         self._append_svg_metadata(  # noqa: SLF001
@@ -659,7 +661,9 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         safe_group_id = html.escape(group_id)
         lines.append(
             f'    <g id="{safe_group_id}" data-pcb-svg-group="view" '
-            f'data-pcb-svg-view="{html.escape(view.name)}">'
+            f'data-pcb-svg-view="{html.escape(view.name)}" '
+            f'inkscape:groupmode="layer" inkscape:label="{html.escape(view.name)}" '
+            f'aria-label="{html.escape(view.name)}">'
         )
 
         defs_lines: list[str] = []
@@ -712,14 +716,17 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
                     timing["cache"] = "hit"
                 else:
                     timing["cache"] = "built"
-                    self.render_job.fragments[key] = tuple(self._render_a0_token(
-                        ctx,
-                        pcbdoc,
+                    self.render_job.fragments[key] = tuple(decorate_editor_layer(
+                        self._render_a0_token(
+                            ctx,
+                            pcbdoc,
+                            token,
+                            styles,
+                            source_layers=hole_source_layers,
+                            board_clip_id=board_clip_id,
+                            layer_hole_masks=layer_hole_masks,
+                        ),
                         token,
-                        styles,
-                        source_layers=hole_source_layers,
-                        board_clip_id=board_clip_id,
-                        layer_hole_masks=layer_hole_masks,
                     ))
                 lines.extend(self.render_job.fragments[key])
 

@@ -152,8 +152,9 @@ def test_variant_parameters_are_applied_without_mutating_saved_components():
     assert rendered.pads is saved.pads
 
 
-def test_svg_job_reports_progress_and_writes_timings(tmp_path, monkeypatch, caplog):
-    caplog.set_level("INFO")
+@pytest.mark.parametrize("level", ["INFO", "DEBUG", "WARNING"])
+def test_svg_job_reports_progress_and_writes_timings(tmp_path, monkeypatch, caplog, level):
+    caplog.set_level(level)
     import json
     from altium_monkey.altium_board import AltiumBoard, AltiumBoardOutline
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -183,5 +184,28 @@ def test_svg_job_reports_progress_and_writes_timings(tmp_path, monkeypatch, capl
     assert not report["events"][0]["failed"]
     assert not any(e["stage"] == "raster" for e in report["events"])
 
-    for message in ("Loading project/board context", "Loading selected PCB documents", "Variant base", "Rendering board / base / top", "Wrote SVG", "Wrote 2 illustration file(s)"):
-        assert message in caplog.text
+    for message in ("Loading project/board context", "Loading selected PCB documents", "Rendering board / base / top", "Wrote SVG", "Success: wrote 2 SVG files"):
+        assert (message in caplog.text) == (level != "WARNING")
+    for message in ("Loaded design context", "Variant base", "Render timing layer", "SVG native workers", "SVG disk cache"):
+        assert (message in caplog.text) == (level == "DEBUG")
+    if level != "WARNING":
+        assert caplog.records[-1].message == f"Success: wrote 2 SVG files to {output}"
+
+
+@pytest.mark.parametrize("failure_stage", ["render", "finish", "write_timings"])
+def test_failed_toon_job_does_not_report_success(tmp_path, monkeypatch, caplog, failure_stage):
+    import json
+    from altium_cruncher import altium_cruncher_cmd_toon as toon
+
+    caplog.set_level("INFO")
+    def fail(*args, **kwargs):
+        raise OSError("fixture failure")
+    monkeypatch.setattr(toon, "_cmd_toon", fail if failure_stage == "render" else lambda *a: "Success: wrote SVG files")
+    if failure_stage != "render":
+        monkeypatch.setattr(toon.PcbSvgRenderJob, failure_stage, fail)
+    timing = tmp_path / "timings.json"
+    assert toon.cmd_toon(_args("--no-cache", "--timings", str(timing))) == 1
+    assert "fixture failure" in caplog.text
+    assert "Success:" not in caplog.text
+    if failure_stage != "write_timings":
+        assert json.loads(timing.read_text())["events"][0]["failed"] is True
