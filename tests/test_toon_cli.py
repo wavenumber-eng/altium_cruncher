@@ -9,7 +9,9 @@ from types import SimpleNamespace
 import pytest
 
 from altium_cruncher.altium_cruncher_cmd_toon import (
-    TOON_CONFIG_FILENAME, _resolve_config, register_parser,
+    TOON_CONFIG_FILENAME,
+    _resolve_config,
+    register_parser,
 )
 from altium_cruncher.config_json import load_json_config
 from altium_cruncher.pcb_illustration_config import resolve_illustration_config
@@ -18,17 +20,23 @@ from altium_cruncher.pcb_illustration_variants import illustration_variants
 ROOT = Path(__file__).resolve().parents[1]
 
 
-
 def _args(*tokens):
     parser = argparse.ArgumentParser()
     register_parser(parser.add_subparsers())
     return parser.parse_args(["toon", *tokens])
 
 
-@pytest.mark.parametrize("tokens", [
-    ("--format", "svg"), ("--format", "png"), ("--format", "both"),
-    ("--dpi", "300"), ("--width", "4096"), ("--background", "transparent"),
-])
+@pytest.mark.parametrize(
+    "tokens",
+    [
+        ("--format", "svg"),
+        ("--format", "png"),
+        ("--format", "both"),
+        ("--dpi", "300"),
+        ("--width", "4096"),
+        ("--background", "transparent"),
+    ],
+)
 def test_removed_output_options_are_rejected(tokens):
     with pytest.raises(SystemExit):
         _args(*tokens)
@@ -60,6 +68,7 @@ def test_config_is_created_and_reused_with_cli_overrides(tmp_path):
     payload["global"]["styles"]["assembly_designators"]["color"] = "#00FF00"
     payload["components"] = {"J1": {"show_designator": False}}
     import json
+
     path.write_text(json.dumps(payload), encoding="utf-8")
     saved = path.read_bytes()
     config = _resolve_config(_args("--side", "bottom", "--assembly"), source)
@@ -76,11 +85,42 @@ def test_config_is_created_and_reused_with_cli_overrides(tmp_path):
     assert config.components["J1"].show_designator is False
 
 
+@pytest.mark.parametrize(
+    ("theme", "mask", "silk"),
+    [
+        ("saved", "auto", "#F5F5F5"),
+        ("white", "#EEEEEE", "#000000"),
+        ("black", "#000000", "#F5F5F5"),
+        ("blue", "#1D4F91", "#F5F5F5"),
+        ("red", "#A62A2A", "#F5F5F5"),
+        ("purple", "#6F3C8A", "#F5F5F5"),
+        ("yellow", "#D6A600", "#F5F5F5"),
+        ("green", "#176B3A", "#F5F5F5"),
+    ],
+)
+def test_common_mask_and_silk_themes(theme, mask, silk):
+    assert _args("--theme", theme).theme == theme
+    config = resolve_illustration_config(side="top", theme=theme)
+    styles = config.resolved_styles_for_view(config.enabled_views()[0])
+    assert styles["soldermask_film"]["color"] == mask
+    assert styles["silkscreen_board_graphics"]["color"] == silk
+
+
 def test_public_toon_command_writes_editable_substrate_preset(tmp_path):
     target = tmp_path / "toon.config"
     result = subprocess.run(
-        [sys.executable, "-m", "altium_cruncher", "toon", "--write-config", str(target)],
-        cwd=tmp_path, text=True, capture_output=True, check=False,
+        [
+            sys.executable,
+            "-m",
+            "altium_cruncher",
+            "toon",
+            "--write-config",
+            str(target),
+        ],
+        cwd=tmp_path,
+        text=True,
+        capture_output=True,
+        check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     config = load_json_config(target)
@@ -91,12 +131,18 @@ def test_public_toon_command_writes_editable_substrate_preset(tmp_path):
 
 
 def test_config_accepts_partial_settings_and_custom_views():
-    config = resolve_illustration_config({
-        "global": {"styles": {"illustration": {"opacity": 0.3}}},
-        "views": [{"name": "custom", "layers": ["ILLUSTRATION_BOTTOM"]}],
-    }, side="bottom")
+    config = resolve_illustration_config(
+        {
+            "global": {"styles": {"illustration": {"opacity": 0.3}}},
+            "views": [{"name": "custom", "layers": ["ILLUSTRATION_BOTTOM"]}],
+        },
+        side="bottom",
+    )
     assert config.views[0].name == "custom"
-    assert config.resolved_styles_for_view(config.views[0])["illustration"]["opacity"] == 0.3
+    assert (
+        config.resolved_styles_for_view(config.views[0])["illustration"]["opacity"]
+        == 0.3
+    )
     with pytest.raises(ValueError, match="exactly one"):
         resolve_illustration_config({"views": [{"name": "copper", "layers": ["TOP"]}]})
 
@@ -105,7 +151,9 @@ def test_rt_variants_read_dnp_and_leave_project_unchanged():
     from altium_monkey.altium_design import AltiumDesign
     from altium_monkey.altium_prjpcb import AltiumPrjPcb
 
-    project = AltiumPrjPcb(ROOT / "tests/assets/projects/rt_super_c1/input/RT_SUPER_C1.PrjPcb")
+    project = AltiumPrjPcb(
+        ROOT / "tests/assets/projects/rt_super_c1/input/RT_SUPER_C1.PrjPcb"
+    )
     design = AltiumDesign(project=project, schdocs=[])
     current = project.get_current_variant()
     variants = illustration_variants(design, all_variants=True)
@@ -125,7 +173,9 @@ def test_rt_variants_read_dnp_and_leave_project_unchanged():
 def test_alternate_model_variant_is_reported_before_rendering():
     design = SimpleNamespace(
         get_variants=lambda: ["alternate"],
-        project=SimpleNamespace(variants={"alternate": {"variations": [{"Designator": "U1", "Kind": "2"}]}}),
+        project=SimpleNamespace(
+            variants={"alternate": {"variations": [{"Designator": "U1", "Kind": "2"}]}}
+        ),
     )
     with pytest.raises(ValueError, match="alternate 3D model resolution"):
         illustration_variants(design, variant="alternate")
@@ -136,13 +186,19 @@ def test_variant_parameters_are_applied_without_mutating_saved_components():
 
     design = SimpleNamespace(
         get_variants=lambda: ["production"],
-        project=SimpleNamespace(variants={"production": {
-            "parameters": [{"ParameterName": "Revision", "Value": "B"}],
-        }}),
+        project=SimpleNamespace(
+            variants={
+                "production": {
+                    "parameters": [{"ParameterName": "Revision", "Value": "B"}],
+                }
+            }
+        ),
         get_pcb_project_parameters=lambda: {"Revision": "A", "VariantName": "saved"},
         get_variant_parameter_overrides=lambda name: {"R1": {"Value": "20k"}},
     )
-    component = AltiumPcbComponent("R1", "0603", "TOP", "0mil", "0mil", parameters={"Value": "10k"})
+    component = AltiumPcbComponent(
+        "R1", "0603", "TOP", "0mil", "0mil", parameters={"Value": "10k"}
+    )
     saved = SimpleNamespace(components=[component], pads=[object()])
     variant = illustration_variants(design, variant="production")[0]
     rendered = variant.board(saved)
@@ -153,7 +209,9 @@ def test_variant_parameters_are_applied_without_mutating_saved_components():
 
 
 @pytest.mark.parametrize("level", ["INFO", "DEBUG", "WARNING"])
-def test_svg_job_reports_progress_and_writes_timings(tmp_path, monkeypatch, caplog, level):
+def test_svg_job_reports_progress_and_writes_timings(
+    tmp_path, monkeypatch, caplog, level
+):
     caplog.set_level(level)
     import json
     from altium_monkey.altium_board import AltiumBoard, AltiumBoardOutline
@@ -165,17 +223,32 @@ def test_svg_job_reports_progress_and_writes_timings(tmp_path, monkeypatch, capl
     source = tmp_path / "board.PrjPcb"
     source.write_text("fixture context supplied below")
     pcb = AltiumPcbDoc()
-    pcb.board = AltiumBoard(outline=AltiumBoardOutline.rectangle_mils(
-        left_mils=0, bottom_mils=0, right_mils=1000, top_mils=1000))
-    design = SimpleNamespace(get_variants=lambda: [], get_pcb_project_parameters=lambda: {},
-                             get_variant_parameter_overrides=lambda name: {})
+    pcb.board = AltiumBoard(
+        outline=AltiumBoardOutline.rectangle_mils(
+            left_mils=0, bottom_mils=0, right_mils=1000, top_mils=1000
+        )
+    )
+    design = SimpleNamespace(
+        get_variants=lambda: [],
+        get_pcb_project_parameters=lambda: {},
+        get_variant_parameter_overrides=lambda name: {},
+    )
+
     def load_preview(path, *, load_schematics):
         assert load_schematics is False
         return design, "test"
+
     monkeypatch.setattr(workflow, "load_design_for_pcb_input", load_preview)
-    monkeypatch.setattr(workflow, "iter_pcb_render_inputs", lambda *a, **k: [CruncherPcbRenderInput("board", source, pcb, {})])
+    monkeypatch.setattr(
+        workflow,
+        "iter_pcb_render_inputs",
+        lambda *a, **k: [CruncherPcbRenderInput("board", source, pcb, {})],
+    )
     output, timing = tmp_path / "output", tmp_path / "timing.json"
-    assert toon.cmd_toon(_args(str(source), "-o", str(output), "--timings", str(timing))) == 0
+    assert (
+        toon.cmd_toon(_args(str(source), "-o", str(output), "--timings", str(timing)))
+        == 0
+    )
     assert len(list(output.glob("*.svg"))) == 2
     assert not list(output.glob("*.png"))
     report = json.loads(timing.read_text())
@@ -184,23 +257,43 @@ def test_svg_job_reports_progress_and_writes_timings(tmp_path, monkeypatch, capl
     assert not report["events"][0]["failed"]
     assert not any(e["stage"] == "raster" for e in report["events"])
 
-    for message in ("Loading project/board context", "Loading selected PCB documents", "Rendering board / base / top", "Wrote SVG", "Success: wrote 2 SVG files"):
+    for message in (
+        "Loading project/board context",
+        "Loading selected PCB documents",
+        "Rendering board / base / top",
+        "Wrote SVG",
+        "Success: wrote 2 SVG files",
+    ):
         assert (message in caplog.text) == (level != "WARNING")
-    for message in ("Loaded design context", "Variant base", "Render timing layer", "SVG native workers", "SVG disk cache"):
+    for message in (
+        "Loaded design context",
+        "Variant base",
+        "Render timing layer",
+        "SVG native workers",
+        "SVG disk cache",
+    ):
         assert (message in caplog.text) == (level == "DEBUG")
     if level != "WARNING":
         assert caplog.records[-1].message == f"Success: wrote 2 SVG files to {output}"
 
 
 @pytest.mark.parametrize("failure_stage", ["render", "finish", "write_timings"])
-def test_failed_toon_job_does_not_report_success(tmp_path, monkeypatch, caplog, failure_stage):
+def test_failed_toon_job_does_not_report_success(
+    tmp_path, monkeypatch, caplog, failure_stage
+):
     import json
     from altium_cruncher import altium_cruncher_cmd_toon as toon
 
     caplog.set_level("INFO")
+
     def fail(*args, **kwargs):
         raise OSError("fixture failure")
-    monkeypatch.setattr(toon, "_cmd_toon", fail if failure_stage == "render" else lambda *a: "Success: wrote SVG files")
+
+    monkeypatch.setattr(
+        toon,
+        "_cmd_toon",
+        fail if failure_stage == "render" else lambda *a: "Success: wrote SVG files",
+    )
     if failure_stage != "render":
         monkeypatch.setattr(toon.PcbSvgRenderJob, failure_stage, fail)
     timing = tmp_path / "timings.json"

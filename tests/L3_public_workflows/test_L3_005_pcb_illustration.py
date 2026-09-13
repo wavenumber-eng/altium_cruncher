@@ -76,6 +76,7 @@ def test_extruded_bodies_use_native_depth_and_surface_fusion():
         job = IllustrationJob(client)
         parts = job.collect_top(pcb)
         assert len(parts) == 2  # Free bodies have nullable component indices.
+        parts = [part for part, _ in job.render_many(parts, side="top", illustrate=True)]
         assert parts[0].bounds[2] == pytest.approx(2.54)
         assert parts[0].bounds[5] == pytest.approx(5.08)
         combined = combine_components(parts)
@@ -111,9 +112,12 @@ def test_rt_components_include_extrusions_and_omit_parts_without_models():
         )
         assert "J1" not in by_name  # Pad-only connector: no invented illustration.
         assert len(by_name["D3"].bodies) == len(by_name["D4"].bodies) == 6
-        assert by_name["D3"].bounds[5] == pytest.approx(0.75000104)
-        assert by_name["U1"].bounds[2] == pytest.approx(0.00999998)
         green, red = job.render(by_name["D3"]), job.render(by_name["D4"])
+        u1 = job.render(by_name["U1"])
+        assert green.source_bounds_mm is not None
+        assert green.source_bounds_mm[5] == pytest.approx(0.75000104)
+        assert u1.source_bounds_mm is not None
+        assert u1.source_bounds_mm[2] == pytest.approx(0.00999998)
         assert "rgb(47,152,47)" in green.svg
         assert "rgb(190,29,29)" in red.svg
         assert green.stats["surface_draws"] < green.stats["triangles"]
@@ -121,7 +125,7 @@ def test_rt_components_include_extrusions_and_omit_parts_without_models():
         combined.extend([green.group("green"), red.group("red")])
         assert not any(node.get("class") for node in combined.iter())
         assert not list(combined.iter(f"{{{SVG}}}style"))
-        assert job.counts["tessellation_hits"] > 0
+        assert job.counts["illustrations"] == 3
         assert not job.warnings
 
 
@@ -142,17 +146,13 @@ def test_component_svg_cache_reuses_instances_and_keeps_material_variants():
         assert job.render(instance) is symbol
         assert job.counts["illustrations"] == 1
         assert job.counts["illustration_hits"] == 1
+        red_part = job.collect_top(
+            SimpleNamespace(
+                components=[], component_bodies=[_body(200, 0, 100, 0x0000FF)]
+            )
+        )[0]
         red = replace(
-            instance,
-            meshes=tuple(
-                replace(
-                    mesh,
-                    materials=tuple(
-                        replace(mat, color=(1, 0, 0)) for mat in mesh.materials
-                    ),
-                )
-                for mesh in instance.meshes
-            ),
+            red_part, designator="red-instance", anchor_mm=instance.anchor_mm
         )
         red_symbol = job.render(red)
         assert red_symbol is not symbol
@@ -172,6 +172,10 @@ def test_bottom_extrusions_preserve_xy_and_outward_depth():
         job = IllustrationJob(client)
         assert job.collect_top(pcb) == []
         parts = job.collect(pcb, side="bottom")
+        parts = [
+            part
+            for part, _ in job.render_many(parts, side="bottom", illustrate=True)
+        ]
         assert parts[0].bounds == pytest.approx((0.508, 0, -5.08, 3.048, 2.54, -2.54))
         combined = combine_components(parts)
         symbol = job.render(combined, side="bottom")
@@ -198,14 +202,17 @@ def test_rt_bottom_models_use_body_side_and_signed_z_offset():
         by_name = {part.designator: part for part in parts}
         assert len(parts) == 107
         assert all(body["kind"] == "step" for part in parts for body in part.bodies)
-        assert (by_name["T1"].bounds[2], by_name["T1"].bounds[5]) == pytest.approx(
+        t1 = job.render(by_name["T1"], side="bottom").source_bounds_mm
+        c10 = job.render(by_name["C10"], side="bottom").source_bounds_mm
+        assert t1 is not None and c10 is not None
+        assert (t1[2], t1[5]) == pytest.approx(
             (-4.4069, 2.5273), abs=1e-5
         )
-        assert (by_name["C10"].bounds[2], by_name["C10"].bounds[5]) == pytest.approx(
+        assert (c10[2], c10[5]) == pytest.approx(
             (-0.55, 0), abs=1e-5
         )
         assert "D3" not in by_name and "J1" not in by_name
-        assert job.counts["tessellation_hits"] > 0
+        assert job.counts["illustrations"] == 2
         assert not job.warnings
 
 

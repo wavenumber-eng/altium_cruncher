@@ -23,18 +23,18 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.9.12"
+EXPECTED_VERSION = "2026.9.13"
 EXPECTED_RELEASE_DATE = date(2026, 9, 12)
 EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-09-12.md"
 CONTROLLED_DEPENDENCY_REQUIREMENTS = {
-    "altium-monkey": "==2026.9.12.post2",
-    "wn-geometer": "==2026.9.12",
+    "altium-monkey": "==2026.9.13",
+    "wn-geometer": "==2026.9.13",
     "easyeda-monkey": ">=2026.9.11",
 }
 MINIMUM_CONTROLLED_DEPENDENCIES: dict[str, str] = {}
 EXACT_CONTROLLED_DEPENDENCIES = {
-    "altium-monkey": "2026.9.12.post2",
-    "wn-geometer": "2026.9.12",
+    "altium-monkey": "2026.9.13",
+    "wn-geometer": "2026.9.13",
 }
 
 

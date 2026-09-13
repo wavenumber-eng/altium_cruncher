@@ -21,9 +21,17 @@ def scene(monkeypatch, tmp_path):
                           components=[SimpleNamespace(designator=f"U{i}") for i in range(3)])
     helper = SimpleNamespace(_collect_embedded_step_model_catalog=lambda pcb: ([], []),
                              _component_body_is_bottom=lambda *args: False)
+    monkeypatch.setattr(illustration, "PcbAssemblyModelHelper", lambda: helper)
     for module in (illustration, artwork):
-        monkeypatch.setattr(module, "PcbAssemblyModelHelper", lambda: helper)
         monkeypatch.setattr(module, "_body_anchor", lambda helper, body, component: (0., 0.))
+    monkeypatch.setattr(
+        illustration.IllustrationJob, "_collect_direct_body", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(
+        illustration.IllustrationJob,
+        "_collect_direct_analytic_group",
+        lambda *args, **kwargs: None,
+    )
     monkeypatch.setattr(artwork, "_extrusion_request", lambda body, *args, **kwargs: body.properties)
     monkeypatch.setattr(g, "GeometerClient", lambda: nullcontext(None))
     raw = (g.MeshIllustrationMesh(id="face", positions=(0., 0., 0., 1., 0., 0., 0., 1., 1.),
@@ -46,7 +54,9 @@ def scene(monkeypatch, tmp_path):
 
     monkeypatch.setattr(illustration.IllustrationJob, "_body_geometry", geometry)
     monkeypatch.setattr(illustration.IllustrationJob, "_render_native", native)
-    cache = lambda: PcbSvgModelCache(tmp_path, identity="a" * 64)
+    def cache():
+        return PcbSvgModelCache(tmp_path, identity="a" * 64)
+
     return pcb, cache, calls
 
 

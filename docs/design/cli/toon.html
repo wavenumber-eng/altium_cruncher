@@ -19,7 +19,7 @@ acr toon --write-config toon.jsonc</code></pre></section>
 <table><thead><tr><th>Option</th><th>Behavior</th></tr></thead><tbody>
 <tr><td><code>--side top|bottom|both</code></td><td>Both by default. Bottom preset views are mirrored as seen from underneath.</td></tr>
 <tr><td><code>--assembly</code></td><td>Add projected labels and hide saved silkscreen designators. Labels default to red.</td></tr>
-<tr><td><code>--theme saved|white|black|green</code></td><td>Saved mask color plus white silk by default. White uses #EEEEEE mask and black silk; black/green use white silk. Explicit themes override config colors, retaining configured opacity.</td></tr>
+<tr><td><code>--theme saved|white|black|blue|red|purple|yellow|green</code></td><td>Saved mask color plus white silk by default. White uses #EEEEEE mask and black silk; black, blue, red, purple, yellow, and green use white silk. Explicit themes override config colors, retaining configured opacity.</td></tr>
 <tr><td><code>--timings PATH</code></td><td>Write <code>pcb.svg.timings.a0</code> JSON with job, variant, view, side and layer wall durations, cache outcomes, parent IDs and failure status. No timing file is written unless requested.</td></tr>
 <tr><td><code>--cache-dir PATH</code></td><td>Choose the persistent tessellation/illustration cache directory. Defaults to the operating system's user cache under altium-cruncher/svg-models.</td></tr>
 <tr><td><code>--no-cache</code></td><td>Disable disk-cache reads and writes; retain reuse within the invocation.</td></tr>

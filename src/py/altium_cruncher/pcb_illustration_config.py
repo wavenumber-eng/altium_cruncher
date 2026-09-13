@@ -6,13 +6,18 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import Literal, cast
 
+from .altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
 from .contracts.pcb_svg import config_metadata
 from .contracts.generated.pcb_svg_config import PcbSvgConfigInput
 
 type IllustrationSide = Literal["top", "bottom"]
-type IllustrationTheme = Literal["saved", "white", "black", "green"]
+type IllustrationTheme = Literal[
+    "saved", "white", "black", "blue", "red", "purple", "yellow", "green"
+]
 
-from .altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
+ILLUSTRATION_THEMES = cast(
+    tuple[IllustrationTheme, ...], tuple(config_metadata()["toon-themes"])
+)
 
 
 def illustration_preset() -> PcbSvgConfigInput:
