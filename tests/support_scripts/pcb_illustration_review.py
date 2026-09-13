@@ -21,7 +21,6 @@ from pcb_review_page import write_review_page
 from altium_cruncher.altium_cruncher_pcb_illustration import (
     IllustrationComponent,
     IllustrationJob,
-    combine_components,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
@@ -144,11 +143,12 @@ def main() -> None:
         job = IllustrationJob(client)
         t = time.perf_counter()
         components = job.collect_top(pcb)
-        groups = [combine_components(components)] if components else []
         symbol_ids = {}
         extents = [0.0, 0.0, *map(float, base.attrib["viewBox"].split()[2:])]
-        for group in groups:
+        rendered_components = []
+        for group in components:
             symbol = job.render(group)
+            rendered_components.append((group, symbol))
             identity = id(symbol)
             symbol_id = symbol_ids.get(identity)
             if symbol_id is None:
@@ -165,7 +165,7 @@ def main() -> None:
                 {"href": f"#{symbol_id}", "transform": f"translate({x:.9g} {y:.9g})"},
             )
             ET.SubElement(use, f"{{{SVG}}}title").text = group.designator
-            bounds = group.bounds
+            bounds = symbol.source_bounds_mm or group.bounds
             extents = [
                 min(extents[0], x + bounds[0] - 0.1),
                 min(extents[1], y - bounds[4] - 0.1),
@@ -190,16 +190,16 @@ def main() -> None:
         report.update(
             component_seconds=time.perf_counter() - t,
             components=len(components),
-            visibility_groups=len(groups),
+            visibility_groups=len(components),
             body_count=sum(len(c.bodies) for c in components),
             components_detail=[
                 dict(
                     designator=c.designator,
                     anchor_mm=c.anchor_mm,
-                    bounds_mm=c.bounds,
+                    bounds_mm=s.source_bounds_mm or c.bounds,
                     bodies=c.bodies,
                 )
-                for c in components
+                for c, s in rendered_components
             ],
         )
         selected = [

@@ -15,9 +15,7 @@ if TYPE_CHECKING:
     from altium_monkey.altium_pcb_component import AltiumPcbComponent
     from altium_monkey.altium_record_pcb__component_body import AltiumPcbComponentBody
 import logging
-import math
 
-from .altium_cruncher_pcb_assembly_model_helper import PcbAssemblyModelHelper
 from .altium_cruncher_pcb_illustration import (
     CachedComponentPlacement,
     ComponentPlacement,
@@ -35,9 +33,11 @@ from .altium_cruncher_pcb_illustration import (
     _body_anchor,
     _body_opacity,
     _colorref,
+    _component_rotation_degrees,
     _decode_cached_symbol,
     _digest,
     _extrusion_request,
+    _analytic_body,
     _owning_component,
     _step_matrix,
 )
@@ -64,10 +64,13 @@ type Artwork = tuple[dict[str, IllustrationSymbol], list[ArtworkEntry]]
 def _decode_placement(value: dict) -> CachedComponentPlacement:
     part = CachedComponentPlacement(
         value["designator"],
-        _finite_vector(value["anchor_mm"], 2),
+        cast(tuple[float, float], _finite_vector(value["anchor_mm"], 2)),
         tuple(value["bodies"]),
         value["component_index"],
-        _finite_vector(value["bounds"], 6),
+        cast(
+            tuple[float, float, float, float, float, float],
+            _finite_vector(value["bounds"], 6),
+        ),
     )
     if (
         not isinstance(part.designator, str)
@@ -86,7 +89,7 @@ def _validate_body(body: BodyMetadata, seen: set[int]) -> int:
     index = body["index"]
     if type(index) is not int or index < 0 or index in seen:
         raise ValueError("invalid cached body identity")
-    if body["kind"] not in {"step", "extruded"}:
+    if body["kind"] not in {"step", "extruded", "cylinder", "sphere"}:
         raise ValueError("invalid cached body kind")
     lower, upper, opacity = _finite_vector(
         (body["lower_z_mm"], body["upper_z_mm"], body["opacity"]), 3
@@ -97,7 +100,9 @@ def _validate_body(body: BodyMetadata, seen: set[int]) -> int:
         if any(not 0 <= channel <= 1 for channel in _finite_vector(body["color"], 3)):
             raise ValueError("invalid cached body color")
     if body["color"] is not None:
-        body["color"] = tuple(body["color"])
+        body["color"] = cast(
+            tuple[float, float, float], _finite_vector(body["color"], 3)
+        )
     seen.add(index)
     return index
 
@@ -144,7 +149,8 @@ class ComponentArtworkCache:
         illustrate: bool,
         excluded: frozenset[str],
     ) -> None:
-        self.job, self.side, self.illustrate = job, side, illustrate
+        self.job, self.illustrate = job, illustrate
+        self.side: Side = side
         self.catalog_context = model_catalog_context(pcbdoc)
         helper, by_id, by_name = self.catalog_context
         self.recipes = {}
@@ -152,7 +158,9 @@ class ComponentArtworkCache:
         signature = []
         for index, body in enumerate(pcbdoc.component_bodies):
             component = _owning_component(pcbdoc, body)
-            owner = body.component_index if component is not None else -index - 1
+            owner = (
+                cast(int, body.component_index) if component is not None else -index - 1
+            )
             if component is not None and component.designator in excluded:
                 continue
             try:
@@ -201,9 +209,20 @@ class ComponentArtworkCache:
             str(component.designator) if component is not None else f"free-body-{index}"
         )
         color = _colorref(body.body_color_3d)
-        anchor_mm = tuple(v * 0.0254 for v in anchor)
+        anchor_mm = (anchor[0] * 0.0254, anchor[1] * 0.0254)
         if body.model_type == 0:
             source = _extrusion_request(body, anchor_mm, is_bottom=side == "bottom")
+        elif body.model_type in {2, 3}:
+            _, _, _, source = _analytic_body(
+                body,
+                index,
+                anchor,
+                anchor_mm,
+                _component_rotation_degrees(component),
+                side == "bottom",
+                color,
+                opacity,
+            )
         elif body.model_type == 1:
             entry = helper._resolve_component_body_model_entry(
                 body.properties, models_by_id=by_id, models_by_name=by_name
@@ -252,7 +271,10 @@ class ComponentArtworkCache:
         )
 
     def load(self) -> CachedBodies:
-        artifact = self.job.cache.load("component-artwork", self.key, _decode_artwork)
+        cache = self.job.cache
+        if cache is None:
+            return {}
+        artifact = cache.load("component-artwork", self.key, _decode_artwork)
         cached_bodies = {}
         if artifact is None:
             return cached_bodies
@@ -298,16 +320,10 @@ class ComponentArtworkCache:
         seen, unsafe = set(), set()
         changed = False
         for part, symbol in placed:
-            owner = self._owner(part)
-            recipes = self.recipes.get(owner)
-            # All eligible bodies must have succeeded. Partial *tessellation*
-            # warnings are fine; an entirely omitted body must retry next time.
             keys = self.job._render_keys(part, self.side, self.illustrate)
-            complete = self._complete_bodies(part, recipes)
-            if keys[0] not in seen and not complete and symbol.warnings:
-                # Do not persist a consumer's borrowed diagnostics when their
-                # original producer is incomplete and must retry next run.
-                unsafe.add(keys[0])
+            owner = self._owner(part)
+            complete = self._complete_bodies(part, self.recipes.get(owner))
+            self._mark_unsafe(keys[0], complete, symbol, seen, unsafe)
             seen.add(keys[0])
             if not complete or keys[0] in unsafe:
                 continue
@@ -316,9 +332,27 @@ class ComponentArtworkCache:
                 symbols[keys[0]] = asdict(symbol)
             entries.append(self._encode_entry(part, keys))
         if entries and changed:
-            self.job.cache.store(
+            cache = self.job.cache
+            if cache is None:
+                return
+            cache.store(
                 "component-artwork", self.key, dict(entries=entries, symbols=symbols)
             )
+
+    @staticmethod
+    def _mark_unsafe(
+        key: str,
+        complete: bool,
+        symbol: IllustrationSymbol,
+        seen: set[str],
+        unsafe: set[str],
+    ) -> None:
+        # All eligible bodies must have succeeded. Partial tessellation warnings
+        # are safe; an entirely omitted body must retry on the next run.
+        if key not in seen and not complete and symbol.warnings:
+            # Do not persist borrowed diagnostics when their original producer
+            # is incomplete and must retry.
+            unsafe.add(key)
 
     def _encode_entry(self, part: ComponentPlacement, keys: RenderKeys) -> dict:
         placement = dict(

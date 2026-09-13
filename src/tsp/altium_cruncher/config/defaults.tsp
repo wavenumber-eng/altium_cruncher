@@ -375,7 +375,7 @@ const toonPreset = #{
     styles: #{
       board_substrate: #{ enabled: true, color: "#B6A26B" },
       board_outline: #{ color: "#000000", line_width_mm: 0.25 },
-      soldermask_film: #{ color: "auto", opacity: 0.9 },
+      soldermask_film: #{ color: "auto", opacity: 0.75 },
       board_cutouts: #{
         scope: "interior",
         color: "#555555",
@@ -458,5 +458,9 @@ const toonThemes = #{
   saved: #{ mask: "auto", silk: "#F5F5F5" },
   white: #{ mask: "#EEEEEE", silk: "#000000" },
   black: #{ mask: "#000000", silk: "#F5F5F5" },
+  blue: #{ mask: "#1D4F91", silk: "#F5F5F5" },
+  red: #{ mask: "#A62A2A", silk: "#F5F5F5" },
+  purple: #{ mask: "#6F3C8A", silk: "#F5F5F5" },
+  yellow: #{ mask: "#D6A600", silk: "#F5F5F5" },
   green: #{ mask: "#176B3A", silk: "#F5F5F5" },
 };

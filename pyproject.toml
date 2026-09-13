@@ -1,6 +1,6 @@
 [project]
 name = "altium-cruncher"
-version = "2026.9.12"
+version = "2026.9.13"
 description = "Cross-platform Altium CLI utilities built on public altium-monkey"
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
@@ -9,7 +9,7 @@ authors = [
     { name = "Wavenumber LLC" },
 ]
 dependencies = [
-    "altium-monkey==2026.9.12.post2",
+    "altium-monkey==2026.9.13",
     "colorama>=0.4.6",
     "easyeda-monkey>=2026.9.11",
     "json-with-comments>=1.2.10",
@@ -18,7 +18,7 @@ dependencies = [
     "openpyxl>=3.1.0",
     "rich>=13.7.0",
     "shapely>=2.1.1",
-    "wn-geometer==2026.9.12",
+    "wn-geometer==2026.9.13",
 ]
 
 [project.optional-dependencies]

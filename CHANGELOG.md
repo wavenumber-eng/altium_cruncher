@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 2026.9.13
+
+- Route eligible embedded STEP and analytic component bodies through Geometer's
+  direct model-illustration boundary, avoiding intermediate mesh JSON while
+  preserving renderer-neutral SVG composition and component metadata.
+- Reuse analytic body definitions and occurrences for repeated extruded Altium
+  bodies, including cylinders, while retaining the combined-mesh fallback for
+  mixed or multi-STEP component bodies.
+- Default Toon solder-mask film opacity to 0.75 so copper remains readable under
+  the built-in mask themes. Add blue, red, purple, and yellow presets alongside
+  saved, white, black, and green; white uses black silk and the others use white.
+- Consume `altium-monkey==2026.9.13` and `wn-geometer==2026.9.13`.
+
 ## 2026.9.12
 
 - Keep Toon progress readable by reserving timing, worker and cache diagnostics
