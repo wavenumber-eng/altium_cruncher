@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -31,7 +32,9 @@ def _run(command: list[str], *, cwd: Path, env: dict[str, str] | None = None) ->
 
 def _latest_wheel(dist_dir: Path) -> Path:
     """Return the newest wheel in a dist directory."""
-    wheels = sorted(dist_dir.glob("altium_cruncher-*.whl"), key=lambda path: path.stat().st_mtime)
+    wheels = sorted(
+        dist_dir.glob("altium_cruncher-*.whl"), key=lambda path: path.stat().st_mtime
+    )
     if not wheels:
         raise SystemExit(f"No altium_cruncher wheel found in {dist_dir}")
     return wheels[-1]
@@ -49,6 +52,18 @@ def _console_script(venv_dir: Path, command: str) -> Path:
     script_dir = "Scripts" if os.name == "nt" else "bin"
     suffix = ".exe" if os.name == "nt" else ""
     return venv_dir / script_dir / f"{command}{suffix}"
+
+
+def _resolve_on_path(command: str, env: dict[str, str]) -> str:
+    """Resolve a bare command against the test env PATH.
+
+    Windows CreateProcess searches the parent process PATH, not the child
+    env, so bare names must be resolved explicitly to honor the venv PATH.
+    """
+    resolved = shutil.which(command, path=env["PATH"])
+    if resolved is None:
+        raise SystemExit(f"Command not resolvable on test PATH: {command}")
+    return resolved
 
 
 def _clean_env(venv_dir: Path) -> dict[str, str]:
@@ -81,34 +96,47 @@ def run_install_test(wheel: Path) -> None:
             if not executable.exists():
                 raise SystemExit(f"Missing console script after install: {executable}")
             _run([str(executable), "--version"], cwd=temp_dir, env=env)
-            _run([command, "--version"], cwd=temp_dir, env=env)
+            _run([_resolve_on_path(command, env), "--version"], cwd=temp_dir, env=env)
 
         legacy_executable = _console_script(venv_dir, "altium_cruncher")
         if legacy_executable.exists():
-            raise SystemExit(f"Unexpected legacy console script after install: {legacy_executable}")
+            raise SystemExit(
+                f"Unexpected legacy console script after install: {legacy_executable}"
+            )
 
         _run([str(python), "-m", "altium_cruncher", "version"], cwd=temp_dir, env=env)
-        _run([str(python), "-c", "\n".join([
-            "import json",
-            "from importlib.resources import files",
-            "from altium_cruncher.contracts._runtime import _validator, config_metadata",
-            "from altium_cruncher.contracts.generated.public import decode_contract",
-            "catalog = json.loads(files('altium_cruncher.contracts.generated').joinpath('catalog.json').read_text())",
-            "assert any(row['stem'] == 'interface_design_manifest' for row in catalog)",
-            "for row in catalog:",
-            "    _validator(row['stem'])",
-            "    config_metadata(row['stem'])",
-            "assert decode_contract('mate_config', {}) == {}",
-        ])], cwd=temp_dir, env=env)
+        _run(
+            [
+                str(python),
+                "-c",
+                "\n".join(
+                    [
+                        "import json",
+                        "from importlib.resources import files",
+                        "from altium_cruncher.contracts._runtime import _validator, config_metadata",
+                        "from altium_cruncher.contracts.generated.public import decode_contract",
+                        "catalog = json.loads(files('altium_cruncher.contracts.generated').joinpath('catalog.json').read_text())",
+                        "assert any(row['stem'] == 'interface_design_manifest' for row in catalog)",
+                        "for row in catalog:",
+                        "    _validator(row['stem'])",
+                        "    config_metadata(row['stem'])",
+                        "assert decode_contract('mate_config', {}) == {}",
+                    ]
+                ),
+            ],
+            cwd=temp_dir,
+            env=env,
+        )
         prjpcb_dir = temp_dir / "prjpcb_smoke"
         prjpcb_dir.mkdir()
-        _run(["acr", "prjpcb", "create"], cwd=prjpcb_dir, env=env)
+        acr = _resolve_on_path("acr", env)
+        _run([acr, "prjpcb", "create"], cwd=prjpcb_dir, env=env)
         config = prjpcb_dir / "prjpcb_init.jsonc"
         if not config.exists():
             raise SystemExit(f"Missing prjpcb create config: {config}")
         if (prjpcb_dir / "prjpcb_smoke.PrjPcb").exists():
             raise SystemExit("First prjpcb create run should only write config")
-        _run(["acr", "prjpcb", "create"], cwd=prjpcb_dir, env=env)
+        _run([acr, "prjpcb", "create"], cwd=prjpcb_dir, env=env)
         for output in (
             "prjpcb_smoke.PrjPcb",
             "prjpcb_smoke.SchDoc",
