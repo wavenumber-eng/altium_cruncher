@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2026.9.13.1
+
+- Consume `altium-monkey==2026.9.13.post1`, restoring Altium-compatible
+  tolerance for noncanonical schematic-library PinTextData streams while
+  preserving canonical writer output.
+
 ## 2026.9.13
 
 - Route eligible embedded STEP and analytic component bodies through Geometer's
