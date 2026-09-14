@@ -30,14 +30,18 @@ OIDC:
    commit;
 3. release workflow verifies package version metadata matches the tag;
 4. release workflow verifies release notes mention the version;
-5. release workflow runs tests, signoff, package build, install tests, and
-   `twine check`;
+5. release workflow requires the tag to identify current protected `main`, then
+   runs tests, signoff, package build, artifact policy, build-from-sdist,
+   installed-artifact, and `twine check` gates;
 6. release workflow publishes wheel and sdist to PyPI.
 
 Release artifacts may include public reference docs such as ADRs, design docs,
-canonical format docs, contracts, examples, and tests. Developer planning and
-research notes under `docs/plans/` and `docs/research/` are not part of the
-public release artifacts and must be excluded from source distributions.
+canonical format docs, contracts, and examples. Tests and their project assets
+remain repository/CI inputs rather than source-distribution content. Developer
+planning and research notes under `docs/plans/` and `docs/research/` are also
+excluded from source distributions. The detailed allowlist, size budgets, and
+one-build-many-test CI ownership are recorded in
+[CI and release gates](../design/ci-release-gates.md).
 
 Local Twine upload is reserved for emergency fallback.
 

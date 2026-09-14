@@ -138,6 +138,7 @@ def test_developer_working_docs_are_excluded_from_release_artifacts() -> None:
     sdist = pyproject["tool"]["hatch"]["build"]["targets"]["sdist"]
 
     assert "docs/**" in sdist["include"]
+    assert "tests/**" not in sdist["include"]
     assert "docs/plans/**" in sdist["exclude"]
     assert "docs/research/**" in sdist["exclude"]
 
