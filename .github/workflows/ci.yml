@@ -6,14 +6,25 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scope:
     name: Change scope
     runs-on: ubuntu-latest
     outputs:
       docs_only: ${{ steps.scope.outputs.docs_only }}
+      contracts_required: ${{ steps.scope.outputs.contracts_required }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Classify changed paths
@@ -31,14 +42,11 @@ jobs:
   contracts:
     name: Generated public contracts
     needs: scope
-    if: always() && (needs.scope.result != 'success' || needs.scope.outputs.docs_only != 'true')
+    if: needs.scope.result == 'success' && needs.scope.outputs.contracts_required == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Require successful scope check
-        if: needs.scope.result != 'success'
-        run: exit 1
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: npm
@@ -47,32 +55,106 @@ jobs:
       - run: npm run check:typescript
       - run: npm run check:browser
 
-  test:
-    name: test (${{ matrix.os }}, py${{ matrix.python-version }})
-    needs: scope
-    # Always expand the matrix so each required check name is reported.
+  linux:
+    name: test (ubuntu-latest, py3.14)
+    needs: [scope, contracts]
     if: always()
-    runs-on: ${{ needs.scope.outputs.docs_only == 'true' && 'ubuntu-latest' || matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.14"]
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Require successful scope check
-        if: needs.scope.result != 'success'
-        run: exit 1
+      - name: Require owning checks
+        env:
+          CONTRACTS_REQUIRED: ${{ needs.scope.outputs.contracts_required }}
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          CONTRACTS_RESULT: ${{ needs.contracts.result }}
+        run: |
+          python - <<'PY'
+          import os
+          if os.environ["SCOPE_RESULT"] != "success":
+              raise SystemExit("Change-scope gate did not succeed")
+          contracts_required = os.environ["CONTRACTS_REQUIRED"]
+          if contracts_required not in {"true", "false"}:
+              raise SystemExit("Contract-scope output is missing or malformed")
+          expected = {"success"} if contracts_required == "true" else {"skipped"}
+          if os.environ["CONTRACTS_RESULT"] not in expected:
+              raise SystemExit("Generated-contract gate did not reach an allowed result")
+          PY
       - name: Documentation-only change
         if: needs.scope.outputs.docs_only == 'true'
-        run: echo "Documentation-only change; skipping validation, builds, and installation."
-      - uses: actions/checkout@v5
+        run: echo "Documentation-only change; executable validation is not required."
+      - uses: actions/checkout@v6
         if: needs.scope.outputs.docs_only != 'true'
       - uses: astral-sh/setup-uv@v8.2.0
         if: needs.scope.outputs.docs_only != 'true'
       - name: Set up Python
         if: needs.scope.outputs.docs_only != 'true'
-        run: uv python install ${{ matrix.python-version }}
+        run: uv python install 3.14
+      - name: Run Rack suite once
+        if: needs.scope.outputs.docs_only != 'true'
+        run: uv run --extra test rack run --all
+      - name: Check generated Python config consumer
+        if: needs.scope.outputs.docs_only != 'true'
+        run: |
+          uv run --extra test pytest -q tests/test_pcb_svg_config_contract.py tests/test_creation_config_contract.py tests/test_mco_contract.py tests/test_workflow_contracts.py tests/test_public_output_contracts.py tests/test_package_artifacts.py
+          uv run --extra test pyright src/py/altium_cruncher/contracts/generated tests/support_scripts/config_type_consumer.py
+      - name: Build and inspect candidate artifacts
+        if: needs.scope.outputs.docs_only != 'true'
+        run: |
+          uv run --extra test python -m build
+          uv run --extra test twine check dist/*
+          uv run --extra test python tests/support_scripts/package_artifacts.py validate
+          uv run --extra test python tests/support_scripts/package_artifacts.py rebuild
+          uv run --extra test python tests/support_scripts/package_artifacts.py manifest
+          uv run --extra test python tests/support_scripts/package_artifacts.py verify
+      - name: Run installed console test
+        if: needs.scope.outputs.docs_only != 'true'
+        run: uv run --extra test python tests/support_scripts/install_test.py
+      - name: Upload exact candidate artifacts
+        if: needs.scope.outputs.docs_only != 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: altium-cruncher-distributions
+          path: |
+            dist/altium_cruncher-*.whl
+            dist/altium_cruncher-*.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 3
+
+  platform:
+    name: test (${{ matrix.os }}, py3.14)
+    needs: [scope, linux]
+    if: always()
+    runs-on: ${{ needs.scope.outputs.docs_only == 'true' && 'ubuntu-latest' || matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - name: Require owning checks
+        env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          LINUX_RESULT: ${{ needs.linux.result }}
+        shell: bash
+        run: |
+          test "$SCOPE_RESULT" = success
+          test "$LINUX_RESULT" = success
+      - name: Documentation-only change
+        if: needs.scope.outputs.docs_only == 'true'
+        run: echo "Documentation-only change; installed-artifact validation is not required."
+      - uses: actions/checkout@v6
+        if: needs.scope.outputs.docs_only != 'true'
+      - uses: actions/setup-python@v6
+        if: needs.scope.outputs.docs_only != 'true'
+        with:
+          python-version: "3.14"
+      - uses: actions/download-artifact@v7
+        if: needs.scope.outputs.docs_only != 'true'
+        with:
+          name: altium-cruncher-distributions
+          path: dist
+      - name: Verify candidate artifact identity
+        if: needs.scope.outputs.docs_only != 'true'
+        run: python tests/support_scripts/package_artifacts.py verify
       - name: Validate Windows installer script
         if: needs.scope.outputs.docs_only != 'true' && runner.os == 'Windows'
         shell: pwsh
@@ -88,20 +170,39 @@ jobs:
             $errors | Format-List | Out-String | Write-Error
             exit 1
           }
-      - name: Run Rack suite
+      - name: Run installed console test against candidate wheel
         if: needs.scope.outputs.docs_only != 'true'
-        run: uv run --extra test rack run --all
-      - name: Check generated Python config consumer
-        if: needs.scope.outputs.docs_only != 'true'
+        run: python tests/support_scripts/install_test.py
+
+  policy:
+    name: CI policy
+    needs: [scope, contracts, linux, platform]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every selected gate
+        env:
+          CONTRACTS_REQUIRED: ${{ needs.scope.outputs.contracts_required }}
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          CONTRACTS_RESULT: ${{ needs.contracts.result }}
+          LINUX_RESULT: ${{ needs.linux.result }}
+          PLATFORM_RESULT: ${{ needs.platform.result }}
         run: |
-          uv run --extra test pytest -q tests/test_pcb_svg_config_contract.py tests/test_creation_config_contract.py tests/test_mco_contract.py tests/test_workflow_contracts.py tests/test_public_output_contracts.py
-          uv run --extra test pyright src/py/altium_cruncher/contracts/generated tests/support_scripts/config_type_consumer.py
-      - name: Build package
-        if: needs.scope.outputs.docs_only != 'true'
-        run: uv run --extra test python -m build
-      - name: Check package
-        if: needs.scope.outputs.docs_only != 'true'
-        run: uv run --extra test twine check dist/*
-      - name: Run installed console test
-        if: needs.scope.outputs.docs_only != 'true'
-        run: uv run --extra test python tests/support_scripts/install_test.py
+          python - <<'PY'
+          import os
+          required = {
+              "scope": os.environ["SCOPE_RESULT"],
+              "linux": os.environ["LINUX_RESULT"],
+              "platform": os.environ["PLATFORM_RESULT"],
+          }
+          failures = {name: result for name, result in required.items() if result != "success"}
+          contracts = os.environ["CONTRACTS_RESULT"]
+          contracts_required = os.environ["CONTRACTS_REQUIRED"]
+          if contracts_required not in {"true", "false"}:
+              failures["contracts_required"] = contracts_required
+          expected_contracts = "success" if contracts_required == "true" else "skipped"
+          if contracts != expected_contracts:
+              failures["contracts"] = contracts
+          if failures:
+              raise SystemExit(f"Required CI gates did not succeed: {failures}")
+          PY

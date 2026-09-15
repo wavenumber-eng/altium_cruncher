@@ -62,24 +62,26 @@ requires = ["hatchling==1.31.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
+# Slash-less patterns match at every depth (gitwildmatch), so root-level
+# metadata files are anchored with a leading slash to keep files like
+# tests/assets/**/README.md out of the sdist.
 include = [
     "src/py/altium_cruncher/**",
     "src/tsp/altium_cruncher/**",
     "src/ts/altium_cruncher_config/**",
-    "package.json",
-    "package-lock.json",
-    "tspconfig.yaml",
-    "tsconfig.contracts.json",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE",
-    "CONTRIBUTING.md",
+    "/package.json",
+    "/package-lock.json",
+    "/tspconfig.yaml",
+    "/tsconfig.contracts.json",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE",
+    "/CONTRIBUTING.md",
     "docs/**",
     "docs/contracts/**",
     "examples/**",
     "scripts/**",
-    "tests/**",
-    "pyproject.toml",
+    "/pyproject.toml",
 ]
 exclude = [
     "docs/plans/**",

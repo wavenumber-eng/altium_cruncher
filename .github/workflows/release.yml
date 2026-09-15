@@ -8,19 +8,33 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: pypi
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v8.2.0
       - name: Set up Python
         run: uv python install 3.14
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: npm
+      - name: Require release tag to identify current protected main
+        shell: bash
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
       - name: Verify generated public contracts
         run: |
           npm ci --ignore-scripts
@@ -40,17 +54,23 @@ jobs:
           grep -F "## ${VERSION}" CHANGELOG.md
           test -f "docs/releases/${RELEASE_DATE}.md"
           grep -F "\`${VERSION}\`" "docs/releases/${RELEASE_DATE}.md"
-      - name: Run Rack suite
+      - name: Run release signoff
         run: uv run --extra test rack run --all
-      - name: Check generated Python config consumer
+      - name: Check generated Python config consumer and release policy tests
         run: |
-          uv run --extra test pytest -q tests/test_pcb_svg_config_contract.py tests/test_creation_config_contract.py tests/test_mco_contract.py tests/test_workflow_contracts.py tests/test_public_output_contracts.py
+          uv run --extra test pytest -q tests/test_pcb_svg_config_contract.py tests/test_creation_config_contract.py tests/test_mco_contract.py tests/test_workflow_contracts.py tests/test_public_output_contracts.py tests/test_package_artifacts.py tests/test_ci_scope.py
           uv run --extra test pyright src/py/altium_cruncher/contracts/generated tests/support_scripts/config_type_consumer.py
-      - name: Build package
-        run: uv run --extra test python -m build
-      - name: Check package
-        run: uv run --extra test twine check dist/*
-      - name: Run installed console test
+      - name: Build and inspect publish artifacts
+        run: |
+          uv run --extra test python -m build
+          uv run --extra test twine check dist/*
+          uv run --extra test python tests/support_scripts/package_artifacts.py validate
+          uv run --extra test python tests/support_scripts/package_artifacts.py rebuild
+          uv run --extra test python tests/support_scripts/package_artifacts.py manifest
+          uv run --extra test python tests/support_scripts/package_artifacts.py verify
+      - name: Run installed console test against publish wheel
         run: uv run --extra test python tests/support_scripts/install_test.py
-      - name: Publish to PyPI
+      - name: Remove the identity manifest so only distributions are published
+        run: rm dist/SHA256SUMS
+      - name: Publish the tested wheel and sdist to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
