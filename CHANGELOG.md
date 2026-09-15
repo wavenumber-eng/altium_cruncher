@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2026.9.15
+
+- Consume `altium-monkey==2026.9.15`, which fixes record-text compatibility
+  for boards Altium accepts but strict decoding rejected (previously aborting
+  `acr toon` on affected PCB documents), restores dash patterns in default
+  schematic SVG output, and makes large schematic parsing over 2x faster.
+  `wn-geometer==2026.9.13` remains pinned.
+
 ## 2026.9.13.1
 
 - Consume `altium-monkey==2026.9.13.post1`, restoring Altium-compatible
