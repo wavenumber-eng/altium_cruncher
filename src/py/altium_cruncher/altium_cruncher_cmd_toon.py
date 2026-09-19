@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 from pathlib import Path
+import webbrowser
 
 from .altium_cruncher_common import find_pcbdocs_in_cwd, find_prjpcbs_in_cwd
 from .altium_cruncher_pcb_svg_config import PcbSvgConfig, pcb_svg_config_text
@@ -14,6 +15,7 @@ from .pcb_illustration_config import ILLUSTRATION_THEMES, resolve_illustration_c
 from .pcb_svg_render_job import PcbSvgRenderJob
 from .pcb_svg_model_cache import add_model_cache_arguments
 from .pcb_svg_workers import add_svg_worker_arguments
+from .toon_gallery import _ToonGalleryArtifact, write_toon_gallery
 
 log = logging.getLogger(__name__)
 TOON_CONFIG_FILENAME = "toon.config"
@@ -76,28 +78,62 @@ def _resolve_inputs(file: str | None) -> list[Path]:
     return inputs
 
 
+def _open_toon_gallery(gallery_path: Path) -> None:
+    """Ask the default browser to open a gallery without failing the render."""
+    try:
+        opened = webbrowser.open_new_tab(gallery_path.resolve().as_uri())
+    except (OSError, webbrowser.Error) as exc:
+        log.warning("Could not open Toon gallery %s: %s", gallery_path, exc)
+        return
+    if not opened:
+        log.warning(
+            "Could not open Toon gallery automatically; open %s",
+            gallery_path,
+        )
+
+
+def _write_requested_gallery(
+    args: argparse.Namespace,
+    output_dir: Path,
+    artifacts: list[_ToonGalleryArtifact],
+) -> None:
+    """Write and optionally open the gallery selected by CLI arguments."""
+    if not (args.gallery or args.open_gallery):
+        return
+    gallery_path = write_toon_gallery(output_dir, artifacts)
+    log.info("Wrote Toon gallery: %s", gallery_path)
+    if args.open_gallery:
+        _open_toon_gallery(gallery_path)
+
+
 def _cmd_toon(args: argparse.Namespace, render_job: PcbSvgRenderJob) -> str:
     """Write the requested output and return its final user-facing summary."""
     if args.write_config:
+        if args.gallery or args.open_gallery:
+            raise ValueError("--gallery/--open cannot be used with --write-config")
         config = _resolve_config(args)
         args.write_config.parent.mkdir(parents=True, exist_ok=True)
         args.write_config.write_text(pcb_svg_config_text(config), encoding="utf-8")
         return f"Success: wrote toon SVG config to {args.write_config.resolve()}"
     inputs = _resolve_inputs(args.file)
     output_dir = args.output.resolve()
-    written = 0
+    artifacts: list[_ToonGalleryArtifact] = []
     for input_file in inputs:
         config = _resolve_config(args, input_file)
-        written += render_project(
-            input_file,
-            config,
-            output_dir,
-            render_job=render_job,
-            variant_name=args.variant,
-            all_variants=args.all_variants,
+        artifacts.extend(
+            render_project(
+                input_file,
+                config,
+                output_dir,
+                render_job=render_job,
+                variant_name=args.variant,
+                all_variants=args.all_variants,
+            )
         )
-    if not written:
+    if not artifacts:
         return "No SVG files written: no views are enabled in the selected config."
+    _write_requested_gallery(args, output_dir, artifacts)
+    written = len(artifacts)
     noun = "file" if written == 1 else "files"
     return f"Success: wrote {written} SVG {noun} to {output_dir}"
 
@@ -131,6 +167,7 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
             "Examples:\n"
             "  acr toon board.PrjPcb --theme white\n"
             "  acr toon board.PrjPcb --assembly --all-variants\n"
+            "  acr toon board.PrjPcb --open\n"
             "  acr toon --write-config toon.jsonc"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -190,6 +227,17 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         "--write-config",
         type=Path,
         help="write resolved editable SVG settings and exit",
+    )
+    parser.add_argument(
+        "--gallery",
+        action="store_true",
+        help="write a centered HTML gallery as index.html in the output directory",
+    )
+    parser.add_argument(
+        "--open",
+        dest="open_gallery",
+        action="store_true",
+        help="write the Toon gallery and open it in the default browser",
     )
     parser.set_defaults(handler=cmd_toon)
     return parser

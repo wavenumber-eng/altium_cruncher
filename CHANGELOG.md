@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2026.9.18
+
+- Consume `altium-monkey==2026.9.18`, which fixes hierarchical and multipart
+  netlist compilation, makes ambiguous net aliases explicit, and recovers
+  large-project compiler performance. PnP now uses its faster PCB-backed path
+  by default, and callers can opt into a PCB-backed BOM without compiling the
+  schematic. `wn-geometer==2026.9.13` remains pinned.
+- Add `toon --gallery` for a centered, responsive HTML review page and
+  `toon --open` to generate that gallery and open it in the default browser.
+  Galleries include exactly the SVGs emitted by the current run.
+
 ## 2026.9.15
 
 - Consume `altium-monkey==2026.9.15`, which fixes record-text compatibility
