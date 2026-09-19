@@ -10,12 +10,17 @@ import pytest
 
 from altium_cruncher.altium_cruncher_cmd_toon import (
     TOON_CONFIG_FILENAME,
+    _cmd_toon,
     _resolve_config,
     register_parser,
 )
 from altium_cruncher.config_json import load_json_config
 from altium_cruncher.pcb_illustration_config import resolve_illustration_config
 from altium_cruncher.pcb_illustration_variants import illustration_variants
+from altium_cruncher.toon_gallery import (
+    _ToonGalleryArtifact,
+    write_toon_gallery,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -57,6 +62,9 @@ def test_config_is_created_and_reused_with_cli_overrides(tmp_path):
     assert not hasattr(_args(), "format")
     assert _args().timings is None
     assert _args().workers == 4
+    assert not _args().gallery and not _args().open_gallery
+    assert _args("--gallery").gallery
+    assert _args("--open").open_gallery
     assert _args("--workers", "8").workers == 8
     assert _args("--workers", "1").workers == 1
     assert _args().cache_dir is None and not _args().no_cache
@@ -83,6 +91,76 @@ def test_config_is_created_and_reused_with_cli_overrides(tmp_path):
     assert styles["silkscreen_board_graphics"]["color"] == "#000000"
     assert styles["assembly_designators"]["color"] == "#00FF00"
     assert config.components["J1"].show_designator is False
+
+
+def test_toon_gallery_centers_current_rendered_artifacts(tmp_path):
+    output = tmp_path / "toon"
+    top = output / "base" / "board top.svg"
+    bottom = output / "production" / "board-bottom.svg"
+    stale = output / "stale.svg"
+    top.parent.mkdir(parents=True)
+    bottom.parent.mkdir(parents=True)
+    top.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8")
+    bottom.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8")
+    stale.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8")
+
+    gallery = write_toon_gallery(
+        output,
+        [
+            _ToonGalleryArtifact(top, "control", "main", None, "top", "top"),
+            _ToonGalleryArtifact(
+                bottom, "control", "main", "Production", "bottom", "bottom"
+            ),
+        ],
+    )
+
+    text = gallery.read_text(encoding="utf-8")
+    assert gallery == output / "index.html"
+    assert "align-items: center; justify-content: center" in text
+    assert "object-position: center center" in text
+    assert "grid-template-columns: minmax(0, 1fr)" in text
+    assert "base/board%20top.svg?v=" in text
+    assert "stale.svg" not in text
+    assert "control · main · Base" in text
+    assert "control · main · Production" in text
+    assert text.count("Open raw SVG") == 2
+
+
+def test_toon_open_writes_gallery_and_uses_default_browser(tmp_path, monkeypatch):
+    from altium_cruncher import altium_cruncher_cmd_toon as toon
+
+    source = tmp_path / "board.PrjPcb"
+    source.write_text("fixture", encoding="utf-8")
+    output = tmp_path / "output"
+    svg = output / "board__top.svg"
+    svg.parent.mkdir(parents=True)
+    svg.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8")
+    artifact = _ToonGalleryArtifact(svg, "board", "board", None, "top", "top")
+    monkeypatch.setattr(toon, "render_project", lambda *args, **kwargs: [artifact])
+    opened: list[str] = []
+    monkeypatch.setattr(
+        toon.webbrowser,
+        "open_new_tab",
+        lambda uri: opened.append(uri) or True,
+    )
+
+    summary = _cmd_toon(
+        _args(str(source), "-o", str(output), "--open"),
+        SimpleNamespace(),
+    )
+
+    gallery = output / "index.html"
+    assert gallery.is_file()
+    assert opened == [gallery.resolve().as_uri()]
+    assert summary == f"Success: wrote 1 SVG file to {output.resolve()}"
+
+
+def test_toon_gallery_options_are_rejected_when_only_writing_config(tmp_path):
+    with pytest.raises(ValueError, match="cannot be used"):
+        _cmd_toon(
+            _args("--write-config", str(tmp_path / "toon.jsonc"), "--gallery"),
+            SimpleNamespace(),
+        )
 
 
 @pytest.mark.parametrize(

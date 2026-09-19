@@ -20,6 +20,7 @@ from .altium_cruncher_pcb_workflow import (
 from .pcb_illustration_config import illustration_view_side
 from .pcb_illustration_variants import IllustrationVariant, illustration_variants
 from .pcb_svg_render_job import PcbSvgRenderJob
+from .toon_gallery import _ToonGalleryArtifact
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def render_project(
     render_job: PcbSvgRenderJob,
     variant_name: str | None = None,
     all_variants: bool = False,
-) -> int:
+) -> list[_ToonGalleryArtifact]:
     """Resolve project metadata once, then render its selected boards/populations."""
     log.info("Loading project/board context: %s", input_file)
     with render_job.measure("project", board=str(input_file)):
@@ -52,7 +53,7 @@ def render_project(
         *(variant.excluded_designators for variant in variants)
     )
     variant_scoped = bool(variant_name or all_variants)
-    written = 0
+    artifacts: list[_ToonGalleryArtifact] = []
     for render_input in boards:
         render_job.register_board(render_input.pcbdoc, excluded_designators=common_dnp)
         for variant in variants:
@@ -69,15 +70,18 @@ def render_project(
                 board=str(render_input.pcb_path),
                 variant=variant.name or "base",
             ):
-                written += render_board(
-                    config,
-                    render_input,
-                    variant,
-                    variant_output,
-                    render_job=render_job,
-                    variant_scoped=variant_scoped,
+                artifacts.extend(
+                    render_board(
+                        config,
+                        render_input,
+                        variant,
+                        variant_output,
+                        render_job=render_job,
+                        variant_scoped=variant_scoped,
+                        project=input_file.stem,
+                    )
                 )
-    return written
+    return artifacts
 
 
 def render_board(
@@ -88,13 +92,14 @@ def render_board(
     *,
     render_job: PcbSvgRenderJob,
     variant_scoped: bool = False,
-) -> int:
+    project: str = "",
+) -> list[_ToonGalleryArtifact]:
     renderer = PcbSvgA0Renderer(
         config, excluded_designators=variant.excluded_designators, render_job=render_job
     )
     pcbdoc = variant.board(render_input.pcbdoc)
     renderer.render_job.register_variant(pcbdoc, render_input.pcbdoc)
-    written = 0
+    artifacts: list[_ToonGalleryArtifact] = []
     for view in config.enabled_views():
         side = illustration_view_side(view)
         mirror = (
@@ -137,5 +142,14 @@ def render_board(
         with renderer.render_job.measure("write_svg", view=view.name, side=side):
             svg_path.write_text(svg, encoding="utf-8")
         log.info("Wrote SVG: %s", svg_path)
-        written += 1
-    return written
+        artifacts.append(
+            _ToonGalleryArtifact(
+                path=svg_path,
+                project=project,
+                board=render_input.board_key,
+                variant=variant.name,
+                view=view.name,
+                side=side,
+            )
+        )
+    return artifacts
