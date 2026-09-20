@@ -24,23 +24,29 @@ def test_shared_workflow_vector(vector):
 
 def test_every_public_schema_has_generated_authority_and_local_references():
     catalog = json.loads((ROOT / "src/py/altium_cruncher/contracts/generated/catalog.json").read_text())
-    assert {row["schema"] for row in catalog} == {
+    catalog_schemas = {
+        schema
+        for row in catalog
+        for schema in (row["schema"], *row.get("compatibility_schemas", ()))
+    }
+    assert catalog_schemas == {
         path.relative_to(ROOT).as_posix() for path in (ROOT / "docs/contracts").glob("*.schema.json")
     }
     for row in catalog:
         assert (ROOT / row["source"]).is_file()
-        schema = json.loads((ROOT / row["schema"]).read_text())
-        def visit(value):
-            if isinstance(value, dict):
-                if "$ref" in value:
-                    assert value["$ref"].startswith("#/$defs/")
-                    assert value["$ref"].split("/")[-1] in schema["$defs"]
-                for child in value.values():
-                    visit(child)
-            elif isinstance(value, list):
-                for child in value:
-                    visit(child)
-        visit(schema)
+        for schema_path in (row["schema"], *row.get("compatibility_schemas", ())):
+            schema = json.loads((ROOT / schema_path).read_text())
+            def visit(value):
+                if isinstance(value, dict):
+                    if "$ref" in value:
+                        assert value["$ref"].startswith("#/$defs/")
+                        assert value["$ref"].split("/")[-1] in schema["$defs"]
+                    for child in value.values():
+                        visit(child)
+                elif isinstance(value, list):
+                    for child in value:
+                        visit(child)
+            visit(schema)
     decode_contract("interface_design_manifest", json.loads((ROOT / "docs/contracts/interface_design_manifest.a0.json").read_text()))
 
 

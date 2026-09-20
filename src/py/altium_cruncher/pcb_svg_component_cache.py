@@ -8,7 +8,7 @@ Omitted/failed bodies are never represented as reusable negative results.
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -28,7 +28,6 @@ from .altium_cruncher_pcb_illustration import (
     Side,
     RenderKeys,
     model_catalog_context,
-    _finite_vector,
     ModelGeometryError,
     _body_anchor,
     _body_opacity,
@@ -41,6 +40,7 @@ from .altium_cruncher_pcb_illustration import (
     _owning_component,
     _step_matrix,
 )
+from .pcb_illustration_model_geometry import _finite_vector
 
 log = logging.getLogger(__name__)
 
@@ -71,6 +71,8 @@ def _decode_placement(value: dict) -> CachedComponentPlacement:
             tuple[float, float, float, float, float, float],
             _finite_vector(value["bounds"], 6),
         ),
+        value.get("authored_side", "top"),
+        _finite_vector((value.get("board_z_offset_mm", 0.0),), 1)[0],
     )
     if (
         not isinstance(part.designator, str)
@@ -80,6 +82,7 @@ def _decode_placement(value: dict) -> CachedComponentPlacement:
             and (type(part.component_index) is not int or part.component_index < 0)
         )
         or any(part.bounds[i] > part.bounds[i + 3] for i in range(3))
+        or part.authored_side not in {"top", "bottom"}
     ):
         raise ValueError("invalid cached component placement")
     return part
@@ -108,15 +111,19 @@ def _validate_body(body: BodyMetadata, seen: set[int]) -> int:
 
 
 def _decode_warning_events(value: list) -> WarningEvents:
-    if any(
-        not isinstance(event, (list, tuple))
-        or len(event) != 2
-        or type(event[0]) is not bool
-        or not isinstance(event[1], str)
-        for event in value
-    ):
-        raise ValueError("invalid cached warning events")
-    return [(deduplicate, message) for deduplicate, message in value]
+    events: WarningEvents = []
+    for event in value:
+        if (
+            not isinstance(event, (list, tuple))
+            or len(event) not in {2, 3}
+            or type(event[0]) is not bool
+            or not isinstance(event[1], str)
+            or (len(event) == 3 and not isinstance(event[2], dict))
+        ):
+            raise ValueError("invalid cached warning events")
+        metadata = dict(event[2]) if len(event) == 3 else {}
+        events.append((event[0], event[1], cast(Any, metadata)))
+    return events
 
 
 def _decode_artwork(payload: object) -> Artwork:
@@ -168,20 +175,26 @@ class ComponentArtworkCache:
                 if recipe is None:
                     continue
                 signature.append(_digest(recipe))
-                self.recipes.setdefault(owner, []).append(recipe)
+                self.recipes.setdefault((owner, recipe["authored_side"]), []).append(
+                    recipe
+                )
             except ModelGeometryError, ValueError, TypeError, AttributeError:
                 # The original collector still validates/reports this body.
                 # Never reuse a component with an unrepresented authored body.
                 unusable.add(owner)
                 signature.append(dict(uncacheable_body=index, owner=owner))
         for owner in unusable:
-            self.recipes.pop(owner, None)
+            self.recipes.pop((owner, "top"), None)
+            self.recipes.pop((owner, "bottom"), None)
         self.key = _digest(
             dict(
                 recipes=signature,
                 side=side,
                 illustrate=illustrate,
                 line_width_mm=job.line_width_mm,
+                clipping=job._region_clipping_identity(),
+                placement_contract="board-surface-region-thickness-v1",
+                rendering_contract="aperture-composite-v1",
             )
         )
         self.hit_owners = set()
@@ -195,10 +208,10 @@ class ComponentArtworkCache:
     ) -> dict | None:
         helper, by_id, by_name = self.catalog_context
         side = self.side
-        if helper._component_body_is_bottom(body.properties, component) != (
-            side == "bottom"
-        ):
+        is_bottom = helper._component_body_is_bottom(body.properties, component)
+        if self.job.region_index is None and is_bottom != (side == "bottom"):
             return None
+        authored_side: Side = "bottom" if is_bottom else "top"
         opacity = _body_opacity(body)
         if opacity == 0:
             return None
@@ -210,36 +223,17 @@ class ComponentArtworkCache:
         )
         color = _colorref(body.body_color_3d)
         anchor_mm = (anchor[0] * 0.0254, anchor[1] * 0.0254)
-        if body.model_type == 0:
-            source = _extrusion_request(body, anchor_mm, is_bottom=side == "bottom")
-        elif body.model_type in {2, 3}:
-            _, _, _, source = _analytic_body(
-                body,
-                index,
-                anchor,
-                anchor_mm,
-                _component_rotation_degrees(component),
-                side == "bottom",
-                color,
-                opacity,
-            )
-        elif body.model_type == 1:
-            entry = helper._resolve_component_body_model_entry(
-                body.properties, models_by_id=by_id, models_by_name=by_name
-            )
-            if entry is None:
-                raise ModelGeometryError("unavailable STEP")
-            source = dict(
-                model=entry["hash"],
-                name=entry["name"],
-                matrix=_step_matrix(
-                    helper, body, component, anchor, is_bottom=side == "bottom"
-                ),
-            )
-            color = color if body.body_override_color else None
-        else:
-            raise ModelGeometryError("unsupported body")
-        recipe = dict(
+        source, color = self._body_recipe_source(
+            body,
+            index,
+            component,
+            anchor,
+            anchor_mm,
+            is_bottom,
+            color,
+            opacity,
+        )
+        return dict(
             index=index,
             owner=owner,
             designator=designator,
@@ -248,16 +242,61 @@ class ComponentArtworkCache:
             source=source,
             color=color,
             opacity=opacity,
+            authored_side=authored_side,
         )
-        return recipe
+
+    def _body_recipe_source(
+        self,
+        body: AltiumPcbComponentBody,
+        index: int,
+        component: AltiumPcbComponent | None,
+        anchor: tuple[float, float],
+        anchor_mm: tuple[float, float],
+        is_bottom: bool,
+        color: tuple[float, float, float],
+        opacity: float,
+    ) -> tuple[object, tuple[float, float, float] | None]:
+        helper, by_id, by_name = self.catalog_context
+        if body.model_type == 0:
+            return _extrusion_request(body, anchor_mm, is_bottom=is_bottom), color
+        if body.model_type in {2, 3}:
+            _, _, _, source = _analytic_body(
+                body,
+                index,
+                anchor,
+                anchor_mm,
+                _component_rotation_degrees(component),
+                is_bottom,
+                color,
+                opacity,
+            )
+            return source, color
+        if body.model_type != 1:
+            raise ModelGeometryError("unsupported body")
+        entry = helper._resolve_component_body_model_entry(
+            body.properties, models_by_id=by_id, models_by_name=by_name
+        )
+        if entry is None:
+            raise ModelGeometryError("unavailable STEP")
+        return (
+            dict(
+                model=entry["hash"],
+                name=entry["name"],
+                matrix=_step_matrix(
+                    helper, body, component, anchor, is_bottom=is_bottom
+                ),
+            ),
+            color if body.body_override_color else None,
+        )
 
     @staticmethod
-    def _owner(part: ComponentPlacement) -> int:
-        return (
+    def _owner(part: ComponentPlacement) -> tuple[int, Side]:
+        owner = (
             part.component_index
             if part.component_index is not None
             else -part.bodies[0]["index"] - 1
         )
+        return owner, part.authored_side
 
     @staticmethod
     def _matches_recipe(
@@ -361,6 +400,8 @@ class ComponentArtworkCache:
             bodies=part.bodies,
             component_index=part.component_index,
             bounds=part.bounds,
+            authored_side=part.authored_side,
+            board_z_offset_mm=part.board_z_offset_mm,
         )
         return dict(
             placement=placement,

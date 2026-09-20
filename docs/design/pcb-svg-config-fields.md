@@ -10,7 +10,7 @@ The CLI applies presets, config overrides and explicit command choices afterward
 
 | Field | Required | Default annotation | Description |
 | --- | --- | --- | --- |
-| `schema` | No | `"pcb.svg.config.a0"` | PCB SVG config contract id. |
+| `schema` | No | `"pcb.svg.config.a1"` | PCB SVG config contract id. pcb.svg.config.a0 remains accepted as the additive predecessor. |
 | `global` | No | — | Global settings applied to layer outputs and composed views. |
 | `assembly` | No | — | Assembly projection defaults for component virtual layers. |
 | `dnp` | No | — | DNP marker style. |
@@ -84,7 +84,7 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | --- | --- | --- | --- |
 | `enabled` | No | `true` | Enable individual physical layer SVG outputs. |
 | `layers` | No | `"auto"` | Either 'auto' or a list of PCB layer names: legacy PcbLayer names, display names, or V7 semantic tokens such as 'MECHANICAL33' and 'MID31' when the installed altium-monkey exposes the V7-aware layer API. |
-| `include_special_layers` | No | — | Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM. |
+| `include_special_layers` | No | — | Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, BEND_LINES, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, SURFACE_COPPER_TOP, SURFACE_COPPER_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM. |
 | `output_dir` | No | `"layers"` | Output directory for physical layer SVG files. |
 
 ## ViewOptions
@@ -121,6 +121,7 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | `assembly_designators` | No | — | Autodoc silhouette fitting; model-less parts use electrical pads first (including flagged testpoints), with mechanical holes as a fallback. |
 | `board_substrate` | No | — | Bare PCB fill, clipped to the outline with physical bores and scoped cutouts removed. Place BOARD_SUBSTRATE before copper and film. Applies globally or per view. |
 | `soldermask_film` | No | — | Board-clipped inverse solder mask using saved pad/via expansions. Applies globally or per view. |
+| `bend_lines` | No | — | Flat, region-clipped rigid-flex bend-line annotations. This does not fold or deform the board. |
 | `assembly_hlr` | No | — |  |
 | `board_outline` | No | — |  |
 | `board_cutouts` | No | — |  |
@@ -134,6 +135,7 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | `silkscreen_component_graphics` | No | — |  |
 | `silkscreen_designators` | No | — |  |
 | `silkscreen_board_graphics` | No | — |  |
+| `silkscreen_surface` | No | — |  |
 | `pin1_marker` | No | — |  |
 | `keepout` | No | — |  |
 
@@ -176,15 +178,31 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | Field | Required | Default annotation | Description |
 | --- | --- | --- | --- |
 | `enabled` | No | `true` | Enable this rendering rule. |
-| `color` | No | `"#B6A26B"` | CSS color for exposed board substrate. |
+| `color` | No | `"auto"` | Global substrate CSS color override, or auto (default) for region-local authored/saved/palette resolution. |
+| `rigid_color` | No | `"#B6A26B"` | Rigid-substrate fallback CSS color used when color=auto and no authored or saved board-core color is available. |
+| `flex_color` | No | `"#D18B28"` | Flex-substrate fallback CSS color used when color=auto and no authored material color is available. |
 
 ## SoldermaskFilmStyle
 
 | Field | Required | Default annotation | Description |
 | --- | --- | --- | --- |
 | `enabled` | No | `true` | Enable this rendering rule. |
-| `color` | No | `"auto"` | CSS color or auto (default), which reads the side's saved Altium 3D solder-mask color and falls back to #176B3A. |
+| `color` | No | `"auto"` | Global film CSS color override, or auto (default) for region-local authored material, saved Altium 3D solder-mask color, and configured surface-class fallback resolution. |
+| `coverlay_color` | No | `"#D18B28"` | Coverlay fallback CSS color used when color=auto and the authored coverlay material has no color. |
 | `opacity` | No | `1` | Layer opacity from 0.0 to 1.0. |
+
+## BendLinesStyle
+
+| Field | Required | Default annotation | Description |
+| --- | --- | --- | --- |
+| `enabled` | No | `true` | Enable flat board bend-line annotations. |
+| `color` | No | `"#D97706"` | SVG color for bend-line annotations. |
+| `opacity` | No | `0.8` | Layer opacity from 0.0 to 1.0. |
+| `line_width_mm` | No | `0.15` | Stroke width in millimeters. |
+| `line_style` | No | `"dashed"` | Bend-line stroke style. Options: solid, dashed. |
+| `dash_length_mm` | No | `0.5` | Dash and gap length in millimeters when line_style is dashed. |
+| `dash_gap_mm` | No | `0.3` | Gap between dashes in millimeters when line_style is dashed. |
+| `extension_mm` | No | `1` | Absolute distance each end extends beyond the owning-region chord, in millimeters. Zero stops at the region boundary. |
 
 ## AssemblyHlrStyle
 
@@ -302,6 +320,12 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | --- | --- | --- | --- |
 | `enabled` | No | `true` | Enable this rendering rule. |
 | `color` | No | `"#000000"` | SVG color value, usually #RRGGBB. |
+
+## SilkscreenSurfaceStyle
+
+| Field | Required | Default annotation | Description |
+| --- | --- | --- | --- |
+| `clip_mode` | No | `"none"` | Silkscreen clipping domain. none preserves authored overlay; board clips to board material and physical holes; film clips to the resolved solder-mask/coverlay film after apertures. |
 
 ## Pin1MarkerStyle
 

@@ -49,7 +49,6 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
     pcb_svg_layer_ref_from_token,
-    pcb_svg_physical_layer_from_token,
     resolve_config_output_path,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_assembly_projection import (
@@ -65,21 +64,54 @@ from altium_cruncher.altium_cruncher_pcb_svg_pin1 import (
     is_grid_pad_designator,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
-    COMPONENT_LAYER_IDS, ComponentLayerSession,
+    COMPONENT_LAYER_IDS,
+    ComponentLayerSession,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_soldermask_film import (
     SOLDERMASK_FILM_LAYER_IDS,
-    SoldermaskFilmRenderer,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_substrate import (
-    BOARD_SUBSTRATE_LAYER_ID, BoardSubstrateRenderer,
+    BOARD_SUBSTRATE_LAYER_ID,
+)
+from altium_cruncher.altium_cruncher_pcb_svg_bend_lines import (
+    BEND_LINES_LAYER_ID,
 )
 from altium_cruncher.altium_cruncher_pcb_workflow import (
     CruncherPcbRenderInput,
     iter_pcb_render_inputs,
     load_design_for_pcb_input,
 )
-from .pcb_svg_render_job import PcbSvgRenderJob, layer_style_key, layer_text_key, layer_side, view_side
+from .pcb_svg_render_job import (
+    PcbSvgRenderJob,
+    layer_style_key,
+    layer_text_key,
+    layer_side,
+    view_side,
+)
+from .pcb_svg_surface_mixin import PcbSvgSurfaceMixin
+from .pcb_svg_surface_copper import PcbSvgSurfaceCopperMixin, SURFACE_COPPER_LAYER_IDS
+from .pcb_svg_a0_helpers import (
+    component_designator as _component_designator,
+    component_side as _component_side,
+    is_component_linked as _is_component_linked,
+    normalize_draw_order as _normalize_draw_order,
+    object_float as _object_float,
+    pad_center_mils as _pad_center_mils,
+    pad_has_hole as _pad_has_hole,
+    pad_is_slot as _pad_is_slot,
+    pad_renders_on_layer as _pad_renders_on_layer,
+    pad_size_mils as _pad_size_mils,
+    reference_designator_prefix as _reference_designator_prefix,
+    safe_svg_id as _safe_svg_id,
+    style_bool as _style_bool,
+    style_color as _style_color,
+    style_enabled as _style_enabled,
+    style_float as _style_float,
+    style_int as _style_int,
+    style_plating_color as _style_plating_color,
+    svg_symbol_mode as _svg_symbol_mode,
+    synthetic_layer_metadata_attrs as _synthetic_layer_metadata_attrs,
+)
 from .svg_editor_metadata import decorate_editor_layer
 
 if TYPE_CHECKING:
@@ -119,227 +151,21 @@ _ASSEMBLY_HLR_EDGE_FLAG_KEYS = {
 }
 
 
-def _style_enabled(styles: dict[str, dict[str, object]], name: str) -> bool:
-    return bool(styles.get(name, {}).get("enabled", True))
-
-
-def _style_color(styles: dict[str, dict[str, object]], name: str, default: str) -> str:
-    return str(styles.get(name, {}).get("color") or default)
-
-
-def _style_float(
-    styles: dict[str, dict[str, object]],
-    name: str,
-    key: str,
-    default: float,
-) -> float:
-    value = styles.get(name, {}).get(key, default)
-    if not isinstance(value, (int, float, str)):
-        raise ValueError(f"Invalid pcb-svg style value {name}.{key}")
-    try:
-        return float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"Invalid pcb-svg style value {name}.{key}") from exc
-
-
-def _style_int(
-    styles: dict[str, dict[str, object]],
-    name: str,
-    key: str,
-    default: int,
-) -> int:
-    value = styles.get(name, {}).get(key, default)
-    if not isinstance(value, (int, float, str)):
-        raise ValueError(f"Invalid pcb-svg style value {name}.{key}")
-    try:
-        return int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"Invalid pcb-svg style value {name}.{key}") from exc
-
-
-def _style_bool(
-    styles: dict[str, dict[str, object]],
-    name: str,
-    key: str,
-    default: bool,
-) -> bool:
-    value = styles.get(name, {}).get(key, default)
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        normalized = value.lower().strip()
-        if normalized in {"1", "true", "yes", "on"}:
-            return True
-        if normalized in {"0", "false", "no", "off"}:
-            return False
-    return bool(value)
-
-
-def _style_plating_color(
-    styles: dict[str, dict[str, object]],
-    name: str,
-    *,
-    plated: bool,
-) -> str:
-    style = styles.get(name, {})
-    key = "plated_color" if plated else "non_plated_color"
-    return str(style.get(key) or ("#90EE90" if plated else "#ADD8E6"))
-
-
-def _is_component_linked(primitive: object) -> bool:
-    try:
-        component_index = int(getattr(primitive, "component_index", -1))
-    except (TypeError, ValueError):
-        return False
-    return component_index >= 0 and component_index not in {0xFFFF, 65535}
-
-
-def _pad_has_hole(pad: object) -> bool:
-    try:
-        return int(getattr(pad, "hole_size", 0) or 0) > 0
-    except (TypeError, ValueError):
-        return False
-
-
-def _pad_is_slot(pad: object) -> bool:
-    try:
-        hole_shape = int(getattr(pad, "hole_shape", 0) or 0)
-        hole_size = int(getattr(pad, "hole_size", 0) or 0)
-        slot_size = int(getattr(pad, "slot_size", 0) or 0)
-    except (TypeError, ValueError):
-        return False
-    return hole_shape == 2 and hole_size > 0 and slot_size > hole_size
-
-
-def _object_float(value: object, default: float = 0.0) -> float:
-    if isinstance(value, (int, float, str)):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return default
-    return default
-
-
-def _pad_center_mils(pad: object) -> tuple[float, float]:
-    center = getattr(pad, "pad_center_mils", None)
-    if callable(center):
-        try:
-            result = center()
-            if isinstance(result, (list, tuple)) and len(result) >= 2:
-                return (_object_float(result[0]), _object_float(result[1]))
-        except (TypeError, ValueError):
-            pass
-    x_value = getattr(pad, "x_mils", 0.0)
-    y_value = getattr(pad, "y_mils", 0.0)
-    return (_object_float(x_value), _object_float(y_value))
-
-
-def _pad_size_mils(pad: object, layer: PcbLayer) -> tuple[float, float]:
-    layer_size = getattr(pad, "_layer_size", None)
-    if callable(layer_size):
-        try:
-            result = layer_size(layer)
-            if isinstance(result, (list, tuple)) and len(result) >= 2:
-                return (
-                    _object_float(result[0]) / 10000.0,
-                    _object_float(result[1]) / 10000.0,
-                )
-        except (TypeError, ValueError):
-            pass
-    width = getattr(pad, "width_mils", 0.0)
-    height = getattr(pad, "height", 0.0)
-    return (_object_float(width), _object_float(height) / 10000.0)
-
-
-def _pad_renders_on_layer(pad: object, layer: PcbLayer) -> bool:
-    should_render = getattr(pad, "_should_render_on_layer", None)
-    if callable(should_render):
-        try:
-            return bool(should_render(layer))
-        except (TypeError, ValueError):
-            return False
-    return True
-
-
-def _component_side(component: object) -> str:
-    normalized = getattr(component, "get_layer_normalized", None)
-    if callable(normalized):
-        try:
-            side = str(normalized()).strip().lower()
-            if side:
-                return side
-        except (TypeError, ValueError):
-            pass
-    raw_layer = str(getattr(component, "layer", "") or "").strip().lower()
-    if "bottom" in raw_layer:
-        return "bottom"
-    if "top" in raw_layer:
-        return "top"
-    return raw_layer
-
-
-def _component_designator(component: object) -> str:
-    return str(getattr(component, "designator", "") or "").strip()
-
-
-def _reference_designator_prefix(designator: str) -> str:
-    text = str(designator or "").strip().upper()
-    index = 0
-    while index < len(text) and text[index].isalpha():
-        index += 1
-    return text[:index] if index > 0 else text
-
-
-def _normalize_draw_order(tokens: list[str]) -> list[str]:
-    body: list[str] = []
-    holes: list[str] = []
-    hlr: list[str] = []
-    components: list[str] = []
-    for token in tokens:
-        if token in COMPONENT_LAYER_IDS:
-            if token not in components:
-                components.append(token)
-        elif token in _HLR_TOKENS:
-            if token not in hlr:
-                hlr.append(token)
-        elif token in _HOLE_TOKENS:
-            if token not in holes:
-                holes.append(token)
-        elif token not in body:
-            body.append(token)
-    return body + holes + hlr + components
-
-
-def _svg_symbol_mode(projection_mode: str) -> str:
-    return "simple" if projection_mode in {"outline", "simple"} else projection_mode
-
-
-def _safe_svg_id(value: str) -> str:
-    return "".join(ch if ch.isalnum() or ch in "._-" else "-" for ch in value).strip(
-        "-"
-    )
-
-
-def _synthetic_layer_metadata_attrs(
-    layer_id: int,
-    *,
-    key: str,
-    display_name: str,
-    role: str = "annotation",
-) -> list[str]:
-    return [
-        f'data-layer-id="{int(layer_id)}"',
-        f'data-layer-key="{html.escape(key)}"',
-        f'data-layer-name="{html.escape(key)}"',
-        f'data-layer-display-name="{html.escape(display_name)}"',
-        f'data-layer-role="{html.escape(role)}"',
-    ]
-
-
-class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRenderer):
+class PcbSvgA0Renderer(
+    PcbSvgSurfaceCopperMixin,
+    PcbSvgSurfaceMixin,
+    PrimitiveDispatchCacheMixin,
+    CruncherPcbCutoutLayerRenderer,
+):
     """Render explicit A0 PCB SVG layer and composed view outputs."""
 
-    def __init__(self, config: PcbSvgConfig, *, excluded_designators: frozenset[str] = frozenset(), render_job: PcbSvgRenderJob | None = None) -> None:
+    def __init__(
+        self,
+        config: PcbSvgConfig,
+        *,
+        excluded_designators: frozenset[str] = frozenset(),
+        render_job: PcbSvgRenderJob | None = None,
+    ) -> None:
         self.config = config
         self.excluded_designators = excluded_designators
         self.render_job = render_job or PcbSvgRenderJob()
@@ -361,9 +187,13 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             drill_hole_mode="overlay",
             drill_holes_as_layer_group=False,
         )
-        super().__init__(options=options, primitive_index=self.render_job.primitive_index)
+        super().__init__(
+            options=options, primitive_index=self.render_job.primitive_index
+        )
 
-    def _resolved_layer_stack_safe(self, pcbdoc: AltiumPcbDoc) -> ResolvedLayerStack | None:
+    def _resolved_layer_stack_safe(
+        self, pcbdoc: AltiumPcbDoc
+    ) -> ResolvedLayerStack | None:
         key = self.render_job.identity(self.render_job.source(pcbdoc))
         if key not in self.render_job.stacks:
             resolved = super()._resolved_layer_stack_safe(pcbdoc)
@@ -373,28 +203,48 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         return self.render_job.stacks[key]
 
     def _build_context(
-        self, pcbdoc: AltiumPcbDoc, project_parameters: dict[str, str] | None = None,
+        self,
+        pcbdoc: AltiumPcbDoc,
+        project_parameters: dict[str, str] | None = None,
     ) -> PcbSvgRenderContext:
         """Reuse board facts; bind options and variant parameters to a fresh context."""
         source = self.render_job.source(pcbdoc)
         # These presentation fields cannot affect bounds or force-all metadata.
-        fact_options = replace(self.options, visible_layers=None, layer_render_order=None,
-                               mirror_x=False, board_outline_color="", board_cutout_color="",
-                               polygon_overlay_color="")
-        key = (self.render_job.identity(source), repr(fact_options),
-               repr(self.config.global_options.canvas))
+        fact_options = replace(
+            self.options,
+            visible_layers=None,
+            layer_render_order=None,
+            mirror_x=False,
+            board_outline_color="",
+            board_cutout_color="",
+            polygon_overlay_color="",
+        )
+        key = (
+            self.render_job.identity(source),
+            repr(fact_options),
+            repr(self.config.global_options.canvas),
+        )
         cache = self.render_job.contexts
         self._context_cache_status = "hit" if key in cache else "built"
         if key not in cache:
             cache[key] = super()._build_context(source, project_parameters={})
-        changes = dict(options=self.options, project_parameters=dict(project_parameters or {}))
+        changes = dict(
+            options=self.options, project_parameters=dict(project_parameters or {})
+        )
         if pcbdoc is not source:
             metadata_key = self.render_job.identity(pcbdoc)
             if metadata_key not in self.render_job.component_metadata:
-                self.render_job.component_metadata[metadata_key] = self._build_component_metadata(pcbdoc)
-            designators, uids, components = self.render_job.component_metadata[metadata_key]
-            changes.update(component_designator_by_index=designators,
-                           component_uid_by_index=uids, component_data_by_index=components)
+                self.render_job.component_metadata[metadata_key] = (
+                    self._build_component_metadata(pcbdoc)
+                )
+            designators, uids, components = self.render_job.component_metadata[
+                metadata_key
+            ]
+            changes.update(
+                component_designator_by_index=designators,
+                component_uid_by_index=uids,
+                component_data_by_index=components,
+            )
         # replace invokes __post_init__, giving special-string lookup its own
         # normalized parameter table. Shared metadata dictionaries are read-only.
         return replace(cache[key], **changes)
@@ -429,9 +279,25 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             return None
         try:
             min_x, min_y, max_x, max_y = outline.bounding_box
-        except (TypeError, ValueError, AttributeError):
+        except TypeError, ValueError, AttributeError:
             return None
-        return (float(min_x), float(min_y), float(max_x), float(max_y))
+        bounds = (float(min_x), float(min_y), float(max_x), float(max_y))
+        # Altium split-board regions partition the outline and retain curved
+        # extrema that the legacy endpoint-only bounding box can miss.
+        try:
+            partition = self.render_job.board_region_envelopes(
+                pcbdoc
+            ).complete_partition_bounds_mils
+        except AttributeError, KeyError, TypeError, ValueError:
+            return bounds
+        if partition is None:
+            return bounds
+        return (
+            min(bounds[0], partition[0]),
+            min(bounds[1], partition[1]),
+            max(bounds[2], partition[2]),
+            max(bounds[3], partition[3]),
+        )
 
     def _canvas_metadata_attrs(
         self,
@@ -486,7 +352,7 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
                 float(getattr(board, "origin_x", 0.0)),
                 float(getattr(board, "origin_y", 0.0)),
             )
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return (0.0, 0.0)
 
     def _append_svg_metadata(
@@ -523,7 +389,11 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             enrichment_payload["virtual_component_layers"] = {
                 "schema": "pcb.svg.component-layers.a0",
                 "coordinate_policy": "illustration anchors are before the outer scene mirror; designator centers are in the displayed view; all units mm",
-                "layers": [layer.metadata for layer in self._view_component_layers.values() if layer.metadata],
+                "layers": [
+                    layer.metadata
+                    for layer in self._view_component_layers.values()
+                    if layer.metadata
+                ],
             }
         payload_json = json.dumps(
             enrichment_payload,
@@ -566,11 +436,23 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
     ) -> str:
         """Render a complete view, reusing immutable artwork within this job."""
         if self._own_render_job:
-            self.render_job.register_board(self.render_job.source(pcbdoc), excluded_designators=self.excluded_designators)
+            self.render_job.register_board(
+                self.render_job.source(pcbdoc),
+                excluded_designators=self.excluded_designators,
+            )
         side = view_side(layers)
-        with self.render_job.measure("view", board=str(pcbdoc.filepath), view=view.name, side=side):
-            return self._render_view_svg(pcbdoc, view, project_parameters=project_parameters,
-                                         layers=layers, group_id=group_id, mirror=mirror, styles=styles)
+        with self.render_job.measure(
+            "view", board=str(pcbdoc.filepath), view=view.name, side=side
+        ):
+            return self._render_view_svg(
+                pcbdoc,
+                view,
+                project_parameters=project_parameters,
+                layers=layers,
+                group_id=group_id,
+                mirror=mirror,
+                styles=styles,
+            )
 
     def _render_view_svg(
         self,
@@ -590,8 +472,13 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         )
         self.component_layers = self.render_job.components(pcbdoc)
         tokens = _normalize_draw_order([token for token in layers if token])
-        physical_layers = self._physical_layers_from_tokens(tokens)
         layer_refs = self._layer_refs_from_tokens(tokens)
+        for ref in self._surface_copper_refs(pcbdoc, tokens):
+            if ref not in layer_refs:
+                layer_refs.append(ref)
+        physical_layers = [
+            ref.legacy_layer for ref in layer_refs if ref.legacy_layer is not None
+        ]
         options = replace(
             self.options,
             visible_layers=set(layer_refs),
@@ -632,18 +519,29 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         self._view_component_layers = {}
         for token in tokens:
             if token in COMPONENT_LAYER_IDS:
-                with self.render_job.measure("layer", layer=token, side=layer_side(token)) as timing:
-                    self._view_component_layers[token] = self.component_layers.render(self, ctx, pcbdoc, token, tokens, styles)
+                with self.render_job.measure(
+                    "layer", layer=token, side=layer_side(token)
+                ) as timing:
+                    self._view_component_layers[token] = self.component_layers.render(
+                        self, ctx, pcbdoc, token, tokens, styles
+                    )
                     timing["cache"] = self.component_layers.last_cache_status
         bounds = [(0, 0, ctx.width_mm, ctx.height_mm)]
-        bounds.extend(layer.bounds_mm for layer in self._view_component_layers.values() if layer.bounds_mm)
+        bounds.extend(
+            layer.bounds_mm
+            for layer in self._view_component_layers.values()
+            if layer.bounds_mm
+        )
+        bounds += self._bend_line_bounds(ctx, pcbdoc, tokens, styles, mirror)
         left, top = min(b[0] for b in bounds), min(b[1] for b in bounds)
         right, bottom = max(b[2] for b in bounds), max(b[3] for b in bounds)
         self._view_box_mm = (left, top, right - left, bottom - top)
         active_layer_ids = self._active_layer_ids(tokens)
         svg_attrs = self._build_svg_document_attrs(ctx, pcbdoc, view.name)  # noqa: SLF001
         svg_attrs = [attr for attr in svg_attrs if not attr.startswith("viewBox=")]
-        svg_attrs.append('viewBox="' + " ".join(f"{v:.12g}" for v in self._view_box_mm) + '"')
+        svg_attrs.append(
+            'viewBox="' + " ".join(f"{v:.12g}" for v in self._view_box_mm) + '"'
+        )
         svg_attrs.extend(self._canvas_metadata_attrs(ctx, pcbdoc))
         svg_attrs.append(f'xmlns:inkscape="{_INKSCAPE_NS}"')
 
@@ -679,18 +577,33 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             lines.append(f"    {line}")
 
         hole_source_layers = self._hole_source_layers(tokens, physical_layers)
-        lines.extend(self._compose_view_layers(
-            ctx, pcbdoc, tokens, styles, hole_source_layers, board_clip_id, layer_hole_masks, extra_scene,
-        ))
+        lines.extend(
+            self._compose_view_layers(
+                ctx,
+                pcbdoc,
+                tokens,
+                styles,
+                hole_source_layers,
+                board_clip_id,
+                layer_hole_masks,
+                extra_scene,
+            )
+        )
         lines.append("    </g>")
         lines.append("  </g>")
         lines.append("</svg>")
         return "\n".join(lines)
 
     def _compose_view_layers(
-        self, ctx: PcbSvgRenderContext, pcbdoc: AltiumPcbDoc, tokens: list[str],
-        styles: dict[str, dict[str, object]], hole_source_layers: list[PcbLayer],
-        board_clip_id: str, layer_hole_masks: dict[int, tuple[str, list[str]]], extra_scene: list[str],
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        tokens: list[str],
+        styles: dict[str, dict[str, object]],
+        hole_source_layers: list[PcbLayer],
+        board_clip_id: str,
+        layer_hole_masks: dict[int, tuple[str, list[str]]],
+        extra_scene: list[str],
     ) -> list[str]:
         """Commit ordered layer fragments after all component bounds are known."""
         lines: list[str] = []
@@ -705,29 +618,42 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
                 continue
             if token in _HLR_TOKENS:
                 continue  # Already measured during overlay materialization.
-            with self.render_job.measure("layer", layer=token, side=layer_side(token)) as timing:
-                key = (self.render_job.identity(self.render_job.source(pcbdoc)), token,
-                       ctx.min_x_mils, ctx.max_y_mils, ctx.width_mm, ctx.height_mm,
-                       repr(self.options), json.dumps(self.config.to_dict(), sort_keys=True),
-                       layer_style_key(token, styles), layer_text_key(ctx, pcbdoc, token),
-                       tuple(hole_source_layers), board_clip_id,
-                       tuple((k, v[0]) for k, v in layer_hole_masks.items()))
+            with self.render_job.measure(
+                "layer", layer=token, side=layer_side(token)
+            ) as timing:
+                key = (
+                    self.render_job.identity(self.render_job.source(pcbdoc)),
+                    token,
+                    ctx.min_x_mils,
+                    ctx.max_y_mils,
+                    ctx.width_mm,
+                    ctx.height_mm,
+                    repr(self.options),
+                    json.dumps(self.config.to_dict(), sort_keys=True),
+                    layer_style_key(token, styles),
+                    layer_text_key(ctx, pcbdoc, token),
+                    tuple(hole_source_layers),
+                    board_clip_id,
+                    tuple((k, v[0]) for k, v in layer_hole_masks.items()),
+                )
                 if key in self.render_job.fragments:
                     timing["cache"] = "hit"
                 else:
                     timing["cache"] = "built"
-                    self.render_job.fragments[key] = tuple(decorate_editor_layer(
-                        self._render_a0_token(
-                            ctx,
-                            pcbdoc,
+                    self.render_job.fragments[key] = tuple(
+                        decorate_editor_layer(
+                            self._render_a0_token(
+                                ctx,
+                                pcbdoc,
+                                token,
+                                styles,
+                                source_layers=hole_source_layers,
+                                board_clip_id=board_clip_id,
+                                layer_hole_masks=layer_hole_masks,
+                            ),
                             token,
-                            styles,
-                            source_layers=hole_source_layers,
-                            board_clip_id=board_clip_id,
-                            layer_hole_masks=layer_hole_masks,
-                        ),
-                        token,
-                    ))
+                        )
+                    )
                 lines.extend(self.render_job.fragments[key])
 
         if extra_scene:
@@ -764,18 +690,14 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             return [self._view_component_layers[token].svg]
         if token in _HLR_TOKENS:
             return []
-        if token in SOLDERMASK_FILM_LAYER_IDS:
-            return SoldermaskFilmRenderer(self.options, primitive_index=self.render_job.primitive_index).render_film(
-                ctx, pcbdoc, token, styles.get("soldermask_film", {})
-            )
-        if token == "BOARD_SUBSTRATE":
-            return BoardSubstrateRenderer(self.options).render_substrate(
-                ctx, pcbdoc, styles.get("board_substrate", {}), source_layers,
-            )
-        if token == "BOARD_OUTLINE":
-            return self._render_a0_board_outline(ctx, pcbdoc, styles)
-        if token == "BOARD_CUTOUTS":
-            return self._render_a0_board_cutouts(ctx, pcbdoc, styles)
+        surface = self._render_surface_token(
+            ctx, pcbdoc, token, styles, source_layers, board_clip_id, layer_hole_masks
+        )
+        if surface is not None:
+            return surface
+        board_geometry = self._render_board_geometry_token(ctx, pcbdoc, token, styles)
+        if board_geometry is not None:
+            return board_geometry
         if token in _HOLE_TOKENS:
             return self._render_a0_hole_group(
                 ctx,
@@ -786,11 +708,30 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             )
         if token in _PIN1_TOKENS:
             return self._render_a0_pin1_layer(ctx, pcbdoc, token, styles)
-        return self._render_physical_token(ctx, pcbdoc, token, styles, board_clip_id, layer_hole_masks)
+        return self._render_physical_token(
+            ctx, pcbdoc, token, styles, board_clip_id, layer_hole_masks
+        )
+
+    def _render_board_geometry_token(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        token: str,
+        styles: dict[str, dict[str, object]],
+    ) -> list[str] | None:
+        if token == "BOARD_OUTLINE":
+            return self._render_a0_board_outline(ctx, pcbdoc, styles)
+        if token == "BOARD_CUTOUTS":
+            return self._render_a0_board_cutouts(ctx, pcbdoc, styles)
+        return None
 
     def _render_physical_token(
-        self, ctx: PcbSvgRenderContext, pcbdoc: AltiumPcbDoc, token: str,
-        styles: dict[str, dict[str, object]], board_clip_id: str,
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        token: str,
+        styles: dict[str, dict[str, object]],
+        board_clip_id: str,
         layer_hole_masks: dict[int, tuple[str, list[str]]],
     ) -> list[str]:
         ref = pcb_svg_layer_ref_from_token(token)
@@ -847,16 +788,6 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             return board_clip_id
         return None
 
-    def _physical_layers_from_tokens(self, tokens: list[str]) -> list[PcbLayer]:
-        layers: list[PcbLayer] = []
-        for token in tokens:
-            if token in PCB_SVG_SPECIAL_LAYERS:
-                continue
-            layer = pcb_svg_physical_layer_from_token(token)
-            if layer is not None and layer not in layers:
-                layers.append(layer)
-        return layers
-
     def _layer_refs_from_tokens(self, tokens: list[str]) -> list[PcbLayerRef]:
         refs: list[PcbLayerRef] = []
         for token in tokens:
@@ -871,8 +802,10 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         ids: list[int] = []
         synthetic_ids = {
             **SOLDERMASK_FILM_LAYER_IDS,
+            **SURFACE_COPPER_LAYER_IDS,
             **COMPONENT_LAYER_IDS,
             "BOARD_SUBSTRATE": BOARD_SUBSTRATE_LAYER_ID,
+            "BEND_LINES": BEND_LINES_LAYER_ID,
             "BOARD_OUTLINE": PCB_SVG_BOARD_OUTLINE_LAYER_ID,
             "BOARD_CUTOUTS": PCB_SVG_BOARD_CUTOUTS_LAYER_ID,
             "DRILLS": PCB_SVG_DRILLS_LAYER_ID,
@@ -932,10 +865,16 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         for token in tokens:
             if token not in _HLR_TOKENS:
                 continue
-            with self.render_job.measure("layer", layer=token, side=layer_side(token)) as timing:
+            with self.render_job.measure(
+                "layer", layer=token, side=layer_side(token)
+            ) as timing:
                 overlay_defs, overlay_scene = self._render_a0_hlr(
-                    ctx, pcbdoc, token=token, view=view,
-                    styles=styles, source_layers=source_layers,
+                    ctx,
+                    pcbdoc,
+                    token=token,
+                    view=view,
+                    styles=styles,
+                    source_layers=source_layers,
                 )
                 timing["cache"] = "built"
             defs.extend(overlay_defs)
@@ -1861,7 +1800,7 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         # The base renderer's layer-group emitter takes coerced render layers
         # (V7-aware) since altium-monkey 2026.8.1.
         group_layer = self._coerced_layers([layer])[0]  # noqa: SLF001
-        return self._render_layer_group_from_primitives(  # noqa: SLF001
+        lines = self._render_layer_group_from_primitives(  # noqa: SLF001
             ctx,
             group_layer,
             color,
@@ -1871,6 +1810,15 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             clip_path_id=clip_path_id,
             mask_id=mask_id,
         )
+        if layer.is_overlay():
+            return self._clip_silkscreen_to_surface(
+                ctx,
+                pcbdoc,
+                layer,
+                styles,
+                lines,
+            )
+        return lines
 
     def _a0_copper_primitives(
         self,
@@ -1972,49 +1920,81 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
                 comp_graphics.extend(
                     item for item in collection if _is_component_linked(item)
                 )
-            primitives.extend(self._cached_silk_chunk(
-                ctx, pcbdoc, layer, "component_graphics", styles.get("silkscreen_component_graphics", {}),
-                lambda: self._render_primitive_collection(  # noqa: SLF001
+            primitives.extend(
+                self._cached_silk_chunk(
                     ctx,
-                    comp_graphics,
+                    pcbdoc,
                     layer,
-                    _style_color(
-                        styles,
-                        "silkscreen_component_graphics",
-                        ctx.layer_color(layer),
+                    "component_graphics",
+                    styles.get("silkscreen_component_graphics", {}),
+                    lambda: self._render_primitive_collection(  # noqa: SLF001
+                        ctx,
+                        comp_graphics,
+                        layer,
+                        _style_color(
+                            styles,
+                            "silkscreen_component_graphics",
+                            ctx.layer_color(layer),
+                        ),
                     ),
-                ),
-            ))
+                )
+            )
         if _style_enabled(styles, "silkscreen_board_graphics"):
             board_graphics: list[object] = []
             for collection in graphics_collections:
                 board_graphics.extend(
                     item for item in collection if not _is_component_linked(item)
                 )
-            primitives.extend(self._cached_silk_chunk(
-                ctx, pcbdoc, layer, "board_graphics", styles.get("silkscreen_board_graphics", {}),
-                lambda: self._render_primitive_collection(  # noqa: SLF001
+            primitives.extend(
+                self._cached_silk_chunk(
                     ctx,
-                    board_graphics,
+                    pcbdoc,
                     layer,
-                    _style_color(
-                        styles, "silkscreen_board_graphics", ctx.layer_color(layer)
+                    "board_graphics",
+                    styles.get("silkscreen_board_graphics", {}),
+                    lambda: self._render_primitive_collection(  # noqa: SLF001
+                        ctx,
+                        board_graphics,
+                        layer,
+                        _style_color(
+                            styles, "silkscreen_board_graphics", ctx.layer_color(layer)
+                        ),
                     ),
-                ),
-            ))
+                )
+            )
         primitives.extend(self._render_a0_silkscreen_texts(ctx, pcbdoc, layer, styles))
         return primitives
 
     def _cached_silk_chunk(
-        self, ctx: PcbSvgRenderContext, pcbdoc: AltiumPcbDoc, layer: PcbLayer,
-        part: str, style: dict[str, object], build: Callable[[], Sequence[str]], *, text: bool = False,
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        layer: PcbLayer,
+        part: str,
+        style: dict[str, object],
+        build: Callable[[], Sequence[str]],
+        *,
+        text: bool = False,
     ) -> tuple[str, ...]:
-        key = ("silk-chunk", self.render_job.identity(self.render_job.source(pcbdoc)),
-               layer, part, repr(self.options), ctx.min_x_mils, ctx.max_y_mils,
-               ctx.width_mm, ctx.height_mm, json.dumps(style, sort_keys=True),
-               layer_text_key(ctx, pcbdoc, layer.name) if text else ())
-        with self.render_job.measure("silk_chunk", layer=layer.name, part=part,
-                                     side="top" if layer == PcbLayer.TOP_OVERLAY else "bottom") as timing:
+        key = (
+            "silk-chunk",
+            self.render_job.identity(self.render_job.source(pcbdoc)),
+            layer,
+            part,
+            repr(self.options),
+            ctx.min_x_mils,
+            ctx.max_y_mils,
+            ctx.width_mm,
+            ctx.height_mm,
+            json.dumps(style, sort_keys=True),
+            layer_text_key(ctx, pcbdoc, layer.name) if text else (),
+        )
+        with self.render_job.measure(
+            "silk_chunk",
+            layer=layer.name,
+            part=part,
+            side="top" if layer == PcbLayer.TOP_OVERLAY else "bottom",
+        ) as timing:
             if key not in self.render_job.fragments:
                 timing["cache"] = "built"
                 self.render_job.fragments[key] = tuple(build())
@@ -2036,25 +2016,36 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         for style_name, items in groups:
             if not items or not _style_enabled(styles, style_name):
                 continue
-            rendered.extend(self._cached_silk_chunk(
-                ctx, pcbdoc, layer, style_name + "_text", styles.get(style_name, {}),
-                lambda: self._render_primitive_collection(  # noqa: SLF001
+            rendered.extend(
+                self._cached_silk_chunk(
                     ctx,
-                    items,
+                    pcbdoc,
                     layer,
-                    _style_color(styles, style_name, ctx.layer_color(layer)),
-                    text_as_polygons=self.options.text_as_polygons,
-                    truetype_renderer=tt_renderer,
-                    stroke_renderer=stroke_renderer,
-                    barcode_renderer=barcode_renderer,
-                    font_resolver=font_resolver,
-                ), text=True,
-            ))
+                    style_name + "_text",
+                    styles.get(style_name, {}),
+                    lambda: self._render_primitive_collection(  # noqa: SLF001
+                        ctx,
+                        items,
+                        layer,
+                        _style_color(styles, style_name, ctx.layer_color(layer)),
+                        text_as_polygons=self.options.text_as_polygons,
+                        truetype_renderer=tt_renderer,
+                        stroke_renderer=stroke_renderer,
+                        barcode_renderer=barcode_renderer,
+                        font_resolver=font_resolver,
+                    ),
+                    text=True,
+                )
+            )
         return rendered
 
-    def _silkscreen_text_groups(self, pcbdoc: AltiumPcbDoc) -> list[tuple[str, list[object]]]:
+    def _silkscreen_text_groups(
+        self, pcbdoc: AltiumPcbDoc
+    ) -> list[tuple[str, list[object]]]:
         groups: dict[str, list[object]] = {
-            "silkscreen_designators": [], "silkscreen_component_graphics": [], "silkscreen_board_graphics": [],
+            "silkscreen_designators": [],
+            "silkscreen_component_graphics": [],
+            "silkscreen_board_graphics": [],
         }
         for text in pcbdoc.texts:
             if not self._should_render_component_linked_text(pcbdoc, text):
@@ -2188,12 +2179,19 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
             hole_radius_mm = max(via.hole_size_mils * _MIL_TO_MM / 2.0, 0.0)
             if hole_radius_mm <= 0:
                 continue
-            elements.append(self._via_hole_svg(ctx, via, layer, styles, opacity, hole_radius_mm))
+            elements.append(
+                self._via_hole_svg(ctx, via, layer, styles, opacity, hole_radius_mm)
+            )
         return elements
 
     @staticmethod
     def _hole_is_tented(
-        hole: object, layer: PcbLayer, styles: dict[str, dict[str, object]], style_name: str, *, pad: bool,
+        hole: object,
+        layer: PcbLayer,
+        styles: dict[str, dict[str, object]],
+        style_name: str,
+        *,
+        pad: bool,
     ) -> bool:
         if not _style_bool(styles, style_name, "respect_tenting", False):
             return False
@@ -2205,8 +2203,13 @@ class PcbSvgA0Renderer(PrimitiveDispatchCacheMixin, CruncherPcbCutoutLayerRender
         return bool(getattr(hole, f"is_tent_{side}", False))
 
     def _via_hole_svg(
-        self, ctx: PcbSvgRenderContext, via: AltiumPcbVia, layer: PcbLayer,
-        styles: dict[str, dict[str, object]], opacity: float, hole_radius_mm: float,
+        self,
+        ctx: PcbSvgRenderContext,
+        via: AltiumPcbVia,
+        layer: PcbLayer,
+        styles: dict[str, dict[str, object]],
+        opacity: float,
+        hole_radius_mm: float,
     ) -> str:
         plated = bool(getattr(via, "is_plated", True))
         color = _style_plating_color(styles, "drills", plated=plated)
@@ -2438,7 +2441,9 @@ def render_pcb_svg_a0_to_output(
     try:
         with render_job.measure("job", command="pcb-svg") as timing:
             try:
-                result = _render_pcb_svg_a0_job(input_files, output_dir, config_by_input, render_job)
+                result = _render_pcb_svg_a0_job(
+                    input_files, output_dir, config_by_input, render_job
+                )
             finally:
                 render_job.finish()
             timing["failed"] = result != 0
@@ -2449,7 +2454,9 @@ def render_pcb_svg_a0_to_output(
 
 
 def _render_pcb_svg_a0_job(
-    input_files: Sequence[Path], output_dir: Path, config_by_input: dict[Path, PcbSvgConfig],
+    input_files: Sequence[Path],
+    output_dir: Path,
+    config_by_input: dict[Path, PcbSvgConfig],
     render_job: PcbSvgRenderJob,
 ) -> int:
     total_written = 0

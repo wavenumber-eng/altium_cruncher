@@ -11,6 +11,7 @@ import "../outputs/schematic-svg-enrichment.tsp";
 import "../outputs/schematic-svg-manifest.tsp";
 import "../outputs/pcb-svg-component-layers.tsp";
 import "../outputs/pcb-svg-timings.tsp";
+import "../outputs/toon-warning-report.tsp";
 import "../outputs/commands.tsp";
 import "../outputs/json-dump.tsp";
 import "../outputs/easyeda.tsp";

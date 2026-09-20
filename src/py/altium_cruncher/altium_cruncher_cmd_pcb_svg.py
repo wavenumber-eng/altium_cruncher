@@ -1,4 +1,4 @@
-"""pcb-svg command for explicit A0 PCB SVG views."""
+"""pcb-svg command for explicit PCB SVG views."""
 
 from __future__ import annotations
 
@@ -154,17 +154,18 @@ def _default_pcb_svg_config_text(
         "// altium-cruncher pcb-svg configuration\n"
         "// This file is JSONC: // comments, /* block comments */, and trailing commas are accepted.\n"
         "\n"
-        "// Schema: pcb.svg.config.a0\n"
+        f"// Schema: {PCB_SVG_CONFIG_SCHEMA}\n"
         "\n"
         "// Common physical layer tokens: TOP, BOTTOM, TOPOVERLAY, BOTTOMOVERLAY, TOPPASTE,\n"
         "//   BOTTOMPASTE, TOPSOLDER, BOTTOMSOLDER, and MECHANICAL_1..MECHANICAL_32.\n"
         "\n"
-        "// Synthetic layer tokens: BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS,\n"
+        "// Synthetic layer tokens: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS,\n"
         "//   ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM,\n"
         "//   ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM.\n"
-        "//   SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM.\n"
+        "//   SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, BEND_LINES.\n"
         "//   ILLUSTRATION_TOP, ILLUSTRATION_BOTTOM.\n"
-        "// soldermask_film: color=auto uses saved Altium 3D color (green fallback);\n"
+        "// board_substrate: color=auto resolves authored/saved colors and rigid/flex palettes.\n"
+        "// soldermask_film: color=auto resolves region-local mask/coverlay appearance;\n"
         "//   opacity=1 is opaque. Override either under global.styles or views[].styles.\n"
         "// drills/slots: outline=true draws unfilled boundaries; outline_width_mm sets\n"
         "//   their width. respect_tenting=true hides mask-covered plated hole marks.\n"

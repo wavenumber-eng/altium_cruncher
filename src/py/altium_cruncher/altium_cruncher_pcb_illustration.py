@@ -9,30 +9,72 @@ Invisible geometry is removed before both illustration and HLR.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, fields, replace
-import hashlib
-import json
 import logging
 import math
-import re
 from typing import TYPE_CHECKING, Literal, TypedDict, cast
 from collections.abc import Sequence
-from concurrent.futures import Future, as_completed
-from pathlib import Path
+from concurrent.futures import Future
 
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 from altium_monkey.altium_pcb_component import AltiumPcbComponent
 from altium_monkey.altium_record_pcb__component_body import AltiumPcbComponentBody
-from altium_monkey.altium_record_pcb__shapebased_region import (
-    PcbExtendedVertex,
-    PcbSimpleVertex,
-)
-import xml.etree.ElementTree as ET
-
 import geometer as g
 
 from .altium_cruncher_pcb_assembly_model_helper import PcbAssemblyModelHelper
-from .altium_cruncher_pcb_layer_step import _extended_vertices_ring
-from .pcb_illustration_geometry_svg import geometry_svg
+from .pcb_illustration_diagnostics import (
+    DiagnosticMetadata as _DiagnosticMetadata,
+    IllustrationDiagnosticsMixin,
+    WarningEvents,
+    body_failure_classification as _body_failure_classification,
+    body_model_label as _body_model_label,
+    geometer_failure_message as _geometer_failure_message,
+    report_step_completions as _report_step_completions,
+    unavailable_step_reason as _unavailable_step_reason,
+)
+from .pcb_illustration_model_geometry import (
+    Bounds3,
+    IllustrationProjection,
+    IllustrationSymbol,
+    Meshes,
+    ModelGeometryError,
+    colorref as _colorref,
+    column_major as _column_major,
+    component_rotation_degrees as _component_rotation_degrees,
+    decode_cached_symbol as _decode_cached_symbol,
+    decode_cached_tessellation as _decode_cached_tessellation,
+    digest as _digest,
+    empty_illustration_symbol as _empty_illustration_symbol,
+    extrusion_extents_mm as extrusion_extents_mm,
+    fast_hlr_options as _fast_hlr_options,
+    illustration_style as _illustration_style,
+    model_tessellation as _model_tessellation,
+    rotation_z as _rotation_z,
+    symbol_from_geometry as _symbol_from_geometry,
+    tessellation_disk_key as _tessellation_disk_key,
+    transform_mesh as _transform_mesh,
+    translation as _translation,
+)
+from .pcb_illustration_source_geometry import (
+    body_outline_bounds_local_mm as _body_outline_bounds_local_mm,
+    cylinder_mesh as _cylinder_mesh,
+    extrusion_request as _extrusion_request,
+    illustration_ring as _illustration_ring,
+    mesh_bounds as _mesh_bounds,
+    placed_meshes as _placed_meshes,
+    step_matrix as _step_matrix,
+)
+from .pcb_model_rotation import resolve_model_z_rotation
+from .pcb_board_region_envelope_index import (
+    BoardRegionEnvelopeIndex,
+    BoardRegionQueryStatus,
+)
+from .pcb_component_clipping import (
+    ComponentVisibilityAction,
+    ComponentVisibilityResolution,
+    clipped_conservative_bounds as _clipped_conservative_bounds,
+    native_clipping as _native_clipping,
+    resolve_component_visibility,
+)
 
 if TYPE_CHECKING:
     from .pcb_svg_model_cache import PcbSvgModelCache
@@ -42,73 +84,11 @@ log = logging.getLogger(__name__)
 
 _IU_MM = 0.00000254
 _MIL_MM = 0.0254
-_SVG = "http://www.w3.org/2000/svg"
 _COORDINATE_SPAN = 1_000_000
-
-
-class ModelGeometryError(Exception):
-    """A single authored model cannot supply illustration geometry."""
-
-
-def _unavailable_step_reason(name: str) -> str:
-    extension = Path(name.strip().strip("\x00")).suffix.lower()
-    formats = {
-        ".x_t": "Parasolid text",
-        ".x_b": "Parasolid binary",
-        ".sldprt": "SolidWorks part",
-        ".sldasm": "SolidWorks assembly",
-    }
-    if extension and extension not in {".step", ".stp"}:
-        return (
-            f"unsupported model format {formats.get(extension, 'unknown')} ({extension}); "
-            "Toon supports embedded STEP (.step/.stp), Altium extruded bodies, "
-            "and Altium cylinder bodies"
-        )
-    return "embedded STEP unavailable or unreadable"
-
-
-def _body_model_label(body: AltiumPcbComponentBody) -> str:
-    labels = {0: "extruded body", 2: "cylinder body", 3: "sphere body"}
-    fallback = labels.get(body.model_type, "unnamed model")
-    return str(body.properties.get("MODEL.NAME") or fallback)
-
-
-def _report_step_completions(
-    futures: dict[
-        Future[g.ModelTessellation], tuple[str, AltiumPcbComponent | None, int]
-    ],
-    side: str,
-) -> None:
-    # Observe completion without raising task errors here; source-order
-    # consumption still supplies body-specific warnings/errors.
-    for completed, future in enumerate(as_completed(futures), 1):
-        name, component, index = futures[future]
-        owner = component.designator if component is not None else f"free-body-{index}"
-        failed = future.cancelled() or future.exception() is not None
-        log.info(
-            "%s %s STEP model %d/%d: %s (%s)",
-            "Failed" if failed else "Completed",
-            side,
-            completed,
-            len(futures),
-            name,
-            owner,
-        )
-
-
-def _geometer_failure_message(error: g.GeometerOperationError | g.GeometerError) -> str:
-    if isinstance(error, g.GeometerOperationError):
-        details = "; ".join(f"{d.code}: {d.message}" for d in error.diagnostics)
-        return f"{error.operation}: {details}" if details else str(error)
-    return str(error)
 
 
 type Side = Literal["top", "bottom"]
 type Vector2 = tuple[float, float]
-type Bounds3 = tuple[float, float, float, float, float, float]
-type Meshes = tuple[g.MeshIllustrationMesh, ...]
-type WarningEvents = list[tuple[bool, str]]
-type TessellationCacheValue = tuple[Meshes, tuple[str, ...]]
 type ModelCatalog = dict[str, list[dict[str, object]]]
 type CatalogContext = tuple[PcbAssemblyModelHelper, ModelCatalog, ModelCatalog]
 type ComponentPlacement = IllustrationComponent | CachedComponentPlacement
@@ -136,6 +116,8 @@ class CachedComponentPlacement:
     bodies: tuple[BodyMetadata, ...]
     component_index: int | None
     bounds: Bounds3
+    authored_side: Side = "top"
+    board_z_offset_mm: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -146,6 +128,8 @@ class DirectIllustrationSource:
     model: bytes | None
     identity: object
     label: str
+    footprint_local_source: g.ModelIllustrationSourceA0 | None = None
+    authored_outline_bounds_mm: tuple[float, float, float, float] | None = None
 
 
 @dataclass(frozen=True)
@@ -157,6 +141,8 @@ class IllustrationComponent:
     component_index: int | None = None
     direct: DirectIllustrationSource | None = None
     resolved_bounds: Bounds3 | None = None
+    authored_side: Side = "top"
+    board_z_offset_mm: float = 0.0
 
     @property
     def bounds(self) -> tuple[float, float, float, float, float, float]:
@@ -170,366 +156,6 @@ class IllustrationComponent:
             for fn in (min, max)
             for axis in range(3)
         )  # type: ignore[return-value]
-
-
-@dataclass(frozen=True)
-class IllustrationSymbol:
-    svg: str
-    # Native SVG origin/scale expressed in board-space SVG coordinates (Y down).
-    x_mm: float
-    y_mm: float
-    mm_per_unit: float
-    stats: dict[str, object]
-    warnings: tuple[str, ...]
-    outline_segments_mm: tuple[
-        tuple[tuple[float, float], tuple[float, float]], ...
-    ] = ()
-    source_bounds_mm: Bounds3 | None = None
-
-    def group(self, symbol_id: str) -> ET.Element:
-        """Inline native CSS so multiple symbols cannot recolor one another."""
-        root = ET.fromstring(self.svg)
-        styles: dict[str, dict[str, str]] = {}
-        for style in root.findall(f"{{{_SVG}}}style"):
-            for selector, declarations in re.findall(
-                r"\.([\w-]+)\s*\{([^}]+)\}", style.text or ""
-            ):
-                styles[selector] = dict(
-                    part.strip().split(":", 1)
-                    for part in declarations.split(";")
-                    if ":" in part
-                )
-            root.remove(style)
-        group = ET.Element(f"{{{_SVG}}}g", {"id": symbol_id})
-        _inline_styles(root, styles)
-        local = ET.SubElement(
-            group,
-            f"{{{_SVG}}}g",
-            {
-                "transform": f"translate({self.x_mm:.12g} {self.y_mm:.12g}) scale({self.mm_per_unit:.12g})"
-            },
-        )
-        local.extend(child for child in root if child.tag != f"{{{_SVG}}}title")
-        return group
-
-
-def _digest(value: object) -> str:
-    return hashlib.sha256(
-        json.dumps(
-            value, sort_keys=True, separators=(",", ":"), allow_nan=False
-        ).encode()
-    ).hexdigest()
-
-
-def _tessellation_disk_key(key: str) -> str:
-    return _digest(
-        dict(
-            model=key,
-            linear_deflection_mm=0.01,
-            angular_deflection_rad=0.5,
-            root_placement="preserve",
-            allow_partial="native-default",
-        )
-    )
-
-
-def _model_tessellation(client: g.GeometerClient, step: bytes) -> g.ModelTessellation:
-    return client.model_tessellation(
-        step,
-        g.ModelTessellationRequestA0(
-            schema="geometry.model_tessellation.request.a0",
-            linear_deflection_mm=0.01,
-            angular_deflection_rad=0.5,
-            # Preserve the STEP root, including Z, before Altium placement.
-            root_placement=g.ModelRootPlacement.PRESERVE,
-        ),
-        timeout=60,
-    )
-
-
-def _colorref(value: int) -> tuple[float, float, float]:
-    return tuple(((int(value) >> shift) & 255) / 255 for shift in (0, 8, 16))  # type: ignore[return-value]
-
-
-def extrusion_extents_mm(body: AltiumPcbComponentBody) -> tuple[float, float]:
-    """Altium MAXZ/OVERALLHEIGHT is the upper elevation, not thickness."""
-    props = body.properties
-    low = (
-        body.model_extruded_min_z
-        if "MODEL.EXTRUDED.MINZ" in props
-        else body.standoff_height
-    )
-    high = (
-        body.model_extruded_max_z
-        if "MODEL.EXTRUDED.MAXZ" in props
-        else body.overall_height
-    )
-    lower, upper = float(low) * _IU_MM, float(high) * _IU_MM
-    if not math.isfinite(lower + upper) or upper <= lower:
-        raise ValueError(
-            f"Extruded body requires upper Z > lower Z; received {lower:g}, {upper:g} mm"
-        )
-    return lower, upper
-
-
-def _transform_mesh(
-    mesh: g.MeshIllustrationMesh, matrix: list[list[float]], mesh_id: str
-) -> g.MeshIllustrationMesh:
-    # Tessellation mesh matrices are column-major; helper matrices are row-major.
-    source = mesh.matrix
-    if source is not None:
-        native = [[source[col * 4 + row] for col in range(4)] for row in range(4)]
-        matrix = [
-            [sum(matrix[r][k] * native[k][c] for k in range(4)) for c in range(4)]
-            for r in range(4)
-        ]
-
-    def transform(values: tuple[float, ...], translate: bool) -> tuple[float, ...]:
-        a, b, c, tx = matrix[0]
-        d, e, f, ty = matrix[1]
-        h, j, k, tz = matrix[2]
-        if not translate:
-            tx = ty = tz = 0
-        result = []
-        for i in range(0, len(values), 3):
-            x, y, z = values[i : i + 3]
-            # Preserve Python's float summation and decimal rounding.
-            # Avoid allocating three generator objects for every vertex/normal.
-            result.extend(
-                (
-                    round(sum((a * x, b * y, c * z)) + tx, 10),
-                    round(sum((d * x, e * y, f * z)) + ty, 10),
-                    round(sum((h * x, j * y, k * z)) + tz, 10),
-                )
-            )
-        return tuple(result)
-
-    return replace(
-        mesh,
-        id=mesh_id,
-        positions=transform(mesh.positions, True),
-        normals=transform(mesh.normals, False) if mesh.normals else None,
-        matrix=None,
-    )
-
-
-def _translation(x: float, y: float, z: float = 0) -> list[list[float]]:
-    return [[1, 0, 0, x], [0, 1, 0, y], [0, 0, 1, z], [0, 0, 0, 1]]
-
-
-def _rotation_z(degrees: float) -> list[list[float]]:
-    radians = math.radians(degrees)
-    cosine, sine = math.cos(radians), math.sin(radians)
-    return [
-        [cosine, -sine, 0, 0],
-        [sine, cosine, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]
-
-
-def _column_major(matrix: Sequence[Sequence[float]]) -> g.IllustrationMatrix4x4:
-    values = tuple(
-        float(matrix[row][column]) for column in range(4) for row in range(4)
-    )
-    return cast(g.IllustrationMatrix4x4, values)
-
-
-def _symbol_from_geometry(
-    rendered: g.ModelIllustrationGeometry,
-    *,
-    outline_width_mm: float,
-    illustrate: bool,
-) -> IllustrationSymbol:
-    """Adapt renderer-neutral Geometer geometry to board-local SVG millimeters."""
-    svg, outline = geometry_svg(rendered, outline_width_mm)
-    return IllustrationSymbol(
-        svg if illustrate else "",
-        0,
-        0,
-        1,
-        asdict(rendered.metadata.stats),
-        rendered.metadata.warnings,
-        outline,
-        cast(Bounds3, rendered.metadata.bounds_mm),
-    )
-
-
-def _component_rotation_degrees(
-    component: AltiumPcbComponent | None,
-) -> float:
-    degrees = float(component.rotation or 0) if component is not None else 0.0
-    if not math.isfinite(degrees):
-        raise ModelGeometryError(
-            f"component rotation must be finite; received {degrees}"
-        )
-    degrees %= 360.0
-    return 0.0 if math.isclose(degrees, 0.0, abs_tol=1e-12) else degrees
-
-
-def _visible_mesh(
-    mesh: g.MeshIllustrationMesh,
-    opacity: float,
-    color: tuple[float, float, float] | None,
-) -> g.MeshIllustrationMesh | None:
-    materials = tuple(
-        replace(
-            mat,
-            opacity=opacity * (1.0 if mat.opacity is None else mat.opacity),
-            color=color if color is not None else mat.color,
-        )
-        for mat in mesh.materials
-    )
-    indices = (
-        mesh.indices
-        if mesh.indices is not None
-        else tuple(range(len(mesh.positions) // 3))
-    )
-    face_materials = mesh.triangle_material_indices or (0,) * (len(indices) // 3)
-    kept = [
-        i
-        for i, material in enumerate(face_materials)
-        if cast(float, materials[material].opacity) > 0
-    ]
-    if not kept:
-        return None
-    # Compact vertices too: hidden/unused vertices must not expand SVG bounds.
-    vertex_ids = sorted({v for i in kept for v in indices[3 * i : 3 * i + 3]})
-    remap = {v: i for i, v in enumerate(vertex_ids)}
-    return replace(
-        mesh,
-        materials=materials,
-        positions=tuple(
-            mesh.positions[3 * v + a] for v in vertex_ids for a in range(3)
-        ),
-        normals=tuple(mesh.normals[3 * v + a] for v in vertex_ids for a in range(3))
-        if mesh.normals
-        else None,
-        indices=tuple(remap[v] for i in kept for v in indices[3 * i : 3 * i + 3]),
-        triangle_material_indices=tuple(face_materials[i] for i in kept),
-    )
-
-
-def _finite_vector(value: object, length: int) -> tuple[float, ...]:
-    if not isinstance(value, (list, tuple)) or len(value) != length:
-        raise ValueError("invalid cached geometry vector")
-    try:
-        if any(
-            isinstance(v, bool)
-            or not isinstance(v, (int, float))
-            or not math.isfinite(v)
-            for v in value
-        ):
-            raise ValueError("nonfinite cached geometry")
-    except OverflowError as error:
-        raise ValueError("cached coordinate exceeds numeric range") from error
-    return tuple(value)
-
-
-def _validate_mesh_indices(values: Sequence[int], count: int) -> None:
-    if any(type(index) is not int or not 0 <= index < count for index in values):
-        raise ValueError("invalid cached mesh index")
-
-
-def _validate_cached_mesh(mesh: g.MeshIllustrationMesh) -> None:
-    if not mesh.positions or len(mesh.positions) % 3 or not mesh.materials:
-        raise ValueError("invalid cached mesh")
-    _finite_vector(mesh.positions, len(mesh.positions))
-    if mesh.normals is not None:
-        _finite_vector(mesh.normals, len(mesh.positions))
-    if mesh.matrix is not None:
-        _finite_vector(mesh.matrix, 16)
-    indices = (
-        mesh.indices
-        if mesh.indices is not None
-        else tuple(range(len(mesh.positions) // 3))
-    )
-    if len(indices) % 3:
-        raise ValueError("invalid cached triangle array")
-    _validate_mesh_indices(indices, len(mesh.positions) // 3)
-    if mesh.triangle_material_indices is not None:
-        if len(mesh.triangle_material_indices) != len(indices) // 3:
-            raise ValueError("invalid cached material array")
-        _validate_mesh_indices(mesh.triangle_material_indices, len(mesh.materials))
-    _validate_cached_materials(mesh.materials)
-
-
-def _validate_cached_materials(materials: Sequence[g.MeshIllustrationMaterial]) -> None:
-    for material in materials:
-        _finite_vector(material.color, 3)
-        if material.opacity is not None:
-            _finite_vector((material.opacity,), 1)
-
-
-def _validate_symbol_geometry(symbol: IllustrationSymbol) -> None:
-    _finite_vector((symbol.x_mm, symbol.y_mm, symbol.mm_per_unit), 3)
-    if symbol.mm_per_unit <= 0:
-        raise ValueError("invalid cached symbol scale")
-    if symbol.source_bounds_mm is not None:
-        bounds = _finite_vector(symbol.source_bounds_mm, 6)
-        if bounds[0] > bounds[3] or bounds[1] > bounds[4] or bounds[2] > bounds[5]:
-            raise ValueError("invalid cached source bounds")
-    for segment in symbol.outline_segments_mm:
-        if len(segment) != 2:
-            raise ValueError("invalid cached outline segment")
-        for point in segment:
-            _finite_vector(point, 2)
-
-
-def _decode_cached_tessellation(payload: object) -> TessellationCacheValue:
-    payload = cast(dict, payload)
-    meshes = []
-    for value in payload["meshes"]:
-        fields = dict(value)
-        for name in (
-            "positions",
-            "normals",
-            "indices",
-            "matrix",
-            "triangle_material_indices",
-        ):
-            if fields.get(name) is not None:
-                fields[name] = tuple(fields[name])
-        fields["materials"] = tuple(
-            g.MeshIllustrationMaterial(**{**m, "color": tuple(m["color"])})
-            for m in fields["materials"]
-        )
-        mesh = g.MeshIllustrationMesh(**fields)
-        _validate_cached_mesh(mesh)
-        meshes.append(mesh)
-    warnings = tuple(payload["warnings"])
-    if not all(isinstance(w, str) for w in warnings):
-        raise ValueError("invalid cached warnings")
-    return tuple(meshes), warnings
-
-
-def _decode_cached_symbol(
-    payload: object, *, allow_warnings: bool = False
-) -> IllustrationSymbol:
-    fields = dict(cast(dict, payload))
-    if not isinstance(fields["svg"], str) or not isinstance(fields["stats"], dict):
-        raise ValueError("invalid cached illustration")
-    try:
-        if fields["svg"] and ET.fromstring(fields["svg"]).tag != f"{{{_SVG}}}svg":
-            raise ValueError("invalid cached SVG root")
-    except ET.ParseError as error:
-        raise ValueError("invalid cached SVG") from error
-    fields["warnings"] = tuple(fields["warnings"])
-    if not all(isinstance(w, str) for w in fields["warnings"]):
-        raise ValueError("invalid cached illustration warnings")
-    if fields["warnings"] and not allow_warnings:
-        raise ValueError("instance-specific illustration warnings are not persistable")
-    fields["outline_segments_mm"] = tuple(
-        tuple(tuple(point) for point in segment)
-        for segment in fields["outline_segments_mm"]
-    )
-    if fields.get("source_bounds_mm") is not None:
-        fields["source_bounds_mm"] = cast(
-            Bounds3, _finite_vector(fields["source_bounds_mm"], 6)
-        )
-    symbol = IllustrationSymbol(**fields)
-    _validate_symbol_geometry(symbol)
-    return symbol
 
 
 def model_catalog_context(pcbdoc: AltiumPcbDoc) -> CatalogContext:
@@ -551,7 +177,9 @@ def _excluded_component(
 
 
 def _merge_component_body(
-    groups: dict[int, ComponentPlacement], key: int, part: ComponentPlacement
+    groups: dict[tuple[int, Side], ComponentPlacement],
+    key: tuple[int, Side],
+    part: ComponentPlacement,
 ) -> None:
     previous = groups.get(key)
     if previous is None:
@@ -568,7 +196,7 @@ def _merge_component_body(
     )
 
 
-class IllustrationJob:
+class IllustrationJob(IllustrationDiagnosticsMixin):
     """One native client and reusable tessellations/illustrations per render job."""
 
     def __init__(
@@ -577,12 +205,15 @@ class IllustrationJob:
         *,
         line_width_mm: float = 0.025,
         cache: PcbSvgModelCache | None = None,
+        emit_warnings: bool = True,
+        region_index: BoardRegionEnvelopeIndex | None = None,
     ) -> None:
         if not math.isfinite(line_width_mm) or line_width_mm <= 0:
             raise ValueError("Illustration line width must be positive millimeters")
         self.client = client
         self.line_width_mm = line_width_mm
         self.cache = cache
+        self.region_index = region_index
         self._tessellations: dict[str, tuple[g.MeshIllustrationMesh, ...]] = {}
         self._tessellation_warnings: dict[str, tuple[str, ...]] = {}
         self._tessellation_failures: dict[str, str] = {}
@@ -606,22 +237,7 @@ class IllustrationJob:
             tessellation_disk_hits=0,
             illustration_disk_hits=0,
         )
-        self.warnings: list[str] = []
-
-    def warn(self, message: str) -> None:
-        if self._warning_capture is not None:
-            self._warning_capture.append((True, message))
-        if self._suppress_collection_warnings:
-            return
-        if message not in self.warnings:
-            self.warnings.append(message)
-            log.warning(message)
-
-    def _append_warning(self, message: str) -> None:
-        if self._warning_capture is not None:
-            self._warning_capture.append((False, message))
-        if not self._suppress_collection_warnings:
-            self.warnings.append(message)
+        self._initialize_diagnostics(emit_warnings)
 
     def _tessellate(
         self,
@@ -691,7 +307,14 @@ class IllustrationJob:
 
     def _warn_tessellation(self, key: str, context: str | None) -> None:
         for warning in self._tessellation_warnings.get(key, ()):
-            self.warn(f"{context}: {warning}" if context else warning)
+            self.warn(
+                f"{context}: {warning}" if context else warning,
+                code="geometer-warning",
+                category="geometer_geometry",
+                producer="geometer",
+                model_identity=key,
+                detail={"upstream_message": warning},
+            )
 
     def collect_top(self, pcbdoc: AltiumPcbDoc) -> list[ComponentPlacement]:
         return self.collect(pcbdoc, side="top")
@@ -707,13 +330,19 @@ class IllustrationJob:
         workers: PcbSvgNativeWorkers,
         cached_bodies: CachedBodies | tuple[()] = (),
         direct_indices: frozenset[int] = frozenset(),
+        include_opposite: bool = False,
     ) -> None:
         futures = {}
         for index, body in enumerate(pcbdoc.component_bodies):
             if index in cached_bodies or index in direct_indices:
                 continue
             entry = self._prefetch_entry(
-                pcbdoc, body, (helper, by_id, by_name), side, excluded
+                pcbdoc,
+                body,
+                (helper, by_id, by_name),
+                side,
+                excluded,
+                include_opposite,
             )
             if entry is None:
                 continue
@@ -772,6 +401,7 @@ class IllustrationJob:
         catalog: CatalogContext,
         side: Side,
         excluded: frozenset[str],
+        include_opposite: bool = False,
     ) -> dict[str, object] | None:
         helper, by_id, by_name = catalog
         if body.model_type != 1:
@@ -782,9 +412,9 @@ class IllustrationJob:
         # This pass schedules eligible work only. Validation and diagnostics
         # still occur in the original body-order collection below.
         try:
-            if helper._component_body_is_bottom(body.properties, component) != (
-                side == "bottom"
-            ):
+            if not include_opposite and helper._component_body_is_bottom(
+                body.properties, component
+            ) != (side == "bottom"):
                 return None
             if (
                 _body_opacity(body) == 0
@@ -817,8 +447,14 @@ class IllustrationJob:
             raise ValueError(f"Invalid illustration side: {side}")
         helper, by_id, by_name = catalog_context or model_catalog_context(pcbdoc)
         cached_bodies = cached_bodies or {}
+        include_opposite = self.region_index is not None
         direct_batches = self._direct_body_batches(
-            pcbdoc, helper, side, excluded_designators, cached_bodies
+            pcbdoc,
+            helper,
+            side,
+            excluded_designators,
+            cached_bodies,
+            include_opposite,
         )
         direct_indices = frozenset(
             index for indices in direct_batches.values() for index in indices
@@ -834,6 +470,7 @@ class IllustrationJob:
                 workers,
                 cached_bodies,
                 direct_indices,
+                include_opposite,
             )
         return self._collect_placements(
             pcbdoc,
@@ -843,6 +480,7 @@ class IllustrationJob:
             cached_bodies,
             capture_warnings,
             direct_batches,
+            include_opposite,
         )
 
     def _direct_body_batches(
@@ -852,6 +490,7 @@ class IllustrationJob:
         side: Side,
         excluded: frozenset[str],
         cached_bodies: CachedBodies,
+        include_opposite: bool = False,
     ) -> dict[int, tuple[int, ...]]:
         owner_indices: dict[int, list[int]] = {}
         for index, body in enumerate(pcbdoc.component_bodies):
@@ -862,10 +501,27 @@ class IllustrationJob:
         direct_batches: dict[int, tuple[int, ...]] = {}
         for indices in owner_indices.values():
             relevant = self._eligible_direct_indices(
-                pcbdoc, helper, indices, side, excluded, cached_bodies
+                pcbdoc,
+                helper,
+                indices,
+                side,
+                excluded,
+                cached_bodies,
+                include_opposite,
             )
-            if relevant and self._direct_batch_supported(pcbdoc, relevant):
-                direct_batches[relevant[0]] = tuple(relevant)
+            by_authored_side: dict[Side, list[int]] = {"top": [], "bottom": []}
+            for index in relevant:
+                body = pcbdoc.component_bodies[index]
+                component = _owning_component(pcbdoc, body)
+                authored_side: Side = (
+                    "bottom"
+                    if helper._component_body_is_bottom(body.properties, component)
+                    else "top"
+                )
+                by_authored_side[authored_side].append(index)
+            for authored in by_authored_side.values():
+                if authored and self._direct_batch_supported(pcbdoc, authored):
+                    direct_batches[authored[0]] = tuple(authored)
         return direct_batches
 
     @staticmethod
@@ -876,6 +532,7 @@ class IllustrationJob:
         side: Side,
         excluded: frozenset[str],
         cached_bodies: CachedBodies,
+        include_opposite: bool = False,
     ) -> list[int]:
         relevant = []
         try:
@@ -884,8 +541,11 @@ class IllustrationJob:
                 component = _owning_component(pcbdoc, body)
                 if (
                     not _excluded_component(component, excluded)
-                    and helper._component_body_is_bottom(body.properties, component)
-                    == (side == "bottom")
+                    and (
+                        include_opposite
+                        or helper._component_body_is_bottom(body.properties, component)
+                        == (side == "bottom")
+                    )
                     and _body_opacity(body) != 0
                     and index not in cached_bodies
                 ):
@@ -910,9 +570,10 @@ class IllustrationJob:
         cached_bodies: CachedBodies,
         capture_warnings: bool,
         direct_batches: dict[int, tuple[int, ...]],
+        include_opposite: bool = False,
     ) -> list[ComponentPlacement]:
         helper, _, _ = catalog
-        groups: dict[int, ComponentPlacement] = {}
+        groups: dict[tuple[int, Side], ComponentPlacement] = {}
         consumed_direct: set[int] = set()
         for index, body in enumerate(pcbdoc.component_bodies):
             if index in consumed_direct:
@@ -934,12 +595,14 @@ class IllustrationJob:
                 cached_bodies,
                 capture_warnings,
                 batch is not None and len(batch) == 1,
+                include_opposite,
             )
             if part is None:
                 continue
-            key = (
+            owner = (
                 cast(int, body.component_index) if component is not None else -index - 1
             )
+            key = (owner, cast(IllustrationComponent, part).authored_side)
             _merge_component_body(groups, key, part)
         return list(groups.values())
 
@@ -951,22 +614,29 @@ class IllustrationJob:
         helper: PcbAssemblyModelHelper,
         side: Side,
         batch: tuple[int, ...] | None,
-        groups: dict[int, ComponentPlacement],
+        groups: dict[tuple[int, Side], ComponentPlacement],
         consumed: set[int],
     ) -> bool:
         if batch is None or len(batch) <= 1:
             return False
         try:
-            part = self._collect_direct_analytic_group(
-                pcbdoc, batch, component, helper, side
+            authored_side: Side = (
+                "bottom"
+                if helper._component_body_is_bottom(body.properties, component)
+                else "top"
             )
+            part = self._collect_direct_analytic_group(
+                pcbdoc, batch, component, helper, authored_side
+            )
+            if part is not None:
+                part = self._place_on_board_surface(part)
         except ModelGeometryError, ValueError, TypeError, AttributeError:
             return False
         if part is None:
             return False
         for body_index in batch:
             self._body_warning_events[body_index] = []
-        groups[cast(int, body.component_index)] = part
+        groups[(cast(int, body.component_index), authored_side)] = part
         consumed.update(batch[1:])
         return True
 
@@ -999,7 +669,11 @@ class IllustrationJob:
             opacity = _body_opacity(body)
             if opacity < 1:
                 self.warn(
-                    f"{component.designator} body {index}: partial opacity uses opaque HLR occlusion"
+                    f"{component.designator} body {index}: partial opacity uses opaque HLR occlusion",
+                    code="partial-opacity-opaque-occlusion",
+                    category="geometer_geometry",
+                    component_designator=str(component.designator),
+                    body_index=index,
                 )
             primitive, lower, upper, identity = _analytic_body(
                 body,
@@ -1060,6 +734,7 @@ class IllustrationJob:
                 dict(kind="analytic-component", values=identities, rotation=rotation),
                 "analytic bodies",
             ),
+            authored_side=side,
         )
 
     def _collect_or_replay_body(
@@ -1072,25 +747,67 @@ class IllustrationJob:
         cached_bodies: CachedBodies,
         capture_warnings: bool,
         direct: bool,
+        include_opposite: bool = False,
     ) -> ComponentPlacement | None:
         helper, by_id, by_name = catalog
         if index in cached_bodies:
             part, events = cached_bodies[index]
             self._body_warning_events[index] = events
-            for deduplicate, message in events:
-                (self.warn if deduplicate else self._append_warning)(message)
+            for deduplicate, message, metadata in events:
+                (self.warn if deduplicate else self._append_warning)(
+                    message, **metadata
+                )
         else:
             events = [] if capture_warnings else None
             self._warning_capture = events
             try:
                 part = self._collect_body(
-                    body, index, component, helper, by_id, by_name, side, direct
+                    body,
+                    index,
+                    component,
+                    helper,
+                    by_id,
+                    by_name,
+                    side,
+                    direct,
+                    include_opposite,
                 )
+                if part is not None:
+                    part = self._place_on_board_surface(part)
             finally:
                 self._warning_capture = None
             if capture_warnings:
                 self._body_warning_events[index] = events
         return part
+
+    def _place_on_board_surface(
+        self, part: IllustrationComponent
+    ) -> IllustrationComponent:
+        """Move a bottom-authored model from top-surface zero to its region surface."""
+
+        if part.authored_side != "bottom" or self.region_index is None:
+            return part
+        query = self.region_index.query_point(
+            part.anchor_mm[0] / _MIL_MM,
+            part.anchor_mm[1] / _MIL_MM,
+        )
+        if query.status is not BoardRegionQueryStatus.RESOLVED or query.region is None:
+            self.warn(
+                f"{part.designator}: bottom-side placement retained at z=0 because "
+                f"the board region at its anchor is {query.status.value}",
+                code="component-placement-region-unresolved",
+                category="clipping",
+                component_designator=part.designator,
+                detail={
+                    "authored_side": part.authored_side,
+                    "query_status": query.status.value,
+                    "query_detail": query.detail,
+                },
+            )
+            return part
+        return _translate_component_z(
+            part, -query.region.total_thickness_mils * _MIL_MM
+        )
 
     def _collect_body(
         self,
@@ -1102,16 +819,24 @@ class IllustrationJob:
         by_name: dict[str, list[dict[str, object]]],
         side: Literal["top", "bottom"],
         direct: bool = False,
+        include_opposite: bool = False,
     ) -> IllustrationComponent | None:
         is_bottom = helper._component_body_is_bottom(body.properties, component)
-        if is_bottom != (side == "bottom"):
+        if not include_opposite and is_bottom != (side == "bottom"):
             return None
+        authored_side: Side = "bottom" if is_bottom else "top"
         opacity = _body_opacity(body)
         if opacity == 0:
             return None
         anchor = _body_anchor(helper, body, component)
         if anchor is None:
-            self.warn(f"Body {index}: missing component/model anchor; omitted")
+            self.warn(
+                f"Body {index}: missing component/model anchor; omitted",
+                code="missing-model-anchor",
+                category="invalid_model_geometry",
+                body_index=index,
+                model_identity=_body_model_label(body),
+            )
             return None
         anchor_mm = (anchor[0] * _MIL_MM, anchor[1] * _MIL_MM)
         designator = (
@@ -1126,7 +851,7 @@ class IllustrationJob:
                 helper,
                 by_id,
                 by_name,
-                side,
+                authored_side,
                 anchor,
                 anchor_mm,
                 designator,
@@ -1149,7 +874,15 @@ class IllustrationJob:
             )
         except ModelGeometryError as error:
             name = _body_model_label(body)
-            self.warn(f"{designator} body {index} ({name}): {error}; omitted")
+            category, code = _body_failure_classification(body)
+            self.warn(
+                f"{designator} body {index} ({name}): {error}; omitted",
+                code=code,
+                category=category,
+                component_designator=designator,
+                body_index=index,
+                model_identity=name,
+            )
             return None
 
     def _try_collect_direct_body(
@@ -1211,6 +944,55 @@ class IllustrationJob:
             return None
         raw_meshes, matrix, color, kind = geometry
         meshes = self._place_body(raw_meshes, matrix, color, opacity, index)
+        if kind == "step":
+            alternative_matrix = _step_matrix(
+                helper,
+                body,
+                component,
+                anchor,
+                is_bottom=is_bottom,
+                rotation_mode="footprint_local",
+            )
+            if alternative_matrix != matrix:
+                target = _body_outline_bounds_local_mm(body, anchor_mm)
+                if target is None:
+                    self.warn(
+                        f"{designator} body {index}: authored outline cannot resolve model Z rotation; retaining current placement",
+                        code="rotation-outline-unavailable",
+                        category="rotation_resolution",
+                        component_designator=designator,
+                        body_index=index,
+                        model_identity=_body_model_label(body),
+                    )
+                else:
+                    alternative_meshes = self._place_body(
+                        raw_meshes,
+                        alternative_matrix,
+                        color,
+                        opacity,
+                        index,
+                    )
+                    resolution = resolve_model_z_rotation(
+                        target,
+                        _mesh_bounds(meshes),
+                        _mesh_bounds(alternative_meshes),
+                    )
+                    if resolution.choice == "footprint_local":
+                        meshes = alternative_meshes
+                    elif resolution.choice == "unresolved":
+                        self.warn(
+                            f"{designator} body {index}: neither supported model Z-rotation interpretation matches the authored outline; retaining current placement",
+                            code="rotation-unresolved",
+                            category="rotation_resolution",
+                            component_designator=designator,
+                            body_index=index,
+                            model_identity=_body_model_label(body),
+                            detail={
+                                "reason": resolution.reason,
+                                "instance_space_score": resolution.current_score,
+                                "footprint_local_score": resolution.footprint_local_score,
+                            },
+                        )
         if not meshes:
             return None
         z_values = [z for mesh in meshes for z in mesh.positions[2::3]]
@@ -1232,6 +1014,7 @@ class IllustrationJob:
             meshes,
             (metadata,),
             body.component_index if component is not None else None,
+            authored_side="bottom" if is_bottom else "top",
         )
 
     def _collect_direct_body(
@@ -1293,7 +1076,11 @@ class IllustrationJob:
         )
         if opacity < 1:
             self._append_warning(
-                f"{designator} body {index}: partial opacity uses opaque HLR occlusion"
+                f"{designator} body {index}: partial opacity uses opaque HLR occlusion",
+                code="partial-opacity-opaque-occlusion",
+                category="geometer_geometry",
+                component_designator=designator,
+                body_index=index,
             )
         return IllustrationComponent(
             designator,
@@ -1302,10 +1089,11 @@ class IllustrationJob:
             (metadata,),
             body.component_index if component is not None else None,
             direct_source,
+            authored_side=side,
         )
 
-    @staticmethod
     def _direct_step_source(
+        self,
         body: AltiumPcbComponentBody,
         component: AltiumPcbComponent | None,
         helper: PcbAssemblyModelHelper,
@@ -1324,7 +1112,18 @@ class IllustrationJob:
         if entry is None:
             name = str(body.properties.get("MODEL.NAME") or "")
             raise ModelGeometryError(_unavailable_step_reason(name))
+        failure = self._tessellation_failures.get(str(entry["hash"]))
+        if failure is not None:
+            raise ModelGeometryError(failure)
         matrix = _step_matrix(helper, body, component, anchor_mils, is_bottom=is_bottom)
+        footprint_local_matrix = _step_matrix(
+            helper,
+            body,
+            component,
+            anchor_mils,
+            is_bottom=is_bottom,
+            rotation_mode="footprint_local",
+        )
         override = (
             g.MeshIllustrationMaterial(color=color, opacity=opacity)
             if body.body_override_color
@@ -1341,16 +1140,30 @@ class IllustrationJob:
                 root_placement=g.ModelRootPlacement.PRESERVE,
             ),
         )
+        footprint_local_source = (
+            None
+            if footprint_local_matrix == matrix
+            else replace(source, transform=_column_major(footprint_local_matrix))
+        )
+        outline_bounds = _body_outline_bounds_local_mm(
+            body, (anchor_mils[0] * _MIL_MM, anchor_mils[1] * _MIL_MM)
+        )
         return DirectIllustrationSource(
             source,
             cast(bytes, entry["step_bytes"]),
             dict(
                 kind="step",
                 model=entry["hash"],
-                matrix=matrix,
+                rotation_candidates=dict(
+                    instance_space=matrix,
+                    footprint_local=footprint_local_matrix,
+                    authored_outline_bounds_mm=outline_bounds,
+                ),
                 override=asdict(override) if override is not None else None,
             ),
             str(entry["name"]),
+            footprint_local_source,
+            outline_bounds,
         )
 
     def _warn_partial_opacity(
@@ -1362,7 +1175,11 @@ class IllustrationJob:
             for material in mesh.materials
         ):
             self._append_warning(
-                f"{designator} body {index}: partial opacity uses opaque HLR occlusion"
+                f"{designator} body {index}: partial opacity uses opaque HLR occlusion",
+                code="partial-opacity-opaque-occlusion",
+                category="geometer_geometry",
+                component_designator=designator,
+                body_index=index,
             )
 
     def _body_geometry(
@@ -1472,10 +1289,12 @@ class IllustrationJob:
         ):
             key = _digest(
                 dict(
+                    renderer_contract="geometer-b0-half-space-v4-aperture-composite",
                     source=component.direct.identity,
                     line_width_mm=self.line_width_mm,
                     side=side,
                     illustrate=illustrate,
+                    clipping=self._clipping_identity(component),
                 )
             )
             warning_key = _digest(
@@ -1497,6 +1316,7 @@ class IllustrationJob:
             self.line_width_mm,
             side,
             illustrate,
+            _digest(self._clipping_identity(component)),
         )
         key = self._appearance_keys.get(identity)
         if key is None:
@@ -1513,10 +1333,12 @@ class IllustrationJob:
                 appearance.append(value)
             key = _digest(
                 dict(
+                    renderer_contract="geometer-b0-half-space-v4-aperture-composite",
                     meshes=appearance,
                     line_width_mm=self.line_width_mm,
                     side=side,
                     illustrate=illustrate,
+                    clipping=self._clipping_identity(component),
                 )
             )
             self._appearance_keys[identity] = key
@@ -1524,6 +1346,40 @@ class IllustrationJob:
             dict(appearance=key, mesh_ids=[m.id for m in component.meshes])
         )
         return key, warning_key
+
+    def _clipping_identity(self, component: IllustrationComponent) -> object:
+        if self.region_index is None:
+            return None
+        return {
+            "anchor_mm": component.anchor_mm,
+            "authored_side": component.authored_side,
+            "partition": self._region_clipping_identity(),
+        }
+
+    def _region_clipping_identity(self) -> object:
+        if self.region_index is None:
+            return None
+        return {
+            "regions": [
+                {
+                    "source_index": region.source_index,
+                    "name": region.name,
+                    "outline_mils": region.outline_mils,
+                    "holes_mils": region.holes_mils,
+                    "thickness_mils": region.total_thickness_mils,
+                }
+                for region in self.region_index.regions
+            ],
+            "invalid_regions": [
+                {
+                    "source_index": region.source_index,
+                    "name": region.name,
+                    "reason": region.reason,
+                    "bounds_mils": region.bounds_mils,
+                }
+                for region in self.region_index.invalid_regions
+            ],
+        }
 
     def _load_symbol(self, key: str, warning_key: str) -> IllustrationSymbol | None:
         if self.cache is None:
@@ -1611,20 +1467,43 @@ class IllustrationJob:
                 "illustration", warning_key if symbol.warnings else key, asdict(symbol)
             )
 
-    @staticmethod
     def _log_direct_warnings(
-        component: ComponentPlacement, symbol: IllustrationSymbol, side: Side
+        self,
+        component: ComponentPlacement,
+        symbol: IllustrationSymbol,
+        side: Side,
     ) -> None:
-        if (
-            not symbol.warnings
-            or not isinstance(component, IllustrationComponent)
-            or component.direct is None
-        ):
+        if not symbol.warnings:
             return
-        context = f"{component.designator} / {component.direct.label} ({side})"
-        log.warning("%s: %s", context, symbol.warnings[0])
-        for warning in symbol.warnings[1:]:
-            log.debug("%s: %s", context, warning)
+        direct = (
+            component.direct if isinstance(component, IllustrationComponent) else None
+        )
+        context = (
+            f"{component.designator} / {direct.label} ({side})"
+            if direct is not None
+            else f"{component.designator} ({side})"
+        )
+        body_index = (
+            component.bodies[0]["index"] if len(component.bodies) == 1 else None
+        )
+        for warning in symbol.warnings:
+            metadata = _DiagnosticMetadata(
+                code="geometer-warning",
+                category="geometer_geometry",
+                producer="geometer",
+                component_designator=component.designator,
+                body_index=body_index,
+                model_identity=direct.label if direct is not None else None,
+                detail={"side": side, "upstream_message": warning},
+            )
+            self._record_diagnostic(
+                f"{context}: {warning}",
+                metadata,
+            )
+        if self.emit_warnings and direct is not None:
+            log.warning("%s: %s", context, symbol.warnings[0])
+            for warning in symbol.warnings[1:]:
+                log.debug("%s: %s", context, warning)
 
     def render_many(
         self,
@@ -1649,8 +1528,15 @@ class IllustrationJob:
                 symbol = self._render_prepared(part, keys, prepared, side, illustrate)
             except ModelGeometryError as error:
                 self.warn(
-                    f"{part.designator} ({side}): {error}; component illustration omitted"
+                    f"{part.designator} ({side}): {error}; component illustration omitted",
+                    code="component-illustration-failed",
+                    category="geometer_geometry",
+                    producer="geometer",
+                    component_designator=part.designator,
+                    detail={"side": side},
                 )
+                continue
+            if symbol.empty:
                 continue
             part = self._resolve_direct_bounds(part, symbol)
             placed.append((part, symbol))
@@ -1691,21 +1577,43 @@ class IllustrationJob:
     def _resolve_direct_bounds(
         part: ComponentPlacement, symbol: IllustrationSymbol
     ) -> ComponentPlacement:
+        resolved_bounds = symbol.source_bounds_mm
+        if symbol.aperture_source_bounds_mm is not None:
+            resolved_bounds = (
+                symbol.aperture_source_bounds_mm
+                if resolved_bounds is None
+                else (
+                    *(
+                        min(
+                            resolved_bounds[axis],
+                            symbol.aperture_source_bounds_mm[axis],
+                        )
+                        for axis in range(3)
+                    ),
+                    *(
+                        max(
+                            resolved_bounds[axis],
+                            symbol.aperture_source_bounds_mm[axis],
+                        )
+                        for axis in range(3, 6)
+                    ),
+                )
+            )
         if (
             not isinstance(part, IllustrationComponent)
             or part.direct is None
-            or symbol.source_bounds_mm is None
+            or resolved_bounds is None
         ):
             return part
         bodies = part.bodies
         if len(bodies) == 1 and bodies[0]["kind"] == "step":
             body = dict(bodies[0])
             body["lower_z_mm"], body["upper_z_mm"] = (
-                symbol.source_bounds_mm[2],
-                symbol.source_bounds_mm[5],
+                resolved_bounds[2],
+                resolved_bounds[5],
             )
             bodies = (cast(BodyMetadata, body),)
-        return replace(part, resolved_bounds=symbol.source_bounds_mm, bodies=bodies)
+        return replace(part, resolved_bounds=resolved_bounds, bodies=bodies)
 
     def _prepare_illustrations(
         self,
@@ -1742,6 +1650,7 @@ class IllustrationJob:
                     self.line_width_mm,
                     side,
                     illustrate,
+                    self.region_index,
                 )
                 submitted += 1
         log.debug(
@@ -1766,11 +1675,165 @@ class IllustrationJob:
     def _render_direct(
         self, component: IllustrationComponent, side: Side, illustrate: bool
     ) -> IllustrationSymbol:
+        direct = component.direct
+        if direct is None:
+            raise ModelGeometryError("direct illustration source is unavailable")
+        current = self._render_direct_source(
+            direct.source, direct.model, side, illustrate
+        )
+        alternative_source = direct.footprint_local_source
+        target = direct.authored_outline_bounds_mm
+        if alternative_source is None:
+            return self._apply_direct_visibility(
+                component, direct.source, current, side, illustrate
+            )
+        body_index = (
+            component.bodies[0]["index"] if len(component.bodies) == 1 else None
+        )
+        if target is None or current.source_bounds_mm is None:
+            self.warn(
+                f"{component.designator}: authored outline cannot resolve model Z rotation; retaining current placement",
+                code="rotation-outline-unavailable",
+                category="rotation_resolution",
+                component_designator=component.designator,
+                body_index=body_index,
+                model_identity=direct.label,
+            )
+            return self._apply_direct_visibility(
+                component, direct.source, current, side, illustrate
+            )
+        current_check = resolve_model_z_rotation(
+            target, current.source_bounds_mm, current.source_bounds_mm
+        )
+        if current_check.choice == "instance_space":
+            return self._apply_direct_visibility(
+                component, direct.source, current, side, illustrate
+            )
+        alternative = self._render_direct_source(
+            alternative_source, direct.model, side, illustrate
+        )
+        if alternative.source_bounds_mm is None:
+            self._queue_discarded_symbol_warnings(component, alternative, side, direct)
+            self.warn(
+                f"{component.designator}: alternative model Z rotation returned no native bounds; retaining current placement",
+                code="rotation-bounds-unavailable",
+                category="rotation_resolution",
+                producer="geometer",
+                component_designator=component.designator,
+                body_index=body_index,
+                model_identity=direct.label,
+            )
+            return self._apply_direct_visibility(
+                component, direct.source, current, side, illustrate
+            )
+        resolution = resolve_model_z_rotation(
+            target, current.source_bounds_mm, alternative.source_bounds_mm
+        )
+        if resolution.choice == "footprint_local":
+            self._queue_discarded_symbol_warnings(component, current, side, direct)
+            return self._apply_direct_visibility(
+                component, alternative_source, alternative, side, illustrate
+            )
+        self._queue_discarded_symbol_warnings(component, alternative, side, direct)
+        if resolution.choice == "unresolved":
+            self.warn(
+                f"{component.designator}: neither supported model Z-rotation interpretation matches the authored outline; retaining current placement",
+                code="rotation-unresolved",
+                category="rotation_resolution",
+                component_designator=component.designator,
+                body_index=body_index,
+                model_identity=direct.label,
+                detail={
+                    "reason": resolution.reason,
+                    "instance_space_score": resolution.current_score,
+                    "footprint_local_score": resolution.footprint_local_score,
+                },
+            )
+        return self._apply_direct_visibility(
+            component, direct.source, current, side, illustrate
+        )
+
+    def _apply_direct_visibility(
+        self,
+        component: IllustrationComponent,
+        source: g.ModelIllustrationSourceA0,
+        uncut: IllustrationSymbol,
+        side: Side,
+        illustrate: bool,
+    ) -> IllustrationSymbol:
+        resolution = self._component_visibility(component, uncut.source_bounds_mm, side)
+        if (
+            resolution is None
+            or resolution.action is ComponentVisibilityAction.RENDER_UNCLIPPED
+        ):
+            return uncut
+        if resolution.action is ComponentVisibilityAction.OMIT:
+            self._warn_unsafe_opposite_visibility(component, resolution)
+            return _with_aperture_projection(_empty_illustration_symbol(), uncut)
+        surface = self._render_direct_source(
+            source,
+            cast(DirectIllustrationSource, component.direct).model,
+            side,
+            illustrate,
+            clipping=_native_clipping(resolution),
+        )
+        return _with_aperture_projection(surface, uncut)
+
+    def _component_visibility(
+        self,
+        component: IllustrationComponent,
+        bounds: Bounds3 | None,
+        side: Side,
+    ) -> ComponentVisibilityResolution | None:
+        if self.region_index is None:
+            return None
+        if bounds is None:
+            raise ModelGeometryError("native illustration did not return model bounds")
+        return resolve_component_visibility(
+            self.region_index,
+            anchor_mm=component.anchor_mm,
+            bounds_local_mm=bounds,
+            authored_side=component.authored_side,
+            requested_side=side,
+        )
+
+    def _warn_unsafe_opposite_visibility(
+        self,
+        component: IllustrationComponent,
+        resolution: ComponentVisibilityResolution,
+    ) -> None:
+        if (
+            resolution.requested_side == component.authored_side
+            or resolution.reason == "clipped-fragment-empty"
+        ):
+            return
+        self.warn(
+            f"{component.designator}: opposite-side model fragment omitted because {resolution.reason}",
+            code="component-clipping-unresolved",
+            category="clipping",
+            component_designator=component.designator,
+            detail={
+                "authored_side": component.authored_side,
+                "requested_side": resolution.requested_side,
+                "reason": resolution.reason,
+                "region_name": resolution.region_name,
+            },
+        )
+
+    def _render_direct_source(
+        self,
+        source: g.ModelIllustrationSourceA0,
+        model: bytes | None,
+        side: Side,
+        illustrate: bool,
+        *,
+        clipping: g.IllustrationClipping | None = None,
+    ) -> IllustrationSymbol:
         bottom = side == "bottom"
         rendered = self.client.model_illustration_geometry(
-            g.ModelIllustrationGeometryRequestA0(
-                schema="geometry.model_illustration_geometry.request.a0",
-                source=cast(g.ModelIllustrationSourceA0, component.direct.source),
+            g.ModelIllustrationGeometryRequestB0(
+                schema="geometry.model_illustration_geometry.request.b0",
+                source=source,
                 view=g.MeshIllustrationView(
                     direction=(0, 0, -1) if bottom else (0, 0, 1),
                     up=(0, 1, 0),
@@ -1782,49 +1845,127 @@ class IllustrationJob:
                     detail_width_mm=self.line_width_mm * 0.55,
                 ),
                 style=_illustration_style(bottom),
+                clipping=clipping,
             ),
-            component.direct.model,
+            model,
             timeout=60,
         )
         return _symbol_from_geometry(
             rendered, outline_width_mm=self.line_width_mm, illustrate=illustrate
         )
 
+    def _queue_discarded_symbol_warnings(
+        self,
+        component: IllustrationComponent,
+        symbol: IllustrationSymbol,
+        side: Side,
+        direct: DirectIllustrationSource,
+    ) -> None:
+        body_index = (
+            component.bodies[0]["index"] if len(component.bodies) == 1 else None
+        )
+        for warning in symbol.warnings:
+            self.warn(
+                f"{component.designator} / {direct.label} ({side}): {warning}",
+                code="geometer-warning",
+                category="geometer_geometry",
+                producer="geometer",
+                component_designator=component.designator,
+                body_index=body_index,
+                model_identity=direct.label,
+                detail={"side": side, "upstream_message": warning},
+            )
+
     def _render_meshes(
         self, component: IllustrationComponent, side: Side, illustrate: bool
     ) -> IllustrationSymbol:
+        resolution = self._component_visibility(component, component.bounds, side)
+        if (
+            resolution is None
+            or resolution.action is ComponentVisibilityAction.RENDER_UNCLIPPED
+        ):
+            return self._render_mesh_projection(
+                component, side, illustrate, clipping=None, resolution=resolution
+            )
+        if resolution.action is ComponentVisibilityAction.OMIT:
+            self._warn_unsafe_opposite_visibility(component, resolution)
+            uncut = self._render_mesh_projection(
+                component, side, illustrate, clipping=None, resolution=None
+            )
+            return _with_aperture_projection(_empty_illustration_symbol(), uncut)
+        surface = self._render_mesh_projection(
+            component,
+            side,
+            illustrate,
+            clipping=_native_clipping(resolution),
+            resolution=resolution,
+        )
+        uncut = self._render_mesh_projection(
+            component, side, illustrate, clipping=None, resolution=None
+        )
+        return _with_aperture_projection(surface, uncut)
+
+    def _render_mesh_projection(
+        self,
+        component: IllustrationComponent,
+        side: Side,
+        illustrate: bool,
+        *,
+        clipping: g.IllustrationClipping | None,
+        resolution: ComponentVisibilityResolution | None,
+    ) -> IllustrationSymbol:
         bottom = side == "bottom"
         meshes = component.meshes
-        min_x, min_y, _, max_x, max_y, _ = component.bounds
-        span = max(max_x - min_x, max_y - min_y, 1e-9)
-        indexed = _combine_mesh_arrays(meshes)
+        visible_bounds = _clipped_conservative_bounds(component.bounds, resolution)
         direction = (0, 0, -1) if bottom else (0, 0, 1)
         view = g.HlrViewSpec(id=side, direction=direction, up=(0, 1, 0))
         hlr = self.client.mesh_hlr_projection(
-            indexed,
-            g.HlrProjectionOptionsA0(
+            g.MeshCollectionA0(
+                schema="geometry.mesh_collection.a0",
+                length_unit="millimeter",
+                meshes=meshes,
+            ),
+            g.MeshHlrProjectionRequestB0(
+                schema="geometry.mesh_hlr_projection.request.b0",
                 views=(view,),
                 output_outline=True,
                 output_detail=True,
-                output_bbox=False,
-                curve_mode=g.HlrCurveMode.POLYLINE,
+                output_bbox=True,
                 round_digits=6,
-                projection_algorithm=g.HlrProjectionAlgorithm.FAST,
-                outline_algorithm=g.HlrOutlineAlgorithm.FAST_MESH_SHADOW,
                 fast=_fast_hlr_options(),
+                clipping=clipping,
             ),
             timeout=60,
         )
-        projected = next(v for v in hlr.views if v.id == side).modes.outline
+        projected_view = next(v for v in hlr.views if v.id == side)
+        projected = projected_view.modes.outline
         outline = tuple(
             (((-x1 if bottom else x1), -y1), ((-x2 if bottom else x2), -y2))
             for x1, y1, x2, y2 in projected.segments
         )
+        if hlr.empty:
+            return replace(
+                _empty_illustration_symbol(),
+                outline_segments_mm=outline,
+                source_bounds_mm=visible_bounds,
+            )
         if not illustrate:
-            return IllustrationSymbol("", 0, 0, 1, {}, (), outline)
+            return IllustrationSymbol(
+                "", 0, 0, 1, {}, (), outline, visible_bounds, hlr.empty
+            )
+        projected_bounds = projected_view.modes.bbox.bounds
+        if projected_bounds is None:
+            raise ModelGeometryError(
+                "nonempty clipped illustration did not return projected bounds"
+            )
+        # HLR's -Z view reverses X.  mesh_illustration mirrors that view back
+        # into board coordinates, so use the correspondingly mirrored origin.
+        min_x = -projected_bounds.max_x if bottom else projected_bounds.min_x
+        max_y = projected_bounds.max_y
+        span = max(projected_bounds.width, projected_bounds.height, 1e-9)
         result = self.client.mesh_illustration(
-            g.MeshIllustrationInputA0(
-                schema="geometry.mesh_illustration.input.a0",
+            g.MeshIllustrationInputB0(
+                schema="geometry.mesh_illustration.input.b0",
                 meshes=meshes,
                 # Native bottom projection reverses X. Undo that here to retain
                 # board XY registration; the whole SVG is mirrored once by the
@@ -1838,6 +1979,7 @@ class IllustrationJob:
                     crease_width=self.line_width_mm * 0.55 / span,
                 ),
                 svg=g.MeshIllustrationSvgOptions(coordinate_span=_COORDINATE_SPAN),
+                clipping=clipping,
             ),
             hlr_projection=hlr,
             timeout=60,
@@ -1850,51 +1992,33 @@ class IllustrationJob:
             asdict(result.stats),
             result.warnings,
             outline,
+            visible_bounds,
+            result.empty,
         )
 
 
-def _fast_hlr_options() -> g.FastHlrOptionsA0:
-    return g.FastHlrOptionsA0(
-        include_hidden=False,
-        suppress_coplanar_seams=False,
-        crease_angle_rad=math.radians(25),
+def _with_aperture_projection(
+    surface: IllustrationSymbol, uncut: IllustrationSymbol
+) -> IllustrationSymbol:
+    """Pair disjoint board-surface and aperture projections for SVG composition."""
+
+    if uncut.empty:
+        return surface
+    aperture = IllustrationProjection(
+        uncut.svg,
+        uncut.x_mm,
+        uncut.y_mm,
+        uncut.mm_per_unit,
     )
-
-
-def _illustration_style(bottom: bool) -> g.MeshIllustrationStyleA0:
-    return g.MeshIllustrationStyleA0(
-        shading=g.MeshIllustrationShading.TOON,
-        ambient=0.28,
-        key_intensity=0.9,
-        rim_amount=0.12,
-        light_direction=(-0.35, 0.8, -0.48) if bottom else (0.35, 0.8, 0.48),
-        bands=3,
-        source_colors=True,
-        fallback_color=(113 / 255, 166 / 255, 160 / 255),
-        transparent_background=True,
-        fuse_surfaces=True,
-        layer_coplanar_materials=True,
-        double_sided=False,
-        show_outlines=False,
-        show_creases=False,
-        show_hlr_outline=True,
-        show_hlr_detail=True,
-        outline_color="#000000",
-        crease_color="#000000",
+    warnings = tuple(dict.fromkeys((*surface.warnings, *uncut.warnings)))
+    return replace(
+        surface,
+        warnings=warnings,
+        outline_segments_mm=uncut.outline_segments_mm,
+        empty=False,
+        aperture=aperture,
+        aperture_source_bounds_mm=uncut.source_bounds_mm,
     )
-
-
-def _combine_mesh_arrays(meshes: Meshes) -> g.IndexedTriangleMeshA0:
-    positions: list[float] = []
-    indices: list[int] = []
-    source_faces: list[int] = []
-    for face, mesh in enumerate(meshes):
-        offset = len(positions) // 3
-        local_indices = mesh.indices or tuple(range(len(mesh.positions) // 3))
-        positions.extend(mesh.positions)
-        indices.extend(index + offset for index in local_indices)
-        source_faces.extend([face] * (len(local_indices) // 3))
-    return g.IndexedTriangleMeshA0(positions, indices, source_faces)
 
 
 def _illustrate_with_client(
@@ -1903,12 +2027,108 @@ def _illustrate_with_client(
     line_width: float,
     side: Side,
     illustrate: bool,
+    region_index: BoardRegionEnvelopeIndex | None = None,
 ) -> IllustrationSymbol:
     # A task's style is immutable even when later views use another line width.
-    return IllustrationJob(client, line_width_mm=line_width)._render_native(
+    return IllustrationJob(
+        client, line_width_mm=line_width, region_index=region_index
+    )._render_native(
         component,
         side=side,
         illustrate=illustrate,
+    )
+
+
+def _translate_component_z(
+    component: IllustrationComponent, offset_mm: float
+) -> IllustrationComponent:
+    """Apply a world-Z board-surface placement to every source representation."""
+
+    if not math.isfinite(offset_mm):
+        raise ValueError("Component board Z offset must be finite")
+    if offset_mm == component.board_z_offset_mm:
+        return component
+    if component.board_z_offset_mm != 0.0:
+        raise ValueError("Component board Z placement cannot be applied twice")
+    meshes = tuple(
+        _transform_mesh(mesh, _translation(0, 0, offset_mm), mesh.id)
+        for mesh in component.meshes
+    )
+    direct = component.direct
+    if direct is not None:
+        direct = replace(
+            direct,
+            source=_translate_direct_source_z(direct.source, offset_mm),
+            identity={
+                "source": direct.identity,
+                "board_z_offset_mm": offset_mm,
+            },
+            footprint_local_source=(
+                None
+                if direct.footprint_local_source is None
+                else _translate_direct_source_z(
+                    direct.footprint_local_source, offset_mm
+                )
+            ),
+        )
+    bodies = tuple(
+        cast(
+            BodyMetadata,
+            {
+                **body,
+                "lower_z_mm": body["lower_z_mm"] + offset_mm,
+                "upper_z_mm": body["upper_z_mm"] + offset_mm,
+            },
+        )
+        for body in component.bodies
+    )
+    bounds = component.resolved_bounds
+    if bounds is not None:
+        bounds = (
+            bounds[0],
+            bounds[1],
+            bounds[2] + offset_mm,
+            bounds[3],
+            bounds[4],
+            bounds[5] + offset_mm,
+        )
+    return replace(
+        component,
+        meshes=meshes,
+        bodies=bodies,
+        direct=direct,
+        resolved_bounds=bounds,
+        board_z_offset_mm=offset_mm,
+    )
+
+
+def _translate_direct_source_z(
+    source: g.ModelIllustrationSourceA0, offset_mm: float
+) -> g.ModelIllustrationSourceA0:
+    if isinstance(source, g.ModelAttachmentIllustrationSourceA0):
+        transform = list(source.transform or _column_major(_translation(0, 0)))
+        transform[14] += offset_mm
+        return replace(
+            source,
+            transform=cast(g.IllustrationMatrix4x4, tuple(transform)),
+        )
+    if isinstance(source, g.AnalyticIllustrationSourceA0):
+        occurrences = tuple(
+            _translate_analytic_occurrence_z(occurrence, offset_mm)
+            for occurrence in source.scene.occurrences
+        )
+        return replace(source, scene=replace(source.scene, occurrences=occurrences))
+    raise TypeError(f"Unsupported direct illustration source {type(source).__name__}")
+
+
+def _translate_analytic_occurrence_z(
+    occurrence: g.AnalyticOccurrenceA0, offset_mm: float
+) -> g.AnalyticOccurrenceA0:
+    transform = list(occurrence.transform or _column_major(_translation(0, 0)))
+    transform[14] += offset_mm
+    return replace(
+        occurrence,
+        transform=cast(g.IllustrationMatrix4x4, tuple(transform)),
     )
 
 
@@ -1939,6 +2159,7 @@ def combine_components(
         tuple(meshes),
         tuple(body for component in components for body in component.bodies),
         direct=direct,
+        authored_side=components[0].authored_side,
     )
 
 
@@ -2014,19 +2235,6 @@ def _translated_occurrence(
     )
 
 
-def _inline_styles(root: ET.Element, styles: dict[str, dict[str, str]]) -> None:
-    for element in root.iter():
-        for name in element.attrib.pop("class", "").split():
-            if name not in styles:
-                raise ValueError(f"Unsupported native illustration CSS class: {name}")
-            for key, value in styles[name].items():
-                element.set(key.strip(), value.strip())
-        # Current native illustrations emit no IDs/references. Fail rather
-        # than silently introduce collisions if that contract changes.
-        if "id" in element.attrib or any("url(" in v for v in element.attrib.values()):
-            raise ValueError("Native illustration references require SVG namespacing")
-
-
 def _owning_component(
     pcbdoc: AltiumPcbDoc, body: AltiumPcbComponentBody
 ) -> AltiumPcbComponent | None:
@@ -2061,111 +2269,6 @@ def _body_anchor(
     if values[0] is None or values[1] is None:
         return None
     return values[0], values[1]
-
-
-def _placed_meshes(
-    raw_meshes: tuple[g.MeshIllustrationMesh, ...],
-    matrix: list[list[float]],
-    color: tuple[float, float, float] | None,
-    opacity: float,
-    index: int,
-) -> tuple[g.MeshIllustrationMesh, ...]:
-    meshes = []
-    for face, mesh in enumerate(raw_meshes):
-        visible = _visible_mesh(mesh, opacity, color)
-        if visible is not None:
-            meshes.append(_transform_mesh(visible, matrix, f"body-{index}-face-{face}"))
-    return tuple(meshes)
-
-
-def _extrusion_ring(
-    vertices: Sequence[PcbExtendedVertex | PcbSimpleVertex],
-    anchor_mm: tuple[float, float],
-    component_rotation_degrees: float = 0.0,
-) -> dict[str, object]:
-    ring = _extended_vertices_ring(list(vertices))
-    if ring is None:
-        raise ValueError("Invalid extrusion ring")
-    value = ring.to_json()
-    radians = math.radians(component_rotation_degrees)
-    cosine, sine = math.cos(radians), math.sin(radians)
-
-    def component_local(point: Sequence[float]) -> list[float]:
-        x, y = point[0] - anchor_mm[0], point[1] - anchor_mm[1]
-        result = [
-            round((cosine * x) + (sine * y), 9),
-            round((-sine * x) + (cosine * y), 9),
-        ]
-        return [0.0 if coordinate == 0 else coordinate for coordinate in result]
-
-    points = cast(list[list[float]], value["points"])
-    segments = cast(list[dict[str, object]], value["segments"])
-    value["points"] = [component_local(point) for point in points]
-    for segment in segments:
-        if "center" in segment:
-            segment["center"] = component_local(
-                cast(Sequence[float], segment["center"])
-            )
-    return value
-
-
-def _extrusion_request(
-    body: AltiumPcbComponentBody,
-    anchor_mm: tuple[float, float],
-    *,
-    component_rotation_degrees: float = 0.0,
-    is_bottom: bool = False,
-) -> dict[str, object]:
-    lower, upper = extrusion_extents_mm(body)
-    region = {
-        "outer": _extrusion_ring(body.outline, anchor_mm, component_rotation_degrees),
-        "holes": [
-            _extrusion_ring(hole, anchor_mm, component_rotation_degrees)
-            for hole in body.holes
-        ],
-    }
-    return dict(
-        schema="geometry.planar_step.request.a0",
-        units="mm",
-        name="extruded-body",
-        bodies=[
-            dict(
-                id="body",
-                name="body",
-                z_mm=-upper if is_bottom else lower,
-                thickness_mm=upper - lower,
-                regions=[region],
-            )
-        ],
-    )
-
-
-def _illustration_ring(value: dict[str, object]) -> g.IllustrationProfileRingA0:
-    points = cast(list[list[float]], value["points"])
-    segments = cast(list[dict[str, object]], value["segments"])
-    converted = []
-    for segment in segments:
-        if segment["kind"] == "line":
-            converted.append(g.IllustrationProfileLineA0(kind="line"))
-        elif segment["kind"] == "arc":
-            center = cast(Sequence[float], segment["center"])
-            converted.append(
-                g.IllustrationProfileCircularArcA0(
-                    kind="circular_arc",
-                    center_mm=(float(center[0]), float(center[1])),
-                    sweep=(
-                        g.PlanarArcSweep.CCW
-                        if segment["sweep"] == "ccw"
-                        else g.PlanarArcSweep.CW
-                    ),
-                )
-            )
-        else:
-            raise ModelGeometryError(f"unsupported extrusion segment {segment['kind']}")
-    return g.IllustrationProfileRingA0(
-        points_mm=tuple((float(point[0]), float(point[1])) for point in points),
-        segments=tuple(converted),
-    )
 
 
 def _analytic_body(
@@ -2246,6 +2349,12 @@ def _analytic_radial_body(
     )
     lower = float(body.standoff_height) * _IU_MM
     if not math.isfinite(radius + lower) or radius <= 0:
+        if body.model_type == 2:
+            height = float(body.model_cylinder_height) * _IU_MM
+            raise ModelGeometryError(
+                "cylinder requires positive finite radius and height; "
+                f"received {radius:g}, {height:g} mm"
+            )
         raise ModelGeometryError(
             f"analytic body requires a positive finite radius; received {radius:g} mm"
         )
@@ -2340,122 +2449,4 @@ def _direct_analytic_source(
         ),
         lower,
         upper,
-    )
-
-
-def _cylinder_mesh(
-    body: AltiumPcbComponentBody,
-    anchor_mils: tuple[float, float],
-    *,
-    component_rotation_degrees: float = 0.0,
-    is_bottom: bool = False,
-) -> tuple[str, g.MeshIllustrationMesh]:
-    """Lower an Altium Z-axis cylinder directly to the illustration mesh boundary."""
-    radius = float(body.model_cylinder_radius) * _IU_MM
-    height = float(body.model_cylinder_height) * _IU_MM
-    lower = float(body.standoff_height) * _IU_MM
-    if not math.isfinite(radius + height + lower) or radius <= 0 or height <= 0:
-        raise ModelGeometryError(
-            f"cylinder requires positive finite radius and height; received {radius:g}, {height:g} mm"
-        )
-    upper = lower + height
-    if is_bottom:
-        lower, upper = -upper, -lower
-    board_center = (
-        float(body.model_2d_x) * _IU_MM - anchor_mils[0] * _MIL_MM,
-        float(body.model_2d_y) * _IU_MM - anchor_mils[1] * _MIL_MM,
-    )
-    if not math.isfinite(board_center[0] + board_center[1]):
-        raise ModelGeometryError("cylinder requires a finite 2D center")
-    radians = math.radians(component_rotation_degrees)
-    cosine, sine = math.cos(radians), math.sin(radians)
-    center = (
-        round((cosine * board_center[0]) + (sine * board_center[1]), 10),
-        round((-sine * board_center[0]) + (cosine * board_center[1]), 10),
-    )
-    center = tuple(0.0 if coordinate == 0 else coordinate for coordinate in center)
-
-    # The cylinder is already analytic Altium topology. A small local prism is
-    # only the common interchange used by illustration for lighting, overlap,
-    # and Z ordering; no STEP generation or OCCT tessellation is involved.
-    segments = 48
-    ring = tuple(
-        (
-            round(center[0] + radius * math.cos(2 * math.pi * index / segments), 10),
-            round(center[1] + radius * math.sin(2 * math.pi * index / segments), 10),
-        )
-        for index in range(segments)
-    )
-    positions = tuple(
-        coordinate for z in (lower, upper) for x, y in ring for coordinate in (x, y, z)
-    ) + (center[0], center[1], lower, center[0], center[1], upper)
-    bottom_center, top_center = 2 * segments, 2 * segments + 1
-    indices: list[int] = []
-    for index in range(segments):
-        following = (index + 1) % segments
-        bottom, next_bottom = index, following
-        top, next_top = segments + index, segments + following
-        indices.extend((bottom_center, next_bottom, bottom))
-        indices.extend((top_center, top, next_top))
-        indices.extend((bottom, next_bottom, next_top, bottom, next_top, top))
-    key = _digest(
-        {
-            "kind": "altium-cylinder",
-            "center_mm": center,
-            "radius_mm": radius,
-            "lower_z_mm": lower,
-            "upper_z_mm": upper,
-            "segments": segments,
-        }
-    )
-    return key, g.MeshIllustrationMesh(
-        id="cylinder",
-        positions=positions,
-        indices=tuple(indices),
-        materials=(g.MeshIllustrationMaterial(color=(0.5, 0.5, 0.5)),),
-    )
-
-
-def _step_matrix(
-    helper: PcbAssemblyModelHelper,
-    body: AltiumPcbComponentBody,
-    component: AltiumPcbComponent | None,
-    anchor: tuple[float, float],
-    *,
-    is_bottom: bool = False,
-) -> list[list[float]]:
-    props = body.properties
-    rotation = float(component.rotation) if component is not None else 0.0
-    raw_rotz = props.get("MODEL.3D.ROTZ")
-    rotz = (
-        helper._parse_altium_float(raw_rotz, default=0.0)
-        + (rotation if is_bottom else -rotation)
-        if raw_rotz
-        else 0.0
-    )
-    model_anchor = [
-        cast(
-            float,
-            helper._parse_altium_mils(
-                props.get(f"MODEL.2D.{axis}"),
-                assume_internal_units=False,
-                default=anchor[i],
-            ),
-        )
-        for i, axis in enumerate(("X", "Y"))
-    ]
-    return helper._compose_step_component_transform(
-        x_mm=(model_anchor[0] - anchor[0]) * _MIL_MM,
-        y_mm=(model_anchor[1] - anchor[1]) * _MIL_MM,
-        z_mm=float(body.model_3d_dz) * _IU_MM * (-1 if is_bottom else 1),
-        model_2d_rotation_deg=rotation
-        + helper._parse_altium_float(props.get("MODEL.2D.ROTATION"), default=0),
-        model_rotx_deg=helper._parse_altium_float(
-            props.get("MODEL.3D.ROTX"), default=0
-        ),
-        model_roty_deg=helper._parse_altium_float(
-            props.get("MODEL.3D.ROTY"), default=0
-        ),
-        model_rotz_deg=rotz,
-        is_bottom=is_bottom,
     )

@@ -1,5 +1,5 @@
 {
-  "schema": "pcb.svg.config.a0",
+  "schema": "pcb.svg.config.a1",
   "global": {
     "include_metadata": true,
     "clip_to_outline": true,
@@ -75,9 +75,14 @@
         "enabled": true,
         "color": "#434343"
       },
+      "silkscreen_surface": {
+        "clip_mode": "film"
+      },
       "board_substrate": {
         "enabled": true,
-        "color": "#B6A26B"
+        "color": "auto",
+        "rigid_color": "#B6A26B",
+        "flex_color": "#D18B28"
       }
     }
   },

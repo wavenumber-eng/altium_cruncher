@@ -7,7 +7,9 @@ reports and the existing unversioned array outputs. Wire tags, paths and output
 shapes are preserved. The Python CLI does not require Node.
 
 The generated [catalog](../../src/ts/altium_cruncher_config/generated/catalog.json)
-lists all 45 roots, their authored sources, schemas and validators. Generation
+lists all 46 roots, their authored sources, current schemas, compatibility
+schemas and validators. The PCB SVG root declares both its current A1 schema
+and its frozen A0 predecessor without creating a second runtime codec. Generation
 rejects duplicate names and any public `docs/contracts/*.schema.json` that lacks
 a TypeSpec source. All published references are bundled locally; validation
 does not fetch schemas from the network.
@@ -32,6 +34,7 @@ roots in `outputs`. Each catalog entry links the exact source and JSON Schema.
 | `schematic_svg_manifest`, `schematic_svg_enrichment` | `altium_cruncher_cmd_sch_svg`; Design b0 links and embedded metadata |
 | `pcb_svg_manifest`, `pcb_svg_enrichment`, `pcb_svg_component_layers` | `altium_cruncher_cmd_pcb_svg`, `altium_cruncher_pcb_svg_a0_renderer`, `altium_cruncher_pcb_svg_component_layers` |
 | `pcb_svg_timings` | `pcb_svg_render_job`; nullable absent cache statistics |
+| `toon_warning_report` | `toon_diagnostics`, `altium_cruncher_cmd_toon`; deterministic nonfatal diagnostic report |
 | `notes` | `altium_cruncher_cmd_notes` |
 | `variants_list` | `altium_cruncher_prjpcb_variants` |
 | `intlib_extract` | `altium_cruncher_cmd_extract._intlib_extract_manifest` |

@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 2026.9.19
+
+- Consume `altium-monkey==2026.9.19` and `wn-geometer==2026.9.19`, including
+  Geometer's B0 post-transform half-space clipping and projected-fragment
+  bounds used by Toon component visibility.
+- Correct Toon component placement and cross-side visibility using region-aware
+  finished board thickness, affine bottom-side placement, Geometer half-space
+  fragments, and board/aperture-domain composition for through-hole, straddle,
+  edge-overhang, cutout-overhang, and reverse-mount parts.
+- Render rigid-flex substrate, outer copper, solder mask, coverlay and flat bend
+  lines per board region. Add configurable silkscreen clipping to the board or
+  resolved film domain while preserving unclipped PCB-SVG compatibility mode.
+- Queue nonfatal Toon model/geometry diagnostics and present a deterministic
+  completion summary, with optional `toon.warning_report.a0` JSON output.
+- Advance the additive PCB SVG/Toon configuration contract to
+  `pcb.svg.config.a1`. A0 files and the A0 schema path remain supported; new
+  templates and examples use A1. Explicit substrate/film colors remain global
+  overrides, and open style records leave room for later material and per-bend
+  policies.
+
 ## 2026.9.18
 
 - Consume `altium-monkey==2026.9.18`, which fixes hierarchical and multipart

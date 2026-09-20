@@ -1,0 +1,24 @@
+{
+  "source_corpus": "user-authored projection_test/PCB_Project",
+  "project": "projection_test.PrjPcb",
+  "imported": "2026-09-19",
+  "import_authorization": "Repository owner explicitly approved copying this test project into Altium Cruncher on 2026-09-19.",
+  "fixture_purpose": "Focused component-projection stress board with models spanning the outer board edge, an interior cutout, and both board surfaces.",
+  "files": [
+    {
+      "path": "projection_test.PcbDoc",
+      "bytes": 2394624,
+      "sha256": "05ee314e7a75dd271eaa4df2042be499f5d3c92d65035e54bdbac0e67d60fbc5"
+    },
+    {
+      "path": "projection_test.PrjPcb",
+      "bytes": 37399,
+      "sha256": "38140142165bf87329da4be8da69e297f64ead5dac0c0a9c8f24388703806ff9"
+    },
+    {
+      "path": "projection_test.SchDoc",
+      "bytes": 45568,
+      "sha256": "26c876fe5f75af1b76880c441821adef8ffeb0d8295b6d75e3e60849674791c6"
+    }
+  ]
+}

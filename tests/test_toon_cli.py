@@ -61,6 +61,13 @@ def test_config_is_created_and_reused_with_cli_overrides(tmp_path):
     assert _args().output == Path("output/toon")
     assert not hasattr(_args(), "format")
     assert _args().timings is None
+    assert _args().warning_mode == "summary"
+    assert _args().warning_report is None
+    assert _args("--warnings", "all").warning_mode == "all"
+    assert _args("--warnings", "none").warning_mode == "none"
+    assert _args("--warning-report", str(tmp_path / "warnings.json")).warning_report == (
+        tmp_path / "warnings.json"
+    )
     assert _args().workers == 4
     assert not _args().gallery and not _args().open_gallery
     assert _args("--gallery").gallery
@@ -202,10 +209,14 @@ def test_public_toon_command_writes_editable_substrate_preset(tmp_path):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     config = load_json_config(target)
-    assert config["schema"] == "pcb.svg.config.a0"
+    assert config["schema"] == "pcb.svg.config.a1"
     assert [v["group_id"] for v in config["views"]] == ["toon-top", "toon-bottom"]
     assert all(v["layers"][0] == "BOARD_SUBSTRATE" for v in config["views"])
-    assert config["global"]["styles"]["board_substrate"]["color"] == "#B6A26B"
+    substrate = config["global"]["styles"]["board_substrate"]
+    assert substrate["color"] == "auto"
+    assert substrate["rigid_color"] == "#B6A26B"
+    assert substrate["flex_color"] == "#D18B28"
+    assert config["global"]["styles"]["silkscreen_surface"]["clip_mode"] == "film"
 
 
 def test_config_accepts_partial_settings_and_custom_views():
@@ -353,6 +364,56 @@ def test_svg_job_reports_progress_and_writes_timings(
         assert (message in caplog.text) == (level == "DEBUG")
     if level != "WARNING":
         assert caplog.records[-1].message == f"Success: wrote 2 SVG files to {output}"
+
+
+@pytest.mark.parametrize(
+    ("warning_mode", "expected_detail"),
+    [("summary", False), ("all", True), ("none", False)],
+)
+def test_toon_queues_warnings_until_completion_and_can_write_report(
+    tmp_path, monkeypatch, caplog, warning_mode, expected_detail
+):
+    import json
+    from altium_cruncher import altium_cruncher_cmd_toon as toon
+
+    caplog.set_level("INFO")
+    report_path = tmp_path / f"{warning_mode}.json"
+
+    def render(_args, render_job):
+        assert "Nonfatal warnings" not in caplog.text
+        render_job.diagnose(
+            code="missing-renderable-model",
+            category="missing_model",
+            producer="altium-cruncher",
+            message="U1: fitted component has no renderable 3D model",
+            component_designator="U1",
+            source_scoped=True,
+            occurrence_key="component:U1",
+        )
+        assert "missing-renderable-model" not in caplog.text
+        return "Success: fixture"
+
+    monkeypatch.setattr(toon, "_cmd_toon", render)
+    args = _args(
+        "--no-cache",
+        "--warnings",
+        warning_mode,
+        "--warning-report",
+        str(report_path),
+    )
+
+    assert toon.cmd_toon(args) == 0
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    assert payload["schema"] == "toon.warning_report.a0"
+    assert payload["summary"]["unique_diagnostic_count"] == 1
+    assert payload["diagnostics"][0]["component_designator"] == "U1"
+    assert ("Nonfatal warnings: 1 unique" in caplog.text) == (
+        warning_mode != "none"
+    )
+    assert (
+        "U1: fitted component has no renderable 3D model" in caplog.text
+    ) == expected_detail
+    assert caplog.records[-1].message == "Success: fixture"
 
 
 @pytest.mark.parametrize("failure_stage", ["render", "finish", "write_timings"])

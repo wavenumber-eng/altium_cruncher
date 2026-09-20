@@ -121,6 +121,65 @@
     }
   },
   {
+    "name": "a0 additive predecessor",
+    "valid": true,
+    "value": {
+      "schema": "pcb.svg.config.a0",
+      "global": {
+        "styles": {
+          "board_substrate": {
+            "color": "#123456"
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "a1 regional surface styles and extensions",
+    "valid": true,
+    "value": {
+      "schema": "pcb.svg.config.a1",
+      "global": {
+        "styles": {
+          "board_substrate": {
+            "color": "auto",
+            "rigid_color": "#B6A26B",
+            "flex_color": "#D18B28",
+            "future_material_map": {
+              "ceramic": "#FFFFFF"
+            }
+          },
+          "soldermask_film": {
+            "coverlay_color": "#D18B28"
+          },
+          "bend_lines": {
+            "enabled": true,
+            "line_style": "dashed",
+            "line_width_mm": 0.15,
+            "dash_length_mm": 0.5,
+            "dash_gap_mm": 0.3,
+            "extension_mm": 1.0,
+            "future_per_bend_policy": true
+          },
+          "silkscreen_surface": {
+            "clip_mode": "film",
+            "future_aperture_policy": "source"
+          }
+        }
+      },
+      "views": [
+        {
+          "name": "top",
+          "layers": [
+            "SURFACE_COPPER_TOP",
+            "BEND_LINES",
+            "FUTURE_SYNTHETIC_LAYER"
+          ]
+        }
+      ]
+    }
+  },
+  {
     "name": "root array",
     "valid": false,
     "value": []

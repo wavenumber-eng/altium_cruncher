@@ -2,9 +2,9 @@
 
 export type PcbSvgConfigInput = RecordUnknown & {
   /**
-   * PCB SVG config contract id.
+   * PCB SVG config contract id. pcb.svg.config.a0 remains accepted as the additive predecessor.
    */
-  schema?: "pcb.svg.config.a0" | null;
+  schema?: "pcb.svg.config.a1" | "pcb.svg.config.a0" | null;
   /**
    * Global settings applied to layer outputs and composed views.
    */
@@ -89,6 +89,7 @@ export type StyleTable = RecordStyleObject & {
   assembly_designators?: AssemblyDesignatorsStyle;
   board_substrate?: BoardSubstrateStyle;
   soldermask_film?: SoldermaskFilmStyle;
+  bend_lines?: BendLinesStyle;
   assembly_hlr?: AssemblyHlrStyle;
   board_outline?: BoardOutlineStyle;
   board_cutouts?: BoardCutoutsStyle;
@@ -102,6 +103,7 @@ export type StyleTable = RecordStyleObject & {
   silkscreen_component_graphics?: SilkscreenComponentGraphicsStyle;
   silkscreen_designators?: SilkscreenDesignatorsStyle;
   silkscreen_board_graphics?: SilkscreenBoardGraphicsStyle;
+  silkscreen_surface?: SilkscreenSurfaceStyle;
   pin1_marker?: Pin1MarkerStyle;
   keepout?: KeepoutStyle;
 };
@@ -155,9 +157,17 @@ export type BoardSubstrateStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * CSS color for exposed board substrate.
+   * Global substrate CSS color override, or auto (default) for region-local authored/saved/palette resolution.
    */
   color?: string;
+  /**
+   * Rigid-substrate fallback CSS color used when color=auto and no authored or saved board-core color is available.
+   */
+  rigid_color?: string;
+  /**
+   * Flex-substrate fallback CSS color used when color=auto and no authored material color is available.
+   */
+  flex_color?: string;
 };
 /**
  * Board-clipped inverse solder mask using saved pad/via expansions. Applies globally or per view.
@@ -168,13 +178,54 @@ export type SoldermaskFilmStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * CSS color or auto (default), which reads the side's saved Altium 3D solder-mask color and falls back to #176B3A.
+   * Global film CSS color override, or auto (default) for region-local authored material, saved Altium 3D solder-mask color, and configured surface-class fallback resolution.
+   */
+  color?: string;
+  /**
+   * Coverlay fallback CSS color used when color=auto and the authored coverlay material has no color.
+   */
+  coverlay_color?: string;
+  /**
+   * Layer opacity from 0.0 to 1.0.
+   */
+  opacity?: number | boolean | string;
+};
+/**
+ * Flat, region-clipped rigid-flex bend-line annotations. This does not fold or deform the board.
+ */
+export type BendLinesStyle = RecordUnknown & {
+  /**
+   * Enable flat board bend-line annotations.
+   */
+  enabled?: boolean | number | string;
+  /**
+   * SVG color for bend-line annotations.
    */
   color?: string;
   /**
    * Layer opacity from 0.0 to 1.0.
    */
   opacity?: number | boolean | string;
+  /**
+   * Stroke width in millimeters.
+   */
+  line_width_mm?: number | boolean | string;
+  /**
+   * Bend-line stroke style. Options: solid, dashed.
+   */
+  line_style?: ("solid" | "dashed") | string;
+  /**
+   * Dash and gap length in millimeters when line_style is dashed.
+   */
+  dash_length_mm?: number | boolean | string;
+  /**
+   * Gap between dashes in millimeters when line_style is dashed.
+   */
+  dash_gap_mm?: number | boolean | string;
+  /**
+   * Absolute distance each end extends beyond the owning-region chord, in millimeters. Zero stops at the region boundary.
+   */
+  extension_mm?: number | boolean | string;
 };
 export type AssemblyHlrStyle = RecordUnknown & {
   projection_algorithm?: "fast" | "poly" | "exact";
@@ -429,6 +480,12 @@ export type SilkscreenBoardGraphicsStyle = RecordUnknown & {
    */
   color?: string;
 };
+export type SilkscreenSurfaceStyle = RecordUnknown & {
+  /**
+   * Silkscreen clipping domain. none preserves authored overlay; board clips to board material and physical holes; film clips to the resolved solder-mask/coverlay film after apertures.
+   */
+  clip_mode?: ("none" | "board" | "film") | string;
+};
 export type Pin1MarkerStyle = RecordUnknown & {
   /**
    * Enable this rendering rule.
@@ -467,7 +524,7 @@ export type LayerOutputOptions = RecordUnknown & {
    */
   layers?: ("auto" | "AUTO" | string[]) | null | string;
   /**
-   * Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.
+   * Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, BEND_LINES, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, SURFACE_COPPER_TOP, SURFACE_COPPER_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.
    */
   include_special_layers?:
     | (
@@ -484,6 +541,9 @@ export type LayerOutputOptions = RecordUnknown & {
         | "PIN1_BOTTOM"
         | "SOLDERMASK_FILM_TOP"
         | "SOLDERMASK_FILM_BOTTOM"
+        | "SURFACE_COPPER_TOP"
+        | "SURFACE_COPPER_BOTTOM"
+        | "BEND_LINES"
         | "ILLUSTRATION_TOP"
         | "ILLUSTRATION_BOTTOM"
         | string

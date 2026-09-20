@@ -11,6 +11,7 @@ from altium_cruncher import pcb_svg_component_cache as artwork
 from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
     ComponentLayerSession,
 )
+from altium_cruncher.pcb_board_region_envelope_index import BoardRegionQueryStatus
 from altium_cruncher.pcb_svg_model_cache import PcbSvgModelCache
 
 
@@ -110,8 +111,53 @@ def test_warm_artwork_skips_positive_geometry_preserves_body_order_and_retries_f
     assert snapshot(actual) == expected
     assert calls == [3]
     assert warm.job.warnings == cold.job.warnings
+    assert warm.job.diagnostics == cold.job.diagnostics
     assert [b["index"] for p, _ in actual for b in p.bodies] == [1, 0, 2]
     assert all(not hasattr(p, "meshes") for p, _ in actual)
+
+
+def test_region_aware_artwork_cache_retains_opposite_authored_side(
+    scene, monkeypatch
+):
+    pcb, cache, calls = scene
+    pcb.component_bodies[1].properties["bottom"] = True
+    helper = SimpleNamespace(
+        _collect_embedded_step_model_catalog=lambda pcb: ([], []),
+        _component_body_is_bottom=lambda props, component: bool(props.get("bottom")),
+    )
+    monkeypatch.setattr(illustration, "PcbAssemblyModelHelper", lambda: helper)
+    region = SimpleNamespace(
+        source_index=0,
+        name="Rigid",
+        outline_mils=((0.0, 0.0), (100.0, 0.0), (100.0, 100.0)),
+        holes_mils=(),
+        total_thickness_mils=40.0,
+    )
+    region_index = SimpleNamespace(
+        regions=(region,),
+        invalid_regions=(),
+        query_point=lambda _x, _y: SimpleNamespace(
+            status=BoardRegionQueryStatus.RESOLVED,
+            region=region,
+            detail="",
+        ),
+    )
+
+    cold = ComponentLayerSession(cache=cache())
+    expected = snapshot(
+        cold._materialize(pcb, "top", 0.025, True, region_index)
+    )
+    assert {part.authored_side for part, _ in cold._placed[next(iter(cold._placed))]} == {
+        "top",
+        "bottom",
+    }
+    calls.clear()
+
+    warm = ComponentLayerSession(cache=cache())
+    actual = warm._materialize(pcb, "top", 0.025, True, region_index)
+    assert snapshot(actual) == expected
+    assert calls == [3]
+    assert all(not hasattr(part, "meshes") for part, _ in actual)
 
 
 def test_style_changes_recollect_without_duplicating_geometry_warnings(scene):
@@ -125,6 +171,7 @@ def test_style_changes_recollect_without_duplicating_geometry_warnings(scene):
             snapshot(session._materialize(pcb, *style)) for style in styles
         ] == expected
         assert session.job.warnings == baseline.job.warnings
+        assert session.job.diagnostics == baseline.job.diagnostics
         assert session.job._suppress_collection_warnings is False
 
 

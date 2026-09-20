@@ -6,7 +6,7 @@ from typing import Literal, Never, NotRequired
 from typing_extensions import TypedDict
 
 PcbSvgConfigInput = TypedDict("PcbSvgConfigInput", {
-    "schema": NotRequired["Literal[\"pcb.svg.config.a0\"] | None"],
+    "schema": NotRequired["Literal[\"pcb.svg.config.a1\"] | Literal[\"pcb.svg.config.a0\"] | None"],
     "global": NotRequired["GlobalOptions | None"],
     "assembly": NotRequired["AssemblyOptions | None"],
     "dnp": NotRequired["DnpOptions | None"],
@@ -63,7 +63,7 @@ Pin1Options = TypedDict("Pin1Options", {
 LayerOutputOptions = TypedDict("LayerOutputOptions", {
     "enabled": NotRequired["bool | None | float | str"],
     "layers": NotRequired["Literal[\"auto\"] | Literal[\"AUTO\"] | list[str] | None | str"],
-    "include_special_layers": NotRequired["list[Literal[\"BOARD_SUBSTRATE\"] | Literal[\"BOARD_OUTLINE\"] | Literal[\"BOARD_CUTOUTS\"] | Literal[\"DRILLS\"] | Literal[\"SLOTS\"] | Literal[\"ASSEMBLY_HLR_TOP\"] | Literal[\"ASSEMBLY_HLR_BOTTOM\"] | Literal[\"ASSEMBLY_DESIGNATORS_TOP\"] | Literal[\"ASSEMBLY_DESIGNATORS_BOTTOM\"] | Literal[\"PIN1_TOP\"] | Literal[\"PIN1_BOTTOM\"] | Literal[\"SOLDERMASK_FILM_TOP\"] | Literal[\"SOLDERMASK_FILM_BOTTOM\"] | Literal[\"ILLUSTRATION_TOP\"] | Literal[\"ILLUSTRATION_BOTTOM\"] | str] | None"],
+    "include_special_layers": NotRequired["list[Literal[\"BOARD_SUBSTRATE\"] | Literal[\"BOARD_OUTLINE\"] | Literal[\"BOARD_CUTOUTS\"] | Literal[\"DRILLS\"] | Literal[\"SLOTS\"] | Literal[\"ASSEMBLY_HLR_TOP\"] | Literal[\"ASSEMBLY_HLR_BOTTOM\"] | Literal[\"ASSEMBLY_DESIGNATORS_TOP\"] | Literal[\"ASSEMBLY_DESIGNATORS_BOTTOM\"] | Literal[\"PIN1_TOP\"] | Literal[\"PIN1_BOTTOM\"] | Literal[\"SOLDERMASK_FILM_TOP\"] | Literal[\"SOLDERMASK_FILM_BOTTOM\"] | Literal[\"SURFACE_COPPER_TOP\"] | Literal[\"SURFACE_COPPER_BOTTOM\"] | Literal[\"BEND_LINES\"] | Literal[\"ILLUSTRATION_TOP\"] | Literal[\"ILLUSTRATION_BOTTOM\"] | str] | None"],
     "output_dir": NotRequired["str | None"],
 }, extra_items="object")
 
@@ -89,6 +89,7 @@ StyleTable = TypedDict("StyleTable", {
     "assembly_designators": NotRequired["AssemblyDesignatorsStyle"],
     "board_substrate": NotRequired["BoardSubstrateStyle"],
     "soldermask_film": NotRequired["SoldermaskFilmStyle"],
+    "bend_lines": NotRequired["BendLinesStyle"],
     "assembly_hlr": NotRequired["AssemblyHlrStyle"],
     "board_outline": NotRequired["BoardOutlineStyle"],
     "board_cutouts": NotRequired["BoardCutoutsStyle"],
@@ -102,6 +103,7 @@ StyleTable = TypedDict("StyleTable", {
     "silkscreen_component_graphics": NotRequired["SilkscreenComponentGraphicsStyle"],
     "silkscreen_designators": NotRequired["SilkscreenDesignatorsStyle"],
     "silkscreen_board_graphics": NotRequired["SilkscreenBoardGraphicsStyle"],
+    "silkscreen_surface": NotRequired["SilkscreenSurfaceStyle"],
     "pin1_marker": NotRequired["Pin1MarkerStyle"],
     "keepout": NotRequired["KeepoutStyle"],
 }, extra_items="StyleObject")
@@ -137,12 +139,26 @@ AssemblyDesignatorsStyle = TypedDict("AssemblyDesignatorsStyle", {
 BoardSubstrateStyle = TypedDict("BoardSubstrateStyle", {
     "enabled": NotRequired["bool | float | str"],
     "color": NotRequired["str"],
+    "rigid_color": NotRequired["str"],
+    "flex_color": NotRequired["str"],
 }, extra_items="object")
 
 SoldermaskFilmStyle = TypedDict("SoldermaskFilmStyle", {
     "enabled": NotRequired["bool | float | str"],
     "color": NotRequired["str"],
+    "coverlay_color": NotRequired["str"],
     "opacity": NotRequired["float | bool | str"],
+}, extra_items="object")
+
+BendLinesStyle = TypedDict("BendLinesStyle", {
+    "enabled": NotRequired["bool | float | str"],
+    "color": NotRequired["str"],
+    "opacity": NotRequired["float | bool | str"],
+    "line_width_mm": NotRequired["float | bool | str"],
+    "line_style": NotRequired["Literal[\"solid\"] | Literal[\"dashed\"] | str"],
+    "dash_length_mm": NotRequired["float | bool | str"],
+    "dash_gap_mm": NotRequired["float | bool | str"],
+    "extension_mm": NotRequired["float | bool | str"],
 }, extra_items="object")
 
 AssemblyHlrStyle = TypedDict("AssemblyHlrStyle", {
@@ -236,6 +252,10 @@ SilkscreenDesignatorsStyle = TypedDict("SilkscreenDesignatorsStyle", {
 SilkscreenBoardGraphicsStyle = TypedDict("SilkscreenBoardGraphicsStyle", {
     "enabled": NotRequired["bool | float | str"],
     "color": NotRequired["str"],
+}, extra_items="object")
+
+SilkscreenSurfaceStyle = TypedDict("SilkscreenSurfaceStyle", {
+    "clip_mode": NotRequired["Literal[\"none\"] | Literal[\"board\"] | Literal[\"film\"] | str"],
 }, extra_items="object")
 
 Pin1MarkerStyle = TypedDict("Pin1MarkerStyle", {

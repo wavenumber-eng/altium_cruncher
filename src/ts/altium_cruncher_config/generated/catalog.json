@@ -4,7 +4,10 @@
     "model": "PcbSvgConfigInput",
     "kind": "config",
     "source": "src/tsp/altium_cruncher/config/pcb-svg.tsp",
-    "schema": "docs/contracts/pcb_svg_config.a0.schema.json",
+    "schema": "docs/contracts/pcb_svg_config.a1.schema.json",
+    "compatibility_schemas": [
+      "docs/contracts/pcb_svg_config.a0.schema.json"
+    ],
     "validator": "validate",
     "slug": "pcb-svg"
   },
@@ -142,6 +145,15 @@
     "schema": "docs/contracts/pcb_svg_timings.a0.schema.json",
     "validator": "validate-pcb-svg-timings",
     "slug": "pcb-svg-timings"
+  },
+  {
+    "stem": "toon_warning_report",
+    "model": "ToonWarningReport",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/toon-warning-report.tsp",
+    "schema": "docs/contracts/toon_warning_report.a0.schema.json",
+    "validator": "validate-toon-warning-report",
+    "slug": "toon-warning-report"
   },
   {
     "stem": "bom_array",

@@ -13,19 +13,17 @@
           "type": "null"
         }
       ],
-      "description": "PCB SVG config contract id.",
-      "default": "pcb.svg.config.a0"
+      "description": "PCB SVG config contract id."
     },
     "global": {
       "anyOf": [
         {
-          "$ref": "#/$defs/GlobalOptions"
+          "$ref": "#/$defs/GlobalOptionsA0"
         },
         {
           "type": "null"
         }
-      ],
-      "description": "Global settings applied to layer outputs and composed views."
+      ]
     },
     "assembly": {
       "anyOf": [
@@ -35,8 +33,7 @@
         {
           "type": "null"
         }
-      ],
-      "description": "Assembly projection defaults for component virtual layers."
+      ]
     },
     "dnp": {
       "anyOf": [
@@ -46,8 +43,7 @@
         {
           "type": "null"
         }
-      ],
-      "description": "DNP marker style."
+      ]
     },
     "diodes": {
       "anyOf": [
@@ -57,8 +53,7 @@
         {
           "type": "null"
         }
-      ],
-      "description": "Diode/cathode marker detection policy."
+      ]
     },
     "pin1": {
       "anyOf": [
@@ -68,8 +63,7 @@
         {
           "type": "null"
         }
-      ],
-      "description": "Pin-1 marker detection and display policy."
+      ]
     },
     "components": {
       "anyOf": [
@@ -79,33 +73,30 @@
         {
           "type": "null"
         }
-      ],
-      "description": "Per-designator overrides keyed by component designator."
+      ]
     },
     "layer_outputs": {
       "anyOf": [
         {
-          "$ref": "#/$defs/LayerOutputOptions"
+          "$ref": "#/$defs/LayerOutputOptionsA0"
         },
         {
           "type": "null"
         }
-      ],
-      "description": "Config-driven physical layer SVG output policy."
+      ]
     },
     "views": {
       "anyOf": [
         {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ViewOptions"
+            "$ref": "#/$defs/ViewOptionsA0"
           }
         },
         {
           "type": "null"
         }
-      ],
-      "description": "Explicit composed SVG views. Each item has its own draw-order layer list."
+      ]
     }
   },
   "allOf": [
@@ -118,7 +109,7 @@
   },
   "title": "pcb.svg.config.a0",
   "$defs": {
-    "GlobalOptions": {
+    "GlobalOptionsA0": {
       "type": "object",
       "properties": {
         "pcbdoc": {
@@ -130,8 +121,7 @@
               "type": "null"
             }
           ],
-          "description": "Optional PcbDoc selector when a PrjPcb contains multiple boards.",
-          "default": null
+          "description": "Optional PcbDoc selector when a PrjPcb contains multiple boards."
         },
         "canvas": {
           "anyOf": [
@@ -161,7 +151,6 @@
             }
           ],
           "description": "Include Altium/source metadata in SVG data attributes.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -182,7 +171,6 @@
             }
           ],
           "description": "Emit empty physical layers when no primitives are present.",
-          "default": false,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -203,7 +191,6 @@
             }
           ],
           "description": "Clip rendered geometry to the board outline.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -224,7 +211,6 @@
             }
           ],
           "description": "Clip drills and slots out of copper layers.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -245,7 +231,6 @@
             }
           ],
           "description": "Mirror bottom-side views into assembly-view orientation.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -267,7 +252,6 @@
             }
           ],
           "description": "Multiplier for SVG width and height attributes.",
-          "default": 10,
           "x-acr-input": "number",
           "x-acr-nullable": true
         },
@@ -280,8 +264,7 @@
               "type": "null"
             }
           ],
-          "description": "Optional SVG size unit suffix, such as mm or px.",
-          "default": ""
+          "description": "Optional SVG size unit suffix, such as mm or px."
         },
         "clean_output": {
           "anyOf": [
@@ -300,20 +283,18 @@
             }
           ],
           "description": "Reserved cleanup flag for generated output directories.",
-          "default": false,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
         "styles": {
           "anyOf": [
             {
-              "$ref": "#/$defs/StyleTable"
+              "$ref": "#/$defs/StyleTableA0"
             },
             {
               "type": "null"
             }
-          ],
-          "description": "Default style table for physical and synthetic layers."
+          ]
         }
       },
       "allOf": [
@@ -400,7 +381,6 @@
             }
           ],
           "description": "Projection mode for fitted components. Options: bounding_box, detail, none, outline, simple.",
-          "default": "detail",
           "x-acr-input": "enum",
           "x-acr-nullable": true
         },
@@ -471,7 +451,6 @@
             }
           ],
           "description": "Projection mode for DNP components. Options: bounding_box, detail, none, outline, simple.",
-          "default": "bounding_box",
           "x-acr-input": "enum",
           "x-acr-nullable": true
         },
@@ -484,8 +463,7 @@
               "type": "null"
             }
           ],
-          "description": "Text color for fitted component designators.",
-          "default": "#FF0000"
+          "description": "Text color for fitted component designators."
         },
         "dnp_designator_color": {
           "anyOf": [
@@ -496,8 +474,7 @@
               "type": "null"
             }
           ],
-          "description": "Text color for DNP component designators.",
-          "default": "#FF0000"
+          "description": "Text color for DNP component designators."
         }
       },
       "unevaluatedProperties": {
@@ -516,8 +493,7 @@
               "type": "null"
             }
           ],
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#FF0000"
+          "description": "SVG color value, usually #RRGGBB."
         },
         "hatch": {
           "anyOf": [
@@ -536,7 +512,6 @@
             }
           ],
           "description": "Enable hatch fill for this layer/style.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -558,7 +533,6 @@
             }
           ],
           "description": "Hatch spacing in millimeters.",
-          "default": 1.5,
           "x-acr-input": "number",
           "x-acr-nullable": true
         },
@@ -579,7 +553,6 @@
             }
           ],
           "description": "Hatch angle in degrees.",
-          "default": 45,
           "x-acr-input": "number",
           "x-acr-nullable": true
         },
@@ -601,7 +574,6 @@
             }
           ],
           "description": "Hatch stroke width in millimeters.",
-          "default": 0.08,
           "x-acr-input": "number",
           "x-acr-nullable": true
         }
@@ -630,7 +602,6 @@
             }
           ],
           "description": "Enable diode/cathode marker detection.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -651,7 +622,6 @@
             }
           ],
           "description": "Draw diode line art when possible.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -664,8 +634,7 @@
               "type": "null"
             }
           ],
-          "description": "Cathode marker color.",
-          "default": "#FF0000"
+          "description": "Cathode marker color."
         },
         "numeric_cathode_pad": {
           "anyOf": [
@@ -676,8 +645,7 @@
               "type": "null"
             }
           ],
-          "description": "Default numeric cathode pad designator.",
-          "default": "2"
+          "description": "Default numeric cathode pad designator."
         },
         "cathode_pad_names": {
           "anyOf": [
@@ -759,7 +727,7 @@
         "$ref": "#/$defs/ComponentOverride"
       }
     },
-    "LayerOutputOptions": {
+    "LayerOutputOptionsA0": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -778,8 +746,6 @@
               "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
             }
           ],
-          "description": "Enable individual physical layer SVG outputs.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -811,8 +777,6 @@
               "pattern": "^\\s*(?:[aA][uU][tT][oO]|[aA][uU][tT][oO])\\s*$"
             }
           ],
-          "description": "Either 'auto' or a list of PCB layer names: legacy PcbLayer names, display names, or V7 semantic tokens such as 'MECHANICAL33' and 'MID31' when the installed altium-monkey exposes the V7-aware layer API.",
-          "default": "auto",
           "x-acr-input": "enum",
           "x-acr-nullable": true
         },
@@ -892,7 +856,6 @@
               "type": "null"
             }
           ],
-          "description": "Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.",
           "x-acr-nullable": true
         },
         "output_dir": {
@@ -903,9 +866,7 @@
             {
               "type": "null"
             }
-          ],
-          "description": "Output directory for physical layer SVG files.",
-          "default": "layers"
+          ]
         }
       },
       "allOf": [
@@ -917,7 +878,7 @@
         "not": {}
       }
     },
-    "ViewOptions": {
+    "ViewOptionsA0": {
       "type": "object",
       "properties": {
         "name": {
@@ -941,7 +902,6 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -953,8 +913,7 @@
             {
               "type": "null"
             }
-          ],
-          "default": null
+          ]
         },
         "output_svg": {
           "anyOf": [
@@ -964,8 +923,7 @@
             {
               "type": "null"
             }
-          ],
-          "default": null
+          ]
         },
         "layers": {
           "anyOf": [
@@ -1005,7 +963,6 @@
               "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
             }
           ],
-          "default": null,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -1071,20 +1028,9 @@
               "pattern": "^(?:[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[dD][eE][tT][aA][iI][lL]|[dD][eE][tT][aA][iI][lL][eE][dD]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[oO][fF][fF])$"
             }
           ],
-          "default": "detail",
           "x-acr-input": "enum",
           "x-acr-nullable": true,
           "x-acr-trim": false
-        },
-        "styles": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StyleTable"
-            },
-            {
-              "type": "null"
-            }
-          ]
         },
         "description": {
           "anyOf": [
@@ -1094,8 +1040,17 @@
             {
               "type": "null"
             }
-          ],
-          "default": null
+          ]
+        },
+        "styles": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StyleTableA0"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -1164,7 +1119,6 @@
             }
           ],
           "description": "Canvas bounds mode. Options: all_geometry, board_outline.",
-          "default": "board_outline",
           "x-acr-input": "enum",
           "x-acr-nullable": true
         },
@@ -1186,7 +1140,6 @@
             }
           ],
           "description": "Canvas margin added around the chosen bounds.",
-          "default": 1,
           "x-acr-input": "number",
           "x-acr-nullable": true
         }
@@ -1195,23 +1148,20 @@
         "not": {}
       }
     },
-    "StyleTable": {
+    "StyleTableA0": {
       "type": "object",
       "properties": {
         "illustration": {
           "$ref": "#/$defs/IllustrationStyle"
         },
         "assembly_designators": {
-          "$ref": "#/$defs/AssemblyDesignatorsStyle",
-          "description": "Autodoc silhouette fitting; model-less parts use electrical pads first (including flagged testpoints), with mechanical holes as a fallback."
+          "$ref": "#/$defs/AssemblyDesignatorsStyle"
         },
         "board_substrate": {
-          "$ref": "#/$defs/BoardSubstrateStyle",
-          "description": "Bare PCB fill, clipped to the outline with physical bores and scoped cutouts removed. Place BOARD_SUBSTRATE before copper and film. Applies globally or per view."
+          "$ref": "#/$defs/BoardSubstrateStyleA0"
         },
         "soldermask_film": {
-          "$ref": "#/$defs/SoldermaskFilmStyle",
-          "description": "Board-clipped inverse solder mask using saved pad/via expansions. Applies globally or per view."
+          "$ref": "#/$defs/SoldermaskFilmStyleA0"
         },
         "assembly_hlr": {
           "$ref": "#/$defs/AssemblyHlrStyle"
@@ -1320,7 +1270,6 @@
               "pattern": "^\\s*(?:[tT][oO][pP]|[bB][oO][tT][tT][oO][mM]|[tT][oO][pP][lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM][lL][aA][yY][eE][rR]|[tT][oO][pP]_[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]_[lL][aA][yY][eE][rR]|[tT][oO][pP]-[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]-[lL][aA][yY][eE][rR])\\s*$"
             }
           ],
-          "default": null,
           "x-acr-input": "enum",
           "x-acr-nullable": true
         },
@@ -1393,7 +1342,6 @@
               "pattern": "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$"
             }
           ],
-          "default": null,
           "x-acr-input": "enum",
           "x-acr-nullable": true
         },
@@ -1430,7 +1378,6 @@
               "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
             }
           ],
-          "default": null,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -1442,8 +1389,7 @@
             {
               "type": "null"
             }
-          ],
-          "default": null
+          ]
         },
         "cathode_pad": {
           "anyOf": [
@@ -1453,8 +1399,7 @@
             {
               "type": "null"
             }
-          ],
-          "default": null
+          ]
         },
         "diode": {
           "anyOf": [
@@ -1479,7 +1424,6 @@
               "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
             }
           ],
-          "default": null,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -1506,7 +1450,6 @@
               "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
             }
           ],
-          "default": null,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         },
@@ -1533,7 +1476,6 @@
               "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
             }
           ],
-          "default": null,
           "x-acr-input": "boolean",
           "x-acr-nullable": true
         }
@@ -1559,7 +1501,6 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "line_width_mm": {
@@ -1577,7 +1518,6 @@
             }
           ],
           "description": "Stroke width in millimeters.",
-          "default": 0.025,
           "x-acr-input": "number"
         },
         "opacity": {
@@ -1596,7 +1536,6 @@
             }
           ],
           "description": "Layer opacity from 0.0 to 1.0.",
-          "default": 1,
           "x-acr-input": "number"
         }
       },
@@ -1626,7 +1565,6 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
@@ -1635,8 +1573,7 @@
         },
         "stroke_color": {
           "type": "string",
-          "description": "Text outline CSS color, drawn behind the fill.",
-          "default": "#FFFFFF"
+          "description": "Text outline CSS color, drawn behind the fill."
         },
         "stroke_width_mm": {
           "anyOf": [
@@ -1653,7 +1590,6 @@
             }
           ],
           "description": "Full SVG stroke width in board millimetres. Zero disables the outline; fitting and placement are unchanged.",
-          "default": 0,
           "x-acr-input": "number"
         },
         "fill_ratio": {
@@ -1671,7 +1607,6 @@
               "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"
             }
           ],
-          "default": 0.8,
           "x-acr-input": "number"
         },
         "max_font_size_mm": {
@@ -1688,7 +1623,6 @@
               "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"
             }
           ],
-          "default": 2.5,
           "x-acr-input": "number"
         },
         "opacity": {
@@ -1707,7 +1641,6 @@
             }
           ],
           "description": "Layer opacity from 0.0 to 1.0.",
-          "default": 1,
           "x-acr-input": "number"
         }
       },
@@ -1720,7 +1653,7 @@
         "not": {}
       }
     },
-    "BoardSubstrateStyle": {
+    "BoardSubstrateStyleA0": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -1737,13 +1670,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "CSS color for exposed board substrate.",
-          "default": "#B6A26B"
+          "description": "CSS color for exposed board substrate."
         }
       },
       "allOf": [
@@ -1755,7 +1686,7 @@
         "not": {}
       }
     },
-    "SoldermaskFilmStyle": {
+    "SoldermaskFilmStyleA0": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -1772,13 +1703,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "CSS color or auto (default), which reads the side's saved Altium 3D solder-mask color and falls back to #176B3A.",
-          "default": "auto"
+          "description": "CSS color or auto, which reads the side's saved Altium 3D solder-mask color and falls back to #176B3A."
         },
         "opacity": {
           "anyOf": [
@@ -1796,7 +1725,6 @@
             }
           ],
           "description": "Layer opacity from 0.0 to 1.0.",
-          "default": 1,
           "x-acr-input": "number"
         }
       },
@@ -1862,13 +1790,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#F59E0B"
+          "description": "SVG color value, usually #RRGGBB."
         },
         "line_width_mm": {
           "anyOf": [
@@ -1884,13 +1810,11 @@
             }
           ],
           "description": "Stroke width in millimeters.",
-          "default": 0.12,
           "x-acr-input": "number"
         },
         "curve_mode": {
           "type": "string",
-          "description": "Legacy HLR curve serialization mode; Fast always emits polylines. Options: native_arcs, polyline.",
-          "default": "native_arcs"
+          "description": "Legacy HLR curve serialization mode; Fast always emits polylines. Options: native_arcs, polyline."
         },
         "samples_per_curve": {
           "anyOf": [
@@ -1906,7 +1830,6 @@
             }
           ],
           "description": "Polyline sample count when curves are sampled.",
-          "default": 24,
           "x-acr-input": "number"
         },
         "round_digits": {
@@ -1923,7 +1846,6 @@
             }
           ],
           "description": "Decimal places retained in generated SVG path coordinates.",
-          "default": 3,
           "x-acr-input": "number"
         },
         "include_visible": {
@@ -1940,7 +1862,6 @@
             }
           ],
           "description": "Legacy poly/exact visible-edge control; leave true for Fast.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "include_outline": {
@@ -1957,7 +1878,6 @@
             }
           ],
           "description": "Legacy poly/exact silhouette control; leave true for Fast.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "union_polygons": {
@@ -1974,7 +1894,6 @@
             }
           ],
           "description": "Union projected polygons before converting to SVG paths.",
-          "default": true,
           "x-acr-input": "boolean"
         }
       },
@@ -2004,13 +1923,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         },
         "line_width_mm": {
           "anyOf": [
@@ -2027,7 +1944,6 @@
             }
           ],
           "description": "Stroke width in millimeters.",
-          "default": 0.1,
           "x-acr-input": "number"
         }
       },
@@ -2057,7 +1973,6 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "scope": {
@@ -2071,8 +1986,7 @@
               "const": "interior"
             }
           ],
-          "description": "Cutouts used by board clipping, film and cutout artwork. Interior uses the existing Mate containment filter to exclude touching/outside contours.",
-          "default": "all"
+          "description": "Cutouts used by board clipping, film and cutout artwork. Interior uses the existing Mate containment filter to exclude touching/outside contours."
         },
         "outline_opacity": {
           "anyOf": [
@@ -2090,7 +2004,6 @@
             }
           ],
           "description": "Cutout outline opacity from 0.0 to 1.0.",
-          "default": 1,
           "x-acr-input": "number"
         },
         "hatch_color": {
@@ -2113,13 +2026,11 @@
             }
           ],
           "description": "Hatch opacity from 0.0 to 1.0, independent of the outline.",
-          "default": 0.55,
           "x-acr-input": "number"
         },
         "label": {
           "type": "string",
-          "description": "Cutout label text; an empty string disables labels.",
-          "default": ""
+          "description": "Cutout label text; an empty string disables labels."
         },
         "label_color": {
           "type": "string",
@@ -2141,7 +2052,6 @@
             }
           ],
           "description": "Cutout label opacity from 0.0 to 1.0.",
-          "default": 1,
           "x-acr-input": "number"
         },
         "label_max_font_size_mm": {
@@ -2159,7 +2069,6 @@
             }
           ],
           "description": "Maximum fitted cutout label font size in millimeters.",
-          "default": 3,
           "x-acr-input": "number"
         },
         "label_fill_ratio": {
@@ -2178,7 +2087,6 @@
             }
           ],
           "description": "Fraction of cutout width/height available to the fitted label (0 to 1).",
-          "default": 0.72,
           "x-acr-input": "number"
         },
         "label_rotation_min_gain": {
@@ -2196,13 +2104,11 @@
             }
           ],
           "description": "Vertical cutout text must fit this fraction larger than horizontal after the size cap.",
-          "default": 0.25,
           "x-acr-input": "number"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#FF0000"
+          "description": "SVG color value, usually #RRGGBB."
         },
         "hatch": {
           "anyOf": [
@@ -2218,7 +2124,6 @@
             }
           ],
           "description": "Enable hatch fill for this layer/style.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "hatch_spacing_mm": {
@@ -2236,7 +2141,6 @@
             }
           ],
           "description": "Hatch spacing in millimeters.",
-          "default": 2,
           "x-acr-input": "number"
         },
         "hatch_angle_deg": {
@@ -2253,7 +2157,6 @@
             }
           ],
           "description": "Hatch angle in degrees.",
-          "default": 45,
           "x-acr-input": "number"
         },
         "hatch_line_width_mm": {
@@ -2271,7 +2174,6 @@
             }
           ],
           "description": "Hatch stroke width in millimeters.",
-          "default": 0.08,
           "x-acr-input": "number"
         },
         "outline_style": {
@@ -2294,7 +2196,6 @@
             }
           ],
           "description": "Outline stroke style. Options: solid, dashed.",
-          "default": "solid",
           "x-acr-input": "enum",
           "x-acr-trim": false
         },
@@ -2313,7 +2214,6 @@
             }
           ],
           "description": "Dash length in millimeters when outline_style is dashed.",
-          "default": 1.5,
           "x-acr-input": "number"
         },
         "outline_width_mm": {
@@ -2331,7 +2231,6 @@
             }
           ],
           "description": "Outline stroke width in millimeters.",
-          "default": 0.15,
           "x-acr-input": "number"
         }
       },
@@ -2361,18 +2260,15 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "plated_color": {
           "type": "string",
-          "description": "SVG color for plated drill/slot features.",
-          "default": "#90EE90"
+          "description": "SVG color for plated drill/slot features."
         },
         "non_plated_color": {
           "type": "string",
-          "description": "SVG color for non-plated drill/slot features.",
-          "default": "#ADD8E6"
+          "description": "SVG color for non-plated drill/slot features."
         },
         "outline": {
           "anyOf": [
@@ -2388,7 +2284,6 @@
             }
           ],
           "description": "Draw drill/slot boundaries with unfilled centers instead of filled marks.",
-          "default": false,
           "x-acr-input": "boolean"
         },
         "outline_width_mm": {
@@ -2406,7 +2301,6 @@
             }
           ],
           "description": "Outline stroke width in millimeters.",
-          "default": 0.1,
           "x-acr-input": "number"
         },
         "respect_tenting": {
@@ -2423,7 +2317,6 @@
             }
           ],
           "description": "Hide plated drill/slot marks covered by solder mask on the rendered side.",
-          "default": false,
           "x-acr-input": "boolean"
         },
         "opacity": {
@@ -2442,7 +2335,6 @@
             }
           ],
           "description": "Layer opacity from 0.0 to 1.0.",
-          "default": 1,
           "x-acr-input": "number"
         }
       },
@@ -2472,13 +2364,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2507,13 +2397,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2542,13 +2430,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#888888"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2577,13 +2463,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2612,13 +2496,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2647,13 +2529,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2682,13 +2562,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2717,13 +2595,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#000000"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2752,13 +2628,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#2563EB"
+          "description": "SVG color value, usually #RRGGBB."
         },
         "dot_diameter_mm": {
           "anyOf": [
@@ -2774,7 +2648,6 @@
             }
           ],
           "description": "Pin-1 marker dot diameter in millimeters.",
-          "default": 0.55,
           "x-acr-input": "number"
         },
         "min_dot_diameter_mm": {
@@ -2791,7 +2664,6 @@
             }
           ],
           "description": "Minimum pin-1 marker dot diameter in millimeters.",
-          "default": 0.25,
           "x-acr-input": "number"
         }
       },
@@ -2821,13 +2693,11 @@
             }
           ],
           "description": "Enable this rendering rule.",
-          "default": true,
           "x-acr-input": "boolean"
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB.",
-          "default": "#CC00CC"
+          "description": "SVG color value, usually #RRGGBB."
         }
       },
       "allOf": [
@@ -2943,5 +2813,5 @@
       "additionalProperties": true
     }
   },
-  "$comment": "Generated from src/tsp/altium_cruncher/config/pcb-svg.tsp. Do not edit."
+  "$comment": "Generated from src/tsp/altium_cruncher/config/pcb-svg.tsp (frozen A0 compatibility model). Do not edit."
 }

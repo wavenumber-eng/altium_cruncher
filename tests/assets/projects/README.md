@@ -27,6 +27,18 @@ from the supplied real-world corpus. They retain complete project-referenced
 source documents and embedded STEP models. Each fixture records source hashes;
 generated reviews and individual-model profiles belong in its `output/` folder.
 
+`bluetooth_sentinel_flex` is the focused board-region/layer-stack fixture. It
+contains only the Altium example PcbDoc needed to distinguish its two 32.1455
+mil rigid regions from its 3.3267 mil flex region. Its end-to-end Toon use is
+opt-in; focused semantic region queries may use it directly.
+
+`projection-test` and `usb-edge` are focused component-visibility fixtures.
+The first contains purpose-built edge, cutout, straddle, and through-board
+placements. The second provides real-world straddle-mount USB-C and
+reverse-mount LED cases from a sanitized, PcbDoc-only source. Their source
+manifests record the repository owner's explicit import authorization;
+generated SVG reviews remain transient output.
+
 Generated test or review artifacts should go under each project fixture's
 `output/` folder, organized by command, variant, and output kind when needed,
 for example `tests/assets/projects/node_test_array/output/bom/B4/raw-json`.

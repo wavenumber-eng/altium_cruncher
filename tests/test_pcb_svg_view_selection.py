@@ -172,6 +172,31 @@ def test_pcb_svg_board_outline_canvas_ignores_off_board_geometry() -> None:
     )
 
 
+def test_pcb_svg_board_outline_canvas_includes_valid_region_partition() -> None:
+    config = PcbSvgConfig.default()
+    renderer = PcbSvgA0Renderer(config)
+    outline = SimpleNamespace(
+        vertices=[object()],
+        bounding_box=(1000.0, 2000.0, 2000.0, 3000.0),
+    )
+    pcbdoc = SimpleNamespace(board=SimpleNamespace(outline=outline))
+    renderer.render_job.board_region_envelopes = lambda _pcbdoc: SimpleNamespace(
+        complete_partition_bounds_mils=(500.0, 1000.0, 2500.0, 4000.0),
+    )
+
+    bounds = renderer._compute_bounds_mils(cast(AltiumPcbDoc, pcbdoc))  # noqa: SLF001
+
+    margin_mils = 1.0 / 0.0254
+    assert bounds == pytest.approx(
+        (
+            500.0 - margin_mils,
+            1000.0 - margin_mils,
+            2500.0 + margin_mils,
+            4000.0 + margin_mils,
+        )
+    )
+
+
 def test_pcb_svg_cli_views_enable_requested_views_and_layer_outputs() -> None:
     config = PcbSvgConfig.default()
 
@@ -1089,7 +1114,7 @@ def test_pcb_svg_hlr_component_style_override_builds_projection_options() -> Non
     assert component_stroke == {"color": "#123456", "line_width_mm": 0.22}
 
 
-def test_pcb_svg_rejects_v1_config() -> None:
+def test_pcb_svg_rejects_unknown_schema_revision() -> None:
     with pytest.raises(ValueError, match="Unsupported pcb-svg config schema"):
         PcbSvgConfig.from_dict({"schema": "pcb.svg.config.invalid"})
 

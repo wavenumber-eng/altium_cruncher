@@ -16,18 +16,23 @@ import logging
 from pathlib import Path
 import time
 from types import TracebackType
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Self, cast
 
 if TYPE_CHECKING:
+    from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
     from altium_monkey.altium_resolved_layer_stack import ResolvedLayerStack
     from altium_monkey.altium_pcb_svg_renderer import PcbSvgRenderContext
+
+    from .pcb_board_region_envelope_index import BoardRegionEnvelopeIndex
+    from .pcb_board_surface_appearance import BoardSurfaceAppearanceIndex
 
 from .altium_cruncher_pcb_svg_component_layers import ComponentLayerSession
 from .altium_cruncher_pcb_svg_cutout_layer import _pcbdoc_with_cutout_scope
 from .pcb_svg_model_cache import PcbSvgModelCache
 from .pcb_svg_primitive_index import PrimitiveLayerIndex
 from .pcb_svg_workers import DEFAULT_WORKERS, PcbSvgNativeWorkers
+from .toon_diagnostics import ToonDiagnostic, ToonDiagnosticCollector, ToonWarningCategory
 
 log = logging.getLogger(__name__)
 
@@ -48,6 +53,7 @@ class PcbSvgRenderJob:
         self.model_cache = model_cache
         self.primitive_index = PrimitiveLayerIndex()
         self.native_workers = PcbSvgNativeWorkers(workers)
+        self.diagnostics = ToonDiagnosticCollector()
         self.events: list[dict[str, object]] = []
         self._frames: list[_TimingFrame] = []
         self._records: dict[int, object] = {}
@@ -57,6 +63,9 @@ class PcbSvgRenderJob:
         self._sessions: dict[int, ComponentLayerSession] = {}
         self._excluded: dict[int, frozenset[str]] = {}
         self.stacks: dict[int, ResolvedLayerStack] = {}
+        self.layer_stack_documents: dict[int, AltiumLayerStackDocument] = {}
+        self.region_envelope_indexes: dict[int, BoardRegionEnvelopeIndex] = {}
+        self.surface_appearance_indexes: dict[int, BoardSurfaceAppearanceIndex] = {}
         self.contexts: dict[tuple[int, str, str], PcbSvgRenderContext] = {}
         self.component_metadata: dict[
             int, tuple[dict[int, str], dict[int, str], dict[int, dict[str, object]]]
@@ -148,9 +157,131 @@ class PcbSvgRenderJob:
         if key not in self._sessions:
             excluded = self._excluded.get(key, frozenset())
             self._sessions[key] = ComponentLayerSession(
-                excluded, cache=self.model_cache, workers=self.native_workers
+                excluded,
+                cache=self.model_cache,
+                workers=self.native_workers,
+                diagnostic_sink=self.diagnose,
             )
         return self._sessions[key]
+
+    def board_region_envelopes(
+        self, pcbdoc: AltiumPcbDoc
+    ) -> BoardRegionEnvelopeIndex:
+        """Return one source-board spatial envelope index for all variants/views."""
+
+        from .pcb_board_region_envelope_index import BoardRegionEnvelopeIndex
+
+        source = self.geometry_source(pcbdoc)
+        key = self.identity(source)
+        if key not in self.region_envelope_indexes:
+            document = self.layer_stack_document(source)
+            self.region_envelope_indexes[key] = (
+                BoardRegionEnvelopeIndex.from_layer_stack_document(
+                    document,
+                    document.to_resolved_layer_stack(),
+                )
+            )
+        return self.region_envelope_indexes[key]
+
+    def layer_stack_document(
+        self, pcbdoc: AltiumPcbDoc
+    ) -> AltiumLayerStackDocument:
+        """Return one parsed semantic stack document for all variants/views."""
+
+        from altium_monkey.altium_layer_stack_document import AltiumLayerStackDocument
+
+        source = self.geometry_source(pcbdoc)
+        key = self.identity(source)
+        if key not in self.layer_stack_documents:
+            self.layer_stack_documents[key] = AltiumLayerStackDocument.from_pcbdoc(
+                source
+            )
+        return self.layer_stack_documents[key]
+
+    def board_surface_appearances(
+        self, pcbdoc: AltiumPcbDoc
+    ) -> BoardSurfaceAppearanceIndex:
+        """Return one source-board region appearance index for all views."""
+
+        from .pcb_board_surface_appearance import BoardSurfaceAppearanceIndex
+
+        source = self.geometry_source(pcbdoc)
+        key = self.identity(source)
+        if key not in self.surface_appearance_indexes:
+            document = self.layer_stack_document(source)
+            appearance_index = (
+                BoardSurfaceAppearanceIndex.from_layer_stack_document(
+                    document,
+                    cast(
+                        "ResolvedLayerStack",
+                        document.to_resolved_layer_stack(),
+                    ),
+                )
+            )
+            self.surface_appearance_indexes[key] = appearance_index
+            for invalid in appearance_index.invalid_regions:
+                self.diagnose(
+                    code="board-region-appearance-unresolved",
+                    category="region_resolution",
+                    producer="altium-cruncher",
+                    message=f"{invalid.name}: {invalid.reason}; using compatibility appearance",
+                    detail={
+                        "region_index": invalid.source_index,
+                        "region_name": invalid.name,
+                        "layerstack_id": invalid.layerstack_id,
+                        "reason": invalid.reason,
+                    },
+                    occurrence_key=(
+                        f"board-region-appearance:{key}:{invalid.source_index}"
+                    ),
+                    source_scoped=True,
+                )
+        return self.surface_appearance_indexes[key]
+
+    def diagnose(
+        self,
+        *,
+        code: str,
+        category: ToonWarningCategory,
+        producer: str,
+        message: str,
+        input: str | None = None,
+        board: str | None = None,
+        variant: str | None = None,
+        view: str | None = None,
+        component_designator: str | None = None,
+        body_index: int | None = None,
+        model_identity: str | None = None,
+        detail: Mapping[str, object] | None = None,
+        occurrence_key: str | None = None,
+        source_scoped: bool = False,
+    ) -> ToonDiagnostic:
+        """Queue one nonfatal diagnostic using the active render context."""
+
+        context = self._frames[-1].context if self._frames else {}
+        return self.diagnostics.add(
+            code=code,
+            category=category,
+            producer=producer,
+            message=message,
+            input=input,
+            board=board or _optional_context(context, "board"),
+            variant=(
+                variant
+                if variant is not None
+                else None if source_scoped else _optional_context(context, "variant")
+            ),
+            view=(
+                view
+                if view is not None
+                else None if source_scoped else _optional_context(context, "view")
+            ),
+            component_designator=component_designator,
+            body_index=body_index,
+            model_identity=model_identity,
+            detail=detail,
+            occurrence_key=occurrence_key,
+        )
 
     @contextmanager
     def measure(self, stage: str, **labels: object) -> Iterator[dict[str, object]]:
@@ -228,6 +359,11 @@ def layer_side(token: str) -> str:
     return "board"
 
 
+def _optional_context(context: Mapping[str, object], name: str) -> str | None:
+    value = context.get(name)
+    return None if value is None else str(value)
+
+
 def view_side(tokens: Iterable[str]) -> str:
     sides = {layer_side(token) for token in tokens} - {"board"}
     return "both" if len(sides) > 1 else next(iter(sides), "board")
@@ -241,6 +377,7 @@ def layer_style_key(token: str, styles: Mapping[str, object]) -> str:
         "DRILLS": ("drills",),
         "SLOTS": ("slots",),
         "BOARD_SUBSTRATE": ("board_substrate",),
+        "BEND_LINES": ("bend_lines",),
         "SOLDERMASK_FILM_TOP": ("soldermask_film",),
         "SOLDERMASK_FILM_BOTTOM": ("soldermask_film",),
         "TOP": (
@@ -289,6 +426,7 @@ def layer_text_key(
         "DRILLS",
         "SLOTS",
         "BOARD_SUBSTRATE",
+        "BEND_LINES",
     }:
         return ()
     texts = tuple(

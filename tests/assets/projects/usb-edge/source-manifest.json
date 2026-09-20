@@ -1,0 +1,15 @@
+{
+  "source_corpus": "user-sanitized usb-edge PcbDoc",
+  "pcbdoc": "usb_edge.PcbDoc",
+  "imported": "2026-09-19",
+  "import_authorization": "Repository owner explicitly approved copying this test project into Altium Cruncher on 2026-09-19.",
+  "sanitization": "Repository owner renamed the board and removed proprietary logo artwork on 2026-09-19. Project, schematic, project-structure, and Altium History files are intentionally excluded.",
+  "fixture_purpose": "PcbDoc-only projection stress board with a top-side straddle-mount USB-C connector and a bottom-side reverse-mount LED exposed through a non-plated board slot.",
+  "files": [
+    {
+      "path": "usb_edge.PcbDoc",
+      "bytes": 2304512,
+      "sha256": "900c6a916ec7c3a0ae855778ea96b87cdc267765bd22153370cecee83c1e3e1f"
+    }
+  ]
+}

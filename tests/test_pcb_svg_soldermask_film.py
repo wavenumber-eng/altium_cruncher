@@ -89,6 +89,56 @@ def _render(
     )
 
 
+def _render_silk(pcb: AltiumPcbDoc, clip_mode: str) -> ET.Element:
+    config = PcbSvgConfig.default()
+    config.global_options.clip_to_outline = False
+    view = PcbSvgViewConfig(
+        name="silk",
+        layers=["TOPOVERLAY"],
+        styles={"silkscreen_surface": {"clip_mode": clip_mode}},
+    )
+    return ET.fromstring(
+        PcbSvgA0Renderer(config).render_view_svg(
+            pcb,
+            view,
+            project_parameters=None,
+            layers=view.layers,
+            group_id="silk",
+            mirror=False,
+            styles=config.resolved_styles_for_view(view),
+        )
+    )
+
+
+def _silk_alpha(
+    pcb: AltiumPcbDoc,
+    root: ET.Element,
+    points: list[tuple[float, float]],
+) -> list[int]:
+    from PIL import Image
+
+    ctx = PcbSvgA0Renderer(PcbSvgConfig.default())._build_context(
+        pcb,
+        project_parameters=None,
+    )
+    root = deepcopy(root)
+    _, _, width, height = root.get("viewBox").split()
+    root.set("width", f"{width}mm")
+    root.set("height", f"{height}mm")
+    png = svg_to_bytes(svg_string=ET.tostring(root, encoding="unicode"), dpi=1016)
+    with Image.open(BytesIO(png)) as image:
+        alpha = image.convert("RGBA").getchannel("A")
+        return [
+            alpha.getpixel(
+                (
+                    round(ctx.x_to_svg(x) * 40),
+                    round(ctx.y_to_svg(y) * 40),
+                )
+            )
+            for x, y in points
+        ]
+
+
 def _pad(x_mils: int = 150, expansion: int = 100000) -> AltiumPcbPad:
     pad = AltiumPcbPad()
     pad.layer = PcbLayer.TOP
@@ -134,6 +184,60 @@ def test_saved_color_and_config_overrides() -> None:
         .get("fill")
         == "#176B3A"
     )
+
+
+def test_silkscreen_surface_clip_modes_share_board_and_film_domains() -> None:
+    pcb = _board()
+    silk = AltiumPcbTrack()
+    silk.layer = PcbLayer.TOP_OVERLAY
+    silk.start_x, silk.end_x = 500000, 9000000
+    silk.start_y = silk.end_y = 1500000
+    silk.width = 200000
+    silk_cutout = AltiumPcbTrack()
+    silk_cutout.layer = PcbLayer.TOP_OVERLAY
+    silk_cutout.start_x, silk_cutout.end_x = 500000, 9000000
+    silk_cutout.start_y = silk_cutout.end_y = 4000000
+    silk_cutout.width = 200000
+    pcb.tracks = [silk, silk_cutout]
+    pcb.pads = [_pad(150)]
+
+    none = _render_silk(pcb, "none")
+    assert none.find('.//s:g[@data-feature="silkscreen-surface-clip"]', NS) is None
+
+    board = _render_silk(pcb, "board")
+    board_clip = board.find(
+        './/s:g[@data-feature="silkscreen-surface-clip"]', NS
+    )
+    assert board_clip.get("data-clip-mode") == "board"
+    board_mask = board.find('.//s:mask[@id="silkscreen-surface-board-top"]', NS)
+    assert board_mask is not None
+
+    film = _render_silk(pcb, "film")
+    film_clip = film.find('.//s:g[@data-feature="silkscreen-surface-clip"]', NS)
+    assert film_clip.get("data-clip-mode") == "film"
+    film_mask = film.find('.//s:mask[@id="silkscreen-surface-film-top"]', NS)
+    assert film_mask is not None
+
+    # The board domain removes the routed cutout but not an SMD mask opening.
+    # The film domain consumes the same aperture geometry as the visible film.
+    assert len(board_mask.findall('s:path[@fill="black"]', NS)) == 1
+    assert sum(element.get("fill") == "black" for element in film_mask) == 2
+    points = [(150, 150), (400, 400), (700, 150)]
+    assert _silk_alpha(pcb, none, points) == [255, 255, 255]
+    assert _silk_alpha(pcb, board, points) == [255, 0, 255]
+    assert _silk_alpha(pcb, film, points) == [0, 0, 255]
+
+
+def test_invalid_silkscreen_surface_clip_mode_is_rejected() -> None:
+    pcb = _board()
+    silk = AltiumPcbTrack()
+    silk.layer = PcbLayer.TOP_OVERLAY
+    silk.start_x, silk.end_x = 500000, 9000000
+    silk.start_y = silk.end_y = 1500000
+    silk.width = 200000
+    pcb.tracks = [silk]
+    with pytest.raises(ValueError, match="clip_mode"):
+        _render_silk(pcb, "invalid")
 
 
 def test_film_uses_cutouts_and_unions_overlapping_expanded_openings() -> None:
@@ -272,7 +376,7 @@ def test_rt_saved_white_color_and_tented_vias() -> None:
 def test_film_example_config_matches_contract(filename: str) -> None:
     payload = json.loads((ROOT / "examples/pcb-svg" / filename).read_text())
     schema = json.loads(
-        (ROOT / "docs/contracts/pcb_svg_config.a0.schema.json").read_text()
+        (ROOT / "docs/contracts/pcb_svg_config.a1.schema.json").read_text()
     )
     validator = Draft202012Validator(schema)
     validator.validate(payload)

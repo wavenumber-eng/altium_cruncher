@@ -56,8 +56,14 @@ def test_placed_geometry_reuses_arrays_but_preserves_instance_face_ids(monkeypat
         appearance = [asdict(m) for m in meshes]
         for value in appearance:
             value.pop("id")
-        expected = illustration._digest(dict(meshes=appearance,
-            line_width_mm=.025, side="top", illustrate=True))
+        expected = illustration._digest(dict(
+            renderer_contract="geometer-b0-half-space-v4-aperture-composite",
+            meshes=appearance,
+            line_width_mm=.025,
+            side="top",
+            illustrate=True,
+            clipping=None,
+        ))
         key, warning_key = job._render_keys(part, "top", True)
         assert key == expected
         assert warning_key == illustration._digest(dict(

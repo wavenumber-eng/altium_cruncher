@@ -82,7 +82,7 @@
 
   <section>
     <h2>Primary Cases</h2>
-    <p><code>nxp-frdm-imx93</code> and <code>ov-tech-pimx8</code> extend the opt-in toon/SVG performance corpus with larger boards and complex embedded STEP models. Their project-referenced sources retain original relative paths, and source manifests record byte hashes. They have no Altium output oracle and are excluded from fast unit-test workloads.</p>
+    <p><code>nxp-frdm-imx93</code> and <code>ov-tech-pimx8</code> extend the opt-in toon/SVG performance corpus with larger boards and complex embedded STEP models. Their project-referenced sources retain original relative paths, and source manifests record byte hashes. They have no Altium output oracle and are excluded from fast unit-test workloads. <code>bluetooth_sentinel_flex</code> is the focused board-region and local-stack-thickness fixture; it contains only the PcbDoc required to distinguish two rigid regions from one flex region.</p>
     <table>
       <tr>
         <th>Project</th>
@@ -99,6 +99,10 @@
       <tr>
         <td><code>cutouts</code></td>
         <td>Primary <code>pcb-svg</code> board cutout fixture. It contains four interior cutouts covering rectangular, circular arc, and rounded T-shaped geometry.</td>
+      </tr>
+      <tr>
+        <td><code>bluetooth_sentinel_flex</code></td>
+        <td>Primary source-aware board-region fixture. Its two rigid regions resolve to 32.1455 mil and its flex region resolves to 3.3267 mil. Focused region-query tests may run normally; full Toon rendering remains opt-in.</td>
       </tr>
     </table>
   </section>

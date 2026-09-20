@@ -135,7 +135,7 @@ name = "PCB Illustration Adapter"
 description = "Native Geometer demo rendering with Altium extrusion and model placement"
 concerns = ["contracts", "release"]
 test_case_type = "reference"
-test_cases = "../../tests/assets/projects/rt_super_c1/input"
+test_cases = "../../tests/assets/projects"
 
 [subtests.code_under_test]
 module = "altium_cruncher.altium_cruncher_pcb_illustration"
@@ -144,6 +144,9 @@ module = "altium_cruncher.altium_cruncher_pcb_illustration"
 extrusions = "Preserve authored body Z extents and native visibility"
 demo_rendering = "Use native material fusion, colors and HLR"
 placement = "Match STEP root placement and omit model-less components"
+through_board_clipping = "Clip one transformed bottom-side STEP model into exact top and bottom board-surface fragments"
+aperture_visibility = "Compose full projections through open board topology with surface-clipped projections over board material"
+sanitized_stress_fixtures = "Exercise purpose-built edge/cutout overhangs and the PcbDoc-only usb-edge reverse-mount fixture"
 
 [subtests.approach]
 native_calls = "Exercise persistent Geometer IPC with generated solids and RT_SUPER_C1"
@@ -156,4 +159,6 @@ test_extrusion_legacy_heights_are_elevations = "Interpret standoff and overall h
 test_bottom_extrusions_preserve_xy_and_outward_depth = "Keep asymmetric bottom bodies registered and resolve stacked outward depth"
 test_component_svg_cache_reuses_instances_and_keeps_material_variants = "Reuse SVGs across placed instances while keeping source material variants distinct"
 test_rt_bottom_models_use_body_side_and_signed_z_offset = "Select actual body side and preserve bottom STEP standoff"
+test_rt_through_board_model_uses_clipped_fragments_on_both_sides = "Render RT_SUPER T1 through-board fragments against its resolved rigid thickness"
+test_aperture_composition_stress_fixtures = "Verify projection-test overhangs and usb-edge reverse-mount aperture composition"
 test_component_virtual_layers_compose_cache_and_link_metadata = "Compose native symbols and fitted model/pad designators, reuse layers, and preserve readable bottom labels and metadata links"

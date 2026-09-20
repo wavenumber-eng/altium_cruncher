@@ -8,9 +8,9 @@ after artwork preparation.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from .altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
     from .pcb_svg_model_cache import PcbSvgModelCache
     from .pcb_svg_workers import PcbSvgNativeWorkers
+    from .pcb_board_region_envelope_index import BoardRegionEnvelopeIndex
 import json
 import logging
 import math
@@ -44,6 +45,10 @@ from .altium_cruncher_pcb_designator_layout import (
 )
 from .altium_cruncher_pcb_designator_pads import component_designator_pads, pad_geometry
 from .altium_cruncher_pcb_svg_cutout_layer import fit_cutout_label
+from .altium_cruncher_pcb_svg_substrate import (
+    BoardMaterialDomain,
+    BoardSubstrateRenderer,
+)
 
 COMPONENT_LAYER_IDS = {
     "ASSEMBLY_DESIGNATORS_TOP": 9008,
@@ -154,11 +159,15 @@ class ComponentLayerSession:
         *,
         cache: PcbSvgModelCache | None = None,
         workers: PcbSvgNativeWorkers | None = None,
+        diagnostic_sink: Callable[..., object] | None = None,
     ) -> None:
         self.excluded_designators = excluded_designators
         self.job = None
         self.cache = cache
         self.workers = workers
+        self.diagnostic_sink = diagnostic_sink
+        self._reported_diagnostic_count = 0
+        self._diagnosed_missing_populations: set[tuple[int, frozenset[str]]] = set()
         self.fit_session = CcaDesignatorFitSession()
         self._parts = {}
         self._collected_sides = set()
@@ -175,6 +184,7 @@ class ComponentLayerSession:
         side: Side,
         line_width: float,
         illustrate: bool,
+        region_index: BoardRegionEnvelopeIndex | None = None,
     ) -> PlacedIllustrations:
         identity = id(pcbdoc.components), id(pcbdoc.component_bodies)
         key = (*identity, side, line_width, illustrate)
@@ -184,13 +194,19 @@ class ComponentLayerSession:
             return self._placed[painted_key]
         if key in self._placed:
             return self._placed[key]
+        parts: list[ComponentPlacement]
         with g.GeometerClient() as client:
             if self.job is None:
                 self.job = IllustrationJob(
-                    client, line_width_mm=line_width, cache=self.cache
+                    client,
+                    line_width_mm=line_width,
+                    cache=self.cache,
+                    emit_warnings=self.diagnostic_sink is None,
+                    region_index=region_index,
                 )
             self.job.client = client
             self.job.line_width_mm = line_width
+            self.job.region_index = region_index
             parts_key = (*identity, side)
             artwork = None
             if self.cache is not None:
@@ -239,7 +255,10 @@ class ComponentLayerSession:
             if artwork is not None:
                 artwork.store(placed)
             log.info(
-                "Completed %s component illustrations: %d/%d", side, len(placed), len(parts)
+                "Completed %s component illustrations: %d/%d",
+                side,
+                len(placed),
+                len(parts),
             )
             log.debug(
                 "Completed %s components: %d/%d (%d new, %d disk-cached illustrations in job)",
@@ -249,6 +268,7 @@ class ComponentLayerSession:
                 self.job.counts["illustrations"],
                 self.job.counts["illustration_disk_hits"],
             )
+            self._flush_diagnostics()
         placed.sort(
             key=lambda item: (
                 -item[0].bounds[2] if side == "bottom" else item[0].bounds[5]
@@ -256,6 +276,58 @@ class ComponentLayerSession:
         )
         self._placed[key] = placed
         return placed
+
+    def _flush_diagnostics(self) -> None:
+        if self.diagnostic_sink is None or self.job is None:
+            return
+        for diagnostic in self.job.diagnostics[self._reported_diagnostic_count :]:
+            self.diagnostic_sink(
+                code=diagnostic.code,
+                category=diagnostic.category,
+                producer=diagnostic.producer,
+                message=diagnostic.message,
+                component_designator=diagnostic.component_designator,
+                body_index=diagnostic.body_index,
+                model_identity=diagnostic.model_identity,
+                detail=diagnostic.detail,
+                occurrence_key=(
+                    f"component:{diagnostic.component_designator or ''}:"
+                    f"body:{diagnostic.body_index}:model:{diagnostic.model_identity or ''}:"
+                    f"code:{diagnostic.code}"
+                ),
+                source_scoped=True,
+            )
+        self._reported_diagnostic_count = len(self.job.diagnostics)
+
+    def _diagnose_missing_models(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        excluded_designators: frozenset[str],
+    ) -> None:
+        if self.diagnostic_sink is None:
+            return
+        population_key = id(pcbdoc.components), excluded_designators
+        if population_key in self._diagnosed_missing_populations:
+            return
+        self._diagnosed_missing_populations.add(population_key)
+        owners = {
+            body.component_index
+            for body in pcbdoc.component_bodies
+            if body.component_index is not None
+        }
+        for index, component in enumerate(pcbdoc.components):
+            designator = str(component.designator or "")
+            if not designator or designator in excluded_designators or index in owners:
+                continue
+            self.diagnostic_sink(
+                code="missing-renderable-model",
+                category="missing_model",
+                producer="altium-cruncher",
+                message=f"{designator}: fitted component has no renderable 3D model",
+                component_designator=designator,
+                occurrence_key=f"component:{index}:{designator}:missing-renderable-model",
+                source_scoped=True,
+            )
 
     def render(
         self,
@@ -278,6 +350,8 @@ class ComponentLayerSession:
         if not style.get("enabled", True):
             self.last_cache_status = "disabled"
             return ComponentLayer("", {})
+        if illustrated:
+            self._diagnose_missing_models(pcbdoc, renderer.excluded_designators)
         obstacles = (
             cutout_label_obstacles(ctx, pcbdoc, styles)
             if "BOARD_CUTOUTS" in tokens
@@ -306,12 +380,24 @@ class ComponentLayerSession:
             self.layer_hits += 1
             self.last_cache_status = "hit"
         else:
-            painted = f"ILLUSTRATION_{side.upper()}" in tokens and styles.get(
-                "illustration", {}
-            ).get("enabled", True)
-            placed = self._materialize(source, side, width, illustrated or painted)
+            painted = bool(
+                f"ILLUSTRATION_{side.upper()}" in tokens
+                and styles.get("illustration", {}).get("enabled", True)
+            )
+            placed = self._materialize(
+                source,
+                side,
+                width,
+                illustrated or painted,
+                renderer.render_job.board_region_envelopes(source),
+            )
             if illustrated:
-                result = self._illustrations(ctx, placed, token, side, style)
+                occlusion_domain = BoardSubstrateRenderer(
+                    renderer.options
+                ).occlusion_domain(ctx, source, side)
+                result = self._illustrations(
+                    ctx, placed, token, side, style, occlusion_domain
+                )
             else:
                 result = self._designators(
                     renderer, ctx, pcbdoc, placed, token, side, style, obstacles
@@ -344,71 +430,49 @@ class ComponentLayerSession:
         token: str,
         side: Side,
         style: Mapping[str, object],
+        occlusion_domain: BoardMaterialDomain,
     ) -> ComponentLayer:
         opacity = _number(style, "opacity", 1, maximum=1)
         layer = _layer(token, "illustration")
         layer.set("opacity", f"{opacity:g}")
         definitions = ET.SubElement(layer, f"{{{SVG}}}defs")
         ids = {}
+        aperture_ids = {}
         entries = []
         bounds = []
+        mask_extent = _illustration_mask_extent(ctx, placed)
+        board_mask_id = f"{token.lower()}-board-occlusion"
+        aperture_mask_id = f"{token.lower()}-open-space"
+        if any(symbol.aperture is not None for _part, symbol in placed):
+            definitions.append(
+                occlusion_domain.mask_element(ctx, board_mask_id, extent=mask_extent)
+            )
+            definitions.append(
+                occlusion_domain.mask_element(
+                    ctx, aperture_mask_id, extent=mask_extent, complement=True
+                )
+            )
         for ordinal, (part, symbol) in enumerate(placed):
-            symbol_id = ids.get(id(symbol))
-            if symbol_id is None:
-                symbol_id = f"{token.lower()}-symbol-{len(ids)}"
-                ids[id(symbol)] = symbol_id
-                definitions.append(symbol.group(symbol_id))
-            x = ctx.x_to_svg(part.anchor_mm[0] / 0.0254)
-            y = ctx.y_to_svg(part.anchor_mm[1] / 0.0254)
-            identity = (
-                part.component_index
-                if part.component_index is not None
-                else f"free-{part.bodies[0]['index']}"
+            symbol_id = _surface_symbol_definition(
+                definitions, ids, aperture_ids, token, symbol
             )
-            group_id = f"{token.lower()}-component-{identity}"
-            attrs = _component_attrs(
+            aperture_symbol_id = _aperture_symbol_definition(
+                definitions, ids, aperture_ids, token, symbol
+            )
+            entry, instance_bounds = _append_illustration_instance(
                 ctx,
-                part.component_index,
-                part.designator,
+                layer,
+                part,
+                symbol_id,
+                aperture_symbol_id,
+                token,
                 side,
-                "component-illustration",
-                group_id,
+                board_mask_id,
+                aperture_mask_id,
+                ordinal,
             )
-            if ctx.options.include_metadata:
-                attrs["data-body-indices"] = ",".join(
-                    str(body["index"]) for body in part.bodies
-                )
-                attrs["data-geometry-source"] = ",".join(
-                    sorted({body["kind"] for body in part.bodies})
-                )
-            group = ET.SubElement(layer, f"{{{SVG}}}g", attrs)
-            ET.SubElement(
-                group,
-                f"{{{SVG}}}use",
-                {
-                    "href": "#" + symbol_id,
-                    "transform": f"translate({x:.12g} {y:.12g})",
-                },
-            )
-            low_x, low_y, low_z, high_x, high_y, high_z = part.bounds
-            left, right = x + low_x - 0.1, x + high_x + 0.1
-            if ctx.options.mirror_x:
-                left, right = ctx.width_mm - right, ctx.width_mm - left
-            bounds.append((left, y - high_y - 0.1, right, y - low_y + 0.1))
-            entries.append(
-                dict(
-                    group_id=group_id,
-                    component_index=part.component_index,
-                    designator=part.designator,
-                    side=side,
-                    symbol_id=symbol_id,
-                    anchor_svg_mm=[x, y],
-                    anchor_board_mm=part.anchor_mm,
-                    bounds_local_xyz_mm=part.bounds,
-                    bodies=part.bodies,
-                    paint_order=ordinal,
-                )
-            )
+            entries.append(entry)
+            bounds.append(instance_bounds)
         combined = (
             (
                 min(b[0] for b in bounds),
@@ -426,7 +490,7 @@ class ComponentLayerSession:
                 group_id=layer.get("id"),
                 side=side,
                 instances=entries,
-                unique_symbols=len(ids),
+                unique_symbols=len(ids) + len(aperture_ids),
             ),
             combined,
         )
@@ -537,9 +601,16 @@ class ComponentLayerSession:
                 for segment in symbol.outline_segments_mm
             )
             if not segments:
-                self.job.warnings.append(
-                    f"{designator}: no model outline for designator; omitted"
+                job = self.job
+                if job is None:
+                    raise RuntimeError("component geometry was not materialized")
+                job.warn(
+                    f"{designator}: no model outline for designator; omitted",
+                    code="missing-model-outline",
+                    category="geometer_geometry",
+                    component_designator=designator,
                 )
+                self._flush_diagnostics()
                 return None
             xs, ys = zip(*(point for segment in segments for point in segment))
             geometry = CcaComponentGeometryFact(
@@ -663,6 +734,145 @@ def _append_designator(
     )
 
 
+def _illustration_mask_extent(
+    ctx: PcbSvgRenderContext,
+    placed: PlacedIllustrations,
+) -> tuple[float, float, float, float]:
+    """Cover the board canvas and every projected component overhang."""
+
+    left, top, right, bottom = 0.0, 0.0, ctx.width_mm, ctx.height_mm
+    for part, symbol in placed:
+        source_bounds = symbol.aperture_source_bounds_mm or symbol.source_bounds_mm
+        low_x, low_y, _, high_x, high_y, _ = source_bounds or part.bounds
+        x = ctx.x_to_svg(part.anchor_mm[0] / 0.0254)
+        y = ctx.y_to_svg(part.anchor_mm[1] / 0.0254)
+        left = min(left, x + low_x)
+        top = min(top, y - high_y)
+        right = max(right, x + high_x)
+        bottom = max(bottom, y - low_y)
+    padding = 0.1
+    left -= padding
+    top -= padding
+    return left, top, right - left + padding, bottom - top + padding
+
+
+def _surface_symbol_definition(
+    definitions: ET.Element,
+    ids: dict[int, str],
+    aperture_ids: Mapping[int, str],
+    token: str,
+    symbol: IllustrationSymbol,
+) -> str | None:
+    del aperture_ids  # Keep both symbol registries explicit at the call site.
+    if not symbol.svg:
+        return None
+    symbol_id = ids.get(id(symbol))
+    if symbol_id is None:
+        symbol_id = f"{token.lower()}-symbol-{len(ids)}"
+        ids[id(symbol)] = symbol_id
+        definitions.append(symbol.group(symbol_id))
+    return symbol_id
+
+
+def _aperture_symbol_definition(
+    definitions: ET.Element,
+    ids: Mapping[int, str],
+    aperture_ids: dict[int, str],
+    token: str,
+    symbol: IllustrationSymbol,
+) -> str | None:
+    del ids  # Keep both symbol registries explicit at the call site.
+    if symbol.aperture is None:
+        return None
+    key = id(symbol.aperture)
+    symbol_id = aperture_ids.get(key)
+    if symbol_id is None:
+        symbol_id = f"{token.lower()}-aperture-symbol-{len(aperture_ids)}"
+        aperture_ids[key] = symbol_id
+        definitions.append(symbol.aperture_group(symbol_id))
+    return symbol_id
+
+
+def _append_illustration_instance(
+    ctx: PcbSvgRenderContext,
+    layer: ET.Element,
+    part: ComponentPlacement,
+    symbol_id: str | None,
+    aperture_symbol_id: str | None,
+    token: str,
+    side: Side,
+    board_mask_id: str,
+    aperture_mask_id: str,
+    ordinal: int,
+) -> tuple[dict[str, object], tuple[float, float, float, float]]:
+    x = ctx.x_to_svg(part.anchor_mm[0] / 0.0254)
+    y = ctx.y_to_svg(part.anchor_mm[1] / 0.0254)
+    identity = (
+        part.component_index
+        if part.component_index is not None
+        else f"free-{part.bodies[0]['index']}"
+    )
+    group_id = f"{token.lower()}-component-{identity}"
+    attrs = _component_attrs(
+        ctx,
+        part.component_index,
+        part.designator,
+        side,
+        "component-illustration",
+        group_id,
+    )
+    if ctx.options.include_metadata:
+        attrs["data-body-indices"] = ",".join(
+            str(body["index"]) for body in part.bodies
+        )
+        attrs["data-geometry-source"] = ",".join(
+            sorted({body["kind"] for body in part.bodies})
+        )
+    group = ET.SubElement(layer, f"{{{SVG}}}g", attrs)
+    transform = f"translate({x:.12g} {y:.12g})"
+    if aperture_symbol_id is not None:
+        ET.SubElement(
+            group,
+            f"{{{SVG}}}use",
+            {
+                "href": "#" + aperture_symbol_id,
+                "transform": transform,
+                "mask": f"url(#{aperture_mask_id})",
+                "data-visibility-domain": "aperture",
+            },
+        )
+    if symbol_id is not None:
+        ET.SubElement(
+            group,
+            f"{{{SVG}}}use",
+            {
+                "href": "#" + symbol_id,
+                "transform": transform,
+                "mask": f"url(#{board_mask_id})" if aperture_symbol_id else "none",
+                "data-visibility-domain": "board-surface",
+            },
+        )
+    low_x, low_y, _, high_x, high_y, _ = part.bounds
+    left, right = x + low_x - 0.1, x + high_x + 0.1
+    if ctx.options.mirror_x:
+        left, right = ctx.width_mm - right, ctx.width_mm - left
+    bounds = left, y - high_y - 0.1, right, y - low_y + 0.1
+    entry = dict(
+        group_id=group_id,
+        component_index=part.component_index,
+        designator=part.designator,
+        side=side,
+        symbol_id=symbol_id,
+        aperture_symbol_id=aperture_symbol_id,
+        anchor_svg_mm=[x, y],
+        anchor_board_mm=part.anchor_mm,
+        bounds_local_xyz_mm=part.bounds,
+        bodies=part.bodies,
+        paint_order=ordinal,
+    )
+    return entry, bounds
+
+
 def _select_population(
     source: ComponentLayer,
     excluded: frozenset[str],
@@ -710,29 +920,76 @@ def _prune_population_symbols(
     metadata: dict,
     ctx: PcbSvgRenderContext,
 ) -> list[tuple[float, float, float, float]]:
-    bounds = []
-    original = {node.get("id"): node for node in definitions}
-    ids = {}
+    original = {
+        node.get("id"): node
+        for node in definitions
+        if node.tag == f"{{{SVG}}}g" and node.get("id")
+    }
+    fixed_definitions = [node for node in definitions if node.tag != f"{{{SVG}}}g"]
+    used = _used_population_symbols(root, entries)
+    ids, bounds = _renumber_population_entries(entries, metadata, ctx)
+    for old in used:
+        ids.setdefault(old, f"{metadata['token'].lower()}-symbol-{len(ids)}")
+    _replace_population_definitions(root, definitions, fixed_definitions, original, ids)
+    metadata["unique_symbols"] = len(ids)
+    return bounds
+
+
+def _used_population_symbols(
+    root: ET.Element, entries: Sequence[Mapping[str, object]]
+) -> list[str]:
+    groups = {child.get("id"): child for child in root if child.get("id")}
+    used: list[str] = []
+    for entry in entries:
+        group = groups.get(cast(str, entry["group_id"]))
+        if group is None:
+            continue
+        for use in group.iter(f"{{{SVG}}}use"):
+            href = use.get("href", "")
+            if href.startswith("#") and href[1:] not in used:
+                used.append(href[1:])
+    return used
+
+
+def _renumber_population_entries(
+    entries: list[dict], metadata: Mapping[str, object], ctx: PcbSvgRenderContext
+) -> tuple[dict[str, str], list[tuple[float, float, float, float]]]:
+    ids: dict[str, str] = {}
+    bounds: list[tuple[float, float, float, float]] = []
     for ordinal, entry in enumerate(entries):
-        old = entry["symbol_id"]
-        if old not in ids:
+        old = entry.get("symbol_id")
+        if old is not None and old not in ids:
             ids[old] = f"{metadata['token'].lower()}-symbol-{len(ids)}"
-        entry.update(symbol_id=ids[old], paint_order=ordinal)
+        entry.update(
+            symbol_id=ids.get(old) if old is not None else None,
+            paint_order=ordinal,
+        )
         x, y = entry["anchor_svg_mm"]
         low_x, low_y, _, high_x, high_y, _ = entry["bounds_local_xyz_mm"]
         left, right = x + low_x - 0.1, x + high_x + 0.1
         if ctx.options.mirror_x:
             left, right = ctx.width_mm - right, ctx.width_mm - left
         bounds.append((left, y - high_y - 0.1, right, y - low_y + 0.1))
+    return ids, bounds
+
+
+def _replace_population_definitions(
+    root: ET.Element,
+    definitions: ET.Element,
+    fixed_definitions: Sequence[ET.Element],
+    original: Mapping[str | None, ET.Element],
+    ids: Mapping[str, str],
+) -> None:
     definitions.clear()
+    definitions.extend(fixed_definitions)
     for old, new in ids.items():
         node = original[old]
         node.set("id", new)
         definitions.append(node)
     for use in root.iter(f"{{{SVG}}}use"):
-        use.set("href", "#" + ids[use.get("href")[1:]])
-    metadata["unique_symbols"] = len(ids)
-    return bounds
+        old = use.get("href", "")[1:]
+        if old in ids:
+            use.set("href", "#" + ids[old])
 
 
 def cutout_label_obstacles(

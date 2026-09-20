@@ -1,4 +1,4 @@
-"""A0 config model for explicit PCB SVG layer/view rendering."""
+"""A1 config model for explicit PCB SVG layer/view rendering."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from altium_cruncher.config_json import JsoncCommentMap, render_commented_jsonc
 
 PCB_SVG_CONFIG_FILENAME = "pcb.svg.config"
 PCB_SVG_CONFIG_SCHEMA = cast(str, config_metadata()["schema"])
+PCB_SVG_CONFIG_LEGACY_SCHEMAS = frozenset({"pcb.svg.config.a0"})
 PCB_DEFAULT_SVG_SCALE = cast(float, config_default("global", "svg_scale"))
 PCB_SVG_CANVAS_BOUNDS_MODES = frozenset({"board_outline", "all_geometry"})
 PCB_SVG_COMPONENT_PROJECTION_MODES = frozenset(
@@ -843,7 +844,7 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
 
 @dataclass(slots=True)
 class PcbSvgConfig:
-    """Root pcb-svg A0 configuration model."""
+    """Root pcb-svg A1 configuration model."""
 
     schema: str = PCB_SVG_CONFIG_SCHEMA
     global_options: PcbSvgGlobalConfig = field(default_factory=PcbSvgGlobalConfig)
@@ -863,11 +864,11 @@ class PcbSvgConfig:
     def from_dict(cls, data: dict[str, object]) -> "PcbSvgConfig":
         if not isinstance(data, dict):
             raise ValueError("pcb-svg config root must be a JSON object")
-        schema = str(data.get("schema") or PCB_SVG_CONFIG_SCHEMA)
-        if schema != PCB_SVG_CONFIG_SCHEMA:
+        source_schema = str(data.get("schema") or PCB_SVG_CONFIG_SCHEMA)
+        if source_schema not in {PCB_SVG_CONFIG_SCHEMA, *PCB_SVG_CONFIG_LEGACY_SCHEMAS}:
             raise ValueError(
-                f"Unsupported pcb-svg config schema: {schema!r}; "
-                f"expected {PCB_SVG_CONFIG_SCHEMA!r}"
+                f"Unsupported pcb-svg config schema: {source_schema!r}; "
+                f"expected {PCB_SVG_CONFIG_SCHEMA!r} or an additive predecessor"
             )
         raw_views = data.get("views")
         if raw_views is None:
@@ -877,7 +878,9 @@ class PcbSvgConfig:
                 raise ValueError("pcb-svg config field 'views' must be an array")
             views = [PcbSvgViewConfig.from_dict(item) for item in raw_views]
         return cls(
-            schema=schema,
+            # Resolved/written configs use the current discriminator. Authored
+            # A0 files are accepted without being rewritten during ordinary use.
+            schema=PCB_SVG_CONFIG_SCHEMA,
             global_options=PcbSvgGlobalConfig.from_dict(
                 _coerce_object_mapping(data.get("global"), field_name="global")
             ),
@@ -980,6 +983,7 @@ __all__ = [
     "PCB_SVG_COMPONENT_SIDES",
     "PCB_SVG_CONFIG_FILENAME",
     "PCB_SVG_CONFIG_SCHEMA",
+    "PCB_SVG_CONFIG_LEGACY_SCHEMAS",
     "PCB_SVG_SPECIAL_LAYERS",
     "PcbSvgAssemblyConfig",
     "PcbSvgConfig",
