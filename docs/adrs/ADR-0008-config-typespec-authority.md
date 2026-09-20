@@ -2,7 +2,7 @@
 
 Status: accepted for the PCB SVG/Toon migration authorized on 2026-09-11.
 
-PCB SVG and Toon share the `pcb.svg.config.a0` wire format. Its authored structure,
+PCB SVG and Toon share the versioned `pcb.svg.config` wire family. Its authored structure,
 static SVG/Toon defaults, preset/theme values and JSONC field help now live in
 `src/tsp/altium_cruncher/config`. The TypeSpec schema projection generates the
 canonical schema, Python TypedDicts/resources, TypeScript declarations, standalone
@@ -32,8 +32,14 @@ boundary, not for each layer or primitive.
 
 ## Compatibility decisions
 
-- Keep the a0 ID and existing schema path. The old schema's required root fields
-  did not describe documented partial Toon inputs; these fields are now optional.
+- The initial migration kept the `a0` ID because the old schema's required root
+  fields did not describe documented partial Toon inputs; these fields became optional.
+- Additive public fields advance the `a` revision. The issue-67 regional-surface,
+  bend-line and silkscreen policy additions therefore make
+  `pcb.svg.config.a1` the current authoring target. `pcb.svg.config.a0` remains
+  accepted as an additive predecessor and its durable schema path remains published.
+  A breaking or replacement shape starts at `b0`; it must not silently reuse an
+  `a` discriminator.
 - Keep allowed null resets/inheritance and existing boolean/numeric spellings,
   case/whitespace handling and projection/layer aliases at their relevant fields.
   Native/board-specific layer interpretation remains semantic validation.
@@ -47,6 +53,12 @@ boundary, not for each layer or primitive.
 - PNG export was removed before release at the user's request. SVG is the only
   Toon output. The shared config rejects the former `global.png` block; raster
   conversion belongs to consumers.
+
+The discriminator versions the authored wire object, not renderer internals or
+defaults alone. A preset/default behavior change is still documented and tested,
+but does not by itself create a new wire revision. Loading an `a0` file does not
+rewrite it during rendering; newly generated and explicitly resolved configs use
+`a1`.
 
 ## Validator portability
 

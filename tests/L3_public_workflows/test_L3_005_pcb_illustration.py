@@ -21,6 +21,9 @@ from altium_cruncher.altium_cruncher_pcb_illustration import (
     _extrusion_request,
     extrusion_extents_mm,
 )
+from altium_cruncher.pcb_board_region_envelope_index import (
+    BoardRegionEnvelopeIndex,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 SVG = "http://www.w3.org/2000/svg"
@@ -209,6 +212,117 @@ def test_rt_bottom_models_use_body_side_and_signed_z_offset():
         assert "D3" not in by_name and "J1" not in by_name
         assert job.counts["illustrations"] == 2
         assert not job.warnings
+
+
+def test_rt_through_board_model_uses_clipped_fragments_on_both_sides():
+    pcb = AltiumPcbDoc.from_file(
+        ROOT / "tests/assets/projects/rt_super_c1/input/RT_SUPER_C1.PCBdoc"
+    )
+    regions = BoardRegionEnvelopeIndex.from_pcbdoc(pcb)
+    with g.GeometerClient() as client:
+        job = IllustrationJob(client, region_index=regions)
+        top_parts = {part.designator: part for part in job.collect(pcb, side="top")}
+        top_part = top_parts["T1"]
+        bottom_part = next(
+            part for part in job.collect(pcb, side="bottom") if part.designator == "T1"
+        )
+        assert top_part.authored_side == bottom_part.authored_side == "bottom"
+        assert top_part.board_z_offset_mm == pytest.approx(-1.0239248)
+        assert bottom_part.board_z_offset_mm == pytest.approx(-1.0239248)
+
+        # A bottom-side SMD whose model ends at its mounting plane has no
+        # board-surface fragment. Its retained full projection is masked to
+        # apertures/outside-board by the SVG compositor.
+        c10_top = job.render(top_parts["C10"], side="top")
+        assert c10_top.svg == ""
+        assert c10_top.aperture is not None
+
+        top = job.render(top_part, side="top")
+        bottom = job.render(bottom_part, side="bottom")
+        assert not top.empty and not bottom.empty
+        assert top.source_bounds_mm == pytest.approx(
+            (-0.2413, -0.23954065132, -1e-6, 0.2413, 0.23954065132, 1.5033752),
+            abs=1e-9,
+        )
+        assert bottom.source_bounds_mm == pytest.approx(
+            (
+                -0.508,
+                -0.504296108042,
+                -5.4308248,
+                0.508,
+                0.504296108042,
+                -1.0239238,
+            ),
+            abs=1e-9,
+        )
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    ("fixture", "filename", "side", "designators"),
+    [
+        (
+            "projection-test",
+            "projection_test.PcbDoc",
+            "bottom",
+            ("J2", "J7"),
+        ),
+        (
+            "usb-edge",
+            "usb_edge.PcbDoc",
+            "top",
+            ("D1",),
+        ),
+    ],
+)
+def test_aperture_composition_stress_fixtures(fixture, filename, side, designators):
+    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
+        PcbSvgA0Renderer,
+    )
+    from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
+    from altium_cruncher.pcb_illustration_config import illustration_preset
+
+    pcb = AltiumPcbDoc.from_file(
+        ROOT / f"tests/assets/projects/{fixture}/input/{filename}"
+    )
+    config = PcbSvgConfig.from_dict(illustration_preset())
+    view = next(view for view in config.views if view.name.startswith(side))
+    renderer = PcbSvgA0Renderer(config)
+    root = ET.fromstring(
+        renderer.render_view_svg(
+            pcb,
+            view,
+            project_parameters=None,
+            layers=view.layers,
+            group_id="aperture-stress",
+            mirror=side == "bottom",
+            styles=config.resolved_styles_for_view(view),
+        )
+    )
+
+    mask = root.find(f".//{{{SVG}}}mask[@id='illustration_{side}-open-space']")
+    assert mask is not None
+    ctx = renderer._build_context(pcb, project_parameters=None)
+    # The mask is authored before the outer bottom-view reflection, so compare
+    # it with the unmirrored board canvas rather than the final viewBox.
+    assert float(mask.get("x")) < 0
+    assert float(mask.get("width")) > ctx.width_mm
+    for designator in designators:
+        component = root.find(
+            f".//{{{SVG}}}g[@data-feature='component-illustration']"
+            f"[@data-designator='{designator}']"
+        )
+        assert component is not None
+        assert {branch.get("data-visibility-domain") for branch in component} == {
+            "aperture",
+            "board-surface",
+        }
+    if fixture == "usb-edge":
+        assert any(
+            node.get("stroke") == "white"
+            and float(node.get("stroke-width", 0)) == pytest.approx(1.6)
+            for node in mask
+        )
 
 
 def test_step_tessellation_preserves_root_placement_used_by_assembly():

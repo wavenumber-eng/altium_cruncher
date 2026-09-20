@@ -1,10 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "pcb_svg_config.a0.schema.json",
+  "$id": "pcb_svg_config.a1.schema.json",
   "type": "object",
   "properties": {
     "schema": {
       "anyOf": [
+        {
+          "type": "string",
+          "const": "pcb.svg.config.a1"
+        },
         {
           "type": "string",
           "const": "pcb.svg.config.a0"
@@ -13,8 +17,8 @@
           "type": "null"
         }
       ],
-      "description": "PCB SVG config contract id.",
-      "default": "pcb.svg.config.a0"
+      "description": "PCB SVG config contract id. pcb.svg.config.a0 remains accepted as the additive predecessor.",
+      "default": "pcb.svg.config.a1"
     },
     "global": {
       "anyOf": [
@@ -116,7 +120,7 @@
   "unevaluatedProperties": {
     "not": {}
   },
-  "title": "pcb.svg.config.a0",
+  "title": "pcb.svg.config.a1",
   "$defs": {
     "GlobalOptions": {
       "type": "object",
@@ -876,6 +880,18 @@
                   },
                   {
                     "type": "string",
+                    "const": "SURFACE_COPPER_TOP"
+                  },
+                  {
+                    "type": "string",
+                    "const": "SURFACE_COPPER_BOTTOM"
+                  },
+                  {
+                    "type": "string",
+                    "const": "BEND_LINES"
+                  },
+                  {
+                    "type": "string",
                     "const": "ILLUSTRATION_TOP"
                   },
                   {
@@ -892,7 +908,7 @@
               "type": "null"
             }
           ],
-          "description": "Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.",
+          "description": "Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, BEND_LINES, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, SURFACE_COPPER_TOP, SURFACE_COPPER_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.",
           "x-acr-nullable": true
         },
         "output_dir": {
@@ -1213,6 +1229,10 @@
           "$ref": "#/$defs/SoldermaskFilmStyle",
           "description": "Board-clipped inverse solder mask using saved pad/via expansions. Applies globally or per view."
         },
+        "bend_lines": {
+          "$ref": "#/$defs/BendLinesStyle",
+          "description": "Flat, region-clipped rigid-flex bend-line annotations. This does not fold or deform the board."
+        },
         "assembly_hlr": {
           "$ref": "#/$defs/AssemblyHlrStyle"
         },
@@ -1251,6 +1271,9 @@
         },
         "silkscreen_board_graphics": {
           "$ref": "#/$defs/SilkscreenBoardGraphicsStyle"
+        },
+        "silkscreen_surface": {
+          "$ref": "#/$defs/SilkscreenSurfaceStyle"
         },
         "pin1_marker": {
           "$ref": "#/$defs/Pin1MarkerStyle"
@@ -1742,8 +1765,18 @@
         },
         "color": {
           "type": "string",
-          "description": "CSS color for exposed board substrate.",
+          "description": "Global substrate CSS color override, or auto (default) for region-local authored/saved/palette resolution.",
+          "default": "auto"
+        },
+        "rigid_color": {
+          "type": "string",
+          "description": "Rigid-substrate fallback CSS color used when color=auto and no authored or saved board-core color is available.",
           "default": "#B6A26B"
+        },
+        "flex_color": {
+          "type": "string",
+          "description": "Flex-substrate fallback CSS color used when color=auto and no authored material color is available.",
+          "default": "#D18B28"
         }
       },
       "allOf": [
@@ -1777,8 +1810,13 @@
         },
         "color": {
           "type": "string",
-          "description": "CSS color or auto (default), which reads the side's saved Altium 3D solder-mask color and falls back to #176B3A.",
+          "description": "Global film CSS color override, or auto (default) for region-local authored material, saved Altium 3D solder-mask color, and configured surface-class fallback resolution.",
           "default": "auto"
+        },
+        "coverlay_color": {
+          "type": "string",
+          "description": "Coverlay fallback CSS color used when color=auto and the authored coverlay material has no color.",
+          "default": "#D18B28"
         },
         "opacity": {
           "anyOf": [
@@ -1796,6 +1834,156 @@
             }
           ],
           "description": "Layer opacity from 0.0 to 1.0.",
+          "default": 1,
+          "x-acr-input": "number"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "BendLinesStyle": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
+            }
+          ],
+          "description": "Enable flat board bend-line annotations.",
+          "default": true,
+          "x-acr-input": "boolean"
+        },
+        "color": {
+          "type": "string",
+          "description": "SVG color for bend-line annotations.",
+          "default": "#D97706"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"
+            }
+          ],
+          "description": "Layer opacity from 0.0 to 1.0.",
+          "default": 0.8,
+          "x-acr-input": "number"
+        },
+        "line_width_mm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"
+            }
+          ],
+          "description": "Stroke width in millimeters.",
+          "default": 0.15,
+          "x-acr-input": "number"
+        },
+        "line_style": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "solid"
+                },
+                {
+                  "type": "string",
+                  "const": "dashed"
+                }
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^(?:[sS][oO][lL][iI][dD]|[dD][aA][sS][hH][eE][dD])$"
+            }
+          ],
+          "description": "Bend-line stroke style. Options: solid, dashed.",
+          "default": "dashed",
+          "x-acr-input": "enum",
+          "x-acr-trim": false
+        },
+        "dash_length_mm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"
+            }
+          ],
+          "description": "Dash and gap length in millimeters when line_style is dashed.",
+          "default": 0.5,
+          "x-acr-input": "number"
+        },
+        "dash_gap_mm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"
+            }
+          ],
+          "description": "Gap between dashes in millimeters when line_style is dashed.",
+          "default": 0.3,
+          "x-acr-input": "number"
+        },
+        "extension_mm": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"
+            }
+          ],
+          "description": "Absolute distance each end extends beyond the owning-region chord, in millimeters. Zero stops at the region boundary.",
           "default": 1,
           "x-acr-input": "number"
         }
@@ -2724,6 +2912,46 @@
           "type": "string",
           "description": "SVG color value, usually #RRGGBB.",
           "default": "#000000"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "SilkscreenSurfaceStyle": {
+      "type": "object",
+      "properties": {
+        "clip_mode": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "none"
+                },
+                {
+                  "type": "string",
+                  "const": "board"
+                },
+                {
+                  "type": "string",
+                  "const": "film"
+                }
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*(?:[nN][oO][nN][eE]|[bB][oO][aA][rR][dD]|[fF][iI][lL][mM])\\s*$"
+            }
+          ],
+          "description": "Silkscreen clipping domain. none preserves authored overlay; board clips to board material and physical holes; film clips to the resolved solder-mask/coverlay film after apertures.",
+          "default": "none",
+          "x-acr-input": "enum"
         }
       },
       "allOf": [

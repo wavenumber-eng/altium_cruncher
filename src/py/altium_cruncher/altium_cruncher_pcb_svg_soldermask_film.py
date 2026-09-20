@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from copy import copy
-from dataclasses import replace
+from dataclasses import dataclass, replace
 import html
 import logging
 import math
@@ -19,6 +19,12 @@ from altium_monkey.altium_pcbdoc_builder import PcbDocNestedConfig
 from altium_monkey.altium_record_types import PcbLayer
 
 from .pcb_svg_primitive_dispatch import PrimitiveDispatchCacheMixin
+from .pcb_board_surface_appearance import (
+    BoardRegionAppearance,
+    BoardSurfaceAppearance,
+    BoardSurfaceAppearanceIndex,
+    BoardSurfaceKind,
+)
 
 if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
@@ -37,7 +43,29 @@ SOLDERMASK_FILM_LAYER_IDS = {
     "SOLDERMASK_FILM_BOTTOM": 9011,
 }
 DEFAULT_SOLDERMASK_FILM_COLOR = "#176B3A"
+DEFAULT_COVERLAY_FILM_COLOR = "#D18B28"
 log = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class SurfaceFilmDomain:
+    """Reusable region-local film domain and its aperture geometry."""
+
+    side: Literal["top", "bottom"]
+    path: str
+    openings: tuple[str, ...]
+    region_paths: tuple[tuple[BoardRegionAppearance, str], ...]
+
+    def mask_lines(self, ctx: PcbSvgRenderContext, mask_id: str) -> list[str]:
+        return [
+            f'<mask id="{mask_id}" maskUnits="userSpaceOnUse" '
+            f'maskContentUnits="userSpaceOnUse" x="0" y="0" '
+            f'width="{ctx.fmt(ctx.width_mm)}" height="{ctx.fmt(ctx.height_mm)}" '
+            'style="mask-type:luminance" color-interpolation="sRGB">',
+            f'<path d="{self.path}" fill="white" fill-rule="evenodd"/>',
+            *self.openings,
+            "</mask>",
+        ]
 
 
 def saved_soldermask_color(
@@ -71,6 +99,86 @@ def _film_opacity(style: Mapping[str, object]) -> float:
     return opacity
 
 
+def _valid_appearances(
+    appearance_index: BoardSurfaceAppearanceIndex | None,
+) -> tuple[BoardRegionAppearance, ...]:
+    if appearance_index is None or appearance_index.invalid_regions:
+        return ()
+    return tuple(appearance_index.regions)
+
+
+def _film_group_attributes(ctx: PcbSvgRenderContext, token: str) -> list[str]:
+    attrs = [f'id="layer-{token}"']
+    if ctx.options.include_metadata:
+        attrs.extend(
+            [
+                f'data-layer-id="{SOLDERMASK_FILM_LAYER_IDS[token]}"',
+                f'data-layer-key="{token}"',
+                f'data-layer-name="{token}"',
+                'data-layer-origin="synthetic-soldermask-film"',
+            ]
+        )
+    return attrs
+
+
+def _film_paint_lines(
+    ctx: PcbSvgRenderContext,
+    pcbdoc: AltiumPcbDoc,
+    style: Mapping[str, object],
+    side: Literal["top", "bottom"],
+    domain: SurfaceFilmDomain,
+    mask_id: str,
+    opacity: float,
+) -> list[str]:
+    if not domain.region_paths:
+        color = html.escape(_fallback_film_color(pcbdoc, side, style))
+        return [
+            f'<path d="{domain.path}" fill="{color}" '
+            f'fill-rule="evenodd" opacity="{ctx.fmt(opacity)}" '
+            f'mask="url(#{mask_id})"/>'
+        ]
+    return [
+        _film_region_line(
+            ctx,
+            pcbdoc,
+            style,
+            side,
+            appearance,
+            path,
+            mask_id,
+            opacity,
+        )
+        for appearance, path in domain.region_paths
+    ]
+
+
+def _film_region_line(
+    ctx: PcbSvgRenderContext,
+    pcbdoc: AltiumPcbDoc,
+    style: Mapping[str, object],
+    side: Literal["top", "bottom"],
+    appearance: BoardRegionAppearance,
+    path: str,
+    mask_id: str,
+    opacity: float,
+) -> str:
+    surface = appearance.surface(side)
+    color = html.escape(_film_color(pcbdoc, side, surface, style))
+    metadata = ""
+    if ctx.options.include_metadata:
+        metadata = (
+            f' data-region-index="{appearance.region.source_index}"'
+            f' data-region-name="{html.escape(appearance.region.name)}"'
+            f' data-surface-kind="{surface.kind.value}"'
+            f' data-surface-material="{html.escape(surface.material or "")}"'
+        )
+    return (
+        f'<path d="{path}" fill="{color}" '
+        f'fill-rule="evenodd" opacity="{ctx.fmt(opacity)}" '
+        f'mask="url(#{mask_id})"{metadata}/>'
+    )
+
+
 class SoldermaskFilmRenderer(PrimitiveDispatchCacheMixin, PcbSvgRenderer):
     """Reuse native primitive/outline paths and subtract apertures with an SVG mask."""
 
@@ -80,55 +188,74 @@ class SoldermaskFilmRenderer(PrimitiveDispatchCacheMixin, PcbSvgRenderer):
         pcbdoc: AltiumPcbDoc,
         token: str,
         style: Mapping[str, object],
+        appearance_index: BoardSurfaceAppearanceIndex | None = None,
     ) -> list[str]:
         if not style.get("enabled", True):
             return []
         opacity = _film_opacity(style)
         side: Literal["top", "bottom"] = "top" if token.endswith("_TOP") else "bottom"
-        color = str(style.get("color", "auto"))
-        if color.strip().lower() == "auto":
-            color = (
-                saved_soldermask_color(pcbdoc, side) or DEFAULT_SOLDERMASK_FILM_COLOR
+        domain = self.surface_domain(ctx, pcbdoc, side, appearance_index)
+        appearances = _valid_appearances(appearance_index)
+        if appearances and not domain.region_paths:
+            return []
+        mask_id = f"soldermask-film-openings-{side}"
+        attrs = _film_group_attributes(ctx, token)
+        lines = [f"<g {' '.join(attrs)}>", "<defs>"]
+        # Independent black cutouts and apertures overlap as a union. Combining
+        # unrelated rings into one evenodd path would put film back in overlaps.
+        lines.extend(domain.mask_lines(ctx, mask_id))
+        lines.append("</defs>")
+        lines.extend(
+            _film_paint_lines(
+                ctx,
+                pcbdoc,
+                style,
+                side,
+                domain,
+                mask_id,
+                opacity,
             )
-        outline = pcbdoc.board.outline if pcbdoc.board is not None else None
-        domain = self._path_from_vertices(ctx, outline.vertices) if outline else ""
-        if not domain:
-            raise ValueError(f"{token} requires a board outline")
+        )
+        lines.append("</g>")
+        return lines
 
+    def surface_domain(
+        self,
+        ctx: PcbSvgRenderContext,
+        pcbdoc: AltiumPcbDoc,
+        side: Literal["top", "bottom"],
+        appearance_index: BoardSurfaceAppearanceIndex | None = None,
+    ) -> SurfaceFilmDomain:
+        """Build the exact mask domain shared by film and silk rendering."""
+
+        outline = pcbdoc.board.outline if pcbdoc.board is not None else None
+        board_path = self._path_from_vertices(ctx, outline.vertices) if outline else ""
+        if not board_path:
+            raise ValueError("surface film requires a board outline")
+        appearances = (
+            tuple(appearance_index.regions)
+            if appearance_index and not appearance_index.invalid_regions
+            else ()
+        )
+        region_paths = tuple(
+            (appearance, _region_path(ctx, appearance))
+            for appearance in appearances
+            if appearance.surface(side).has_film
+        )
+        region_paths = tuple(
+            (appearance, path) for appearance, path in region_paths if path
+        )
+        path = (
+            " ".join(item_path for _appearance, item_path in region_paths)
+            if appearances
+            else board_path
+        )
         # Aperture IDs must not collide with a physical mask layer in the same SVG.
         self.options = replace(self.options, include_metadata=False)
         layer = PcbLayer.TOP_SOLDER if side == "top" else PcbLayer.BOTTOM_SOLDER
         openings = self._openings(ctx, pcbdoc, layer, side)
         openings.extend(self._cutout_openings(ctx, pcbdoc))
-        mask_id = f"soldermask-film-openings-{side}"
-        attrs = [f'id="layer-{token}"']
-        if ctx.options.include_metadata:
-            attrs.extend(
-                [
-                    f'data-layer-id="{SOLDERMASK_FILM_LAYER_IDS[token]}"',
-                    f'data-layer-key="{token}"',
-                    f'data-layer-name="{token}"',
-                    'data-layer-origin="synthetic-soldermask-film"',
-                ]
-            )
-        lines = [f"<g {' '.join(attrs)}>", "<defs>"]
-        lines.append(
-            f'<mask id="{mask_id}" maskUnits="userSpaceOnUse" '
-            f'maskContentUnits="userSpaceOnUse" x="0" y="0" '
-            f'width="{ctx.fmt(ctx.width_mm)}" height="{ctx.fmt(ctx.height_mm)}" '
-            'style="mask-type:luminance" color-interpolation="sRGB">'
-        )
-        # Independent black cutouts and apertures overlap as a union. Combining
-        # unrelated rings into one evenodd path would put film back in overlaps.
-        lines.append(f'<path d="{domain}" fill="white" fill-rule="evenodd"/>')
-        lines.extend(openings)
-        lines.extend(["</mask>", "</defs>"])
-        lines.append(
-            f'<path d="{domain}" fill="{html.escape(color)}" fill-rule="evenodd" '
-            f'opacity="{ctx.fmt(opacity)}" mask="url(#{mask_id})"/>'
-        )
-        lines.append("</g>")
-        return lines
+        return SurfaceFilmDomain(side, path, tuple(openings), region_paths)
 
     def _cutout_openings(
         self, ctx: PcbSvgRenderContext, pcbdoc: AltiumPcbDoc
@@ -486,3 +613,54 @@ def _offset_contours(
         group.append(painted)
         elements.append(ET.tostring(group, encoding="unicode"))
     return elements
+
+
+def _film_color(
+    pcbdoc: AltiumPcbDoc,
+    side: Literal["top", "bottom"],
+    surface: BoardSurfaceAppearance,
+    style: Mapping[str, object],
+) -> str:
+    override = str(style.get("color", "auto")).strip()
+    if override.casefold() != "auto":
+        return override
+    if surface.authored_color:
+        return surface.authored_color
+    if surface.kind is BoardSurfaceKind.COVERLAY:
+        coverlay = str(style.get("coverlay_color", DEFAULT_COVERLAY_FILM_COLOR)).strip()
+        return (
+            coverlay if coverlay.casefold() != "auto" else DEFAULT_COVERLAY_FILM_COLOR
+        )
+    return saved_soldermask_color(pcbdoc, side) or DEFAULT_SOLDERMASK_FILM_COLOR
+
+
+def _fallback_film_color(
+    pcbdoc: AltiumPcbDoc,
+    side: Literal["top", "bottom"],
+    style: Mapping[str, object],
+) -> str:
+    override = str(style.get("color", "auto")).strip()
+    if override.casefold() != "auto":
+        return override
+    return saved_soldermask_color(pcbdoc, side) or DEFAULT_SOLDERMASK_FILM_COLOR
+
+
+def _region_path(
+    ctx: PcbSvgRenderContext,
+    appearance: BoardRegionAppearance,
+) -> str:
+    rings = (appearance.region.outline_mils, *appearance.region.holes_mils)
+    commands: list[str] = []
+    for ring in rings:
+        if len(ring) < 3:
+            continue
+        first_x, first_y = ring[0]
+        commands.append(
+            f"M {ctx.fmt(ctx.x_to_svg(first_x))} {ctx.fmt(ctx.y_to_svg(first_y))}"
+        )
+        commands.extend(
+            f"L {ctx.fmt(ctx.x_to_svg(x))} {ctx.fmt(ctx.y_to_svg(y))}"
+            for x, y in ring[1:]
+        )
+        commands.append("Z")
+    return " ".join(commands)

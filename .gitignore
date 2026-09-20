@@ -11,6 +11,7 @@ rack_results/
 *.pyc
 node_modules/
 tsp-output/
+temp/
 
 # Altium transient project folders
 **/__Previews/

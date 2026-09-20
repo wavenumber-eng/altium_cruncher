@@ -56,6 +56,28 @@ per-style merge. A color picker must allow values such as `auto`, and optional
 fields need an unset/inherit state. Editor layout and board-dependent choices
 remain consumer responsibilities.
 
+## Contract evolution and compatibility
+
+`pcb.svg.config.a1` is the current authored contract. The `a` sequence is
+additive: optional fields and layer tokens advance the suffix while existing
+valid settings retain their meaning. Cruncher continues to accept
+`pcb.svg.config.a0`, and the A0 schema remains at its durable public path. New
+templates and resolved `--write-config` output identify themselves as A1. A
+change that rejects previously valid values, changes a field's meaning or
+null/inheritance behavior, makes a field required, or replaces the root shape
+starts a breaking `b0` family instead of reusing A1.
+
+The regional color fields are deliberately fallbacks rather than a closed
+material taxonomy. An explicit non-`auto` `board_substrate.color` or
+`soldermask_film.color` remains the global override. With `auto`, authored and
+saved board data is considered before `rigid_color`, `flex_color`, or
+`coverlay_color`. Future material maps or per-region policies can therefore be
+added beside these fields without changing their meaning. Bend-line defaults are
+global presentation defaults; future per-bend metadata or rules must use adjacent
+fields rather than reinterpret them. Unknown root, style-group and style fields
+continue to round-trip through the transport codecs, although a renderer may
+ignore extensions it does not implement.
+
 Use the supplied codecs for legacy numeric spellings: stock Draft 2020-12
 validation does not enforce the `x-acr-input` numeric-string range extension.
 The codecs do not resolve boards or promise that every structurally valid config

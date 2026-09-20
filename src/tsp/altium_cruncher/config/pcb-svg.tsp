@@ -20,6 +20,9 @@ alias SyntheticLayer =
   | "PIN1_BOTTOM"
   | "SOLDERMASK_FILM_TOP"
   | "SOLDERMASK_FILM_BOTTOM"
+  | "SURFACE_COPPER_TOP"
+  | "SURFACE_COPPER_BOTTOM"
+  | "BEND_LINES"
   | "ILLUSTRATION_TOP"
   | "ILLUSTRATION_BOTTOM";
 
@@ -132,8 +135,14 @@ model BoardSubstrateStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("CSS color for exposed board substrate.")
+  @doc("Global substrate CSS color override, or auto (default) for region-local authored/saved/palette resolution.")
   color?: string;
+
+  @doc("Rigid-substrate fallback CSS color used when color=auto and no authored or saved board-core color is available.")
+  rigid_color?: string;
+
+  @doc("Flex-substrate fallback CSS color used when color=auto and no authored material color is available.")
+  flex_color?: string;
 }
 
 model SoldermaskFilmStyle extends Record<unknown> {
@@ -141,7 +150,25 @@ model SoldermaskFilmStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("CSS color or auto (default), which reads the side's saved Altium 3D solder-mask color and falls back to #176B3A.")
+  @doc("Global film CSS color override, or auto (default) for region-local authored material, saved Altium 3D solder-mask color, and configured surface-class fallback resolution.")
+  color?: string;
+
+  @doc("Coverlay fallback CSS color used when color=auto and the authored coverlay material has no color.")
+  coverlay_color?: string;
+
+  @doc("Layer opacity from 0.0 to 1.0.")
+  @minValue(0)
+  @maxValue(1)
+  @extension("x-acr-input", "number")
+  opacity?: float64;
+}
+
+model BendLinesStyle extends Record<unknown> {
+  @doc("Enable flat board bend-line annotations.")
+  @extension("x-acr-input", "boolean")
+  enabled?: boolean;
+
+  @doc("SVG color for bend-line annotations.")
   color?: string;
 
   @doc("Layer opacity from 0.0 to 1.0.")
@@ -149,6 +176,31 @@ model SoldermaskFilmStyle extends Record<unknown> {
   @maxValue(1)
   @extension("x-acr-input", "number")
   opacity?: float64;
+
+  @doc("Stroke width in millimeters.")
+  @minValueExclusive(0)
+  @extension("x-acr-input", "number")
+  line_width_mm?: float64;
+
+  @doc("Bend-line stroke style. Options: solid, dashed.")
+  @extension("x-acr-input", "enum")
+  @extension("x-acr-trim", false)
+  line_style?: "solid" | "dashed";
+
+  @doc("Dash and gap length in millimeters when line_style is dashed.")
+  @minValueExclusive(0)
+  @extension("x-acr-input", "number")
+  dash_length_mm?: float64;
+
+  @doc("Gap between dashes in millimeters when line_style is dashed.")
+  @minValueExclusive(0)
+  @extension("x-acr-input", "number")
+  dash_gap_mm?: float64;
+
+  @doc("Absolute distance each end extends beyond the owning-region chord, in millimeters. Zero stops at the region boundary.")
+  @minValue(0)
+  @extension("x-acr-input", "number")
+  extension_mm?: float64;
 }
 
 model BoardOutlineStyle extends Record<unknown> {
@@ -325,6 +377,12 @@ model SilkscreenBoardGraphicsStyle extends Record<unknown> {
   color?: string;
 }
 
+model SilkscreenSurfaceStyle extends Record<unknown> {
+  @doc("Silkscreen clipping domain. none preserves authored overlay; board clips to board material and physical holes; film clips to the resolved solder-mask/coverlay film after apertures.")
+  @extension("x-acr-input", "enum")
+  clip_mode?: "none" | "board" | "film";
+}
+
 model Pin1MarkerStyle extends Record<unknown> {
   @doc("Enable this rendering rule.")
   @extension("x-acr-input", "boolean")
@@ -363,6 +421,9 @@ model StyleTable extends Record<StyleObject> {
   @doc("Board-clipped inverse solder mask using saved pad/via expansions. Applies globally or per view.")
   soldermask_film?: SoldermaskFilmStyle;
 
+  @doc("Flat, region-clipped rigid-flex bend-line annotations. This does not fold or deform the board.")
+  bend_lines?: BendLinesStyle;
+
   assembly_hlr?: AssemblyHlrStyle;
   board_outline?: BoardOutlineStyle;
   board_cutouts?: BoardCutoutsStyle;
@@ -376,6 +437,7 @@ model StyleTable extends Record<StyleObject> {
   silkscreen_component_graphics?: SilkscreenComponentGraphicsStyle;
   silkscreen_designators?: SilkscreenDesignatorsStyle;
   silkscreen_board_graphics?: SilkscreenBoardGraphicsStyle;
+  silkscreen_surface?: SilkscreenSurfaceStyle;
   pin1_marker?: Pin1MarkerStyle;
   keepout?: KeepoutStyle;
 }
@@ -635,7 +697,7 @@ model LayerOutputOptions extends Record<unknown> {
   @extension("x-acr-input", "enum")
   layers?: "auto" | "AUTO" | string[];
 
-  @doc("Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.")
+  @doc("Synthetic layers also emitted with layer outputs. Options: BOARD_SUBSTRATE, BOARD_OUTLINE, BOARD_CUTOUTS, DRILLS, SLOTS, BEND_LINES, ASSEMBLY_HLR_TOP, ASSEMBLY_HLR_BOTTOM, ASSEMBLY_DESIGNATORS_TOP, ASSEMBLY_DESIGNATORS_BOTTOM, PIN1_TOP, PIN1_BOTTOM, SOLDERMASK_FILM_TOP, SOLDERMASK_FILM_BOTTOM, SURFACE_COPPER_TOP, SURFACE_COPPER_BOTTOM, ILLUSTRATION_TOP, and ILLUSTRATION_BOTTOM.")
   @extension("x-acr-nullable", true)
   include_special_layers?: (SyntheticLayer | string)[];
 
@@ -685,8 +747,8 @@ model ViewOptions {
 }
 
 @jsonSchema
-@id("pcb_svg_config.a0.schema.json")
-@extension("title", "pcb.svg.config.a0")
+@id("pcb_svg_config.a1.schema.json")
+@extension("title", "pcb.svg.config.a1")
 @extension("x-acr-jsonc-comments", configComments)
 @extension("x-acr-jsonc-key-comments", styleComments)
 @extension("x-acr-style-order", styleOrder)
@@ -694,8 +756,8 @@ model ViewOptions {
 @extension("x-acr-toon-preset", toonPreset)
 @extension("x-acr-toon-themes", toonThemes)
 model PcbSvgConfigInput extends Record<unknown> {
-  @doc("PCB SVG config contract id.")
-  schema?: "pcb.svg.config.a0" | null;
+  @doc("PCB SVG config contract id. pcb.svg.config.a0 remains accepted as the additive predecessor.")
+  schema?: "pcb.svg.config.a1" | "pcb.svg.config.a0" | null;
 
   @doc("Global settings applied to layer outputs and composed views.")
   global?: GlobalOptions | null;
@@ -720,4 +782,111 @@ model PcbSvgConfigInput extends Record<unknown> {
 
   @doc("Explicit composed SVG views. Each item has its own draw-order layer list.")
   views?: ViewOptions[] | null;
+}
+
+// Frozen additive predecessor. Its open records still permit extensions, but
+// A1-only fields are not promoted into A0's typed/documented surface.
+model BoardSubstrateStyleA0 extends Record<unknown> {
+  @doc("Enable this rendering rule.")
+  @extension("x-acr-input", "boolean")
+  enabled?: boolean;
+
+  @doc("CSS color for exposed board substrate.")
+  color?: string;
+}
+
+model SoldermaskFilmStyleA0 extends Record<unknown> {
+  @doc("Enable this rendering rule.")
+  @extension("x-acr-input", "boolean")
+  enabled?: boolean;
+
+  @doc("CSS color or auto, which reads the side's saved Altium 3D solder-mask color and falls back to #176B3A.")
+  color?: string;
+
+  @doc("Layer opacity from 0.0 to 1.0.")
+  @minValue(0)
+  @maxValue(1)
+  @extension("x-acr-input", "number")
+  opacity?: float64;
+}
+
+model StyleTableA0 extends Record<StyleObject> {
+  illustration?: IllustrationStyle;
+  assembly_designators?: AssemblyDesignatorsStyle;
+  board_substrate?: BoardSubstrateStyleA0;
+  soldermask_film?: SoldermaskFilmStyleA0;
+  assembly_hlr?: AssemblyHlrStyle;
+  board_outline?: BoardOutlineStyle;
+  board_cutouts?: BoardCutoutsStyle;
+  drills?: HoleStyle;
+  slots?: HoleStyle;
+  copper_traces?: CopperTracesStyle;
+  vias?: ViasStyle;
+  copper_polygons?: CopperPolygonsStyle;
+  smd_pads?: SmdPadsStyle;
+  through_hole_pads?: ThroughHolePadsStyle;
+  silkscreen_component_graphics?: SilkscreenComponentGraphicsStyle;
+  silkscreen_designators?: SilkscreenDesignatorsStyle;
+  silkscreen_board_graphics?: SilkscreenBoardGraphicsStyle;
+  pin1_marker?: Pin1MarkerStyle;
+  keepout?: KeepoutStyle;
+}
+
+@extension("not", #{ required: #["png"] })
+model GlobalOptionsA0 extends Record<unknown> {
+  ...OmitProperties<GlobalOptions, "styles">;
+  styles?: StyleTableA0 | null;
+}
+
+model ViewOptionsA0 {
+  ...OmitProperties<ViewOptions, "styles">;
+  styles?: StyleTableA0 | null;
+}
+
+alias SyntheticLayerA0 =
+  | "BOARD_SUBSTRATE"
+  | "BOARD_OUTLINE"
+  | "BOARD_CUTOUTS"
+  | "DRILLS"
+  | "SLOTS"
+  | "ASSEMBLY_HLR_TOP"
+  | "ASSEMBLY_HLR_BOTTOM"
+  | "ASSEMBLY_DESIGNATORS_TOP"
+  | "ASSEMBLY_DESIGNATORS_BOTTOM"
+  | "PIN1_TOP"
+  | "PIN1_BOTTOM"
+  | "SOLDERMASK_FILM_TOP"
+  | "SOLDERMASK_FILM_BOTTOM"
+  | "ILLUSTRATION_TOP"
+  | "ILLUSTRATION_BOTTOM";
+
+model LayerOutputOptionsA0 extends Record<unknown> {
+  @extension("x-acr-nullable", true)
+  @extension("x-acr-input", "boolean")
+  enabled?: boolean;
+
+  @extension("x-acr-nullable", true)
+  @extension("x-acr-input", "enum")
+  layers?: "auto" | "AUTO" | string[];
+
+  @extension("x-acr-nullable", true)
+  include_special_layers?: (SyntheticLayerA0 | string)[];
+
+  output_dir?: string | null;
+}
+
+@jsonSchema
+@id("pcb_svg_config.a0.schema.json")
+@extension("title", "pcb.svg.config.a0")
+model PcbSvgConfigA0Input extends Record<unknown> {
+  @doc("PCB SVG config contract id.")
+  schema?: "pcb.svg.config.a0" | null;
+  global?: GlobalOptionsA0 | null;
+  assembly?: AssemblyOptions | null;
+  dnp?: DnpOptions | null;
+  diodes?: DiodeOptions | null;
+  pin1?: Pin1Options | null;
+  components?: Record<ComponentOverride> | null;
+  layer_outputs?: LayerOutputOptionsA0 | null;
+  views?: ViewOptionsA0[] | null;
 }

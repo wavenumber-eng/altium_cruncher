@@ -151,9 +151,23 @@ def cmd_toon(args: argparse.Namespace) -> int:
             if getattr(args, "timings", None):
                 render_job.write_timings(args.timings)
                 log.info("Wrote timing report: %s", args.timings.resolve())
+        warning_report = getattr(args, "warning_report", None)
+        if warning_report is not None:
+            render_job.diagnostics.write(warning_report)
+            log.info("Wrote Toon warning report: %s", warning_report.resolve())
     except (ValueError, OSError, RuntimeError) as exc:
         log.error("toon: %s", exc)
         return 1
+    warning_mode = getattr(args, "warning_mode", "summary")
+    warning_lines = (
+        render_job.diagnostics.all_lines()
+        if warning_mode == "all"
+        else render_job.diagnostics.summary_lines()
+        if warning_mode == "summary"
+        else ()
+    )
+    for line in warning_lines:
+        log.warning(line)
     log.info(summary)
     return 0
 
@@ -162,7 +176,7 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
     parser = subparsers.add_parser(
         "toon",
         help="generate top/bottom PCB illustration SVGs",
-        description="Generate PCB illustrations with built-in defaults and optional pcb.svg.config.a0 overrides.",
+        description="Generate PCB illustrations with built-in defaults and optional pcb.svg.config.a1 overrides (a0 remains accepted).",
         epilog=(
             "Examples:\n"
             "  acr toon board.PrjPcb --theme white\n"
@@ -215,6 +229,18 @@ def register_parser(subparsers: argparse._SubParsersAction) -> argparse.Argument
         "--timings",
         type=Path,
         help="write SVG job/layer/view/variant wall timings and cache outcomes as JSON",
+    )
+    parser.add_argument(
+        "--warnings",
+        dest="warning_mode",
+        choices=("summary", "all", "none"),
+        default="summary",
+        help="nonfatal warning presentation at completion (default: summary)",
+    )
+    parser.add_argument(
+        "--warning-report",
+        type=Path,
+        help="write complete deterministic toon.warning_report.a0 JSON",
     )
     add_model_cache_arguments(parser)
     add_svg_worker_arguments(parser)

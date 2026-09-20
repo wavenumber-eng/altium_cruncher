@@ -1,0 +1,19 @@
+{
+  "source_corpus": "altium/common/real_world_pcbdoc/bluetooth_sentinel_flex/input",
+  "imported": "2026-09-19",
+  "import_authorization": "Repository owner explicitly requested this test-fixture copy on 2026-09-19.",
+  "upstream_identity": {
+    "name": "Bluetooth Sentinel",
+    "kind": "Altium Designer bundled example project",
+    "documentation": "https://www.altium.com/documentation/knowledge-base/altium-designer/analyze-altium-crashing",
+    "rigid_flex_reference": "https://resources.altium.com/p/practical-steps-for-creating-embedded-components-with-side-emitting-leds",
+    "public_mirror": "https://cadlab.io/project/25844/master/files"
+  },
+  "files": [
+    {
+      "path": "Bluetooth_Sentinel.PcbDoc",
+      "bytes": 17699328,
+      "sha256": "1e18c3efa9d6c3245aa09cab7268b2a908078e50ed2d09dc9d6dfd3bc36b95f3"
+    }
+  ]
+}

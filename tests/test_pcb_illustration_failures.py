@@ -104,6 +104,25 @@ def test_partial_meshes_are_cached_and_warnings_identify_the_model(caplog):
     assert all(warning in caplog.text for warning in job.warnings)
 
 
+def test_queued_illustration_diagnostics_do_not_stream_to_logging(caplog):
+    job = IllustrationJob(None, emit_warnings=False)
+
+    job.warn(
+        "U1 body 0: native warning",
+        code="geometer-warning",
+        category="geometer_geometry",
+        producer="geometer",
+        component_designator="U1",
+        body_index=0,
+        detail={"upstream_message": "native warning"},
+    )
+
+    assert job.warnings == ["U1 body 0: native warning"]
+    assert len(job.diagnostics) == 1
+    assert job.diagnostics[0].producer == "geometer"
+    assert "native warning" not in caplog.text
+
+
 def test_component_render_failure_is_cached_and_other_components_render(monkeypatch, caplog):
     bad = IllustrationComponent("J1", (0, 0), (_mesh(),), ({"index": 0},))
     repeated = replace(bad, designator="J2", anchor_mm=(10, 10))

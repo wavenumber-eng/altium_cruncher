@@ -138,7 +138,7 @@ def _config_cases() -> list[tuple[str, str, Any]]:
         ),
         (
             "pcb-svg generated default",
-            "pcb_svg_config.a0.schema.json",
+            "pcb_svg_config.a1.schema.json",
             jsonc.loads(pcb_svg_config_text(PcbSvgConfig.default())),
         ),
         (
@@ -207,6 +207,8 @@ def _generated_template_comment_cases() -> list[tuple[str, str, list[str]]]:
                 "/* Canvas bounds mode. Options: all_geometry, board_outline. */",
                 "/* Projection mode for fitted components. Options: bounding_box, detail, none, outline, simple. */",
                 "/* Legacy HLR curve serialization mode; Fast always emits polylines. Options: native_arcs, polyline. */",
+                "/* Silkscreen clipping: none preserves authored overlay; board removes board voids; film also removes film apertures and uncoated regions. Default: none. */",
+                "/* Stroke style. Options: solid, dashed. */",
             ],
         ),
         (

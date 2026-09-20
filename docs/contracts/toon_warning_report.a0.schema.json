@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "toon.warning_report.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "toon.warning_report.a0"
+    },
+    "summary": {
+      "$ref": "#/$defs/ToonWarningSummary"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ToonWarningDiagnostic"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "summary",
+    "diagnostics"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "title": "Toon nonfatal warning report",
+  "$defs": {
+    "ToonWarningSummary": {
+      "type": "object",
+      "properties": {
+        "unique_diagnostic_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "occurrence_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToonWarningSummaryGroup"
+          }
+        }
+      },
+      "required": [
+        "unique_diagnostic_count",
+        "occurrence_count",
+        "groups"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ToonWarningDiagnostic": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Stable digest of the diagnostic's structured grouping identity."
+        },
+        "code": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "const": "warning"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "missing_model"
+            },
+            {
+              "type": "string",
+              "const": "unsupported_model"
+            },
+            {
+              "type": "string",
+              "const": "invalid_model_geometry"
+            },
+            {
+              "type": "string",
+              "const": "geometer_geometry"
+            },
+            {
+              "type": "string",
+              "const": "region_resolution"
+            },
+            {
+              "type": "string",
+              "const": "rotation_resolution"
+            },
+            {
+              "type": "string",
+              "const": "clipping"
+            }
+          ]
+        },
+        "producer": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "occurrence_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "input": {
+          "type": "string"
+        },
+        "board": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "view": {
+          "type": "string"
+        },
+        "component_designator": {
+          "type": "string"
+        },
+        "body_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model_identity": {
+          "type": "string"
+        },
+        "detail": {
+          "$ref": "#/$defs/RecordUnknown"
+        }
+      },
+      "required": [
+        "key",
+        "code",
+        "severity",
+        "category",
+        "producer",
+        "message",
+        "occurrence_count"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "ToonWarningSummaryGroup": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "missing_model"
+            },
+            {
+              "type": "string",
+              "const": "unsupported_model"
+            },
+            {
+              "type": "string",
+              "const": "invalid_model_geometry"
+            },
+            {
+              "type": "string",
+              "const": "geometer_geometry"
+            },
+            {
+              "type": "string",
+              "const": "region_resolution"
+            },
+            {
+              "type": "string",
+              "const": "rotation_resolution"
+            },
+            {
+              "type": "string",
+              "const": "clipping"
+            }
+          ]
+        },
+        "code": {
+          "type": "string"
+        },
+        "unique_diagnostic_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "occurrence_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "affected_component_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "affected_body_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "affected_model_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sample_designators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "category",
+        "code",
+        "unique_diagnostic_count",
+        "occurrence_count",
+        "affected_component_count",
+        "affected_body_count",
+        "affected_model_count",
+        "sample_designators"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/toon-warning-report.tsp. Do not edit."
+}

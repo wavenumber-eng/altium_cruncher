@@ -32,6 +32,8 @@ import type { PcbSvgComponentLayers } from "./pcb-svg-component-layers.js";
 import PcbSvgComponentLayersValidator from "./validate-pcb-svg-component-layers.js";
 import type { PcbSvgTimings } from "./pcb-svg-timings.js";
 import PcbSvgTimingsValidator from "./validate-pcb-svg-timings.js";
+import type { ToonWarningReport } from "./toon-warning-report.js";
+import ToonWarningReportValidator from "./validate-toon-warning-report.js";
 import type { BomArray } from "./bom-array.js";
 import BomArrayValidator from "./validate-bom-array.js";
 import type { BomGrouped } from "./bom-grouped.js";
@@ -107,6 +109,7 @@ export interface ContractTypes {
   "schematic_svg_manifest": SchematicSvgManifest;
   "pcb_svg_component_layers": PcbSvgComponentLayers;
   "pcb_svg_timings": PcbSvgTimings;
+  "toon_warning_report": ToonWarningReport;
   "bom_array": BomArray;
   "bom_grouped": BomGrouped;
   "bom_legacy": BomLegacy;
@@ -154,6 +157,7 @@ const validators = {
   "schematic_svg_manifest": SchematicSvgManifestValidator,
   "pcb_svg_component_layers": PcbSvgComponentLayersValidator,
   "pcb_svg_timings": PcbSvgTimingsValidator,
+  "toon_warning_report": ToonWarningReportValidator,
   "bom_array": BomArrayValidator,
   "bom_grouped": BomGroupedValidator,
   "bom_legacy": BomLegacyValidator,

@@ -260,17 +260,21 @@ def test_step_prefetch_commits_in_body_order_and_reuses_positive_disk_results(
 
 
 @pytest.mark.parametrize("side", ["top", "bottom"])
-def test_component_hlr_always_requests_fast_detail_and_fast_mesh_shadow(side):
+def test_component_hlr_uses_fast_b0_request(side):
     requests = []
+    collections = []
 
-    def hlr(mesh, options, **kwargs):
+    def hlr(mesh_collection, options, **kwargs):
+        collections.append(mesh_collection)
         requests.append(options)
         return SimpleNamespace(views=[SimpleNamespace(id=side,
-            modes=SimpleNamespace(outline=SimpleNamespace(segments=())))])
+            modes=SimpleNamespace(outline=SimpleNamespace(segments=())))], empty=False)
 
     job = IllustrationJob(SimpleNamespace(mesh_hlr_projection=hlr))
     job._render_native(part("U1", (1., 0., 0.)), side=side, illustrate=False)
     options = requests[0]
-    assert options.projection_algorithm == g.HlrProjectionAlgorithm.FAST
-    assert options.outline_algorithm == g.HlrOutlineAlgorithm.FAST_MESH_SHADOW
+    assert collections[0].schema == "geometry.mesh_collection.a0"
+    assert options.schema == "geometry.mesh_hlr_projection.request.b0"
+    assert options.fast == illustration._fast_hlr_options()
+    assert options.clipping is None
     assert options.output_detail and options.output_outline

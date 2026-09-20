@@ -42,8 +42,13 @@ Current contracts:
 - `pcbdoc_create_config.a0.schema.json`: standalone PcbDoc create config schema.
 - `pcb_layer_step_config.a0.schema.json`: fixture-alignment PCB layer STEP
   config schema.
-- `pcb_svg_config.a0.schema.json`: experimental explicit PCB SVG config schema.
+- `pcb_svg_config.a1.schema.json`: current additive PCB SVG/Toon config schema,
+  including regional surface appearance, bend lines and silkscreen clipping.
+- `pcb_svg_config.a0.schema.json`: accepted additive predecessor retained at its
+  durable public path for existing configs.
 - `pcb_svg_component_layers.a0.schema.json`: illustrated component metadata.
 - `pcb_svg_timings.a0.schema.json`: per-job/layer/view/variant timing reports.
+- `toon_warning_report.a0.schema.json`: deterministic grouped nonfatal Toon
+  diagnostics and their structured occurrences.
 - `project_skeleton_config.a0.schema.json`: JSONC PrjPcb skeleton creation
   config schema.

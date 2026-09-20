@@ -255,6 +255,40 @@ def test_unrelated_documents_with_shared_board_do_not_share_stack(monkeypatch):
     assert calls == [a, b]
 
 
+def test_region_envelope_index_reuses_source_across_variants(monkeypatch):
+    from altium_cruncher.pcb_board_region_envelope_index import (
+        BoardRegionEnvelopeIndex,
+    )
+
+    pcb = board()
+    variant = copy(pcb)
+    job = PcbSvgRenderJob()
+    job.register_variant(variant, pcb)
+    built = object()
+    calls = []
+    resolved = object()
+
+    class Document:
+        @staticmethod
+        def to_resolved_layer_stack():
+            return resolved
+
+    document = Document()
+
+    def build(source_document, source_resolved):
+        calls.append((source_document, source_resolved))
+        return built
+
+    monkeypatch.setattr(job, "layer_stack_document", lambda _source: document)
+    monkeypatch.setattr(
+        BoardRegionEnvelopeIndex, "from_layer_stack_document", staticmethod(build)
+    )
+
+    assert job.board_region_envelopes(pcb) is built
+    assert job.board_region_envelopes(variant) is built
+    assert calls == [(document, resolved)]
+
+
 def test_cutout_scopes_share_variant_artwork_but_keep_distinct_film():
     pcb = board()
     pcb.board.outline.cutouts = [
