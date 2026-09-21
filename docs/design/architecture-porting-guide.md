@@ -128,7 +128,9 @@ Keep board-scoped caches separate from persistent native model/artwork caches.
 The disk cache is positive-only, checksummed JSON under a versioned identity
 covering native binaries, dependencies and adapter policy source. Corrupt entries
 are warnings/misses, including malformed geometry, scale and index arrays. Writes
-are atomic; size-based eviction only touches owned entries. When moving native
+are atomic; size-based eviction runs once when a render job finishes and only
+touches owned entries. Do not scan the complete persistent cache after each
+entry write: cold rendering can produce hundreds of entries. When moving native
 policy to additional modules, extend `native_cache_identity()` accordingly.
 
 An early component-artwork hit must cover every eligible authored body for that

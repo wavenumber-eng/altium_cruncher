@@ -118,6 +118,41 @@ def empty_illustration_symbol() -> IllustrationSymbol:
     return IllustrationSymbol("", 0, 0, 1, {}, (), empty=True)
 
 
+def with_aperture_projection(
+    surface: IllustrationSymbol, uncut: IllustrationSymbol
+) -> IllustrationSymbol:
+    """Pair disjoint board-surface and aperture projections for SVG composition."""
+
+    if uncut.empty:
+        return surface
+    aperture = IllustrationProjection(
+        uncut.svg,
+        uncut.x_mm,
+        uncut.y_mm,
+        uncut.mm_per_unit,
+    )
+    warnings = tuple(dict.fromkeys((*surface.warnings, *uncut.warnings)))
+    return replace(
+        surface,
+        warnings=warnings,
+        outline_segments_mm=uncut.outline_segments_mm,
+        empty=False,
+        aperture=aperture,
+        aperture_source_bounds_mm=uncut.source_bounds_mm,
+    )
+
+
+def invisible_illustration_symbol(uncut: IllustrationSymbol) -> IllustrationSymbol:
+    """Preserve diagnostics from completed native work while omitting artwork."""
+
+    return replace(
+        empty_illustration_symbol(),
+        warnings=uncut.warnings,
+        outline_segments_mm=uncut.outline_segments_mm,
+        source_bounds_mm=uncut.source_bounds_mm,
+    )
+
+
 def illustration_style(bottom: bool) -> g.MeshIllustrationStyleA0:
     return g.MeshIllustrationStyleA0(
         shading=g.MeshIllustrationShading.TOON,

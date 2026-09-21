@@ -172,6 +172,41 @@ Physical substrate holes remain transparent. `DRILLS`, `SLOTS`, and
 but those virtual overlays do not close a physical opening or change component
 visibility.
 
+### Projection planning and conservative skips
+
+The two logical branches do not imply two native requests for every occurrence.
+The planner uses trusted transformed bounds and the board/opening index before
+requesting geometry:
+
+- an entirely visible body reuses its uncut projection as the surface branch;
+- an entirely hidden body emits no surface projection;
+- an entirely hidden body whose conservative XY rectangle is strictly inside
+  board material and disjoint from every eligible opening emits no open-space
+  projection either; and
+- a surface-crossing or ambiguous body retains the exact clipped/unclipped
+  fallback. In particular, a crossing body is not rejected only because its
+  conservative rectangle misses an opening: antialiased boundary fragments and
+  tolerance contact remain part of the exact composition policy.
+
+The open-space rejection test erodes valid board material once when its query
+index is built and expands opening bounds by the policy clearance. It never
+repairs invalid topology into an optimization input. Invalid or empty material
+geometry, a cutout touching/crossing its outer contour, outside-board
+placement, boundary contact, unavailable bounds, or any other uncertainty
+returns "may intersect" and keeps the exact branch. The predicate can prove
+absence; it never invents visibility.
+
+Direct STEP and analytic sources are single-flighted within a command by their
+exact native source, attached model bytes, requested view, line style, and
+clipping planes. Occurrence metadata, anchor, region query and branch masks are
+not shared. An uncut mounting-side result can provide trusted bounds for the
+opposite-side omission test. When both views are requested, the mounting-side
+projection is prepared first; a complete component-artwork disk-cache hit is
+primed before this scheduling step and therefore starts no native worker.
+Mesh-backed sources already carry conservative transformed bounds and do not
+need that prewarm request. Results and warnings are still committed in source
+order.
+
 ## Component body sources
 
 Toon currently accepts these Altium component-body forms:
@@ -219,7 +254,12 @@ compatibility overrides.
 Physical silkscreen can be preserved as-authored (`none`), clipped to the board
 material domain (`board`), or clipped to the actual film domain and film
 openings (`film`). Toon defaults to `film`; the general PCB SVG config retains
-its compatibility default.
+its compatibility default. New Toon configs also default all three physical
+silkscreen categories to `color: auto`. The renderer resolves each board side's
+authored, saved, or fallback film colors and selects black or near-white ink to
+maximize the worst contrast ratio. A white mask therefore receives black silk.
+An explicit category color remains authoritative. Existing editable configs
+that contain an explicit color retain that appearance.
 
 ### Bend lines
 
@@ -250,9 +290,12 @@ suppression policy.
 Reusable component artwork is emitted into SVG definitions, while occurrence
 groups retain stable source-order placement and metadata. Surface and open-space
 branches reference separate symbols when both exist. Unused definitions are
-pruned after population and variant selection. Canvas bounds include accepted
-component fragments and board artwork; an empty opposite-side fragment does not
-expand them.
+pruned after population and variant selection. Exact projection content,
+origin, outline content and opaque-paint policy identify a definition, so
+identical native results share one definition even when occurrence-level render
+keys differ. Surface and open-space registries stay distinct because their masks
+and semantic roles differ. Canvas bounds include accepted component fragments
+and board artwork; an empty opposite-side fragment does not expand them.
 
 Uniform component opacity is set once on the final occurrence group after the
 surface/open-space union. HLR remains opaque, so this is an illustration
@@ -286,12 +329,16 @@ same inputs, dependencies, config, and cache state.
 
 Cache identity includes model content, root/body/occurrence transforms,
 materials, requested side, region/envelope identity, normalized clipping
-planes, region-query tolerance, clip tolerance, cap policy, and relevant
-illustration settings. The
-surface/open-space composition policy is also versioned internally. Successful
+planes, region-query tolerance, clip tolerance, cap policy, physical opening
+bounds, board-material topology/trust state, and relevant illustration
+settings. The surface/open-space composition policy and every internal source
+module that owns it are also versioned in the disposable namespace. Successful
 empty fragments are cacheable. Failed or incomplete bodies are not persisted as
 successful component artwork and are retried on a later invocation. Cache files
 are disposable implementation artifacts, not public interchange contracts.
+Writes are atomic. Cache size enforcement enumerates owned entries once when
+the render job finishes, including exception exits; it must not scan the full
+persistent cache after every model write.
 
 ## Diagnostics and failure policy
 

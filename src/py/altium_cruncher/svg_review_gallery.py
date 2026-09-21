@@ -215,12 +215,7 @@ dialog::backdrop {{ background: #111827; }}
 .viewer-toolbar button:hover, .viewer-toolbar button:focus-visible,
 .viewer-toolbar a:hover, .viewer-toolbar a:focus-visible {{ background: #334155; outline: 2px solid #93c5fd; }}
 .viewer-stage {{ position: relative; min-width: 0; min-height: 0; overflow: hidden;
-  background-color: #eef2f6;
-  background-image: linear-gradient(45deg, #d9e0e7 25%, transparent 25%),
-    linear-gradient(-45deg, #d9e0e7 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #d9e0e7 75%),
-    linear-gradient(-45deg, transparent 75%, #d9e0e7 75%);
-  background-size: 24px 24px; background-position: 0 0, 0 12px, 12px -12px, -12px 0; }}
+  background: #fff; }}
 .viewer-stage > svg {{ display: block; width: 100% !important; height: 100% !important;
   max-width: none !important; max-height: none !important; }}
 .shortcut-help {{ color: #cbd5e1; font-size: .78rem; white-space: nowrap; }}

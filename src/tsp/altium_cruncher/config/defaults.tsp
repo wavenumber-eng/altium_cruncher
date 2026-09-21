@@ -457,9 +457,9 @@ const toonPreset = #{
         outline: true,
         respect_tenting: true,
       },
-      silkscreen_component_graphics: #{ enabled: true, color: "#F5F5F5" },
-      silkscreen_designators: #{ enabled: true, color: "#F5F5F5" },
-      silkscreen_board_graphics: #{ enabled: true, color: "#F5F5F5" },
+      silkscreen_component_graphics: #{ enabled: true, color: "auto" },
+      silkscreen_designators: #{ enabled: true, color: "auto" },
+      silkscreen_board_graphics: #{ enabled: true, color: "auto" },
       silkscreen_surface: #{ clip_mode: "film" },
     },
   },
@@ -505,7 +505,7 @@ const toonPreset = #{
 };
 
 const toonThemes = #{
-  saved: #{ mask: "auto", silk: "#F5F5F5" },
+  saved: #{ mask: "auto", silk: "auto" },
   white: #{ mask: "#EEEEEE", silk: "#000000" },
   black: #{ mask: "#000000", silk: "#F5F5F5" },
   blue: #{ mask: "#1D4F91", silk: "#F5F5F5" },

@@ -1,7 +1,9 @@
 """Persistent results must preserve appearance, warning context, and rebuildability."""
 
 from dataclasses import asdict, replace
+from pathlib import Path
 from types import SimpleNamespace
+import xml.etree.ElementTree as ET
 
 import geometer as g
 import pytest
@@ -14,14 +16,40 @@ from altium_cruncher.altium_cruncher_pcb_illustration import (
 )
 from altium_cruncher.pcb_illustration_model_geometry import IllustrationProjection
 from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
+    SVG,
+    _aperture_symbol_definition,
     _illustration_instance_opacity,
+    _surface_symbol_definition,
 )
-from altium_cruncher.pcb_svg_model_cache import PcbSvgModelCache
+from altium_cruncher.pcb_svg_model_cache import (
+    _CACHE_POLICY_FILES,
+    PcbSvgModelCache,
+)
 from altium_cruncher import altium_cruncher_pcb_illustration as illustration
 
 
 def cache(path, identity="a" * 64, **kwargs):
     return PcbSvgModelCache(path, identity=identity, **kwargs)
+
+
+def test_native_cache_namespace_declares_every_artwork_policy_module():
+    expected = {
+        "altium_cruncher_pcb_illustration.py",
+        "altium_cruncher_pcb_svg_component_layers.py",
+        "altium_cruncher_pcb_svg_substrate.py",
+        "pcb_board_region_envelope_index.py",
+        "pcb_component_clipping.py",
+        "pcb_direct_projection_memo.py",
+        "pcb_direct_projection_prewarm.py",
+        "pcb_direct_projection_runtime.py",
+        "pcb_illustration_model_geometry.py",
+        "pcb_model_rotation.py",
+        "pcb_svg_component_cache.py",
+    }
+
+    assert set(_CACHE_POLICY_FILES) == expected
+    package = Path(illustration.__file__).parent
+    assert all((package / name).is_file() for name in _CACHE_POLICY_FILES)
 
 
 def mesh():
@@ -61,6 +89,64 @@ def test_instance_opacity_requires_one_value_for_every_body():
         )
         == 0.75
     )
+
+
+def test_svg_definitions_reuse_exact_projection_content_not_wrapper_identity():
+    svg = '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0L1 1"/></svg>'
+    first = IllustrationSymbol(svg, -0.0, 2, 0.5, {}, ())
+    second = IllustrationSymbol(svg, -0.0, 2, 0.5, {}, ())
+    aperture = IllustrationProjection(svg, -0.0, 2, 0.5)
+    first = replace(first, aperture=aperture)
+    second = replace(
+        second,
+        aperture=IllustrationProjection(svg, -0.0, 2, 0.5),
+    )
+    definitions = ET.Element(f"{{{SVG}}}defs")
+    surface_ids = {}
+    aperture_ids = {}
+
+    assert _surface_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        first,
+        opaque_paint=False,
+    ) == _surface_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        second,
+        opaque_paint=False,
+    )
+    assert _aperture_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        first,
+        opaque_paint=False,
+    ) == _aperture_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        second,
+        opaque_paint=False,
+    )
+    assert len(definitions) == 2
+
+    opaque_id = _surface_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        second,
+        opaque_paint=True,
+    )
+    assert opaque_id != next(iter(surface_ids.values()))
+    assert len(definitions) == 3
     assert (
         _illustration_instance_opacity(
             SimpleNamespace(bodies=({"opacity": 0.75}, {"opacity": 0.5}))
@@ -312,6 +398,25 @@ def test_corrupt_and_unwritable_cache_are_misses(tmp_path, caplog):
     assert blocked.read_text() == "user data"
     assert "rendering continues" in caplog.text
     assert not list(tmp_path.rglob("*.tmp"))
+
+
+def test_store_defers_full_cache_scan_until_command_prune(tmp_path, monkeypatch):
+    store = cache(tmp_path)
+    scans = 0
+    original_entries = store._entries
+
+    def counted_entries():
+        nonlocal scans
+        scans += 1
+        yield from original_entries()
+
+    monkeypatch.setattr(store, "_entries", counted_entries)
+    for digit in "123":
+        store.store("illustration", digit * 64, {"result": digit * 100})
+
+    assert scans == 0
+    store.prune()
+    assert scans == 1
 
 
 @pytest.mark.parametrize("kind", ["illustration", "component-artwork"])

@@ -33,8 +33,10 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgViewConfig,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_soldermask_film import (
+    contrasting_silkscreen_color,
     saved_soldermask_color,
 )
+from altium_cruncher.pcb_illustration_config import resolve_illustration_config
 from resvg_py import svg_to_bytes
 
 NS = {"s": "http://www.w3.org/2000/svg"}
@@ -368,6 +370,38 @@ def test_rt_saved_white_color_and_tented_vias() -> None:
         root.find(".//s:g[@id='layer-SOLDERMASK_FILM_TOP']/s:path", NS).get("fill")
         == "#FFFFFF"
     )
+
+
+def test_rt_saved_white_mask_selects_black_auto_silkscreen() -> None:
+    pcb = AltiumPcbDoc.from_file(
+        ROOT / "tests/assets/projects/rt_super_c1/input/RT_SUPER_C1.PCBdoc"
+    )
+    assert contrasting_silkscreen_color(pcb, "top", {"color": "auto"}) == (
+        "#000000"
+    )
+    assert contrasting_silkscreen_color(pcb, "bottom", {"color": "auto"}) == (
+        "#000000"
+    )
+
+    config = resolve_illustration_config(side="top")
+    styles = config.resolved_styles_for_view(config.enabled_views()[0])
+    styles["silkscreen_designators"]["color"] = "#123456"
+    resolved = PcbSvgCompositeRenderer(config)._resolved_silkscreen_styles(
+        pcb, PcbLayer.TOP_OVERLAY, styles
+    )
+    assert resolved["silkscreen_component_graphics"]["color"] == "#000000"
+    assert resolved["silkscreen_board_graphics"]["color"] == "#000000"
+    assert resolved["silkscreen_designators"]["color"] == "#123456"
+
+
+@pytest.mark.parametrize(
+    ("mask", "silk"),
+    [("#FFFFFF", "#000000"), ("#EEEEEE", "#000000"), ("#176B3A", "#F5F5F5")],
+)
+def test_auto_silkscreen_chooses_contrast_for_explicit_film(mask: str, silk: str):
+    assert contrasting_silkscreen_color(
+        _board(), "top", {"color": mask}
+    ) == silk
 
 
 @pytest.mark.parametrize(

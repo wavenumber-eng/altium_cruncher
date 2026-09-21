@@ -59,8 +59,38 @@ question. It remains useful evidence:
 
 The corrected branch is approximately 2 percent faster in this small sample.
 Its final cache/correctness remediation is therefore not the source of the RT
-Super regression. The major cost is associated with the feature boundary
-between 2026.9.18 and 2026.9.19.
+Super regression. The major cost appears across the combined release interval
+between 2026.9.18 and 2026.9.19. This comparison does not isolate clipping
+because Cruncher, Monkey, Geometer, and their committed dependency locks all
+changed.
+
+## Loz Old Man scale baseline
+
+Loz Old Man uses the retained PcbDoc directly so schematic compilation does not
+hide renderer cost:
+
+- board: `tests/assets/projects/loz-old-man/input/SB0037A.PcbDoc`;
+- board SHA-256:
+  `B1D4D794AFBD7C77A086C50BDE3D5C37172B1FF921B0AD12ED6D3FEB43488368`;
+- config, workers, cache policy, warm-up and repetition count: identical to the
+  RT Super pre-clipping comparison.
+
+| Candidate | Full wall runs, s | Median, s | Internal median, s | SVG bytes |
+| --- | --- | ---: | ---: | ---: |
+| Pre-clipping 2026.9.18 / `79bb81e` | 8.149, 7.942, 8.178 | 8.149 | 6.404 | 18,354,023 |
+| Corrected 2026.9.20 / `bb76253` | 20.488, 21.318, 21.204 | 21.204 | 19.729 | 50,759,064 |
+
+The corrected candidate is 2.60x slower by complete command wall, 3.08x slower
+inside the render job, and emits 2.77x as many SVG bytes. In the representative
+third run, exclusive layer time grows from 5.422 to 18.447 seconds; project
+loading, context construction, silkscreen chunking, and file writing remain
+small by comparison.
+
+RT Super remains the primary inner loop because its current branch completes in
+about six seconds. Loz Old Man is mandatory after each promising optimization
+and in the final five-repetition matrix because its larger board-level free
+model and 50.8 MB current SVG output can reveal scaling defects hidden by the
+smaller board.
 
 ## Limitations and next evidence
 
@@ -72,6 +102,13 @@ This is a triage result, not release evidence:
 - RT Super does not reproduce the owner's approximately 10x case;
 - browser parse/interaction time was not measured.
 
-The next measurement must use an owner-reported slow board and exact command,
-then run the full five-repetition cold/warm matrix with enhanced native branch
-instrumentation.
+The `uvx --from git` launcher also does not prove exact reproduction of each
+revision's committed lock. Before using these values as implementation evidence,
+repeat them from detached worktrees with `uv sync --frozen` and record the lock,
+environment, Python, native executable/library, machine, command, and output
+hashes in a durable run manifest.
+
+The next measurement must first freeze those environments, then isolate native
+dependency and clipping costs with request replay and same-code factorial
+controls. It must also capture an owner-reported slow board and exact command
+before the full five-repetition cold/warm release matrix.

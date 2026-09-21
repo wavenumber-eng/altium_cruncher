@@ -17,6 +17,7 @@ from .altium_cruncher_pcb_svg_bend_lines import (
 from .altium_cruncher_pcb_svg_soldermask_film import (
     SOLDERMASK_FILM_LAYER_IDS,
     SoldermaskFilmRenderer,
+    contrasting_silkscreen_color,
 )
 from .altium_cruncher_pcb_svg_substrate import BoardSubstrateRenderer
 from .pcb_svg_render_job import PcbSvgRenderJob
@@ -34,6 +35,39 @@ class PcbSvgSurfaceMixin:
 
     options: PcbSvgRenderOptions
     render_job: PcbSvgRenderJob
+
+    def _resolved_silkscreen_styles(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        layer: PcbLayer,
+        styles: dict[str, dict[str, object]],
+    ) -> dict[str, dict[str, object]]:
+        names = (
+            "silkscreen_component_graphics",
+            "silkscreen_designators",
+            "silkscreen_board_graphics",
+        )
+        automatic = tuple(
+            name
+            for name in names
+            if str(styles.get(name, {}).get("color", "")).strip().casefold()
+            == "auto"
+        )
+        if not automatic:
+            return styles
+        side: Literal["top", "bottom"] = (
+            "top" if layer == PcbLayer.TOP_OVERLAY else "bottom"
+        )
+        color = contrasting_silkscreen_color(
+            pcbdoc,
+            side,
+            styles.get("soldermask_film", {}),
+            self.render_job.board_surface_appearances(pcbdoc),
+        )
+        resolved = dict(styles)
+        for name in automatic:
+            resolved[name] = {**styles.get(name, {}), "color": color}
+        return resolved
 
     def _bend_line_bounds(
         self,

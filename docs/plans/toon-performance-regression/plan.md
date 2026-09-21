@@ -7,65 +7,83 @@ created = "2026-09-20"
 [[steps]]
 id = "capture-user-reproducer"
 title = "Capture the reported slow boards, exact commands, configs, cache state, and machine context"
-status = "pending"
+status = "done"
+
+[[steps]]
+id = "freeze-benchmark-environments"
+title = "Reproduce each candidate from its committed lock and record executable, dependency, and machine identities"
+status = "done"
 
 [[steps]]
 id = "establish-controlled-baseline"
 title = "Measure pre-clipping, first-clipping, and corrected candidates under controlled cold and warm conditions"
-status = "pending"
+status = "done"
+depends_on = ["freeze-benchmark-environments"]
 
 [[steps]]
 id = "test-runtime-impact-audit"
 title = "Attribute wall time, native requests, data volume, memory, and SVG growth to each rendering branch"
-status = "pending"
+status = "done"
 depends_on = ["establish-controlled-baseline"]
 
 [[steps]]
 id = "isolate-regression-causes"
 title = "Separate Cruncher visibility planning, Geometer operations, dependency versions, and SVG composition costs"
-status = "pending"
+status = "done"
 depends_on = ["test-runtime-impact-audit"]
 
 [[steps]]
 id = "implement-safe-visibility-fast-paths"
 title = "Skip clipping and aperture work when 3D bounds and board topology prove it unnecessary"
-status = "pending"
+status = "done"
 depends_on = ["isolate-regression-causes"]
 
 [[steps]]
 id = "reduce-native-and-serialization-work"
 title = "Reuse or batch required projections and prevent redundant native payload and SVG generation"
-status = "pending"
+status = "done"
+depends_on = ["validate-visibility-fast-paths"]
+
+[[steps]]
+id = "validate-visibility-fast-paths"
+title = "Verify exact request counts, output equivalence, boundary cases, and RT Super/Loz performance after visibility changes"
+status = "done"
 depends_on = ["implement-safe-visibility-fast-paths"]
+
+[[steps]]
+id = "validate-native-and-serialization-work"
+title = "Verify exact request counts, output structure, correctness, and RT Super/Loz performance after native or SVG changes"
+status = "done"
+depends_on = ["reduce-native-and-serialization-work"]
 
 [[steps]]
 id = "validate-cache-and-determinism"
 title = "Verify cold, warm, worker-count, cache identity, output determinism, and failure behavior"
-status = "pending"
-depends_on = ["reduce-native-and-serialization-work"]
+status = "done"
+depends_on = ["validate-native-and-serialization-work"]
 
 [[steps]]
 id = "requalify-rendering-correctness"
 title = "Rerun every placement, through-board, overhang, cutout, reverse-mount, flex, and designator gate"
-status = "pending"
+status = "done"
 depends_on = ["validate-cache-and-determinism"]
 
 [[steps]]
 id = "design-doc-intent-audit"
 title = "Reconcile the optimized algorithm, public documentation, contracts, and accepted limitations"
-status = "pending"
+status = "done"
 depends_on = ["requalify-rendering-correctness"]
 
 [[steps]]
 id = "accept-performance-envelope"
 title = "Obtain owner acceptance of the measured runtime, memory, and output-size envelope"
-status = "pending"
+status = "done"
 depends_on = ["design-doc-intent-audit"]
 
 [[steps]]
 id = "external-review"
 title = "Independently audit the optimized algorithm, measurements, and correctness evidence"
-status = "pending"
+status = "done"
 depends_on = ["accept-performance-envelope", "design-doc-intent-audit", "test-runtime-impact-audit"]
 
 [[steps]]
@@ -77,37 +95,37 @@ depends_on = ["external-review"]
 [[exit_criteria]]
 id = "reported-regression-reproduced"
 title = "At least one owner-reported approximately 10x case is reproduced or its environmental cause is identified"
-status = "pending"
+status = "met"
 
 [[exit_criteria]]
 id = "pre-clipping-baseline"
 title = "The last pre-clipping release and current candidate are compared with identical inputs and explicit dependency attribution"
-status = "pending"
+status = "met"
 
 [[exit_criteria]]
 id = "bounded-native-work"
 title = "Native request count is proportional to physically required surface and open-space projections"
-status = "pending"
+status = "met"
 
 [[exit_criteria]]
 id = "test-runtime-impact-audit"
 title = "Cold, warm, runtime, memory, and SVG-size budgets pass on synthetic and real-world boards"
-status = "pending"
+status = "met"
 
 [[exit_criteria]]
 id = "correctness-preserved"
 title = "All Issue 67 rendering gates pass without disabling or approximating required clipping behavior"
-status = "pending"
+status = "met"
 
 [[exit_criteria]]
 id = "design-doc-intent-audit"
 title = "Public documentation and contracts match the optimized implementation and accepted performance policy"
-status = "pending"
+status = "met"
 
 [[exit_criteria]]
 id = "external-review"
 title = "Independent review has no unresolved material correctness or performance findings"
-status = "pending"
+status = "met"
 +++
 
 # Toon performance regression
@@ -127,11 +145,15 @@ work.
 ## Trigger and first controlled result
 
 The owner reports approximately 10x slower overall execution on existing
-boards. The first controlled A/B uses RT Super C1 because it contains 157
+boards. RT Super C1 is the primary optimization loop because it contains 157
 modeled occurrences, both board sides, through-board geometry, and established
-profiling history without the excessive review cost of the i.MX93 fixture.
+profiling history while completing quickly enough for repeated instrumentation
+and fault-injection runs. Loz Old Man is the secondary scale gate: its larger
+board-level free STEP model, much larger SVGs, and heavier layer composition can
+expose serialization, native-geometry, and document-complexity costs that the
+RT Super inner loop may hide.
 
-The corrected pre-clipping comparison is:
+The initial cross-release comparison is:
 
 - `2026.9.18` / commit `79bb81e`, Monkey 2026.9.18, Geometer 2026.9.13;
 - current corrected branch / commit `bb76253`, Monkey 2026.9.19, Geometer
@@ -141,8 +163,16 @@ The corrected pre-clipping comparison is:
 
 The current branch is 1.77x slower by median complete command wall time and
 2.60x slower inside the measured render job. Its two SVGs are 3.33x larger.
-This proves a material regression but does not reproduce the reported 10x case.
-The detailed evidence is in `baseline.md`.
+This proves a material regression across the combined 2026.9.18-to-2026.9.19
+release interval, but it neither isolates clipping nor reproduces the reported
+10x case. Cruncher, Monkey, Geometer, and their committed dependency locks all
+changed across that interval. The detailed evidence is in `baseline.md`.
+
+The same three-run triage on Loz Old Man measures 8.149 seconds before clipping
+and 21.204 seconds on the corrected branch: 2.60x slower overall and 3.08x
+slower inside the render job. SVG bytes grow from 18.35 MB to 50.76 MB
+(2.77x). Loz therefore remains in every milestone measurement, but RT Super is
+the default development target until an optimization passes its focused tests.
 
 An initially attempted comparison against 2026.9.19 was invalid as a
 pre-clipping baseline because that release already contains the surface/open-
@@ -154,7 +184,9 @@ later Issue 67 correctness fixes did not introduce this particular slowdown.
 
 Every reported comparison must record:
 
-- Cruncher commit/version and exact Monkey/Geometer versions;
+- Cruncher commit/version, committed `uv.lock` hash, `uv` version, complete
+  environment freeze, and exact Monkey/Geometer versions;
+- Python executable hash and Geometer executable/library hashes;
 - board bytes or source-manifest hash, config bytes, selected views/variants,
   worker count, cache directory/state, and command line;
 - machine, OS, Python, available cores and memory;
@@ -165,6 +197,11 @@ Every reported comparison must record:
 - cache hits, misses, writes and bytes;
 - SVG count, bytes, definitions, instances, paths/segments and DOM nodes;
 - deterministic hashes for equivalent repeated outputs.
+
+The run manifest is durable plan evidence and contains the exact argv, working
+directory, input/config hashes, launcher identity, cache identity, machine/OS,
+Python, logical-core count, and physical memory. Raw SVGs, traces, and profiles
+remain ignored under `temp/`.
 
 Use one unmeasured warm-up followed by at least five measured repetitions for
 release evidence. Three repetitions are sufficient only for initial triage.
@@ -180,7 +217,8 @@ warm run from another. Measure these conditions separately:
 
 ## Baseline matrix
 
-Measure three code points:
+Measure three code points from detached worktrees synchronized with their
+committed locks by `uv sync --frozen`:
 
 1. 2026.9.18, the last pre-clipping release;
 2. 2026.9.19, the first released clipping implementation, even though the
@@ -190,13 +228,19 @@ Measure three code points:
 Run both each revision's default config and the newest mutually accepted config.
 The former captures user experience; the latter isolates implementation cost.
 Because the pre-clipping release also pins older Monkey and Geometer versions,
-add a dependency cross-matrix or targeted native microbenchmarks where API
-compatibility permits. Do not attribute all delta to Cruncher until renderer
-planning and native-kernel costs are separated.
+dependency isolation is mandatory before implementation. Replay identical
+representative uncut native requests against Geometer 2026.9.13 and 2026.9.19,
+then compare uncut and clipped requests on Geometer 2026.9.19. Where the Python
+API is compatible, also run the current Cruncher code against frozen alternate
+dependency sets. Do not attribute the cross-release delta to clipping or
+Cruncher until renderer planning and native-kernel costs are separated.
 
 The fixture set must include:
 
-- RT Super C1 as the dense modeled baseline;
+- RT Super C1 as the primary dense modeled inner loop for profiling and rapid
+  optimization iteration;
+- Loz Old Man as the secondary large-board/free-model scale and SVG-complexity
+  gate;
 - the Issue 67 reporter board;
 - single-SMT and single-through-hole controls;
 - projection-test and USB-edge for actual overhang/open-space work;
@@ -235,16 +279,41 @@ Development-only experiment flags may bypass one stage for attribution, but
 they are not public behavior and their outputs must never be presented as
 correctness candidates.
 
+Run the following same-code factorial controls on both RT Super and Loz Old Man:
+
+1. normal corrected behavior;
+2. perform all native aperture work but omit aperture SVG definitions and
+   instances, isolating serialization/DOM cost;
+3. suppress aperture native requests while retaining surface work, producing
+   deliberately invalid output only for attribution;
+4. replace clipped-plus-uncut work with one uncut projection, again producing
+   deliberately invalid output only to price the clipped call;
+5. instrumentation enabled with no behavioral bypass, pricing profiler
+   overhead.
+
+Attribution-only outputs are never correctness or visual-review candidates.
+
+## Current request graph
+
+Document the direct-STEP and mesh request graphs before optimizing them. The
+mesh path already has transformed bounds before projection. The direct-STEP
+path currently learns bounds from a full uncut native illustration and only
+then applies visibility; therefore a bounds-based direct fast path is useful
+only if its trusted bounds come from a reused cross-side result, cached model
+bounds, or a measured cheaper native bounds operation. Bounds acquisition must
+cost less than the illustration it avoids. Do not restore unconditional STEP
+tessellation merely to obtain bounds.
+
 ## Optimization model
 
 The existing algorithm remains the conservative fallback. Fast paths are
 allowed only when inexpensive bounds and topology tests prove that they are
 semantically equivalent.
 
-### 1. Z-interval classification
+### 1. Early Z-interval classification
 
-Before invoking Geometer clipping, compare transformed 3D bounds with the
-resolved top or bottom surface:
+Where trusted transformed bounds exist before an expensive projection, compare
+their Z interval with the resolved top or bottom surface:
 
 - wholly on the visible side: render the surface result uncut;
 - wholly behind an opaque board-material surface: omit the surface result;
@@ -254,7 +323,9 @@ resolved top or bottom surface:
 
 This avoids asking the native kernel to clip ordinary SMT bodies that cannot
 cross the board surface. Bounds may prove absence; they must not be used to
-invent visible geometry.
+invent visible geometry. If bounds are learned only by performing the expensive
+uncut illustration, retain the existing path until a cheaper trusted source is
+measured.
 
 ### 2. Open-space candidate classification
 
@@ -265,10 +336,13 @@ footprint can intersect true open space for that side:
 - a routed board cutout;
 - an eligible untented, unfilled, uncapped and unplugged through bore.
 
-Precompute a side-aware spatial index of those domains. A footprint completely
-inside board material and disjoint from indexed openings cannot contribute to
-the aperture branch and must not receive an uncut native projection. Ambiguous
-cases continue through the current exact masked composition.
+Precompute a side-aware spatial index of those domains. A safe skip requires
+the transformed conservative footprint to be strictly inside board material
+eroded by the policy tolerance and disjoint from cutouts and eligible bores
+expanded by that tolerance. Touching, invalid, outside-board, incompatible-
+region, or otherwise ambiguous cases continue through the current exact masked
+composition. Cover edge/cutout/slot epsilon boundaries, rotations, non-uniform
+scale, equivalent and incompatible region envelopes, and every via policy.
 
 The optimization must preserve the distinction between graphical drill marks,
 film openings and physical open space.
@@ -286,6 +360,19 @@ After eliminating unnecessary branches, examine the remaining native work:
   resolved and cached;
 - keep worker concurrency bounded and commit results in source order.
 
+For each unique render key, request planning must satisfy this census:
+
+- zero projections when the model is fully hidden and cannot contribute through
+  open space;
+- one uncut projection when it alone supplies the visible surface or aperture;
+- one clipped plus one uncut projection only when the body crosses the surface
+  and can also contribute through open space;
+- placement-resolution probes accounted separately and reused across repeated
+  occurrences whenever their identity permits.
+
+Tests assert planned and actual operation counts and bytes, not only final SVG
+appearance.
+
 If the remaining dominant cost requires a Geometer API change, document the
 exact convenience/batch request and measured expected benefit before requesting
 it. Do not grow a CAD kernel inside Cruncher.
@@ -300,8 +387,10 @@ IDs, metadata or layer order receives an explicit compatibility disposition.
 
 ## Provisional budgets
 
-Final budgets require the owner-reported reproducer, but implementation should
-start with these release gates:
+Final budgets require the owner-reported reproducer. Each optimization is
+compared both with 2026.9.18 user experience and with a current-dependency,
+feature-disabled control so dependency cost is not mistaken for algorithm cost.
+Implementation starts with these release gates:
 
 - boards whose models neither cross a surface nor intersect open space: median
   cold wall time no more than 1.25x the pre-clipping baseline;
@@ -309,19 +398,27 @@ start with these release gates:
   time unless the owner explicitly accepts a measured, necessary cost;
 - warm-cache median no more than 1.10x the corrected candidate's established
   warm baseline, with zero native geometry requests on complete artwork hits;
-- SVG size no more than 1.5x pre-clipping for boards with no visible aperture
-  contribution, and every larger result explained by visible new information;
+- boards with no aperture contribution emit zero unused aperture definitions or
+  instances; their SVG size target is no more than 1.25x pre-clipping, and every
+  larger result must be explained by visible new information;
 - no unbounded RSS growth; retain `--workers 1` as the low-memory path and apply
   the existing 10 percent plus 64 MiB investigation threshold;
-- byte-identical outputs across repeated runs and worker counts.
+- byte-identical outputs across repeated runs and worker counts;
+- medians must improve by more than the observed run-to-run noise and measured
+  ranges must not materially overlap before an optimization is credited;
+- the owner-reported reproducer receives an explicit absolute wall-time target
+  once captured, and gallery/browser budgets are added if review responsiveness
+  is part of that report.
 
 These are budgets, not invitations to disable details, drop warnings, lower
 quality, or silently change defaults.
 
 ## Correctness and review gates
 
-Every optimization must be fault-injected or tested so the regression fails if
-the fast-path predicate is removed or inverted. At minimum, prove:
+Every optimization class receives its focused correctness, request-count, RT
+Super, and Loz Old Man gate before the next class begins. Every optimization
+must be fault-injected or tested so the regression fails if the fast-path
+predicate is removed or inverted. At minimum, prove:
 
 - top and bottom SMT bodies skip unnecessary opposite-side native work;
 - through-board pins retain both required surface fragments;

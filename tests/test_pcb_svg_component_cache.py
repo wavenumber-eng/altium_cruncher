@@ -12,6 +12,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
     ComponentLayerSession,
 )
 from altium_cruncher.pcb_board_region_envelope_index import BoardRegionQueryStatus
+from altium_cruncher.altium_cruncher_pcb_svg_substrate import _BoardOpenSpaceIndex
 from altium_cruncher.pcb_svg_model_cache import PcbSvgModelCache
 
 
@@ -198,6 +199,40 @@ def test_region_aware_artwork_cache_retains_opposite_authored_side(scene, monkey
     assert snapshot(actual) == expected
     assert calls == [3]
     assert all(not hasattr(part, "meshes") for part, _ in actual)
+
+
+def test_artwork_cache_key_includes_physical_open_space_domain(scene):
+    pcb, cache, _calls = scene
+    region = SimpleNamespace(
+        source_index=0,
+        name="Rigid",
+        outline_mils=((0.0, 0.0), (100.0, 0.0), (100.0, 100.0)),
+        holes_mils=(),
+        total_thickness_mils=40.0,
+    )
+    region_index = SimpleNamespace(
+        regions=(region,),
+        invalid_regions=(),
+        tolerance_mils=1e-6,
+    )
+
+    def key(openings):
+        job = illustration.IllustrationJob(
+            None,
+            cache=cache(),
+            region_index=region_index,
+            open_space_index=_BoardOpenSpaceIndex(region_index, openings),
+        )
+        return artwork.ComponentArtworkCache(
+            job, pcb, "top", True, frozenset()
+        ).key
+
+    closed = key(())
+    open_bore = key(((40.0, 40.0, 60.0, 60.0),))
+
+    assert closed != open_bore
+    assert closed == key(())
+    assert open_bore == key(((40.0, 40.0, 60.0, 60.0),))
 
 
 @pytest.mark.parametrize("policy", ["tolerance", "cap"])

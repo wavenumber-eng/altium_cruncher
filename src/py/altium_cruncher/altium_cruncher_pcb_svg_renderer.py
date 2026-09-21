@@ -113,7 +113,6 @@ from .pcb_svg_helpers import (
     synthetic_layer_metadata_attrs as _synthetic_layer_metadata_attrs,
 )
 from .svg_editor_metadata import decorate_editor_layer
-
 if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
     from altium_monkey.altium_record_pcb__via import AltiumPcbVia
@@ -1776,6 +1775,7 @@ class PcbSvgCompositeRenderer(
             primitives = self._copper_primitives(ctx, pcbdoc, layer, styles)
             color = _style_color(styles, "copper_traces", ctx.layer_color(layer))
         elif layer.is_overlay():
+            styles = self._resolved_silkscreen_styles(pcbdoc, layer, styles)
             primitives = self._silkscreen_primitives(ctx, pcbdoc, layer, styles)
             color = _style_color(
                 styles, "silkscreen_component_graphics", ctx.layer_color(layer)

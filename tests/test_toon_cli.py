@@ -190,7 +190,7 @@ def test_toon_gallery_options_are_rejected_when_only_writing_config(tmp_path):
 @pytest.mark.parametrize(
     ("theme", "mask", "silk"),
     [
-        ("saved", "auto", "#F5F5F5"),
+        ("saved", "auto", "auto"),
         ("white", "#EEEEEE", "#000000"),
         ("black", "#000000", "#F5F5F5"),
         ("blue", "#1D4F91", "#F5F5F5"),

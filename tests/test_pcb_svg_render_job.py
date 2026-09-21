@@ -4,6 +4,7 @@ from copy import copy
 from dataclasses import replace
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import xml.etree.ElementTree as ET
 
 from altium_monkey.altium_board import (
@@ -23,14 +24,59 @@ import pytest
 from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
     ComponentLayerSession,
+    _renumber_population_entries,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
 )
 from altium_cruncher.pcb_svg_render_job import PcbSvgRenderJob
+from altium_cruncher.pcb_svg_model_cache import PcbSvgModelCache
 
 SVG = "http://www.w3.org/2000/svg"
+
+
+def test_population_metadata_renumbers_surface_and_aperture_symbols():
+    entries = [
+        {
+            "symbol_id": "old-surface",
+            "aperture_symbol_id": "old-aperture",
+            "anchor_svg_mm": [5.0, 6.0],
+            "bounds_local_xyz_mm": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+        }
+    ]
+    ids, _bounds = _renumber_population_entries(
+        entries,
+        {"token": "ILLUSTRATION_TOP"},
+        SimpleNamespace(options=SimpleNamespace(mirror_x=False), width_mm=10.0),
+    )
+
+    assert entries[0]["symbol_id"] == ids["old-surface"]
+    assert entries[0]["aperture_symbol_id"] == ids["old-aperture"]
+    assert entries[0]["symbol_id"] != entries[0]["aperture_symbol_id"]
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_render_job_prunes_model_cache_once_on_every_exit(
+    tmp_path, monkeypatch, fails
+):
+    store = PcbSvgModelCache(tmp_path, identity="a" * 64)
+    calls = 0
+
+    def prune():
+        nonlocal calls
+        calls += 1
+
+    monkeypatch.setattr(store, "prune", prune)
+    if fails:
+        with pytest.raises(RuntimeError, match="test failure"):
+            with PcbSvgRenderJob(model_cache=store):
+                raise RuntimeError("test failure")
+    else:
+        with PcbSvgRenderJob(model_cache=store):
+            pass
+
+    assert calls == 1
 
 
 @pytest.mark.parametrize("component_side", ["top", "bottom"])

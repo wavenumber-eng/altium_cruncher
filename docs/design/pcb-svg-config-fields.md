@@ -306,21 +306,21 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | Field | Required | Default annotation | Description |
 | --- | --- | --- | --- |
 | `enabled` | No | `true` | Enable this rendering rule. |
-| `color` | No | `"#000000"` | SVG color value, usually #RRGGBB. |
+| `color` | No | `"#000000"` | SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film. |
 
 ## SilkscreenDesignatorsStyle
 
 | Field | Required | Default annotation | Description |
 | --- | --- | --- | --- |
 | `enabled` | No | `true` | Enable this rendering rule. |
-| `color` | No | `"#000000"` | SVG color value, usually #RRGGBB. |
+| `color` | No | `"#000000"` | SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film. |
 
 ## SilkscreenBoardGraphicsStyle
 
 | Field | Required | Default annotation | Description |
 | --- | --- | --- | --- |
 | `enabled` | No | `true` | Enable this rendering rule. |
-| `color` | No | `"#000000"` | SVG color value, usually #RRGGBB. |
+| `color` | No | `"#000000"` | SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film. |
 
 ## SilkscreenSurfaceStyle
 

@@ -456,7 +456,7 @@ export type SilkscreenComponentGraphicsStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * SVG color value, usually #RRGGBB.
+   * SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.
    */
   color?: string;
 };
@@ -466,7 +466,7 @@ export type SilkscreenDesignatorsStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * SVG color value, usually #RRGGBB.
+   * SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.
    */
   color?: string;
 };
@@ -476,7 +476,7 @@ export type SilkscreenBoardGraphicsStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * SVG color value, usually #RRGGBB.
+   * SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.
    */
   color?: string;
 };

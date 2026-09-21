@@ -2,7 +2,7 @@
   "toon-themes": {
     "saved": {
       "mask": "auto",
-      "silk": "#F5F5F5"
+      "silk": "auto"
     },
     "white": {
       "mask": "#EEEEEE",
@@ -104,15 +104,15 @@
         },
         "silkscreen_component_graphics": {
           "enabled": true,
-          "color": "#F5F5F5"
+          "color": "auto"
         },
         "silkscreen_designators": {
           "enabled": true,
-          "color": "#F5F5F5"
+          "color": "auto"
         },
         "silkscreen_board_graphics": {
           "enabled": true,
-          "color": "#F5F5F5"
+          "color": "auto"
         },
         "silkscreen_surface": {
           "clip_mode": "film"

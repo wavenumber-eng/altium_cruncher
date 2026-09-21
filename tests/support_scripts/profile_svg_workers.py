@@ -38,6 +38,9 @@ if TYPE_CHECKING:
     from altium_cruncher.pcb_board_region_envelope_index import (
         BoardRegionEnvelopeIndex,
     )
+    from altium_cruncher.altium_cruncher_pcb_svg_substrate import (
+        _BoardOpenSpaceIndex,
+    )
 
 from profile_pcb_svg import output_inventory, source_fingerprint
 
@@ -106,52 +109,61 @@ class WorkerProbe:
 
         native = IllustrationJob._render_native
         materialize = ComponentLayerSession._materialize
+        probe = self
 
         def measured(
-            job: IllustrationJob, part: IllustrationComponent, **kwargs: object
+            self: IllustrationJob,
+            component: IllustrationComponent,
+            *,
+            side: Side,
+            illustrate: bool,
         ) -> IllustrationSymbol:
             started = time.perf_counter()
             failed = False
             try:
-                return native(job, part, **kwargs)
+                return native(self, component, side=side, illustrate=illustrate)
             except BaseException:
                 failed = True
                 raise
             finally:
-                with self.lock:
-                    self.requests.append(
+                with probe.lock:
+                    probe.requests.append(
                         dict(
-                            designator=part.designator,
-                            side=kwargs["side"],
+                            designator=component.designator,
+                            side=side,
                             seconds=time.perf_counter() - started,
                             failed=failed,
-                            meshes=len(part.meshes),
+                            meshes=len(component.meshes),
                             thread=threading.get_ident(),
                         )
                     )
 
         def record(
-            session: ComponentLayerSession,
+            self: ComponentLayerSession,
             pcbdoc: AltiumPcbDoc,
             side: Side,
             line_width: float,
             illustrate: bool,
             region_index: BoardRegionEnvelopeIndex | None = None,
+            open_space_index: _BoardOpenSpaceIndex | None = None,
+            prewarm_opposite: bool = False,
         ) -> PlacedIllustrations:
             result = materialize(
-                session,
+                self,
                 pcbdoc,
                 side,
                 line_width,
                 illustrate,
                 region_index,
+                open_space_index,
+                prewarm_opposite,
             )
-            if session.job is not None:
-                self.jobs.append(
+            if self.job is not None:
+                probe.jobs.append(
                     dict(
                         side=side,
-                        counts=dict(session.job.counts),
-                        warnings=list(session.job.warnings),
+                        counts=dict(self.job.counts),
+                        warnings=list(self.job.warnings),
                     )
                 )
             return result

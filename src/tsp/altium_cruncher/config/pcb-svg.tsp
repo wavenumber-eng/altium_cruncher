@@ -355,7 +355,7 @@ model SilkscreenComponentGraphicsStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("SVG color value, usually #RRGGBB.")
+  @doc("SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.")
   color?: string;
 }
 
@@ -364,7 +364,7 @@ model SilkscreenDesignatorsStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("SVG color value, usually #RRGGBB.")
+  @doc("SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.")
   color?: string;
 }
 
@@ -373,7 +373,7 @@ model SilkscreenBoardGraphicsStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("SVG color value, usually #RRGGBB.")
+  @doc("SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.")
   color?: string;
 }
 

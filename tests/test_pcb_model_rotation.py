@@ -365,4 +365,7 @@ def test_direct_path_retries_only_a_mismatched_current_candidate(monkeypatch):
     )
     matched_part = replace(part, direct=matched)
     assert job._render_direct(matched_part, "bottom", True) is current
-    assert calls == [current_source]
+    # The authored outline changes rotation selection, not the native request.
+    # Reuse the exact current-source projection and resolve this occurrence
+    # against its own outline.
+    assert calls == []

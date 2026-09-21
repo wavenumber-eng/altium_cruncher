@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import hashlib
 import html
+import math
 from typing import TYPE_CHECKING
 import xml.etree.ElementTree as ET
 
@@ -16,14 +18,21 @@ from altium_monkey.altium_pcb_svg_renderer import (
 from altium_monkey.altium_pcb_enums import PcbIpc4761ViaType
 from altium_monkey.altium_pcbdoc_builder import PcbDocNestedConfig
 from altium_monkey.altium_record_types import PcbLayer
+from altium_monkey.altium_board import resolve_outline_arc_segment
+from shapely.geometry import Polygon, box
+from shapely.geometry.base import BaseGeometry
 
 from .pcb_board_surface_appearance import (
     BoardRegionAppearance,
     BoardSurfaceAppearanceIndex,
 )
+from .pcb_board_region_envelope_index import BoardRegionEnvelopeIndex
 
 if TYPE_CHECKING:
+    from altium_monkey.altium_board import BoardOutlineVertex
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
+    from altium_monkey.altium_record_pcb__pad import AltiumPcbPad
+    from altium_monkey.altium_record_pcb__via import AltiumPcbVia
 
 
 BOARD_SUBSTRATE_LAYER_ID = 9014
@@ -134,6 +143,263 @@ class BoardMaterialDomain:
         return mask
 
 
+@dataclass(frozen=True)
+class _BoardOpenSpaceIndex:
+    """Conservative board/opening test used to suppress invisible aperture art."""
+
+    region_index: BoardRegionEnvelopeIndex
+    opening_bounds_mils: tuple[tuple[float, float, float, float], ...]
+    clearance_mils: float = 1e-3
+    material_geometry: BaseGeometry | None = None
+    material_geometry_trusted: bool = True
+    _strict_material_geometry: BaseGeometry | None = field(
+        init=False, repr=False, compare=False, default=None
+    )
+    _material_wkb_sha256: str | None = field(
+        init=False, repr=False, compare=False, default=None
+    )
+
+    def __post_init__(self) -> None:
+        if self.material_geometry_trusted and self.material_geometry is not None:
+            object.__setattr__(
+                self,
+                "_strict_material_geometry",
+                self.material_geometry.buffer(-self.clearance_mils),
+            )
+        if self.material_geometry is not None:
+            object.__setattr__(
+                self,
+                "_material_wkb_sha256",
+                hashlib.sha256(self.material_geometry.wkb).hexdigest(),
+            )
+
+    def cache_identity(self) -> dict[str, object]:
+        """Identify every input that can change the conservative skip result."""
+
+        return {
+            "clearance_mils": self.clearance_mils,
+            "opening_bounds_mils": self.opening_bounds_mils,
+            "material_geometry_trusted": self.material_geometry_trusted,
+            "material_wkb_sha256": self._material_wkb_sha256,
+        }
+
+    def may_intersect(
+        self,
+        *,
+        anchor_mm: tuple[float, float],
+        bounds_local_mm: tuple[float, float, float, float, float, float],
+    ) -> bool:
+        mm_per_mil = 0.0254
+        left = (anchor_mm[0] + bounds_local_mm[0]) / mm_per_mil
+        top = (anchor_mm[1] + bounds_local_mm[1]) / mm_per_mil
+        right = (anchor_mm[0] + bounds_local_mm[3]) / mm_per_mil
+        bottom = (anchor_mm[1] + bounds_local_mm[4]) / mm_per_mil
+        query_box = box(left, top, right, bottom)
+        if not self.material_geometry_trusted:
+            return True
+        if self.material_geometry is not None:
+            material = self._strict_material_geometry
+            fully_inside = bool(
+                material is not None
+                and not material.is_empty
+                and material.covers(query_box)
+            )
+        else:
+            fully_inside = self.region_index.fully_contains_bounds(
+                left,
+                top,
+                right,
+                bottom,
+                clearance_mils=self.clearance_mils,
+            )
+        if not fully_inside:
+            return True
+        tolerance = self.clearance_mils
+        return any(
+            left <= opening[2] + tolerance
+            and right >= opening[0] - tolerance
+            and top <= opening[3] + tolerance
+            and bottom >= opening[1] - tolerance
+            for opening in self.opening_bounds_mils
+        )
+
+
+def _space_id(index: _BoardOpenSpaceIndex | None) -> object:
+    return None if index is None else index.cache_identity()
+
+
+def _board_material_geometry(
+    pcbdoc: AltiumPcbDoc,
+) -> tuple[BaseGeometry | None, float, bool]:
+    outline = pcbdoc.board.outline if pcbdoc.board is not None else None
+    if outline is None:
+        return None, 0.0, False
+    outer, outer_error = _outline_ring(outline.vertices)
+    holes = []
+    maximum_error = outer_error
+    for cutout in outline.cutouts:
+        ring, error = _outline_ring(cutout)
+        maximum_error = max(maximum_error, error)
+        if len(ring) >= 3:
+            holes.append(ring)
+    if len(outer) < 3:
+        return None, maximum_error, False
+    geometry = Polygon(outer, holes)
+    if not geometry.is_valid:
+        return None, maximum_error, False
+    if geometry.is_empty:
+        return None, maximum_error, False
+    # Erode past the maximum arc chord error before declaring a strict
+    # interior. This makes tessellation uncertainty conservative.
+    return geometry, maximum_error + 1e-3, True
+
+
+def _outline_ring(
+    vertices: Sequence[BoardOutlineVertex],
+) -> tuple[list[tuple[float, float]], float]:
+    if not vertices:
+        return [], 0.0
+    points: list[tuple[float, float]] = []
+    maximum_error = 0.0
+    step_limit = math.radians(0.5)
+    for index, current in enumerate(vertices):
+        nxt = vertices[(index + 1) % len(vertices)]
+        if not points:
+            points.append((float(current.x_mils), float(current.y_mils)))
+        if not getattr(current, "is_arc", False):
+            points.append((float(nxt.x_mils), float(nxt.y_mils)))
+            continue
+        radius = float(current.radius_mils)
+        if radius <= 0.0:
+            radius = math.hypot(
+                float(current.x_mils) - float(current.center_x_mils),
+                float(current.y_mils) - float(current.center_y_mils),
+            )
+        clockwise, sweep_degrees = resolve_outline_arc_segment(current, nxt)
+        sweep = math.radians(sweep_degrees)
+        steps = max(1, math.ceil(sweep / step_limit))
+        increment = sweep / steps
+        maximum_error = max(
+            maximum_error,
+            radius * (1.0 - math.cos(increment * 0.5)),
+        )
+        start = math.atan2(
+            float(current.y_mils) - float(current.center_y_mils),
+            float(current.x_mils) - float(current.center_x_mils),
+        )
+        direction = -1.0 if clockwise else 1.0
+        for step in range(1, steps + 1):
+            angle = start + direction * increment * step
+            points.append(
+                (
+                    float(current.center_x_mils) + radius * math.cos(angle),
+                    float(current.center_y_mils) + radius * math.sin(angle),
+                )
+            )
+    if len(points) > 1 and points[-1] == points[0]:
+        points.pop()
+    return points, maximum_error
+
+
+def _cutout_opening_bounds(
+    pcbdoc: AltiumPcbDoc,
+) -> list[tuple[float, float, float, float]]:
+    outline = pcbdoc.board.outline if pcbdoc.board is not None else None
+    result: list[tuple[float, float, float, float]] = []
+    for cutout in outline.cutouts if outline is not None else ():
+        xs = [float(vertex.x_mils) for vertex in cutout]
+        ys = [float(vertex.y_mils) for vertex in cutout]
+        for vertex in cutout:
+            if vertex.is_arc and vertex.radius_mils > 0.0:
+                xs.extend(
+                    (
+                        vertex.center_x_mils - vertex.radius_mils,
+                        vertex.center_x_mils + vertex.radius_mils,
+                    )
+                )
+                ys.extend(
+                    (
+                        vertex.center_y_mils - vertex.radius_mils,
+                        vertex.center_y_mils + vertex.radius_mils,
+                    )
+                )
+        if xs and ys:
+            result.append((min(xs), min(ys), max(xs), max(ys)))
+    return result
+
+
+def _pad_opening_bounds(
+    renderer: BoardSubstrateRenderer,
+    pcbdoc: AltiumPcbDoc,
+    side: str,
+    layer: PcbLayer,
+) -> list[tuple[float, float, float, float]]:
+    result = []
+    for pad in pcbdoc.pads:
+        if not _pad_is_open_on_side(renderer, pad, side, layer):
+            continue
+        diameter = float(pad.hole_size_mils)
+        slot_length = max(float(pad.slot_size or 0) / 10000.0, diameter)
+        radius = max(diameter, slot_length) * 0.5
+        center_x, center_y = pad.hole_center_mils(layer)
+        result.append(
+            (center_x - radius, center_y - radius, center_x + radius, center_y + radius)
+        )
+    return result
+
+
+def _pad_is_open_on_side(
+    renderer: BoardSubstrateRenderer,
+    pad: AltiumPcbPad,
+    side: str,
+    layer: PcbLayer,
+) -> bool:
+    return bool(
+        getattr(pad, "hole_size", 0) > 0
+        and not renderer._should_skip_primitive_for_svg(pad)
+        and pad._should_render_on_layer(layer)
+        and not bool(
+            getattr(pad, "is_plated", False)
+            and getattr(pad, f"is_tenting_{side}", False)
+        )
+    )
+
+
+def _via_opening_bounds(
+    renderer: BoardSubstrateRenderer,
+    pcbdoc: AltiumPcbDoc,
+    side: str,
+) -> list[tuple[float, float, float, float]]:
+    result = []
+    for via in pcbdoc.vias:
+        if not _via_is_open_on_side(renderer, via, side):
+            continue
+        radius = float(via.hole_size_mils) * 0.5
+        if radius > 0.0:
+            result.append(
+                (
+                    via.x_mils - radius,
+                    via.y_mils - radius,
+                    via.x_mils + radius,
+                    via.y_mils + radius,
+                )
+            )
+    return result
+
+
+def _via_is_open_on_side(
+    renderer: BoardSubstrateRenderer, via: AltiumPcbVia, side: str
+) -> bool:
+    return bool(
+        not renderer._should_skip_primitive_for_svg(via)
+        and _via_bore_is_mechanically_open(via)
+        and all(
+            via._spans_layer(layer) for layer in (PcbLayer.TOP, PcbLayer.BOTTOM)
+        )
+        and not bool(getattr(via, f"is_tent_{side}", False))
+    )
+
+
 def saved_board_core_color(pcbdoc: AltiumPcbDoc) -> str | None:
     """Read the saved 3D board-core COLORREF, not a fabrication attribute."""
 
@@ -232,6 +498,31 @@ class BoardSubstrateRenderer(PcbSvgRenderer):
         openings.extend(self._via_occlusion_openings(ctx, pcbdoc, side))
         return BoardMaterialDomain(path, tuple(openings))
 
+    def open_space_index(
+        self,
+        pcbdoc: AltiumPcbDoc,
+        side: str,
+        region_index: BoardRegionEnvelopeIndex,
+    ) -> _BoardOpenSpaceIndex:
+        """Build a conservative spatial index matching the occlusion mask policy."""
+
+        if side not in {"top", "bottom"}:
+            raise ValueError("board open-space side must be top or bottom")
+        layer = PcbLayer.TOP if side == "top" else PcbLayer.BOTTOM
+        bounds = _cutout_opening_bounds(pcbdoc)
+        bounds.extend(_pad_opening_bounds(self, pcbdoc, side, layer))
+        bounds.extend(_via_opening_bounds(self, pcbdoc, side))
+        material_geometry, arc_clearance, material_geometry_trusted = (
+            _board_material_geometry(pcbdoc)
+        )
+        return _BoardOpenSpaceIndex(
+            region_index,
+            tuple(bounds),
+            max(1e-3, arc_clearance),
+            material_geometry,
+            material_geometry_trusted,
+        )
+
     def _pad_occlusion_openings(
         self,
         ctx: PcbSvgRenderContext,
@@ -290,9 +581,10 @@ class BoardSubstrateRenderer(PcbSvgRenderer):
         pcbdoc: AltiumPcbDoc,
     ) -> list[str]:
         openings: list[str] = []
-        if pcbdoc.board is None:
+        outline = pcbdoc.board.outline if pcbdoc.board is not None else None
+        if outline is None:
             return openings
-        for cutout in pcbdoc.board.outline.cutouts:
+        for cutout in outline.cutouts:
             path = self._path_from_vertices(ctx, cutout)
             if path:
                 openings.append(f'<path d="{path}" fill="black" fill-rule="evenodd"/>')

@@ -89,6 +89,8 @@ class Timings:
     def patch(
         self, owner: object, name: str, label: str, *, event: bool = False
     ) -> None:
+        if not hasattr(owner, name):
+            return
         original: Callable = getattr(owner, name)
 
         @wraps(original)
@@ -232,6 +234,7 @@ class Timings:
         self.patch(toon, "render_board", "toon.variant", event=True)
         for name in (
             "model_tessellation",
+            "model_illustration_geometry",
             "mesh_hlr_projection",
             "mesh_illustration",
             "execute",
@@ -281,6 +284,7 @@ class Timings:
 
 def install_experiments(experiments: list[str]) -> None:
     """Process-local hypotheses only; production functions are never edited."""
+    from altium_cruncher import altium_cruncher_pcb_illustration as illustration
     from altium_cruncher.altium_cruncher_pcb_illustration import IllustrationJob
     from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 
@@ -322,6 +326,39 @@ def install_experiments(experiments: list[str]) -> None:
             return cache[key][1]
 
         PcbSvgCompositeRenderer._resolved_layer_stack_safe = stack
+
+    if "omit-aperture-svg" in experiments:
+
+        def surface_only(surface: object, _aperture: object) -> object:
+            return surface
+
+        illustration._with_aperture_projection = surface_only
+
+    if "uncut-only" in experiments:
+
+        def direct_uncut(
+            _job: object,
+            _component: object,
+            _source: object,
+            uncut: object,
+            _side: object,
+            _illustrate: object,
+        ) -> object:
+            return uncut
+
+        def mesh_uncut(
+            job: object, component: object, side: object, illustrate: object
+        ) -> object:
+            return job._render_mesh_projection(
+                component,
+                side,
+                illustrate,
+                clipping=None,
+                resolution=None,
+            )
+
+        IllustrationJob._apply_direct_visibility = direct_uncut
+        IllustrationJob._render_meshes = mesh_uncut
 
 
 def source_fingerprint() -> dict:
@@ -400,7 +437,12 @@ def main() -> int:
         "--experiment",
         action="append",
         default=[],
-        choices=("variant-model-cache", "resolved-stack"),
+        choices=(
+            "variant-model-cache",
+            "resolved-stack",
+            "omit-aperture-svg",
+            "uncut-only",
+        ),
     )
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()

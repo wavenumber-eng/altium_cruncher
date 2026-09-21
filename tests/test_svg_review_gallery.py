@@ -46,6 +46,8 @@ def test_review_gallery_embeds_vector_modal_and_offline_pan_zoom(tmp_path):
     assert "window.svgPanZoom(svg" in text
     assert "mouseWheelZoomEnabled: true" in text
     assert "maxZoom: 100" in text
+    assert "background: #fff;" in text
+    assert "background-image: linear-gradient" not in text
     assert "#review=" in text
     assert "grid-template-columns: repeat(auto-fit" in text
     assert "top%20view.svg?v=" in text
