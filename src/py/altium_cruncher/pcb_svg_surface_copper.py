@@ -113,13 +113,13 @@ class PcbSvgSurfaceCopperMixin:
     ) -> list[str]:
         layer = ref.legacy_layer
         if layer is None:
-            return self._render_a0_v7_layer(
+            return self._render_v7_layer(
                 ctx,
                 pcbdoc,
                 ref,
                 board_clip_id=clip_id,
             )
-        return self._render_a0_physical_layer(
+        return self._render_physical_layer(
             ctx,
             pcbdoc,
             layer,

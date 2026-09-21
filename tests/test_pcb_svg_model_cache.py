@@ -1,7 +1,9 @@
 """Persistent results must preserve appearance, warning context, and rebuildability."""
 
 from dataclasses import asdict, replace
+from pathlib import Path
 from types import SimpleNamespace
+import xml.etree.ElementTree as ET
 
 import geometer as g
 import pytest
@@ -12,12 +14,42 @@ from altium_cruncher.altium_cruncher_pcb_illustration import (
     IllustrationSymbol,
     ModelGeometryError,
 )
-from altium_cruncher.pcb_svg_model_cache import PcbSvgModelCache
+from altium_cruncher.pcb_illustration_model_geometry import IllustrationProjection
+from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
+    SVG,
+    _aperture_symbol_definition,
+    _illustration_instance_opacity,
+    _surface_symbol_definition,
+)
+from altium_cruncher.pcb_svg_model_cache import (
+    _CACHE_POLICY_FILES,
+    PcbSvgModelCache,
+)
 from altium_cruncher import altium_cruncher_pcb_illustration as illustration
 
 
 def cache(path, identity="a" * 64, **kwargs):
     return PcbSvgModelCache(path, identity=identity, **kwargs)
+
+
+def test_native_cache_namespace_declares_every_artwork_policy_module():
+    expected = {
+        "altium_cruncher_pcb_illustration.py",
+        "altium_cruncher_pcb_svg_component_layers.py",
+        "altium_cruncher_pcb_svg_substrate.py",
+        "pcb_board_region_envelope_index.py",
+        "pcb_component_clipping.py",
+        "pcb_direct_projection_memo.py",
+        "pcb_direct_projection_prewarm.py",
+        "pcb_direct_projection_runtime.py",
+        "pcb_illustration_model_geometry.py",
+        "pcb_model_rotation.py",
+        "pcb_svg_component_cache.py",
+    }
+
+    assert set(_CACHE_POLICY_FILES) == expected
+    package = Path(illustration.__file__).parent
+    assert all((package / name).is_file() for name in _CACHE_POLICY_FILES)
 
 
 def mesh():
@@ -30,11 +62,110 @@ def mesh():
     )
 
 
+def test_projection_can_defer_authored_opacity_to_the_component_instance():
+    projection = IllustrationProjection(
+        """<svg xmlns="http://www.w3.org/2000/svg">
+        <style>.paint { fill: #123456; opacity: 0.75; }</style>
+        <path class="paint" d="M0 0L1 0L0 1Z"/>
+        <path class="paint" d="M1 1L1 0L0 1Z"/>
+        </svg>""",
+        0,
+        0,
+        1,
+    )
+
+    symbol = projection.group("part", opaque_paint=True)
+    paths = tuple(symbol.iter("{http://www.w3.org/2000/svg}path"))
+
+    assert len(paths) == 2
+    assert all(path.get("fill") == "#123456" for path in paths)
+    assert all("opacity" not in path.attrib for path in paths)
+
+
+def test_instance_opacity_requires_one_value_for_every_body():
+    assert (
+        _illustration_instance_opacity(
+            SimpleNamespace(bodies=({"opacity": 0.75}, {"opacity": 0.75}))
+        )
+        == 0.75
+    )
+
+
+def test_svg_definitions_reuse_exact_projection_content_not_wrapper_identity():
+    svg = '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0L1 1"/></svg>'
+    first = IllustrationSymbol(svg, -0.0, 2, 0.5, {}, ())
+    second = IllustrationSymbol(svg, -0.0, 2, 0.5, {}, ())
+    aperture = IllustrationProjection(svg, -0.0, 2, 0.5)
+    first = replace(first, aperture=aperture)
+    second = replace(
+        second,
+        aperture=IllustrationProjection(svg, -0.0, 2, 0.5),
+    )
+    definitions = ET.Element(f"{{{SVG}}}defs")
+    surface_ids = {}
+    aperture_ids = {}
+
+    assert _surface_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        first,
+        opaque_paint=False,
+    ) == _surface_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        second,
+        opaque_paint=False,
+    )
+    assert _aperture_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        first,
+        opaque_paint=False,
+    ) == _aperture_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        second,
+        opaque_paint=False,
+    )
+    assert len(definitions) == 2
+
+    opaque_id = _surface_symbol_definition(
+        definitions,
+        surface_ids,
+        aperture_ids,
+        "ILLUSTRATION_TOP",
+        second,
+        opaque_paint=True,
+    )
+    assert opaque_id != next(iter(surface_ids.values()))
+    assert len(definitions) == 3
+    assert (
+        _illustration_instance_opacity(
+            SimpleNamespace(bodies=({"opacity": 0.75}, {"opacity": 0.5}))
+        )
+        == 1.0
+    )
+
+
 def test_placed_geometry_reuses_arrays_but_preserves_instance_face_ids(monkeypatch):
     job = IllustrationJob(None)
-    raw = (mesh(), replace(mesh(), id="invisible", materials=(
-        g.MeshIllustrationMaterial(color=(1, 0, 0), opacity=0),
-    )), replace(mesh(), id="last"))
+    raw = (
+        mesh(),
+        replace(
+            mesh(),
+            id="invisible",
+            materials=(g.MeshIllustrationMaterial(color=(1, 0, 0), opacity=0),),
+        ),
+        replace(mesh(), id="last"),
+    )
     matrix = illustration._translation(0, 0, 2.54)
     calls = []
     original = illustration._placed_meshes
@@ -56,25 +187,31 @@ def test_placed_geometry_reuses_arrays_but_preserves_instance_face_ids(monkeypat
         appearance = [asdict(m) for m in meshes]
         for value in appearance:
             value.pop("id")
-        expected = illustration._digest(dict(
-            renderer_contract="geometer-b0-half-space-v4-aperture-composite",
-            meshes=appearance,
-            line_width_mm=.025,
-            side="top",
-            illustrate=True,
-            clipping=None,
-        ))
+        expected = illustration._digest(
+            dict(
+                renderer_contract="geometer-b0-half-space-v5-scoped-apertures",
+                meshes=appearance,
+                line_width_mm=0.025,
+                side="top",
+                illustrate=True,
+                clipping=None,
+            )
+        )
         key, warning_key = job._render_keys(part, "top", True)
         assert key == expected
-        assert warning_key == illustration._digest(dict(
-            appearance=expected, mesh_ids=[m.id for m in meshes]))
+        assert warning_key == illustration._digest(
+            dict(appearance=expected, mesh_ids=[m.id for m in meshes])
+        )
     assert len(job._appearance_keys) == 1
 
 
-@pytest.mark.parametrize("change", ["offset", "rotation", "mirror", "color", "opacity", "model", "source_matrix"])
+@pytest.mark.parametrize(
+    "change",
+    ["offset", "rotation", "mirror", "color", "opacity", "model", "source_matrix"],
+)
 def test_placed_geometry_cache_separates_changed_body_inputs(change):
     job = IllustrationJob(None)
-    raw = (replace(mesh(), normals=(0., 0., 1.) * 3),)
+    raw = (replace(mesh(), normals=(0.0, 0.0, 1.0) * 3),)
     matrix = illustration._translation(0, 0)
     job._place_body(raw, matrix, None, 1, 0)
     color, opacity = None, 1
@@ -85,13 +222,15 @@ def test_placed_geometry_cache_separates_changed_body_inputs(change):
     elif change == "mirror":
         matrix[0][0] = -1
     elif change == "color":
-        color = (1., 0., 0.)
+        color = (1.0, 0.0, 0.0)
     elif change == "opacity":
-        opacity = .5
+        opacity = 0.5
     elif change == "model":
         raw = (replace(raw[0], positions=tuple(v * 2 for v in raw[0].positions)),)
     elif change == "source_matrix":
-        raw = (replace(raw[0], matrix=(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 3, 1)),)
+        raw = (
+            replace(raw[0], matrix=(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 3, 1)),
+        )
     actual = job._place_body(raw, matrix, color, opacity, 7)
     assert actual == illustration._placed_meshes(raw, matrix, color, opacity, 7)
     assert len(job._placements) == 2
@@ -103,13 +242,45 @@ def test_appearance_keys_keep_body_order_side_width_and_line_only_mode():
     low = job._place_body(raw, illustration._translation(0, 0), None, 1, 0)
     high = job._place_body(raw, illustration._translation(0, 0, 3), (1, 0, 0), 1, 1)
     part = IllustrationComponent("D3", (0, 0), low + high, ())
-    keys = {job._render_keys(part, "top", True)[0],
-            job._render_keys(part, "bottom", True)[0],
-            job._render_keys(part, "top", False)[0],
-            job._render_keys(replace(part, meshes=high + low), "top", True)[0]}
-    job.line_width_mm = .05
+    keys = {
+        job._render_keys(part, "top", True)[0],
+        job._render_keys(part, "bottom", True)[0],
+        job._render_keys(part, "top", False)[0],
+        job._render_keys(replace(part, meshes=high + low), "top", True)[0],
+    }
+    job.line_width_mm = 0.05
     keys.add(job._render_keys(part, "top", True)[0])
     assert len(keys) == 5
+
+
+def test_clipping_policy_and_region_tolerance_participate_in_cache_identity(
+    monkeypatch,
+):
+    region = SimpleNamespace(
+        source_index=0,
+        name="Rigid",
+        outline_mils=((0.0, 0.0), (100.0, 0.0), (100.0, 100.0)),
+        holes_mils=(),
+        total_thickness_mils=40.0,
+    )
+
+    def render_key(*, query_tolerance=1e-6):
+        region_index = SimpleNamespace(
+            regions=(region,), invalid_regions=(), tolerance_mils=query_tolerance
+        )
+        job = IllustrationJob(None, region_index=region_index)
+        part = IllustrationComponent("U1", (10.0, 20.0), (mesh(),), ())
+        return job._render_keys(part, "top", True)[0]
+
+    baseline = render_key()
+    assert render_key(query_tolerance=2e-6) != baseline
+
+    monkeypatch.setattr(illustration, "COMPONENT_CLIP_TOLERANCE_MM", 2e-6)
+    tolerance_key = render_key()
+    assert tolerance_key != baseline
+
+    monkeypatch.setattr(illustration, "COMPONENT_CLIP_CAP_POLICY", "future-cap")
+    assert render_key() != tolerance_key
 
 
 def test_disk_reuse_preserves_meshes_svg_and_rebinds_partial_warnings(
@@ -229,6 +400,25 @@ def test_corrupt_and_unwritable_cache_are_misses(tmp_path, caplog):
     assert not list(tmp_path.rglob("*.tmp"))
 
 
+def test_store_defers_full_cache_scan_until_command_prune(tmp_path, monkeypatch):
+    store = cache(tmp_path)
+    scans = 0
+    original_entries = store._entries
+
+    def counted_entries():
+        nonlocal scans
+        scans += 1
+        yield from original_entries()
+
+    monkeypatch.setattr(store, "_entries", counted_entries)
+    for digit in "123":
+        store.store("illustration", digit * 64, {"result": digit * 100})
+
+    assert scans == 0
+    store.prune()
+    assert scans == 1
+
+
 @pytest.mark.parametrize("kind", ["illustration", "component-artwork"])
 def test_eviction_is_bounded_and_only_removes_generated_entries(tmp_path, kind):
     store = cache(tmp_path)
@@ -287,10 +477,14 @@ def test_warning_bearing_artwork_reuses_only_matching_request_ids(
     assert calls == ["body-1", "body-2"]
 
 
-@pytest.mark.parametrize("field,value", [("mm_per_unit", "bad"), ("mm_per_unit", 0), ("x_mm", True)])
+@pytest.mark.parametrize(
+    "field,value", [("mm_per_unit", "bad"), ("mm_per_unit", 0), ("x_mm", True)]
+)
 def test_invalid_cached_symbol_geometry_is_a_rebuildable_miss(tmp_path, field, value):
     disk = cache(tmp_path)
-    payload = asdict(IllustrationSymbol('<svg xmlns="http://www.w3.org/2000/svg"/>', 0, 0, 1, {}, ()))
+    payload = asdict(
+        IllustrationSymbol('<svg xmlns="http://www.w3.org/2000/svg"/>', 0, 0, 1, {}, ())
+    )
     payload[field] = value
     key = "b" * 64
     disk.store("illustration", key, payload)
@@ -298,15 +492,22 @@ def test_invalid_cached_symbol_geometry_is_a_rebuildable_miss(tmp_path, field, v
     assert disk.counts["invalid"] == 1
 
 
-@pytest.mark.parametrize("field,value", [
-    ("indices", [0, 1, 999]), ("indices", [0, True, 2]),
-    ("triangle_material_indices", [3]), ("normals", [0, 0, 1]),
-])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("indices", [0, 1, 999]),
+        ("indices", [0, True, 2]),
+        ("triangle_material_indices", [3]),
+        ("normals", [0, 0, 1]),
+    ],
+)
 def test_invalid_cached_mesh_geometry_is_a_rebuildable_miss(tmp_path, field, value):
     disk = cache(tmp_path)
     payload = asdict(mesh())
     payload[field] = value
     key = "c" * 64
     disk.store("tessellation", key, dict(meshes=[payload], warnings=[]))
-    assert disk.load("tessellation", key, illustration._decode_cached_tessellation) is None
+    assert (
+        disk.load("tessellation", key, illustration._decode_cached_tessellation) is None
+    )
     assert disk.counts["invalid"] == 1

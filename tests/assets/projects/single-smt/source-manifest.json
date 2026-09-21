@@ -1,0 +1,19 @@
+{
+  "source_corpus": "user-authored projection_test/single-smt",
+  "imported": "2026-09-20",
+  "import_authorization": "Repository owner explicitly approved copying these focused test boards into Altium Cruncher on 2026-09-20.",
+  "scope": "PcbDoc-only fixture. Project and schematic files are intentionally excluded.",
+  "fixture_purpose": "Paired top- and bottom-mounted SMT boards for affine placement and opposite-side model-leak regression coverage.",
+  "files": [
+    {
+      "path": "single-smt-bottom.PcbDoc",
+      "bytes": 1287168,
+      "sha256": "73c3b08368c6a98e0e8354b10be7cccc8479804c492c9f2c8af073b88595d934"
+    },
+    {
+      "path": "single-smt-top.PcbDoc",
+      "bytes": 1287168,
+      "sha256": "ed2624d3fa0d231d7f623407ad3fb05b5534c9a4a384cdae0282ecf8fc52360e"
+    }
+  ]
+}

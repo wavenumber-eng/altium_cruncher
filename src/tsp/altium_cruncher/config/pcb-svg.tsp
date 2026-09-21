@@ -355,7 +355,7 @@ model SilkscreenComponentGraphicsStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("SVG color value, usually #RRGGBB.")
+  @doc("SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.")
   color?: string;
 }
 
@@ -364,7 +364,7 @@ model SilkscreenDesignatorsStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("SVG color value, usually #RRGGBB.")
+  @doc("SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.")
   color?: string;
 }
 
@@ -373,7 +373,7 @@ model SilkscreenBoardGraphicsStyle extends Record<unknown> {
   @extension("x-acr-input", "boolean")
   enabled?: boolean;
 
-  @doc("SVG color value, usually #RRGGBB.")
+  @doc("SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.")
   color?: string;
 }
 
@@ -623,6 +623,29 @@ model AssemblyOptions {
   dnp_designator_color?: string | null;
 }
 
+model AssemblyOptionsA1 {
+  @doc("Projection mode for fitted components. Options: bounding_box, detail, none, outline, simple.")
+  @extension("x-acr-nullable", true)
+  @extension("x-acr-input", "enum")
+  default_projection?: ProjectionMode;
+
+  @doc("Projection mode for DNP components. Options: bounding_box, detail, none, outline, simple.")
+  @extension("x-acr-nullable", true)
+  @extension("x-acr-input", "enum")
+  dnp_projection?: ProjectionMode;
+
+  @doc("Text color for fitted component designators.")
+  designator_color?: string | null;
+
+  @doc("Text color for DNP component designators.")
+  dnp_designator_color?: string | null;
+
+  @doc("Hide authored physical silkscreen designators when projected assembly designators are requested. Defaults to false so --assembly preserves the board as authored.")
+  @extension("x-acr-nullable", true)
+  @extension("x-acr-input", "boolean")
+  hide_silkscreen_designators?: boolean;
+}
+
 model DnpOptions {
   @doc("SVG color value, usually #RRGGBB.")
   color?: string | null;
@@ -763,7 +786,7 @@ model PcbSvgConfigInput extends Record<unknown> {
   global?: GlobalOptions | null;
 
   @doc("Assembly projection defaults for component virtual layers.")
-  assembly?: AssemblyOptions | null;
+  assembly?: AssemblyOptionsA1 | null;
 
   @doc("DNP marker style.")
   dnp?: DnpOptions | null;

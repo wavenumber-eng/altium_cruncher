@@ -645,6 +645,57 @@ def _fallback_film_color(
     return saved_soldermask_color(pcbdoc, side) or DEFAULT_SOLDERMASK_FILM_COLOR
 
 
+def _relative_luminance(color: str) -> float | None:
+    """Return CSS sRGB luminance for simple authored hex colors."""
+
+    value = color.strip().casefold()
+    value = {"black": "#000000", "white": "#ffffff"}.get(value, value)
+    if not value.startswith("#") or len(value) not in {4, 5, 7, 9}:
+        return None
+    digits = value[1:]
+    if len(digits) in {3, 4}:
+        digits = "".join(channel * 2 for channel in digits)
+    try:
+        channels = tuple(int(digits[offset : offset + 2], 16) / 255 for offset in (0, 2, 4))
+    except ValueError:
+        return None
+    linear = tuple(
+        channel / 12.92
+        if channel <= 0.04045
+        else ((channel + 0.055) / 1.055) ** 2.4
+        for channel in channels
+    )
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def contrasting_silkscreen_color(
+    pcbdoc: AltiumPcbDoc,
+    side: Literal["top", "bottom"],
+    film_style: Mapping[str, object],
+    appearance_index: BoardSurfaceAppearanceIndex | None = None,
+) -> str:
+    """Choose one black/near-white ink with the best worst-case film contrast."""
+
+    appearances = _valid_appearances(appearance_index)
+    colors = tuple(
+        _film_color(pcbdoc, side, appearance.surface(side), film_style)
+        for appearance in appearances
+        if appearance.surface(side).has_film
+    )
+    if not colors:
+        colors = (_fallback_film_color(pcbdoc, side, film_style),)
+    luminances = tuple(
+        luminance
+        for color in colors
+        if (luminance := _relative_luminance(color)) is not None
+    )
+    if not luminances:
+        return "#F5F5F5"
+    black_min = min((luminance + 0.05) / 0.05 for luminance in luminances)
+    white_min = min(1.05 / (luminance + 0.05) for luminance in luminances)
+    return "#000000" if black_min >= white_min else "#F5F5F5"
+
+
 def _region_path(
     ctx: PcbSvgRenderContext,
     appearance: BoardRegionAppearance,

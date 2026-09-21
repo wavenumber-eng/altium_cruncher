@@ -162,8 +162,8 @@ def test_cutout_layer_renderer_skips_boards_without_cutouts() -> None:
 
 @pytest.mark.parametrize("bottom", [False, True])
 def test_autodoc_cutout_styles_fit_labels_and_keep_bottom_text_readable(bottom, tmp_path) -> None:
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
-        PcbSvgA0Renderer,
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+        PcbSvgCompositeRenderer,
         write_or_update_view_svg,
     )
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
@@ -182,7 +182,7 @@ def test_autodoc_cutout_styles_fit_labels_and_keep_bottom_text_readable(bottom, 
     }
     view = PcbSvgViewConfig(name="cutouts", layers=["BOARD_CUTOUTS"], styles={"board_cutouts": style})
     config = PcbSvgConfig.default()
-    svg = PcbSvgA0Renderer(config).render_view_svg(
+    svg = PcbSvgCompositeRenderer(config).render_view_svg(
         pcb, view, project_parameters=None, layers=view.layers,
         group_id="cutouts", mirror=bottom, styles=config.resolved_styles_for_view(view),
     )
@@ -216,7 +216,7 @@ def test_autodoc_cutout_styles_fit_labels_and_keep_bottom_text_readable(bottom, 
     ("label_max_font_size_mm", float("inf")), ("label_max_font_size_mm", -1),
 ])
 def test_cutout_presentation_rejects_invalid_values_on_render(field, value) -> None:
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
 
     config = PcbSvgConfig.default()
@@ -224,7 +224,7 @@ def test_cutout_presentation_rejects_invalid_values_on_render(field, value) -> N
     styles = config.resolved_styles_for_view(view)
     styles["board_cutouts"][field] = value
     with pytest.raises(ValueError, match=f"board_cutouts.{field}"):
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             _pcbdoc_with_cutout(), view, project_parameters=None, layers=view.layers,
             group_id="cutouts", mirror=False, styles=styles,
         )

@@ -12,7 +12,7 @@ export type PcbSvgConfigInput = RecordUnknown & {
   /**
    * Assembly projection defaults for component virtual layers.
    */
-  assembly?: AssemblyOptions | null;
+  assembly?: AssemblyOptionsA1 | null;
   /**
    * DNP marker style.
    */
@@ -456,7 +456,7 @@ export type SilkscreenComponentGraphicsStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * SVG color value, usually #RRGGBB.
+   * SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.
    */
   color?: string;
 };
@@ -466,7 +466,7 @@ export type SilkscreenDesignatorsStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * SVG color value, usually #RRGGBB.
+   * SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.
    */
   color?: string;
 };
@@ -476,7 +476,7 @@ export type SilkscreenBoardGraphicsStyle = RecordUnknown & {
    */
   enabled?: boolean | number | string;
   /**
-   * SVG color value, usually #RRGGBB.
+   * SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film.
    */
   color?: string;
 };
@@ -587,7 +587,7 @@ export interface RecordStyleObject {
 export interface StyleObject {
   [k: string]: unknown;
 }
-export interface AssemblyOptions {
+export interface AssemblyOptionsA1 {
   /**
    * Projection mode for fitted components. Options: bounding_box, detail, none, outline, simple.
    */
@@ -638,6 +638,10 @@ export interface AssemblyOptions {
    * Text color for DNP component designators.
    */
   dnp_designator_color?: string | null;
+  /**
+   * Hide authored physical silkscreen designators when projected assembly designators are requested. Defaults to false so --assembly preserves the board as authored.
+   */
+  hide_silkscreen_designators?: boolean | null | number | string;
 }
 export interface DnpOptions {
   /**

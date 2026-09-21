@@ -233,6 +233,28 @@ class BoardRegionEnvelopeIndex:
             ),
         )
 
+    def fully_contains_bounds(
+        self,
+        min_x_mils: float,
+        min_y_mils: float,
+        max_x_mils: float,
+        max_y_mils: float,
+        *,
+        clearance_mils: float = 0.0,
+    ) -> bool:
+        """Return whether valid board material strictly contains a bounds box."""
+
+        if not isfinite(clearance_mils) or clearance_mils < 0.0:
+            raise ValueError("clearance_mils must be finite and non-negative")
+        query = self.query_bounds(min_x_mils, min_y_mils, max_x_mils, max_y_mils)
+        if query.status in {BoardRegionQueryStatus.INVALID, BoardRegionQueryStatus.OUTSIDE}:
+            return False
+        geometry = box(min_x_mils, min_y_mils, max_x_mils, max_y_mils)
+        coverage = unary_union(tuple(item._geometry for item in query.matches))
+        if clearance_mils > 0.0:
+            coverage = coverage.buffer(-clearance_mils)
+        return bool(not coverage.is_empty and coverage.covers(geometry))
+
     def _query_geometry(
         self,
         query_geometry: BaseGeometry,
@@ -445,10 +467,8 @@ def _canonical_region_key(region: BoardRegionEnvelope) -> tuple[str, str, int]:
 
 
 def _envelope_signature(region: BoardRegionEnvelope) -> tuple[object, ...]:
-    envelope = region.envelope
-    return (
-        str(envelope.z_zero),
-        round(float(envelope.total_thickness_mils), _ENVELOPE_COMPARE_DIGITS),
-        round(float(envelope.top_z_mils), _ENVELOPE_COMPARE_DIGITS),
-        round(float(envelope.bottom_z_mils), _ENVELOPE_COMPARE_DIGITS),
-    )
+    # Cruncher's clipping coordinate system deliberately normalizes every
+    # region to top Z=0 and bottom Z=-thickness. Source stack Z-zero choices
+    # remain diagnostic metadata, but cannot make equal physical slabs
+    # ambiguous at a shared boundary.
+    return (round(float(region.total_thickness_mils), _ENVELOPE_COMPARE_DIGITS),)

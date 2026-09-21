@@ -44,6 +44,7 @@ const configComments = #{
   `assembly.dnp_projection`: "Projection mode for DNP components. Options: bounding_box, detail, none, outline, simple.",
   `assembly.designator_color`: "Text color for fitted component designators.",
   `assembly.dnp_designator_color`: "Text color for DNP component designators.",
+  `assembly.hide_silkscreen_designators`: "Hide authored physical silkscreen designators when projected assembly designators are requested. Default: false.",
   dnp: "DNP marker style.",
   diodes: "Diode/cathode marker detection policy.",
   `diodes.enabled`: "Enable diode/cathode marker detection.",
@@ -384,6 +385,7 @@ const configDefaults = #{
     dnp_projection: "bounding_box",
     designator_color: "#FF0000",
     dnp_designator_color: "#FF0000",
+    hide_silkscreen_designators: false,
   },
   dnp: #{
     color: "#FF0000",
@@ -426,13 +428,13 @@ const toonPreset = #{
         color: "#555555",
         outline_width_mm: 0.24,
         outline_opacity: 0.25,
-        hatch: true,
+        hatch: false,
         hatch_spacing_mm: 1.0,
         hatch_angle_deg: 45.0,
         hatch_line_width_mm: 0.12,
         hatch_color: "#777777",
         hatch_opacity: 0.18,
-        label: "CUTOUT",
+        label: "",
         label_color: "#444444",
         label_opacity: 0.25,
         label_max_font_size_mm: 3.0,
@@ -446,18 +448,18 @@ const toonPreset = #{
       drills: #{
         plated_color: "#D3D3D3",
         non_plated_color: "#D3D3D3",
-        outline: false,
+        outline: true,
         respect_tenting: true,
       },
       slots: #{
         plated_color: "#D3D3D3",
         non_plated_color: "#D3D3D3",
-        outline: false,
+        outline: true,
         respect_tenting: true,
       },
-      silkscreen_component_graphics: #{ enabled: true, color: "#F5F5F5" },
-      silkscreen_designators: #{ enabled: true, color: "#F5F5F5" },
-      silkscreen_board_graphics: #{ enabled: true, color: "#F5F5F5" },
+      silkscreen_component_graphics: #{ enabled: true, color: "auto" },
+      silkscreen_designators: #{ enabled: true, color: "auto" },
+      silkscreen_board_graphics: #{ enabled: true, color: "auto" },
       silkscreen_surface: #{ clip_mode: "film" },
     },
   },
@@ -477,6 +479,7 @@ const toonPreset = #{
         "DRILLS",
         "SLOTS",
         "BOARD_OUTLINE",
+        "BEND_LINES",
         "ILLUSTRATION_TOP"
       ],
     },
@@ -494,6 +497,7 @@ const toonPreset = #{
         "DRILLS",
         "SLOTS",
         "BOARD_OUTLINE",
+        "BEND_LINES",
         "ILLUSTRATION_BOTTOM"
       ],
     }
@@ -501,7 +505,7 @@ const toonPreset = #{
 };
 
 const toonThemes = #{
-  saved: #{ mask: "auto", silk: "#F5F5F5" },
+  saved: #{ mask: "auto", silk: "auto" },
   white: #{ mask: "#EEEEEE", silk: "#000000" },
   black: #{ mask: "#000000", silk: "#F5F5F5" },
   blue: #{ mask: "#1D4F91", silk: "#F5F5F5" },

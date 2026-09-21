@@ -66,7 +66,7 @@ def _rt_pcb():
 def test_rt_j1_designator_centers_on_electrical_pads(mirror):
     from dataclasses import replace
     from altium_monkey.altium_record_types import PcbLayer
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
 
     pcb = _rt_pcb()
@@ -75,7 +75,7 @@ def test_rt_j1_designator_centers_on_electrical_pads(mirror):
     assert {pad.designator for pad in selected} == set("123456")
     assert all(not pad._should_render_on_layer(PcbLayer.TOP) for pad in selected)
     assert all(pad._should_force_svg_copper_render(PcbLayer.TOP) for pad in selected)
-    renderer = PcbSvgA0Renderer(PcbSvgConfig.default())
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
     renderer.options = replace(renderer.options, mirror_x=mirror)
     ctx = renderer._build_context(pcb)
     # This exercises the actual layer adapter without requesting unused models.
@@ -106,11 +106,11 @@ def test_model_less_pad_selection_retains_plated_holes_and_mechanical_fallback()
 def test_designator_stroke_preserves_fit_and_text_fill(mirror):
     from dataclasses import replace
     import xml.etree.ElementTree as ET
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
 
     pcb = _rt_pcb()
-    renderer = PcbSvgA0Renderer(PcbSvgConfig.default())
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
     renderer.options = replace(renderer.options, mirror_x=mirror)
     ctx = renderer._build_context(pcb)
     style = {"color": "#FF0000", "stroke_color": "#FFFFFF", "stroke_width_mm": 0.1}

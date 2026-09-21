@@ -1,0 +1,16 @@
+{
+  "schema": "altium-cruncher.test-asset-source.a0",
+  "fixture": "toon-analytic-bodies",
+  "authorization": "Generated repository test fixture; no third-party design content.",
+  "generator": "tests/support_scripts/generate_toon_analytic_bodies.py",
+  "command": "uv run python tests/support_scripts/generate_toon_analytic_bodies.py",
+  "altium_monkey_version": "2026.9.19",
+  "files": [
+    {
+      "path": "input/toon_analytic_bodies.PcbDoc",
+      "bytes": 228352,
+      "sha256": "fddc0d1b356757dc3a686ad24e56e22b50327be6bd921f33f810cc9259b93ce6"
+    }
+  ],
+  "semantic_inventory": "semantic-inventory.json"
+}

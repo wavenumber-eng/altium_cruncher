@@ -10,7 +10,10 @@ from altium_cruncher.contracts.pcb_svg import (
     decode_pcb_svg_config,
     encode_pcb_svg_config,
 )
-from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
+from altium_cruncher.altium_cruncher_pcb_svg_config import (
+    PcbSvgConfig,
+    resolve_pcb_svg_config,
+)
 from altium_cruncher.pcb_illustration_config import resolve_illustration_config
 
 VECTORS = json.loads(
@@ -63,6 +66,54 @@ def test_a0_is_accepted_as_an_additive_predecessor_and_resolves_to_a1():
     assert resolved.global_options.styles["board_substrate"]["color"] == "#123456"
 
 
+@pytest.mark.parametrize("schema", ["pcb.svg.config.a0", "pcb.svg.config.a1"])
+def test_versioned_config_boundary_normalizes_each_supported_schema(schema):
+    authored = {
+        "schema": schema,
+        "global": {"styles": {"drills": {"outline": True}}},
+    }
+
+    resolved = resolve_pcb_svg_config(authored)
+
+    assert authored["schema"] == schema
+    assert resolved.schema == "pcb.svg.config.a1"
+    assert resolved.global_options.styles["drills"]["outline"] is True
+
+
+def test_versioned_config_boundary_rejects_unknown_schema():
+    with pytest.raises(ValueError, match="pcb-svg config"):
+        resolve_pcb_svg_config({"schema": "pcb.svg.config.b0"})
+
+
+def test_versioned_config_boundary_preserves_authored_presence_and_semantics():
+    authored = {"global": {"styles": {"slots": {"opacity": 0.5}}}}
+    original = deepcopy(authored)
+    implicit = resolve_pcb_svg_config(authored)
+    explicit_a1 = resolve_pcb_svg_config(
+        {"schema": "pcb.svg.config.a1", **deepcopy(authored)}
+    )
+    legacy_a0 = resolve_pcb_svg_config(
+        {"schema": "pcb.svg.config.a0", **deepcopy(authored)}
+    )
+
+    assert authored == original
+    assert implicit.to_dict() == explicit_a1.to_dict() == legacy_a0.to_dict()
+
+
+def test_version_named_renderer_import_remains_a_compatibility_alias():
+    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
+        PcbSvgA0Renderer,
+        render_pcb_svg_a0_to_output,
+    )
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+        PcbSvgCompositeRenderer,
+        render_pcb_svg_to_output,
+    )
+
+    assert PcbSvgA0Renderer is PcbSvgCompositeRenderer
+    assert render_pcb_svg_a0_to_output is render_pcb_svg_to_output
+
+
 def test_a0_schema_stays_frozen_while_a1_owns_additive_surface_fields():
     a0 = json.loads((CONTRACTS / "pcb_svg_config.a0.schema.json").read_text())
     a1 = json.loads((CONTRACTS / "pcb_svg_config.a1.schema.json").read_text())
@@ -75,13 +126,18 @@ def test_a0_schema_stays_frozen_while_a1_owns_additive_surface_fields():
     }
     assert "bend_lines" not in a0["$defs"]["StyleTableA0"]["properties"]
     assert "silkscreen_surface" not in a0["$defs"]["StyleTableA0"]["properties"]
-    assert "BEND_LINES" not in json.dumps(a0["$defs"]["LayerOutputOptionsA0"])
-    assert "SURFACE_COPPER_TOP" not in json.dumps(
-        a0["$defs"]["LayerOutputOptionsA0"]
+    assert (
+        "hide_silkscreen_designators"
+        not in a0["$defs"]["AssemblyOptions"]["properties"]
     )
+    assert "BEND_LINES" not in json.dumps(a0["$defs"]["LayerOutputOptionsA0"])
+    assert "SURFACE_COPPER_TOP" not in json.dumps(a0["$defs"]["LayerOutputOptionsA0"])
     assert "rigid_color" in a1["$defs"]["BoardSubstrateStyle"]["properties"]
     assert "bend_lines" in a1["$defs"]["StyleTable"]["properties"]
     assert "silkscreen_surface" in a1["$defs"]["StyleTable"]["properties"]
+    assert (
+        "hide_silkscreen_designators" in a1["$defs"]["AssemblyOptionsA1"]["properties"]
+    )
 
 
 def test_issue67_explicit_colors_override_additive_regional_fallbacks():

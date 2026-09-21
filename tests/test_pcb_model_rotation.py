@@ -15,6 +15,7 @@ from altium_cruncher.altium_cruncher_pcb_assembly_model_helper import (
 )
 from altium_cruncher.altium_cruncher_pcb_illustration import _step_matrix
 from altium_cruncher.pcb_model_rotation import resolve_model_z_rotation
+from altium_cruncher.pcb_illustration_model_geometry import transform_mesh
 
 
 def test_footprint_local_candidate_fixes_the_rectangular_ic_case():
@@ -56,8 +57,18 @@ def test_neither_match_is_unresolved_instead_of_guessing():
 @pytest.mark.parametrize(
     ("target", "current", "alternative", "reason"),
     [
-        ((0.0, 0.0, 0.0, 1.0), (0, 0, 0, 1, 1, 1), (0, 0, 0, 1, 1, 1), "invalid-authored-outline"),
-        ((0.0, 0.0, 1.0, 1.0), (0, 0, 0, math.nan, 1, 1), (0, 0, 0, 1, 1, 1), "invalid-candidate-bounds"),
+        (
+            (0.0, 0.0, 0.0, 1.0),
+            (0, 0, 0, 1, 1, 1),
+            (0, 0, 0, 1, 1, 1),
+            "invalid-authored-outline",
+        ),
+        (
+            (0.0, 0.0, 1.0, 1.0),
+            (0, 0, 0, math.nan, 1, 1),
+            (0, 0, 0, 1, 1, 1),
+            "invalid-candidate-bounds",
+        ),
     ],
 )
 def test_invalid_geometry_is_typed_as_unresolved(target, current, alternative, reason):
@@ -112,6 +123,111 @@ def test_full_affine_candidates_preserve_noncommuting_rotations_and_offsets(is_b
         assert matrix[2][3] == pytest.approx((-1 if is_bottom else 1) * 0.635)
 
 
+@pytest.mark.parametrize(
+    ("is_bottom", "expected"),
+    [
+        (
+            False,
+            (
+                (0.635, 0.508, 0.635),
+                (0.791912944900, 1.246217365146, -0.021059028991),
+                (-0.212092972853, 0.950124702544, 0.929888525962),
+                (1.142751733691, 1.017471166208, 1.329713831542),
+            ),
+        ),
+        (
+            True,
+            (
+                (0.635, 0.508, -0.635),
+                (1.057028241442, -0.117682598372, 0.021059028991),
+                (0.015211900939, -0.219257498771, -0.929888525962),
+                (1.296630467624, 0.225833707583, -1.329713831542),
+            ),
+        ),
+    ],
+)
+def test_step_affine_chain_matches_independent_basis_point_oracle(is_bottom, expected):
+    """Freeze transform order with noncommuting rotations and translations.
+
+    The expected points were independently calculated from the documented
+    column-vector contract.  This test intentionally does not call Cruncher's
+    matrix composition or point-transform helpers for the oracle.
+    """
+
+    helper = PcbAssemblyModelHelper()
+    component = SimpleNamespace(rotation="37")
+    body = SimpleNamespace(
+        properties={
+            "MODEL.2D.X": "125mil",
+            "MODEL.2D.Y": "-80mil",
+            "MODEL.2D.ROTATION": "11",
+            "MODEL.3D.ROTX": "23",
+            "MODEL.3D.ROTY": "41",
+            "MODEL.3D.ROTZ": "67",
+        },
+        model_3d_dz=250000,
+    )
+    matrix = _step_matrix(helper, body, component, (100.0, -100.0), is_bottom=is_bottom)
+
+    def apply(point):
+        vector = (*point, 1.0)
+        return tuple(
+            sum(float(matrix[row][column]) * vector[column] for column in range(4))
+            for row in range(3)
+        )
+
+    actual = tuple(
+        apply(point)
+        for point in (
+            (0.0, 0.0, 0.0),
+            (1.0, 0.0, 0.0),
+            (0.0, 1.0, 0.0),
+            (0.0, 0.0, 1.0),
+        )
+    )
+    for actual_point, expected_point in zip(actual, expected, strict=True):
+        assert actual_point == pytest.approx(expected_point, abs=1e-12)
+
+
+def test_mesh_root_nonuniform_scale_transforms_positions_and_normals_affinely():
+    root_scale = (
+        2.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+    )
+    diagonal = 1.0 / math.sqrt(2.0)
+    source = g.MeshIllustrationMesh(
+        id="source",
+        positions=(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0),
+        normals=(diagonal, diagonal, 0.0),
+        materials=(g.MeshIllustrationMaterial(color=(0.5, 0.5, 0.5)),),
+        matrix=root_scale,
+    )
+
+    transformed = transform_mesh(source, illustration._rotation_z(90.0), "placed")
+
+    assert transformed.matrix is None
+    assert transformed.positions == pytest.approx(
+        (0.0, 0.0, 0.0, 0.0, 2.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.5)
+    )
+    assert transformed.normals == pytest.approx(
+        (-2.0 / math.sqrt(5.0), 1.0 / math.sqrt(5.0), 0.0)
+    )
+
+
 def test_mesh_collection_uses_native_bounds_to_select_footprint_local_pose(monkeypatch):
     body = AltiumPcbComponentBody()
     body.component_index = 0
@@ -127,11 +243,21 @@ def test_mesh_collection_uses_native_bounds_to_select_footprint_local_pose(monke
             id="body",
             # The first vertex is an asymmetric pin-1 direction oracle.
             positions=(
-                4.0, 2.0, 0.0,
-                -5.0, -3.0, 0.0,
-                5.0, -3.0, 0.0,
-                5.0, 3.0, 0.0,
-                -5.0, 3.0, 0.0,
+                4.0,
+                2.0,
+                0.0,
+                -5.0,
+                -3.0,
+                0.0,
+                5.0,
+                -3.0,
+                0.0,
+                5.0,
+                3.0,
+                0.0,
+                -5.0,
+                3.0,
+                0.0,
             ),
             indices=(0, 1, 2, 0, 2, 3, 0, 3, 4),
             materials=(g.MeshIllustrationMaterial(color=(0.5, 0.5, 0.5)),),
@@ -239,4 +365,7 @@ def test_direct_path_retries_only_a_mismatched_current_candidate(monkeypatch):
     )
     matched_part = replace(part, direct=matched)
     assert job._render_direct(matched_part, "bottom", True) is current
-    assert calls == [current_source]
+    # The authored outline changes rotation selection, not the native request.
+    # Reuse the exact current-source projection and resolve this occurrence
+    # against its own outline.
+    assert calls == []

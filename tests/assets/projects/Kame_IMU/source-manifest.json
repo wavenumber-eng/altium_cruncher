@@ -1,0 +1,14 @@
+{
+  "source_corpus": "repository-owner-supplied/Sample - Kame_IMU",
+  "imported": "2026-09-20",
+  "import_authorization": "Repository owner explicitly requested this test-fixture copy and the Kame_IMU folder name on 2026-09-20.",
+  "sanitization": "Only the PcbDoc required by Toon is retained. Project, schematic, output-job, BOM, drawing, HTML report, variants, and project-structure files are intentionally excluded.",
+  "fixture_purpose": "PcbDoc-only rigid-flex qualification board with two equal-thickness rigid regions, one thinner flex region, regional materials, bend-line metadata, and component placement across a multi-region design.",
+  "files": [
+    {
+      "path": "Kame_IMU.PcbDoc",
+      "bytes": 4874240,
+      "sha256": "85b7af686f75ededb7ff1716d2a2a599b5e3d97c70eedd9369dddf99c9136dc0"
+    }
+  ]
+}

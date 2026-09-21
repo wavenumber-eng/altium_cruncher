@@ -6,7 +6,11 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import Literal, cast
 
-from .altium_cruncher_pcb_svg_config import PcbSvgConfig, PcbSvgViewConfig
+from .altium_cruncher_pcb_svg_config import (
+    PcbSvgConfig,
+    PcbSvgViewConfig,
+    resolve_pcb_svg_config,
+)
 from .contracts.pcb_svg import config_metadata
 from .contracts.generated.pcb_svg_config import PcbSvgConfigInput
 
@@ -67,7 +71,7 @@ def resolve_illustration_config(
     pcbdoc: str | None = None,
 ) -> PcbSvgConfig:
     """Apply config overrides, then explicit command choices to the preset."""
-    config = PcbSvgConfig.from_dict(_overlay(illustration_preset(), override or {}))
+    config = resolve_pcb_svg_config(_overlay(illustration_preset(), override or {}))
     if config.layer_outputs.get("enabled"):
         raise ValueError("toon renders composed views; use pcb-svg for layer_outputs")
     if pcbdoc:
@@ -80,7 +84,13 @@ def resolve_illustration_config(
         if theme is not None:
             _apply_theme(view, theme)
         if assembly:
-            _apply_assembly(view, view_side)
+            _apply_assembly(
+                view,
+                view_side,
+                hide_silkscreen_designators=(
+                    config.assembly.hide_silkscreen_designators
+                ),
+            )
     if not config.enabled_views():
         raise ValueError(f"No enabled illustration views for --side {side}")
     return config
@@ -93,8 +103,14 @@ def _apply_theme(view: PcbSvgViewConfig, theme: IllustrationTheme) -> None:
         view.styles.setdefault(name, {})["color"] = colors["silk"]
 
 
-def _apply_assembly(view: PcbSvgViewConfig, side: IllustrationSide) -> None:
+def _apply_assembly(
+    view: PcbSvgViewConfig,
+    side: IllustrationSide,
+    *,
+    hide_silkscreen_designators: bool,
+) -> None:
     token = f"ASSEMBLY_DESIGNATORS_{side.upper()}"
     if token not in view.layers:
         view.layers.append(token)
-    view.styles.setdefault("silkscreen_designators", {})["enabled"] = False
+    if hide_silkscreen_designators:
+        view.styles.setdefault("silkscreen_designators", {})["enabled"] = False

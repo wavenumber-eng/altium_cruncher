@@ -65,9 +65,9 @@ def test_config_is_created_and_reused_with_cli_overrides(tmp_path):
     assert _args().warning_report is None
     assert _args("--warnings", "all").warning_mode == "all"
     assert _args("--warnings", "none").warning_mode == "none"
-    assert _args("--warning-report", str(tmp_path / "warnings.json")).warning_report == (
-        tmp_path / "warnings.json"
-    )
+    assert _args(
+        "--warning-report", str(tmp_path / "warnings.json")
+    ).warning_report == (tmp_path / "warnings.json")
     assert _args().workers == 4
     assert not _args().gallery and not _args().open_gallery
     assert _args("--gallery").gallery
@@ -96,8 +96,25 @@ def test_config_is_created_and_reused_with_cli_overrides(tmp_path):
     styles = config.resolved_styles_for_view(bottom)
     assert styles["soldermask_film"]["color"] == "#EEEEEE"
     assert styles["silkscreen_board_graphics"]["color"] == "#000000"
+    assert styles["silkscreen_designators"]["enabled"] is True
     assert styles["assembly_designators"]["color"] == "#00FF00"
     assert config.components["J1"].show_designator is False
+
+
+def test_assembly_preserves_authored_silkscreen_designators_unless_opted_out():
+    preserved = resolve_illustration_config(side="top", assembly=True)
+    preserved_styles = preserved.resolved_styles_for_view(preserved.enabled_views()[0])
+    assert preserved.assembly.hide_silkscreen_designators is False
+    assert preserved_styles["silkscreen_designators"]["enabled"] is True
+
+    hidden = resolve_illustration_config(
+        {"assembly": {"hide_silkscreen_designators": True}},
+        side="top",
+        assembly=True,
+    )
+    hidden_styles = hidden.resolved_styles_for_view(hidden.enabled_views()[0])
+    assert hidden.assembly.hide_silkscreen_designators is True
+    assert hidden_styles["silkscreen_designators"]["enabled"] is False
 
 
 def test_toon_gallery_centers_current_rendered_artifacts(tmp_path):
@@ -173,7 +190,7 @@ def test_toon_gallery_options_are_rejected_when_only_writing_config(tmp_path):
 @pytest.mark.parametrize(
     ("theme", "mask", "silk"),
     [
-        ("saved", "auto", "#F5F5F5"),
+        ("saved", "auto", "auto"),
         ("white", "#EEEEEE", "#000000"),
         ("black", "#000000", "#F5F5F5"),
         ("blue", "#1D4F91", "#F5F5F5"),
@@ -217,6 +234,15 @@ def test_public_toon_command_writes_editable_substrate_preset(tmp_path):
     assert substrate["rigid_color"] == "#B6A26B"
     assert substrate["flex_color"] == "#D18B28"
     assert config["global"]["styles"]["silkscreen_surface"]["clip_mode"] == "film"
+    for view in config["views"]:
+        assert "BEND_LINES" in view["layers"]
+        assert view["layers"].index("BOARD_OUTLINE") < view["layers"].index(
+            "BEND_LINES"
+        ) < max(
+            view["layers"].index(token)
+            for token in ("ILLUSTRATION_TOP", "ILLUSTRATION_BOTTOM")
+            if token in view["layers"]
+        )
 
 
 def test_config_accepts_partial_settings_and_custom_views():
@@ -407,9 +433,7 @@ def test_toon_queues_warnings_until_completion_and_can_write_report(
     assert payload["schema"] == "toon.warning_report.a0"
     assert payload["summary"]["unique_diagnostic_count"] == 1
     assert payload["diagnostics"][0]["component_designator"] == "U1"
-    assert ("Nonfatal warnings: 1 unique" in caplog.text) == (
-        warning_mode != "none"
-    )
+    assert ("Nonfatal warnings: 1 unique" in caplog.text) == (warning_mode != "none")
     assert (
         "U1: fitted component has no renderable 3D model" in caplog.text
     ) == expected_detail

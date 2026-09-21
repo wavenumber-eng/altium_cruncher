@@ -33,7 +33,6 @@ from .pcb_illustration_diagnostics import (
 )
 from .pcb_illustration_model_geometry import (
     Bounds3,
-    IllustrationProjection,
     IllustrationSymbol,
     Meshes,
     ModelGeometryError,
@@ -47,12 +46,14 @@ from .pcb_illustration_model_geometry import (
     extrusion_extents_mm as extrusion_extents_mm,
     fast_hlr_options as _fast_hlr_options,
     illustration_style as _illustration_style,
+    invisible_illustration_symbol as _invisible_illustration_symbol,
     model_tessellation as _model_tessellation,
     rotation_z as _rotation_z,
     symbol_from_geometry as _symbol_from_geometry,
     tessellation_disk_key as _tessellation_disk_key,
     transform_mesh as _transform_mesh,
     translation as _translation,
+    with_aperture_projection as _with_aperture_projection,
 )
 from .pcb_illustration_source_geometry import (
     body_outline_bounds_local_mm as _body_outline_bounds_local_mm,
@@ -68,7 +69,19 @@ from .pcb_board_region_envelope_index import (
     BoardRegionEnvelopeIndex,
     BoardRegionQueryStatus,
 )
+from .altium_cruncher_pcb_svg_substrate import _BoardOpenSpaceIndex, _space_id
+from .pcb_direct_projection_memo import DirectProjectionMemo as _DirectProjectionMemo
+from .pcb_direct_projection_prewarm import (
+    prewarm_direct_bounds as _prewarm_direct_bounds,
+    prewarm_opposite_direct as _prewarm_opposite_direct,
+)
+from .pcb_direct_projection_runtime import (
+    render_direct as _render_direct,
+    render_source_cached as _render_source_cached,
+)
 from .pcb_component_clipping import (
+    COMPONENT_CLIP_CAP_POLICY,
+    COMPONENT_CLIP_TOLERANCE_MM,
     ComponentVisibilityAction,
     ComponentVisibilityResolution,
     clipped_conservative_bounds as _clipped_conservative_bounds,
@@ -118,6 +131,7 @@ class CachedComponentPlacement:
     bounds: Bounds3
     authored_side: Side = "top"
     board_z_offset_mm: float = 0.0
+    illustration_label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -156,6 +170,13 @@ class IllustrationComponent:
             for fn in (min, max)
             for axis in range(3)
         )  # type: ignore[return-value]
+
+
+def _illustration_label(component: ComponentPlacement) -> str | None:
+    """Return the diagnostic label retained by fresh and cached placements."""
+    if isinstance(component, CachedComponentPlacement):
+        return component.illustration_label
+    return component.direct.label if component.direct is not None else None
 
 
 def model_catalog_context(pcbdoc: AltiumPcbDoc) -> CatalogContext:
@@ -207,6 +228,8 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         cache: PcbSvgModelCache | None = None,
         emit_warnings: bool = True,
         region_index: BoardRegionEnvelopeIndex | None = None,
+        direct_projection_memo: _DirectProjectionMemo | None = None,
+        open_space_index: _BoardOpenSpaceIndex | None = None,
     ) -> None:
         if not math.isfinite(line_width_mm) or line_width_mm <= 0:
             raise ValueError("Illustration line width must be positive millimeters")
@@ -214,6 +237,10 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         self.line_width_mm = line_width_mm
         self.cache = cache
         self.region_index = region_index
+        self.open_space_index = open_space_index
+        self._direct_projection_memo = (
+            direct_projection_memo or _DirectProjectionMemo()
+        )
         self._tessellations: dict[str, tuple[g.MeshIllustrationMesh, ...]] = {}
         self._tessellation_warnings: dict[str, tuple[str, ...]] = {}
         self._tessellation_failures: dict[str, str] = {}
@@ -791,7 +818,20 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             part.anchor_mm[0] / _MIL_MM,
             part.anchor_mm[1] / _MIL_MM,
         )
-        if query.status is not BoardRegionQueryStatus.RESOLVED or query.region is None:
+        region = query.region
+        if (
+            query.status is BoardRegionQueryStatus.OUTSIDE
+            and len(self.region_index.regions) == 1
+            and not self.region_index.invalid_regions
+            and self.region_index.regions[0].is_flex is False
+        ):
+            region = self.region_index.regions[0]
+            log.debug(
+                "%s: using sole rigid board region %s for outside component anchor",
+                part.designator,
+                region.name,
+            )
+        if region is None:
             self.warn(
                 f"{part.designator}: bottom-side placement retained at z=0 because "
                 f"the board region at its anchor is {query.status.value}",
@@ -805,9 +845,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                 },
             )
             return part
-        return _translate_component_z(
-            part, -query.region.total_thickness_mils * _MIL_MM
-        )
+        return _translate_component_z(part, -region.total_thickness_mils * _MIL_MM)
 
     def _collect_body(
         self,
@@ -1289,7 +1327,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         ):
             key = _digest(
                 dict(
-                    renderer_contract="geometer-b0-half-space-v4-aperture-composite",
+                    renderer_contract="geometer-b0-half-space-v5-scoped-apertures",
                     source=component.direct.identity,
                     line_width_mm=self.line_width_mm,
                     side=side,
@@ -1333,7 +1371,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                 appearance.append(value)
             key = _digest(
                 dict(
-                    renderer_contract="geometer-b0-half-space-v4-aperture-composite",
+                    renderer_contract="geometer-b0-half-space-v5-scoped-apertures",
                     meshes=appearance,
                     line_width_mm=self.line_width_mm,
                     side=side,
@@ -1353,13 +1391,34 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         return {
             "anchor_mm": component.anchor_mm,
             "authored_side": component.authored_side,
+            "policy": self._clipping_policy_identity(),
             "partition": self._region_clipping_identity(),
+            "open_space": _space_id(self.open_space_index),
+        }
+
+    @staticmethod
+    def _clipping_policy_identity() -> object:
+        """Return policy inputs shared by every clipping-aware cache layer."""
+        return {
+            "clip_tolerance_mm": COMPONENT_CLIP_TOLERANCE_MM,
+            "cap_policy": COMPONENT_CLIP_CAP_POLICY,
+        }
+
+    def _component_artwork_clipping_identity(self) -> object:
+        """Return clipping inputs for the early whole-component artwork cache."""
+        if self.region_index is None:
+            return None
+        return {
+            "policy": self._clipping_policy_identity(),
+            "partition": self._region_clipping_identity(),
+            "open_space": _space_id(self.open_space_index),
         }
 
     def _region_clipping_identity(self) -> object:
         if self.region_index is None:
             return None
         return {
+            "query_tolerance_mils": self.region_index.tolerance_mils,
             "regions": [
                 {
                     "source_index": region.source_index,
@@ -1392,6 +1451,25 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                 lambda payload: _decode_cached_symbol(payload, allow_warnings=True),
             )
         return cached
+
+    def _prime_cached_symbol(
+        self,
+        component: ComponentPlacement,
+        side: Side,
+        illustrate: bool,
+    ) -> bool:
+        """Materialize an exact artwork hit before scheduling prerequisite work."""
+        key, warning_key = self._render_keys(component, side, illustrate)
+        if key in self._illustrations or key in self._illustration_failures:
+            return True
+        cached = self._load_symbol(key, warning_key)
+        if cached is None:
+            return False
+        self._illustrations[key] = cached
+        self.counts["illustration_disk_hits"] += 1
+        self.warnings.extend(cached.warnings)
+        self._log_direct_warnings(component, cached, side)
+        return True
 
     def render(
         self,
@@ -1475,12 +1553,10 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
     ) -> None:
         if not symbol.warnings:
             return
-        direct = (
-            component.direct if isinstance(component, IllustrationComponent) else None
-        )
+        label = _illustration_label(component)
         context = (
-            f"{component.designator} / {direct.label} ({side})"
-            if direct is not None
+            f"{component.designator} / {label} ({side})"
+            if label is not None
             else f"{component.designator} ({side})"
         )
         body_index = (
@@ -1493,14 +1569,14 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                 producer="geometer",
                 component_designator=component.designator,
                 body_index=body_index,
-                model_identity=direct.label if direct is not None else None,
+                model_identity=label,
                 detail={"side": side, "upstream_message": warning},
             )
             self._record_diagnostic(
                 f"{context}: {warning}",
                 metadata,
             )
-        if self.emit_warnings and direct is not None:
+        if self.emit_warnings and label is not None:
             log.warning("%s: %s", context, symbol.warnings[0])
             for warning in symbol.warnings[1:]:
                 log.debug("%s: %s", context, warning)
@@ -1512,7 +1588,10 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         side: Side,
         illustrate: bool,
         workers: PcbSvgNativeWorkers | None = None,
+        prewarm_opposite: bool = False,
     ) -> PlacedIllustrations:
+        if prewarm_opposite:
+            self._prewarm_opposite_direct(components, side, illustrate, workers)
         prepared = {}
         keyed = []
         if workers is not None and workers.count > 1:
@@ -1541,6 +1620,20 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             part = self._resolve_direct_bounds(part, symbol)
             placed.append((part, symbol))
         return placed
+
+    def _prewarm_opposite_direct(
+        self,
+        components: Sequence[ComponentPlacement],
+        side: Side,
+        illustrate: bool,
+        workers: PcbSvgNativeWorkers | None,
+    ) -> None:
+        _prewarm_opposite_direct(self, components, side, illustrate, workers)
+
+    def _prewarm_direct_bounds(
+        self, component: IllustrationComponent, side: Side, illustrate: bool
+    ) -> None:
+        _prewarm_direct_bounds(self, component, side, illustrate)
 
     @staticmethod
     def _report_illustration_progress(
@@ -1651,6 +1744,8 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                     side,
                     illustrate,
                     self.region_index,
+                    self._direct_projection_memo,
+                    self.open_space_index,
                 )
                 submitted += 1
         log.debug(
@@ -1675,83 +1770,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
     def _render_direct(
         self, component: IllustrationComponent, side: Side, illustrate: bool
     ) -> IllustrationSymbol:
-        direct = component.direct
-        if direct is None:
-            raise ModelGeometryError("direct illustration source is unavailable")
-        current = self._render_direct_source(
-            direct.source, direct.model, side, illustrate
-        )
-        alternative_source = direct.footprint_local_source
-        target = direct.authored_outline_bounds_mm
-        if alternative_source is None:
-            return self._apply_direct_visibility(
-                component, direct.source, current, side, illustrate
-            )
-        body_index = (
-            component.bodies[0]["index"] if len(component.bodies) == 1 else None
-        )
-        if target is None or current.source_bounds_mm is None:
-            self.warn(
-                f"{component.designator}: authored outline cannot resolve model Z rotation; retaining current placement",
-                code="rotation-outline-unavailable",
-                category="rotation_resolution",
-                component_designator=component.designator,
-                body_index=body_index,
-                model_identity=direct.label,
-            )
-            return self._apply_direct_visibility(
-                component, direct.source, current, side, illustrate
-            )
-        current_check = resolve_model_z_rotation(
-            target, current.source_bounds_mm, current.source_bounds_mm
-        )
-        if current_check.choice == "instance_space":
-            return self._apply_direct_visibility(
-                component, direct.source, current, side, illustrate
-            )
-        alternative = self._render_direct_source(
-            alternative_source, direct.model, side, illustrate
-        )
-        if alternative.source_bounds_mm is None:
-            self._queue_discarded_symbol_warnings(component, alternative, side, direct)
-            self.warn(
-                f"{component.designator}: alternative model Z rotation returned no native bounds; retaining current placement",
-                code="rotation-bounds-unavailable",
-                category="rotation_resolution",
-                producer="geometer",
-                component_designator=component.designator,
-                body_index=body_index,
-                model_identity=direct.label,
-            )
-            return self._apply_direct_visibility(
-                component, direct.source, current, side, illustrate
-            )
-        resolution = resolve_model_z_rotation(
-            target, current.source_bounds_mm, alternative.source_bounds_mm
-        )
-        if resolution.choice == "footprint_local":
-            self._queue_discarded_symbol_warnings(component, current, side, direct)
-            return self._apply_direct_visibility(
-                component, alternative_source, alternative, side, illustrate
-            )
-        self._queue_discarded_symbol_warnings(component, alternative, side, direct)
-        if resolution.choice == "unresolved":
-            self.warn(
-                f"{component.designator}: neither supported model Z-rotation interpretation matches the authored outline; retaining current placement",
-                code="rotation-unresolved",
-                category="rotation_resolution",
-                component_designator=component.designator,
-                body_index=body_index,
-                model_identity=direct.label,
-                detail={
-                    "reason": resolution.reason,
-                    "instance_space_score": resolution.current_score,
-                    "footprint_local_score": resolution.footprint_local_score,
-                },
-            )
-        return self._apply_direct_visibility(
-            component, direct.source, current, side, illustrate
-        )
+        return _render_direct(self, component, side, illustrate)
 
     def _apply_direct_visibility(
         self,
@@ -1760,6 +1779,8 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         uncut: IllustrationSymbol,
         side: Side,
         illustrate: bool,
+        *,
+        projection_identity: object | None = None,
     ) -> IllustrationSymbol:
         resolution = self._component_visibility(component, uncut.source_bounds_mm, side)
         if (
@@ -1769,15 +1790,38 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             return uncut
         if resolution.action is ComponentVisibilityAction.OMIT:
             self._warn_unsafe_opposite_visibility(component, resolution)
+            if not self._may_intersect_open_space(component, uncut.source_bounds_mm):
+                return _invisible_illustration_symbol(uncut)
             return _with_aperture_projection(_empty_illustration_symbol(), uncut)
-        surface = self._render_direct_source(
-            source,
-            cast(DirectIllustrationSource, component.direct).model,
-            side,
-            illustrate,
-            clipping=_native_clipping(resolution),
-        )
+        clipping = _native_clipping(resolution)
+        if projection_identity is None:
+            surface = self._render_direct_source(
+                source,
+                cast(DirectIllustrationSource, component.direct).model,
+                side,
+                illustrate,
+                clipping=clipping,
+            )
+        else:
+            surface = self._render_direct_source_cached(
+                projection_identity,
+                source,
+                cast(DirectIllustrationSource, component.direct).model,
+                side,
+                illustrate,
+                clipping=clipping,
+            )
         return _with_aperture_projection(surface, uncut)
+
+    def _may_intersect_open_space(
+        self, component: IllustrationComponent, bounds: Bounds3 | None
+    ) -> bool:
+        if self.open_space_index is None or bounds is None:
+            return True
+        return self.open_space_index.may_intersect(
+            anchor_mm=component.anchor_mm,
+            bounds_local_mm=bounds,
+        )
 
     def _component_visibility(
         self,
@@ -1795,6 +1839,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             bounds_local_mm=bounds,
             authored_side=component.authored_side,
             requested_side=side,
+            tolerance_mm=COMPONENT_CLIP_TOLERANCE_MM,
         )
 
     def _warn_unsafe_opposite_visibility(
@@ -1854,6 +1899,25 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             rendered, outline_width_mm=self.line_width_mm, illustrate=illustrate
         )
 
+    def _render_direct_source_cached(
+        self,
+        _projection_identity: object,
+        source: g.ModelIllustrationSourceA0,
+        model: bytes | None,
+        side: Side,
+        illustrate: bool,
+        *,
+        clipping: g.IllustrationClipping | None = None,
+    ) -> IllustrationSymbol:
+        return _render_source_cached(
+            self,
+            source,
+            model,
+            side,
+            illustrate,
+            clipping=clipping,
+        )
+
     def _queue_discarded_symbol_warnings(
         self,
         component: IllustrationComponent,
@@ -1889,6 +1953,8 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             )
         if resolution.action is ComponentVisibilityAction.OMIT:
             self._warn_unsafe_opposite_visibility(component, resolution)
+            if not self._may_intersect_open_space(component, component.bounds):
+                return _empty_illustration_symbol()
             uncut = self._render_mesh_projection(
                 component, side, illustrate, clipping=None, resolution=None
             )
@@ -1997,30 +2063,6 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         )
 
 
-def _with_aperture_projection(
-    surface: IllustrationSymbol, uncut: IllustrationSymbol
-) -> IllustrationSymbol:
-    """Pair disjoint board-surface and aperture projections for SVG composition."""
-
-    if uncut.empty:
-        return surface
-    aperture = IllustrationProjection(
-        uncut.svg,
-        uncut.x_mm,
-        uncut.y_mm,
-        uncut.mm_per_unit,
-    )
-    warnings = tuple(dict.fromkeys((*surface.warnings, *uncut.warnings)))
-    return replace(
-        surface,
-        warnings=warnings,
-        outline_segments_mm=uncut.outline_segments_mm,
-        empty=False,
-        aperture=aperture,
-        aperture_source_bounds_mm=uncut.source_bounds_mm,
-    )
-
-
 def _illustrate_with_client(
     client: g.GeometerClient,
     component: IllustrationComponent,
@@ -2028,10 +2070,16 @@ def _illustrate_with_client(
     side: Side,
     illustrate: bool,
     region_index: BoardRegionEnvelopeIndex | None = None,
+    direct_projection_memo: _DirectProjectionMemo | None = None,
+    open_space_index: _BoardOpenSpaceIndex | None = None,
 ) -> IllustrationSymbol:
     # A task's style is immutable even when later views use another line width.
     return IllustrationJob(
-        client, line_width_mm=line_width, region_index=region_index
+        client,
+        line_width_mm=line_width,
+        region_index=region_index,
+        direct_projection_memo=direct_projection_memo,
+        open_space_index=open_space_index,
     )._render_native(
         component,
         side=side,

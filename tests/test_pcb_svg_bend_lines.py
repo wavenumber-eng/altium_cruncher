@@ -15,7 +15,7 @@ from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 from jsonschema import Draft202012Validator
 import pytest
 
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_bend_lines import (
     board_space_bend_lines,
     display_bend_lines,
@@ -164,7 +164,7 @@ def test_bluetooth_bend_layer_renders_clipped_styled_metadata(bluetooth_pcbdoc):
             }
         },
     )
-    svg = PcbSvgA0Renderer(config).render_view_svg(
+    svg = PcbSvgCompositeRenderer(config).render_view_svg(
         bluetooth_pcbdoc,
         view,
         project_parameters=None,
@@ -194,7 +194,7 @@ def test_bluetooth_bend_layer_renders_clipped_styled_metadata(bluetooth_pcbdoc):
     )
 
     bottom = ET.fromstring(
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             bluetooth_pcbdoc,
             view,
             project_parameters=None,
@@ -226,7 +226,7 @@ def test_bend_layer_can_be_disabled(bluetooth_pcbdoc):
         styles={"bend_lines": {"enabled": False}},
     )
     root = ET.fromstring(
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             bluetooth_pcbdoc,
             view,
             project_parameters=None,

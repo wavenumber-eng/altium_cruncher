@@ -38,6 +38,21 @@ authored = decode_pcb_svg_config({
 text = encode_pcb_svg_config(authored)
 ```
 
+Runtime rendering uses a separate neutral adapter:
+
+```python
+from altium_cruncher.altium_cruncher_pcb_svg_config import resolve_pcb_svg_config
+
+runtime_config = resolve_pcb_svg_config(authored)
+```
+
+The generated decoder owns wire-version recognition and authored-field
+presence. `resolve_pcb_svg_config()` then performs compatibility migration,
+default resolution, coercion, and semantic validation exactly once. Renderers
+and workflows consume only the resulting neutral `PcbSvgConfig`; they do not
+branch on A0/A1 or carry a schema suffix in their implementation role names.
+Serialized schema identifiers and generated contract types remain versioned.
+
 For the planned web editor, import `decodePcbSvgConfig`, `encodePcbSvgConfig`
 and `PcbSvgConfigInput` from `src/ts/altium_cruncher_config/index.ts` in a
 TypeScript bundler. The accompanying generated schema supplies descriptions,

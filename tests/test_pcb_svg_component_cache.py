@@ -12,6 +12,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
     ComponentLayerSession,
 )
 from altium_cruncher.pcb_board_region_envelope_index import BoardRegionQueryStatus
+from altium_cruncher.altium_cruncher_pcb_svg_substrate import _BoardOpenSpaceIndex
 from altium_cruncher.pcb_svg_model_cache import PcbSvgModelCache
 
 
@@ -116,9 +117,48 @@ def test_warm_artwork_skips_positive_geometry_preserves_body_order_and_retries_f
     assert all(not hasattr(p, "meshes") for p, _ in actual)
 
 
-def test_region_aware_artwork_cache_retains_opposite_authored_side(
-    scene, monkeypatch
-):
+def test_cached_direct_warning_preserves_model_identity():
+    part = artwork._decode_placement(
+        {
+            "designator": "J1",
+            "anchor_mm": [0.0, 0.0],
+            "bodies": [
+                {
+                    "index": 7,
+                    "kind": "step",
+                    "lower_z_mm": 0.0,
+                    "upper_z_mm": 1.0,
+                    "color": None,
+                    "opacity": 1.0,
+                }
+            ],
+            "component_index": 0,
+            "bounds": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+            "authored_side": "top",
+            "board_z_offset_mm": 0.0,
+            "illustration_label": "connector.step",
+        }
+    )
+    symbol = illustration.IllustrationSymbol(
+        '<svg xmlns="http://www.w3.org/2000/svg"/>',
+        0.0,
+        0.0,
+        1.0,
+        {},
+        ("Skipped degenerate triangle.",),
+        (),
+    )
+    job = illustration.IllustrationJob(None, emit_warnings=False)
+
+    job._log_direct_warnings(part, symbol, "bottom")
+
+    assert job.diagnostics[0].message == (
+        "J1 / connector.step (bottom): Skipped degenerate triangle."
+    )
+    assert job.diagnostics[0].model_identity == "connector.step"
+
+
+def test_region_aware_artwork_cache_retains_opposite_authored_side(scene, monkeypatch):
     pcb, cache, calls = scene
     pcb.component_bodies[1].properties["bottom"] = True
     helper = SimpleNamespace(
@@ -136,6 +176,7 @@ def test_region_aware_artwork_cache_retains_opposite_authored_side(
     region_index = SimpleNamespace(
         regions=(region,),
         invalid_regions=(),
+        tolerance_mils=1e-6,
         query_point=lambda _x, _y: SimpleNamespace(
             status=BoardRegionQueryStatus.RESOLVED,
             region=region,
@@ -144,10 +185,10 @@ def test_region_aware_artwork_cache_retains_opposite_authored_side(
     )
 
     cold = ComponentLayerSession(cache=cache())
-    expected = snapshot(
-        cold._materialize(pcb, "top", 0.025, True, region_index)
-    )
-    assert {part.authored_side for part, _ in cold._placed[next(iter(cold._placed))]} == {
+    expected = snapshot(cold._materialize(pcb, "top", 0.025, True, region_index))
+    assert {
+        part.authored_side for part, _ in cold._placed[next(iter(cold._placed))]
+    } == {
         "top",
         "bottom",
     }
@@ -158,6 +199,78 @@ def test_region_aware_artwork_cache_retains_opposite_authored_side(
     assert snapshot(actual) == expected
     assert calls == [3]
     assert all(not hasattr(part, "meshes") for part, _ in actual)
+
+
+def test_artwork_cache_key_includes_physical_open_space_domain(scene):
+    pcb, cache, _calls = scene
+    region = SimpleNamespace(
+        source_index=0,
+        name="Rigid",
+        outline_mils=((0.0, 0.0), (100.0, 0.0), (100.0, 100.0)),
+        holes_mils=(),
+        total_thickness_mils=40.0,
+    )
+    region_index = SimpleNamespace(
+        regions=(region,),
+        invalid_regions=(),
+        tolerance_mils=1e-6,
+    )
+
+    def key(openings):
+        job = illustration.IllustrationJob(
+            None,
+            cache=cache(),
+            region_index=region_index,
+            open_space_index=_BoardOpenSpaceIndex(region_index, openings),
+        )
+        return artwork.ComponentArtworkCache(
+            job, pcb, "top", True, frozenset()
+        ).key
+
+    closed = key(())
+    open_bore = key(((40.0, 40.0, 60.0, 60.0),))
+
+    assert closed != open_bore
+    assert closed == key(())
+    assert open_bore == key(((40.0, 40.0, 60.0, 60.0),))
+
+
+@pytest.mark.parametrize("policy", ["tolerance", "cap"])
+def test_warm_artwork_cache_invalidates_for_clipping_policy(
+    scene, monkeypatch, policy
+):
+    pcb, cache, calls = scene
+    region = SimpleNamespace(
+        source_index=0,
+        name="Rigid",
+        outline_mils=((0.0, 0.0), (100.0, 0.0), (100.0, 100.0)),
+        holes_mils=(),
+        total_thickness_mils=40.0,
+    )
+    region_index = SimpleNamespace(
+        regions=(region,),
+        invalid_regions=(),
+        tolerance_mils=1e-6,
+        query_point=lambda _x, _y: SimpleNamespace(
+            status=BoardRegionQueryStatus.RESOLVED,
+            region=region,
+            detail="",
+        ),
+    )
+    cold = ComponentLayerSession(cache=cache())
+    cold._materialize(pcb, "top", 0.025, True, region_index)
+    calls.clear()
+
+    if policy == "tolerance":
+        monkeypatch.setattr(illustration, "COMPONENT_CLIP_TOLERANCE_MM", 2e-6)
+    else:
+        monkeypatch.setattr(illustration, "COMPONENT_CLIP_CAP_POLICY", "future-cap")
+
+    warm = ComponentLayerSession(cache=cache())
+    warm._materialize(pcb, "top", 0.025, True, region_index)
+
+    # A stale whole-component hit would retry only the known failed body (3).
+    assert calls == [0, 1, 2, 3]
 
 
 def test_style_changes_recollect_without_duplicating_geometry_warnings(scene):

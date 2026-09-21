@@ -9,6 +9,7 @@ import geometer as g
 import pytest
 
 from altium_cruncher.altium_cruncher_pcb_illustration import (
+    DirectIllustrationSource,
     IllustrationComponent,
     IllustrationJob,
     IllustrationSymbol,
@@ -78,6 +79,109 @@ def test_unique_work_overlaps_but_composition_and_warnings_stay_ordered(monkeypa
     assert all(client.closed for client in clients)
 
 
+def test_parallel_occurrences_singleflight_identical_direct_projection(monkeypatch):
+    calls = []
+    entered = threading.Event()
+    release = threading.Event()
+
+    def direct_source(self, source, model, side, illustrate, **kwargs):
+        calls.append((source, model, side, illustrate, kwargs.get("clipping")))
+        entered.set()
+        assert release.wait(timeout=5)
+        return IllustrationSymbol(
+            '<svg xmlns="http://www.w3.org/2000/svg"/>',
+            0.0,
+            0.0,
+            1.0,
+            {},
+            (),
+            source_bounds_mm=(-1.0, -1.0, 0.1, 1.0, 1.0, 2.0),
+        )
+
+    monkeypatch.setattr(IllustrationJob, "_render_direct_source", direct_source)
+    monkeypatch.setattr(
+        IllustrationJob, "_component_visibility", lambda *args, **kwargs: None
+    )
+    region = SimpleNamespace(
+        source_index=0,
+        name="Rigid",
+        outline_mils=((0.0, 0.0), (100.0, 0.0), (100.0, 100.0)),
+        holes_mils=(),
+        total_thickness_mils=40.0,
+    )
+    region_index = SimpleNamespace(
+        regions=(region,), invalid_regions=(), tolerance_mils=1e-6
+    )
+    direct = DirectIllustrationSource(
+        source=SimpleNamespace(),
+        model=b"same-model",
+        identity={"model": "same", "pose": "same"},
+        label="same.step",
+    )
+    first = IllustrationComponent(
+        "U1", (10.0, 20.0), (), (), direct=direct, authored_side="top"
+    )
+    second = replace(first, designator="U2", anchor_mm=(30.0, 40.0))
+
+    def unblock():
+        assert entered.wait(timeout=5)
+        release.set()
+
+    unblocker = threading.Thread(target=unblock)
+    unblocker.start()
+    with PcbSvgNativeWorkers(2, client_factory=Client) as workers:
+        job = IllustrationJob(None, region_index=region_index)
+        placed = job.render_many(
+            [first, second], side="top", illustrate=True, workers=workers
+        )
+    unblocker.join(timeout=5)
+
+    assert [component.designator for component, _symbol in placed] == ["U1", "U2"]
+    assert len(calls) == 1
+
+
+def test_direct_projection_singleflight_uses_exact_native_inputs(monkeypatch):
+    calls = []
+
+    def direct_source(self, source, model, side, illustrate, **kwargs):
+        calls.append((source, model, side, illustrate, kwargs.get("clipping")))
+        return IllustrationSymbol(
+            '<svg xmlns="http://www.w3.org/2000/svg"/>', 0.0, 0.0, 1.0, {}, ()
+        )
+
+    monkeypatch.setattr(IllustrationJob, "_render_direct_source", direct_source)
+    job = IllustrationJob(None)
+    source = g.AnalyticIllustrationSourceA0(
+        kind="analytic",
+        scene=g.AnalyticSceneA0(definitions=(), occurrences=()),
+        lowering=g.AnalyticLoweringOptionsA0(),
+    )
+    first_plane = g.IllustrationClipping(
+        planes=(g.HalfSpacePlane(normal=(0.0, 0.0, 1.0), distance_mm=0.0),),
+        cap_policy="none",
+    )
+    second_plane = g.IllustrationClipping(
+        planes=(g.HalfSpacePlane(normal=(0.0, 0.0, -1.0), distance_mm=1.0),),
+        cap_policy="none",
+    )
+
+    first = job._render_direct_source_cached(
+        {"occurrence": 1}, source, None, "top", True, clipping=first_plane
+    )
+    repeated = job._render_direct_source_cached(
+        {"occurrence": 2}, source, None, "top", True, clipping=first_plane
+    )
+    job._render_direct_source_cached(
+        {"occurrence": 3}, source, None, "top", True, clipping=second_plane
+    )
+    job._render_direct_source_cached(
+        {"occurrence": 4}, source, b"different", "top", True, clipping=first_plane
+    )
+
+    assert repeated is first
+    assert len(calls) == 3
+
+
 def test_warm_disk_cache_starts_no_workers(tmp_path, monkeypatch):
     def native(self, component, **kwargs):
         return symbol(component)
@@ -100,6 +204,97 @@ def test_warm_disk_cache_starts_no_workers(tmp_path, monkeypatch):
         ) == [(source, cold)]
         assert job.counts["illustration_disk_hits"] == 1
         assert job.warnings == ["Diagnostic: U1"]
+
+
+def test_warm_direct_artwork_skips_opposite_side_prewarm(tmp_path, monkeypatch):
+    direct = DirectIllustrationSource(
+        source=SimpleNamespace(),
+        model=b"same-model",
+        identity={"model": "same", "pose": "same"},
+        label="same.step",
+    )
+    source = IllustrationComponent(
+        "U1",
+        (10.0, 20.0),
+        (),
+        (),
+        direct=direct,
+        authored_side="bottom",
+    )
+
+    def native(self, component, **kwargs):
+        return symbol(component)
+
+    monkeypatch.setattr(IllustrationJob, "_render_native", native)
+    cache = PcbSvgModelCache(tmp_path, identity="a" * 64)
+    cold = IllustrationJob(None, cache=cache).render(
+        source, side="top", illustrate=True
+    )
+
+    def forbidden():
+        pytest.fail("A warm artwork hit must not prewarm a native projection")
+
+    with PcbSvgNativeWorkers(4, client_factory=forbidden) as workers:
+        job = IllustrationJob(None, cache=cache)
+        assert job.render_many(
+            [source],
+            side="top",
+            illustrate=True,
+            workers=workers,
+            prewarm_opposite=True,
+        ) == [(source, cold)]
+        assert job.counts["illustration_disk_hits"] == 1
+        assert job.warnings == ["Diagnostic: U1"]
+
+
+@pytest.mark.parametrize("workers_count", [1, 2])
+def test_recoverable_opposite_prewarm_failure_uses_component_boundary(
+    monkeypatch, workers_count
+):
+    from altium_cruncher import pcb_direct_projection_prewarm as prewarm
+
+    def direct(name):
+        return IllustrationComponent(
+            name,
+            (0.0, 0.0),
+            (),
+            (),
+            direct=DirectIllustrationSource(
+                source=SimpleNamespace(name=name),
+                model=name.encode(),
+                identity={"model": name},
+                label=f"{name}.step",
+            ),
+            authored_side="bottom",
+        )
+
+    bad, good = direct("bad"), direct("good")
+
+    def speculative(_job, component, _side, _illustrate):
+        if component.designator == "bad":
+            raise ModelGeometryError("bad speculative model")
+
+    def native(self, component, **kwargs):
+        if component.designator == "bad":
+            raise ModelGeometryError("bad speculative model")
+        return symbol(component)
+
+    monkeypatch.setattr(prewarm, "prewarm_direct_bounds", speculative)
+    monkeypatch.setattr(IllustrationJob, "_render_native", native)
+    with PcbSvgNativeWorkers(workers_count, client_factory=Client) as workers:
+        job = IllustrationJob(None)
+        result = job.render_many(
+            [bad, good],
+            side="top",
+            illustrate=True,
+            workers=workers,
+            prewarm_opposite=True,
+        )
+
+    assert [component.designator for component, _symbol in result] == ["good"]
+    assert len(job.warnings) == 2
+    assert "bad (top): bad speculative model" in job.warnings[0]
+    assert job.warnings[1] == "Diagnostic: good"
 
 
 def test_parallel_model_failures_preserve_other_parts_and_warn_for_repeats(monkeypatch):

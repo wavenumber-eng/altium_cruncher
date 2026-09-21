@@ -1,13 +1,16 @@
 """Native demo rendering with Altium body placement and extrusions."""
 
 from dataclasses import replace
+from io import BytesIO
 from pathlib import Path
 import re
 from types import SimpleNamespace
 import xml.etree.ElementTree as ET
 
 import geometer as g
+from PIL import Image
 import pytest
+from resvg_py import svg_to_bytes
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 from altium_monkey.altium_record_pcb__component_body import AltiumPcbComponentBody
 from altium_monkey.altium_record_pcb__shapebased_region import PcbExtendedVertex
@@ -258,6 +261,108 @@ def test_rt_through_board_model_uses_clipped_fragments_on_both_sides():
 
 
 @pytest.mark.slow
+def test_issue67_reporter_ic_orientation_and_p1_pin_registration():
+    pcb = AltiumPcbDoc.from_file(
+        ROOT / "tests/assets/projects/issue67-reporter/input/sample.PcbDoc"
+    )
+    regions = BoardRegionEnvelopeIndex.from_pcbdoc(pcb)
+    component_indices = {
+        component.designator: index for index, component in enumerate(pcb.components)
+    }
+
+    with g.GeometerClient() as client:
+        job = IllustrationJob(client, region_index=regions, emit_warnings=False)
+        parts = {part.designator: part for part in job.collect(pcb, side="bottom")}
+
+        for designator in ("IC1", "IC2", "IC3"):
+            part = parts[designator]
+            component = pcb.components[component_indices[designator]]
+            symbol = job.render(part, side="bottom")
+            pads = [
+                pad
+                for pad in pcb.pads
+                if pad.component_index == component_indices[designator]
+            ]
+
+            assert str(component.layer).upper() == "BOTTOM"
+            assert float(component.rotation) == pytest.approx(270.0)
+            assert symbol.source_bounds_mm == pytest.approx(
+                (-4.95, -3.0, -2.16148, 4.95, 3.0, -0.41148), abs=1e-6
+            )
+            local_pad_x = [float(pad.x) * 2.54e-6 - part.anchor_mm[0] for pad in pads]
+            local_pad_y = [float(pad.y) * 2.54e-6 - part.anchor_mm[1] for pad in pads]
+            assert min(local_pad_x) > -4.95 and max(local_pad_x) < 4.95
+            assert min(local_pad_y) > -3.0 and max(local_pad_y) < 3.0
+
+        # The first authored IC3 pad is pin 1. In board coordinates it is
+        # upper-left of the component anchor; the single bottom-view mirror
+        # makes it upper-right, matching the reporter's Altium reference.
+        ic3 = parts["IC3"]
+        ic3_pads = [
+            pad for pad in pcb.pads if pad.component_index == component_indices["IC3"]
+        ]
+        pin1_x = float(ic3_pads[0].x) * 2.54e-6 - ic3.anchor_mm[0]
+        pin1_y = float(ic3_pads[0].y) * 2.54e-6 - ic3.anchor_mm[1]
+        assert (-pin1_x, pin1_y) == pytest.approx((4.445, 2.71200118), abs=1e-6)
+
+        p1 = parts["P1"]
+        p1_index = component_indices["P1"]
+        p1_pads = [pad for pad in pcb.pads if pad.component_index == p1_index]
+        pad_centers = sorted(
+            (
+                float(pad.x) * 2.54e-6 - p1.anchor_mm[0],
+                float(pad.y) * 2.54e-6 - p1.anchor_mm[1],
+            )
+            for pad in p1_pads
+        )
+        body_indices = sorted(body["index"] for body in p1.bodies)
+        model_centers = []
+        for body_index in body_indices:
+            meshes = [
+                mesh for mesh in p1.meshes if mesh.id.startswith(f"body-{body_index}-")
+            ]
+            xs = [value for mesh in meshes for value in mesh.positions[0::3]]
+            ys = [value for mesh in meshes for value in mesh.positions[1::3]]
+            model_centers.append(((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2))
+
+        assert len(pad_centers) == len(model_centers) == 7
+        for model_center, pad_center in zip(
+            sorted(model_centers), pad_centers, strict=True
+        ):
+            assert model_center == pytest.approx(pad_center, abs=5e-4)
+
+
+@pytest.mark.slow
+def test_gate6_analytic_fixture_clips_each_supported_body_type_on_both_sides():
+    pcb = AltiumPcbDoc.from_file(
+        ROOT
+        / "tests/assets/projects/toon-analytic-bodies/input/toon_analytic_bodies.PcbDoc"
+    )
+    regions = BoardRegionEnvelopeIndex.from_pcbdoc(pcb)
+
+    with g.GeometerClient() as client:
+        job = IllustrationJob(client, region_index=regions, emit_warnings=False)
+        parts = {part.designator: part for part in job.collect(pcb, side="top")}
+
+        assert "A9" not in parts  # zero-opacity omission control
+        assert len(parts) == 13
+        for designator in ("A3", "A4", "B4"):
+            top = job.render(parts[designator], side="top")
+            bottom = job.render(parts[designator], side="bottom")
+            assert top.svg and bottom.svg
+            assert top.aperture is not None and bottom.aperture is not None
+            assert top.source_bounds_mm is not None
+            assert bottom.source_bounds_mm is not None
+            assert top.source_bounds_mm[2] == pytest.approx(-1e-6)
+            assert bottom.source_bounds_mm[5] == pytest.approx(-1.587499)
+
+        top_only = job.render(parts["A1"], side="bottom")
+        bottom_only = job.render(parts["B1"], side="top")
+        assert top_only.svg == "" and top_only.aperture is not None
+        assert bottom_only.svg == "" and bottom_only.aperture is not None
+
+
+@pytest.mark.slow
 @pytest.mark.parametrize(
     ("fixture", "filename", "side", "designators"),
     [
@@ -273,11 +378,17 @@ def test_rt_through_board_model_uses_clipped_fragments_on_both_sides():
             "top",
             ("D1",),
         ),
+        (
+            "single-throughhole",
+            "single-though-hole-top.PcbDoc",
+            "bottom",
+            ("J1",),
+        ),
     ],
 )
 def test_aperture_composition_stress_fixtures(fixture, filename, side, designators):
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
-        PcbSvgA0Renderer,
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+        PcbSvgCompositeRenderer,
     )
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
     from altium_cruncher.pcb_illustration_config import illustration_preset
@@ -287,7 +398,7 @@ def test_aperture_composition_stress_fixtures(fixture, filename, side, designato
     )
     config = PcbSvgConfig.from_dict(illustration_preset())
     view = next(view for view in config.views if view.name.startswith(side))
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     root = ET.fromstring(
         renderer.render_view_svg(
             pcb,
@@ -313,16 +424,109 @@ def test_aperture_composition_stress_fixtures(fixture, filename, side, designato
             f"[@data-designator='{designator}']"
         )
         assert component is not None
-        assert {branch.get("data-visibility-domain") for branch in component} == {
+        branches = list(component)
+        assert {branch.get("data-visibility-domain") for branch in branches} == {
             "aperture",
             "board-surface",
         }
+        for branch in branches:
+            assert branch.tag == f"{{{SVG}}}g"
+            assert branch.get("mask", "").startswith("url(#")
+            use = branch.find(f"{{{SVG}}}use")
+            assert use is not None
+            assert use.get("transform", "").startswith("translate(")
+            assert use.get("mask") is None
     if fixture == "usb-edge":
-        assert any(
-            node.get("stroke") == "white"
-            and float(node.get("stroke-width", 0)) == pytest.approx(1.6)
-            for node in mask
+        # D1 is a reverse-mount LED in one physical plated slot. The complement
+        # mask must expose that bore; colored DRILLS/SLOTS artwork is separate.
+        slot_openings = [node for node in mask if node.get("stroke") == "white"]
+        assert len(slot_openings) == 1
+        assert slot_openings[0].tag == f"{{{SVG}}}path"
+        assert slot_openings[0].get("fill") == "none"
+        assert slot_openings[0].get("stroke-linecap") == "round"
+
+
+def _raster_signature(svg: str) -> tuple[tuple[int, int], bytes]:
+    picture = Image.open(BytesIO(svg_to_bytes(svg_string=svg, dpi=254))).convert("RGBA")
+    return picture.size, picture.tobytes()
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    ("fixture", "filename", "designator", "placement_side", "through_board"),
+    [
+        (
+            "single-throughhole",
+            "single-though-hole-top.PcbDoc",
+            "J1",
+            "top",
+            True,
+        ),
+        (
+            "single-throughhole",
+            "single-though-hole-bottom.PcbDoc",
+            "J1",
+            "bottom",
+            True,
+        ),
+        ("single-smt", "single-smt-top.PcbDoc", "R1", "top", False),
+        ("single-smt", "single-smt-bottom.PcbDoc", "R1", "bottom", False),
+    ],
+)
+def test_single_part_geometry_and_designator_side_matrix(
+    fixture, filename, designator, placement_side, through_board
+):
+    """Exercise both views and both label modes for each Gate 1 document."""
+
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+        PcbSvgCompositeRenderer,
+    )
+    from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
+    from altium_cruncher.pcb_illustration_config import illustration_preset
+
+    pcb = AltiumPcbDoc.from_file(
+        ROOT / f"tests/assets/projects/{fixture}/input/{filename}"
+    )
+    config = PcbSvgConfig.from_dict(illustration_preset())
+    renderer = PcbSvgCompositeRenderer(config)
+
+    for side in ("top", "bottom"):
+        view = next(candidate for candidate in config.views if candidate.name == side)
+        illustration_token = f"ILLUSTRATION_{side.upper()}"
+
+        def render(layers):
+            selected_layers = list(layers)
+            return renderer.render_view_svg(
+                pcb,
+                replace(view, layers=selected_layers),
+                project_parameters=None,
+                layers=selected_layers,
+                group_id=f"single-part-{side}",
+                mirror=side == "bottom",
+                styles=config.resolved_styles_for_view(view),
+            )
+
+        without_designator = render(view.layers)
+        without_root = ET.fromstring(without_designator)
+        assert (
+            without_root.find(f".//{{{SVG}}}g[@data-feature='assembly-designator']")
+            is None
         )
+
+        without_component = render(
+            token for token in view.layers if token != illustration_token
+        )
+        pixels_changed = _raster_signature(without_designator) != _raster_signature(
+            without_component
+        )
+        assert pixels_changed is (through_board or side == placement_side)
+
+        with_designator = render([*view.layers, f"ASSEMBLY_DESIGNATORS_{side.upper()}"])
+        label = ET.fromstring(with_designator).find(
+            f".//{{{SVG}}}g[@data-feature='assembly-designator']"
+            f"[@data-designator='{designator}']"
+        )
+        assert (label is not None) is (side == placement_side)
 
 
 def test_step_tessellation_preserves_root_placement_used_by_assembly():
@@ -425,8 +629,8 @@ def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path
     from altium_monkey.altium_pcb_component import AltiumPcbComponent
     from altium_monkey.altium_record_pcb__pad import AltiumPcbPad
     from altium_monkey.altium_record_types import PcbLayer
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
-        PcbSvgA0Renderer,
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+        PcbSvgCompositeRenderer,
         write_or_update_view_svg,
     )
     from altium_cruncher.altium_cruncher_pcb_svg_config import (
@@ -459,7 +663,7 @@ def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path
     pad.layer = PcbLayer.BOTTOM if side == "bottom" else PcbLayer.TOP
     pcb.pads.append(pad)
     config = PcbSvgConfig.default()
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     view = PcbSvgViewConfig(
         name="preview", layers=["DRILLS", "ILLUSTRATION_" + side.upper()]
     )
@@ -507,8 +711,8 @@ def test_component_virtual_layers_compose_cache_and_link_metadata(side, tmp_path
     )
     Draft202012Validator(schema).validate(metadata["virtual_component_layers"])
     layers = metadata["virtual_component_layers"]["layers"]
-    assert [len(layer["instances"]) for layer in layers] == [2, 3]
-    assert layers[1]["instances"][2]["geometry_source"] == "pads"
+    assert [len(layer["instances"]) for layer in layers] == [2, 2]
+    assert {item["designator"] for item in layers[1]["instances"]} == {"U1", "U2"}
     label = root.find(
         f".//{{{SVG}}}g[@data-feature='assembly-designator'][@data-component-index='0']"
     )

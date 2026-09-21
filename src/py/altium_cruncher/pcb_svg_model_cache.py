@@ -20,6 +20,19 @@ log = logging.getLogger(__name__)
 SCHEMA = "pcb.svg.model-cache.a1"
 MAX_BYTES = 1024 * 1024 * 1024
 MAX_ENTRY_BYTES = 256 * 1024 * 1024
+_CACHE_POLICY_FILES = (
+    "altium_cruncher_pcb_illustration.py",
+    "altium_cruncher_pcb_svg_component_layers.py",
+    "altium_cruncher_pcb_svg_substrate.py",
+    "pcb_board_region_envelope_index.py",
+    "pcb_component_clipping.py",
+    "pcb_direct_projection_memo.py",
+    "pcb_direct_projection_prewarm.py",
+    "pcb_direct_projection_runtime.py",
+    "pcb_illustration_model_geometry.py",
+    "pcb_model_rotation.py",
+    "pcb_svg_component_cache.py",
+)
 
 
 def cache_directory() -> Path:
@@ -54,7 +67,7 @@ def native_cache_identity() -> str:
         *sorted(executable.parent.glob("*.so*")),
         *sorted(executable.parent.glob("*.dylib")),
     ]
-    adapter = Path(__file__).with_name("altium_cruncher_pcb_illustration.py")
+    package = Path(__file__).parent
     return _sha(
         _json_bytes(
             dict(
@@ -66,10 +79,10 @@ def native_cache_identity() -> str:
                 binaries={
                     p.name: _sha(p.read_bytes()) for p in binaries if p.is_file()
                 },
-                illustration_policy=_sha(adapter.read_bytes()),
-                component_artwork_policy=_sha(
-                    adapter.with_name("pcb_svg_component_cache.py").read_bytes()
-                ),
+                policy_sources={
+                    name: _sha((package / name).read_bytes())
+                    for name in _CACHE_POLICY_FILES
+                },
             )
         )
     )
@@ -186,7 +199,11 @@ class PcbSvgModelCache:
             os.replace(temporary, path)
             temporary = None
             self.counts["writes"] += 1
-            self.prune()
+            # A render job can write hundreds of entries.  Eviction enumerates
+            # the complete cache, so doing it here makes cold population
+            # O(writes * existing entries).  PcbSvgRenderJob owns the cache's
+            # command lifetime and prunes once from finish(), including when
+            # its context exits through an exception.
         except (OSError, ValueError, TypeError) as error:
             self._warn(f"cannot save {kind} entry ({error})")
         finally:

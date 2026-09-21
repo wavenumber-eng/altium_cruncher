@@ -8,7 +8,7 @@ from typing_extensions import TypedDict
 PcbSvgConfigInput = TypedDict("PcbSvgConfigInput", {
     "schema": NotRequired["Literal[\"pcb.svg.config.a1\"] | Literal[\"pcb.svg.config.a0\"] | None"],
     "global": NotRequired["GlobalOptions | None"],
-    "assembly": NotRequired["AssemblyOptions | None"],
+    "assembly": NotRequired["AssemblyOptionsA1 | None"],
     "dnp": NotRequired["DnpOptions | None"],
     "diodes": NotRequired["DiodeOptions | None"],
     "pin1": NotRequired["Pin1Options | None"],
@@ -31,11 +31,12 @@ GlobalOptions = TypedDict("GlobalOptions", {
     "styles": NotRequired["StyleTable | None"],
 }, extra_items="object")
 
-AssemblyOptions = TypedDict("AssemblyOptions", {
+AssemblyOptionsA1 = TypedDict("AssemblyOptionsA1", {
     "default_projection": NotRequired["Literal[\"detail\"] | Literal[\"outline\"] | Literal[\"simple\"] | Literal[\"bounding_box\"] | Literal[\"none\"] | Literal[\"silhouette\"] | Literal[\"profile\"] | Literal[\"bounding-box\"] | Literal[\"bbox\"] | Literal[\"box\"] | Literal[\"bounds\"] | Literal[\"off\"] | Literal[\"disabled\"] | None | str"],
     "dnp_projection": NotRequired["Literal[\"detail\"] | Literal[\"outline\"] | Literal[\"simple\"] | Literal[\"bounding_box\"] | Literal[\"none\"] | Literal[\"silhouette\"] | Literal[\"profile\"] | Literal[\"bounding-box\"] | Literal[\"bbox\"] | Literal[\"box\"] | Literal[\"bounds\"] | Literal[\"off\"] | Literal[\"disabled\"] | None | str"],
     "designator_color": NotRequired["str | None"],
     "dnp_designator_color": NotRequired["str | None"],
+    "hide_silkscreen_designators": NotRequired["bool | None | float | str"],
 }, closed=True)
 
 DnpOptions = TypedDict("DnpOptions", {

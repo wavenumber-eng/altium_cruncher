@@ -15,12 +15,13 @@ from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 from altium_monkey.altium_record_pcb__pad import AltiumPcbPad
 from altium_monkey.altium_record_pcb__track import AltiumPcbTrack
 from altium_monkey.altium_record_pcb__via import AltiumPcbVia
+from altium_monkey.altium_pcb_enums import PcbIpc4761ViaType
 from altium_monkey.altium_record_types import PcbLayer
 from jsonschema import Draft202012Validator
 from PIL import Image
 import pytest
 
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
@@ -59,7 +60,7 @@ def _render(pcb, *, layers=None, styles=None, config=None, bottom=False):
     view = PcbSvgViewConfig(
         name="substrate", layers=layers or ["BOARD_SUBSTRATE"], styles=styles or {}
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     root = ET.fromstring(
         renderer.render_view_svg(
             pcb,
@@ -189,7 +190,7 @@ def test_substrate_via_mouths_follow_selected_outer_surface():
         )
 
 
-def test_component_occlusion_domain_is_side_aware_and_spans_overhang_canvas():
+def test_component_occlusion_domain_uses_side_aware_through_openings():
     pcb = _board()
     plated = AltiumPcbPad()
     plated.layer, plated.x, plated.y, plated.hole_size = (
@@ -223,14 +224,17 @@ def test_component_occlusion_domain_is_side_aware_and_spans_overhang_canvas():
     blind.layer_start, blind.layer_end = 1, 2
     pcb.pads, pcb.vias = [plated, npth], [via, blind]
 
-    renderer = PcbSvgA0Renderer(PcbSvgConfig.default())
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
     ctx = renderer._build_context(pcb, project_parameters=None)
     domains = BoardSubstrateRenderer(renderer.options)
     top = domains.occlusion_domain(ctx, pcb, "top")
     bottom = domains.occlusion_domain(ctx, pcb, "bottom")
 
-    assert len(top.openings) == 4  # two cutouts, NPTH, top blind via
-    assert len(bottom.openings) == 5  # two cutouts, plated pad, NPTH, through via
+    # Two routed cutouts plus the NPTH. The plated pad and through via are
+    # tented on top, while the blind via never becomes a through-opening.
+    assert len(top.openings) == 3
+    # Bottom additionally exposes the untented plated pad and through via.
+    assert len(bottom.openings) == 5
     mask = top.mask_element(
         ctx,
         "open-space",
@@ -246,6 +250,53 @@ def test_component_occlusion_domain_is_side_aware_and_spans_overhang_canvas():
         element.get("fill") != "black" and element.get("stroke") != "black"
         for element in list(mask)[2:]
     )
+
+
+@pytest.mark.parametrize(
+    "via_type",
+    [
+        PcbIpc4761ViaType.TYPE_3A_PLUGGING,
+        PcbIpc4761ViaType.TYPE_3B_PLUGGING,
+        PcbIpc4761ViaType.TYPE_4A_PLUGGING_AND_COVERING,
+        PcbIpc4761ViaType.TYPE_4B_PLUGGING_AND_COVERING,
+        PcbIpc4761ViaType.TYPE_5_FILLING,
+        PcbIpc4761ViaType.TYPE_6A_FILLING_AND_COVERING,
+        PcbIpc4761ViaType.TYPE_6B_FILLING_AND_COVERING,
+        PcbIpc4761ViaType.TYPE_7_FILLING_AND_CAPPING,
+    ],
+)
+@pytest.mark.parametrize("side", ["top", "bottom"])
+def test_plugged_filled_and_capped_vias_are_not_physical_openings(via_type, side):
+    pcb = _board()
+    via = AltiumPcbVia()
+    via.x, via.y, via.hole_size, via.diameter = 1500000, 1500000, 300000, 600000
+    via.ipc4761_via_type = via_type
+    pcb.vias = [via]
+
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
+    ctx = renderer._build_context(pcb, project_parameters=None)
+    domains = BoardSubstrateRenderer(renderer.options)
+
+    # Only the board's two routed cutouts remain. The via is closed in both
+    # the physical substrate domain and opposite-side component occlusion.
+    assert len(domains.material_domain(ctx, pcb).openings) == 2
+    assert len(domains.occlusion_domain(ctx, pcb, side).openings) == 2
+
+
+@pytest.mark.parametrize("side", ["top", "bottom"])
+def test_unfilled_untented_through_via_is_a_physical_opening(side):
+    pcb = _board()
+    via = AltiumPcbVia()
+    via.x, via.y, via.hole_size, via.diameter = 1500000, 1500000, 300000, 600000
+    via.ipc4761_via_type = PcbIpc4761ViaType.NONE
+    pcb.vias = [via]
+
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
+    ctx = renderer._build_context(pcb, project_parameters=None)
+    domains = BoardSubstrateRenderer(renderer.options)
+
+    assert len(domains.material_domain(ctx, pcb).openings) == 3
+    assert len(domains.occlusion_domain(ctx, pcb, side).openings) == 3
 
 
 def test_substrate_preserves_curved_cutouts_and_requires_outline():

@@ -15,7 +15,7 @@ from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
 from pcb_review_page import write_review_page
 
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
@@ -48,7 +48,7 @@ def main() -> None:
             styles={"soldermask_film": {"color": color, "opacity": opacity}},
         )
         root = ET.fromstring(
-            PcbSvgA0Renderer(config).render_view_svg(
+            PcbSvgCompositeRenderer(config).render_view_svg(
                 pcb,
                 view,
                 project_parameters=None,
@@ -77,7 +77,7 @@ def main() -> None:
     # Bottom film uses its own saved color and openings, mirrored as an assembly view.
     bottom = PcbSvgViewConfig(name="film-bottom", layers=["SOLDERMASK_FILM_BOTTOM"])
     (OUTPUT / "bottom-film.svg").write_text(
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             pcb,
             bottom,
             project_parameters=None,

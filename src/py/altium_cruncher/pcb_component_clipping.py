@@ -22,6 +22,8 @@ from .pcb_board_region_envelope_index import (
 type Side = Literal["top", "bottom"]
 type Bounds3 = tuple[float, float, float, float, float, float]
 _MM_PER_MIL = 0.0254
+COMPONENT_CLIP_TOLERANCE_MM = 1e-6
+COMPONENT_CLIP_CAP_POLICY: Literal["none"] = "none"
 
 
 class ComponentVisibilityAction(StrEnum):
@@ -39,7 +41,7 @@ class HalfSpacePlane:
     normal: tuple[float, float, float]
     distance_mm: float
     tolerance_mm: float
-    cap_policy: Literal["none"] = "none"
+    cap_policy: Literal["none"] = COMPONENT_CLIP_CAP_POLICY
 
     def identity(self) -> tuple[object, ...]:
         return (
@@ -77,7 +79,7 @@ def resolve_component_visibility(
     bounds_local_mm: Bounds3,
     authored_side: Side,
     requested_side: Side,
-    tolerance_mm: float = 1e-6,
+    tolerance_mm: float = COMPONENT_CLIP_TOLERANCE_MM,
 ) -> ComponentVisibilityResolution:
     """Qualify a component for surface clipping without guessing overhangs.
 
@@ -296,6 +298,8 @@ def _unsafe_xy_resolution(
 
 
 __all__ = [
+    "COMPONENT_CLIP_CAP_POLICY",
+    "COMPONENT_CLIP_TOLERANCE_MM",
     "ComponentVisibilityAction",
     "ComponentVisibilityResolution",
     "HalfSpacePlane",

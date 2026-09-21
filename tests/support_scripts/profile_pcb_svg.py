@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
     from altium_monkey.altium_resolved_layer_stack import ResolvedLayerStack
     from altium_cruncher.altium_cruncher_pcb_illustration import IllustrationJob
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 import weakref
 
 
@@ -89,6 +89,8 @@ class Timings:
     def patch(
         self, owner: object, name: str, label: str, *, event: bool = False
     ) -> None:
+        if not hasattr(owner, name):
+            return
         original: Callable = getattr(owner, name)
 
         @wraps(original)
@@ -209,7 +211,7 @@ class Timings:
     def install(self) -> None:
         import geometer
         from altium_cruncher import pcb_illustration_workflow as toon
-        from altium_cruncher import altium_cruncher_pcb_svg_a0_renderer as svg
+        from altium_cruncher import altium_cruncher_pcb_svg_renderer as svg
         from altium_cruncher import altium_cruncher_pcb_illustration as illustration
         from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
             ComponentLayerSession,
@@ -232,6 +234,7 @@ class Timings:
         self.patch(toon, "render_board", "toon.variant", event=True)
         for name in (
             "model_tessellation",
+            "model_illustration_geometry",
             "mesh_hlr_projection",
             "mesh_illustration",
             "execute",
@@ -259,21 +262,21 @@ class Timings:
             )
         for name, label in (
             ("render_view_svg", "svg.view"),
-            ("_render_a0_token", "svg.layer"),
+            ("_render_token", "svg.layer"),
             ("_build_context", "svg.context"),
             ("_resolved_layer_stack_safe", "svg.resolve_stack"),
             ("_collect_layer_hole_masks", "svg.hole_masks"),
-            ("_collect_a0_overlays", "svg.overlays"),
+            ("_collect_overlays", "svg.overlays"),
             ("_append_svg_metadata", "svg.metadata"),
-            ("_render_a0_physical_layer", "svg.physical_layer"),
-            ("_render_a0_board_cutouts", "svg.cutouts"),
-            ("_render_a0_hole_group", "svg.holes"),
+            ("_render_physical_layer", "svg.physical_layer"),
+            ("_render_board_cutouts", "svg.cutouts"),
+            ("_render_hole_group", "svg.holes"),
         ):
             self.patch(
-                svg.PcbSvgA0Renderer,
+                svg.PcbSvgCompositeRenderer,
                 name,
                 label,
-                event=name in {"render_view_svg", "_render_a0_token"},
+                event=name in {"render_view_svg", "_render_token"},
             )
         self.patch(SoldermaskFilmRenderer, "render_film", "svg.mask_film")
         self.patch(BoardSubstrateRenderer, "render_substrate", "svg.substrate")
@@ -281,8 +284,9 @@ class Timings:
 
 def install_experiments(experiments: list[str]) -> None:
     """Process-local hypotheses only; production functions are never edited."""
+    from altium_cruncher import altium_cruncher_pcb_illustration as illustration
     from altium_cruncher.altium_cruncher_pcb_illustration import IllustrationJob
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 
     if "variant-model-cache" in experiments:
         original_init = IllustrationJob.__init__
@@ -297,14 +301,14 @@ def install_experiments(experiments: list[str]) -> None:
         IllustrationJob.__init__ = init
 
     if "resolved-stack" in experiments:
-        original_stack = PcbSvgA0Renderer._resolved_layer_stack_safe
+        original_stack = PcbSvgCompositeRenderer._resolved_layer_stack_safe
         stack_is_static = isinstance(
-            inspect.getattr_static(PcbSvgA0Renderer, "_resolved_layer_stack_safe"),
+            inspect.getattr_static(PcbSvgCompositeRenderer, "_resolved_layer_stack_safe"),
             staticmethod,
         )
 
         def stack(
-            renderer: PcbSvgA0Renderer, pcbdoc: AltiumPcbDoc
+            renderer: PcbSvgCompositeRenderer, pcbdoc: AltiumPcbDoc
         ) -> ResolvedLayerStack | None:
             cache = getattr(renderer, "_profile_resolved_stacks", None)
             if cache is None:
@@ -321,7 +325,40 @@ def install_experiments(experiments: list[str]) -> None:
                 )
             return cache[key][1]
 
-        PcbSvgA0Renderer._resolved_layer_stack_safe = stack
+        PcbSvgCompositeRenderer._resolved_layer_stack_safe = stack
+
+    if "omit-aperture-svg" in experiments:
+
+        def surface_only(surface: object, _aperture: object) -> object:
+            return surface
+
+        illustration._with_aperture_projection = surface_only
+
+    if "uncut-only" in experiments:
+
+        def direct_uncut(
+            _job: object,
+            _component: object,
+            _source: object,
+            uncut: object,
+            _side: object,
+            _illustrate: object,
+        ) -> object:
+            return uncut
+
+        def mesh_uncut(
+            job: object, component: object, side: object, illustrate: object
+        ) -> object:
+            return job._render_mesh_projection(
+                component,
+                side,
+                illustrate,
+                clipping=None,
+                resolution=None,
+            )
+
+        IllustrationJob._apply_direct_visibility = direct_uncut
+        IllustrationJob._render_meshes = mesh_uncut
 
 
 def source_fingerprint() -> dict:
@@ -400,7 +437,12 @@ def main() -> int:
         "--experiment",
         action="append",
         default=[],
-        choices=("variant-model-cache", "resolved-stack"),
+        choices=(
+            "variant-model-cache",
+            "resolved-stack",
+            "omit-aperture-svg",
+            "uncut-only",
+        ),
     )
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()

@@ -10,7 +10,7 @@ import logging
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from .altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from .altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from .altium_cruncher_pcb_svg_config import PcbSvgConfig, resolve_config_output_path
 from .altium_cruncher_pcb_workflow import (
     CruncherPcbRenderInput,
@@ -94,7 +94,7 @@ def render_board(
     variant_scoped: bool = False,
     project: str = "",
 ) -> list[_ToonGalleryArtifact]:
-    renderer = PcbSvgA0Renderer(
+    renderer = PcbSvgCompositeRenderer(
         config, excluded_designators=variant.excluded_designators, render_job=render_job
     )
     pcbdoc = variant.board(render_input.pcbdoc)

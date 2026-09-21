@@ -2533,7 +2533,7 @@
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB."
+          "description": "SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film."
         }
       },
       "allOf": [
@@ -2566,7 +2566,7 @@
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB."
+          "description": "SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film."
         }
       },
       "allOf": [
@@ -2599,7 +2599,7 @@
         },
         "color": {
           "type": "string",
-          "description": "SVG color value, usually #RRGGBB."
+          "description": "SVG color value, usually #RRGGBB. auto chooses black or near-white for contrast with the resolved surface film."
         }
       },
       "allOf": [
