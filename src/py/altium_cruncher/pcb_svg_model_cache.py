@@ -55,6 +55,7 @@ def native_cache_identity() -> str:
         *sorted(executable.parent.glob("*.dylib")),
     ]
     adapter = Path(__file__).with_name("altium_cruncher_pcb_illustration.py")
+    clipping = adapter.with_name("pcb_component_clipping.py")
     return _sha(
         _json_bytes(
             dict(
@@ -70,6 +71,7 @@ def native_cache_identity() -> str:
                 component_artwork_policy=_sha(
                     adapter.with_name("pcb_svg_component_cache.py").read_bytes()
                 ),
+                clipping_policy=_sha(clipping.read_bytes()),
             )
         )
     )

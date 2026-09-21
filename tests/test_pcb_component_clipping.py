@@ -11,6 +11,7 @@ import pytest
 from altium_cruncher.altium_cruncher_pcb_illustration import (
     IllustrationComponent,
     IllustrationJob,
+    IllustrationSymbol,
 )
 from altium_cruncher.pcb_board_region_envelope_index import (
     BoardRegionEnvelope,
@@ -198,6 +199,86 @@ def test_cross_region_different_envelopes_cannot_form_one_plane():
 
     assert result.action is ComponentVisibilityAction.OMIT
     assert result.reason == "board-region-ambiguous:opposite-side-unsafe"
+
+
+@pytest.mark.parametrize("placement", ["cutout", "outside"])
+def test_wholly_open_space_body_preserves_uncut_aperture_projection(placement):
+    hole = ((400, 400), (600, 400), (600, 600), (400, 600))
+    index = _index(
+        _region(
+            "Rigid",
+            ((0, 0), (1000, 0), (1000, 1000), (0, 1000)),
+            holes=(hole,),
+        )
+    )
+    anchor = (12.7, 12.7) if placement == "cutout" else (27.94, 12.7)
+    bounds = (-1.0, -1.0, -2.0, 1.0, 1.0, 2.0)
+    component = IllustrationComponent(
+        "OPEN",
+        anchor,
+        (),
+        (),
+        resolved_bounds=bounds,
+        authored_side="top",
+    )
+    uncut = IllustrationSymbol(
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0L1 0L0 1Z"/></svg>',
+        0.0,
+        0.0,
+        1.0,
+        {},
+        (),
+        source_bounds_mm=bounds,
+    )
+
+    result = IllustrationJob(None, region_index=index)._apply_direct_visibility(
+        component, None, uncut, "bottom", True
+    )
+
+    assert result.svg == ""
+    assert result.aperture is not None
+    assert result.aperture.svg == uncut.svg
+    assert result.aperture_source_bounds_mm == bounds
+
+
+def test_incompatible_envelopes_do_not_erase_open_space_projection():
+    index = _index(
+        _region("Rigid", ((0, 0), (500, 0), (500, 1000), (0, 1000))),
+        _region(
+            "Flex",
+            ((500, 0), (1000, 0), (1000, 1000), (500, 1000)),
+            thickness_mils=4.0,
+        ),
+    )
+    # Cross both incompatible slabs and the lower board edge. The surface
+    # branch is unsafe, while the uncut projection must remain available to
+    # the SVG compositor's outside-board aperture mask.
+    bounds = (-2.0, -2.0, -2.0, 2.0, 2.0, 2.0)
+    component = IllustrationComponent(
+        "MIXED",
+        (12.7, 0.5),
+        (),
+        (),
+        resolved_bounds=bounds,
+        authored_side="top",
+    )
+    uncut = IllustrationSymbol(
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0L1 0L0 1Z"/></svg>',
+        0.0,
+        0.0,
+        1.0,
+        {},
+        (),
+        source_bounds_mm=bounds,
+    )
+
+    result = IllustrationJob(None, region_index=index)._apply_direct_visibility(
+        component, None, uncut, "bottom", True
+    )
+
+    assert result.svg == ""
+    assert result.aperture is not None
+    assert result.aperture_source_bounds_mm == bounds
 
 
 def test_clipping_policy_rejects_nonfinite_or_reversed_bounds():

@@ -23,9 +23,9 @@ def _project_root() -> Path:
 
 
 PACKAGE_ROOT = _project_root()
-EXPECTED_VERSION = "2026.9.19"
-EXPECTED_RELEASE_DATE = date(2026, 9, 19)
-EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-09-19.md"
+EXPECTED_VERSION = "2026.9.20"
+EXPECTED_RELEASE_DATE = date(2026, 9, 20)
+EXPECTED_RELEASE_NOTE = PACKAGE_ROOT / "docs" / "releases" / "2026-09-20.md"
 CONTROLLED_DEPENDENCY_REQUIREMENTS = {
     "altium-monkey": "==2026.9.19",
     "wn-geometer": "==2026.9.19",
@@ -51,7 +51,7 @@ def test_version_contract_matches_date_based_release() -> None:
     assert (version.major, version.minor, version.patch, version.build) == (
         2026,
         9,
-        19,
+        20,
         None,
     )
     assert version.release_date == EXPECTED_RELEASE_DATE

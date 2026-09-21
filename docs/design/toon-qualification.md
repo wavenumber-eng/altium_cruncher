@@ -12,9 +12,10 @@ Cruncher package or tag.
 - [PCB SVG command](cli/pcb-svg.html): composable illustration, designator,
   solder-mask film and substrate layers, styles, coordinate metadata and durable
   generated-group replacement.
-- [Architecture and Rust port guide](architecture-porting-guide.md): all 32 CLI
-  commands, workflow ownership, source immutability, native boundaries, body
-  ordering, model-less pad fallback and behavioral tests.
+- [Architecture and Rust port guide](architecture-porting-guide.md): CLI
+  workflows, source immutability, native boundaries, body ordering, ordinary
+  assembly-label pad fallback and behavioral tests. Toon views that co-compose
+  component illustration omit projected labels for model-less parts.
 - [Public contract authority](public-contract-authority.md): all 45 Cruncher
   JSON/JSONC roots, generated Python and browser bindings, ownership boundaries
   and compatibility rules. The GUI editor remains separate work.

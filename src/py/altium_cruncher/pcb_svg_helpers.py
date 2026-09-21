@@ -1,4 +1,4 @@
-"""Small value and primitive helpers shared by the A0 PCB compositor."""
+"""Small value and primitive helpers shared by the PCB SVG compositor."""
 
 from __future__ import annotations
 

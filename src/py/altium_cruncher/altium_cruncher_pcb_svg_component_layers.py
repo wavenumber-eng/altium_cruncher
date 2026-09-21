@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
     from altium_monkey.altium_pcb_component import AltiumPcbComponent
     from altium_monkey.altium_pcb_svg_renderer import PcbSvgRenderContext
-    from .altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from .altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
     from .pcb_svg_model_cache import PcbSvgModelCache
     from .pcb_svg_workers import PcbSvgNativeWorkers
     from .pcb_board_region_envelope_index import BoardRegionEnvelopeIndex
@@ -331,7 +331,7 @@ class ComponentLayerSession:
 
     def render(
         self,
-        renderer: PcbSvgA0Renderer,
+        renderer: PcbSvgCompositeRenderer,
         ctx: PcbSvgRenderContext,
         pcbdoc: AltiumPcbDoc,
         token: str,
@@ -400,7 +400,15 @@ class ComponentLayerSession:
                 )
             else:
                 result = self._designators(
-                    renderer, ctx, pcbdoc, placed, token, side, style, obstacles
+                    renderer,
+                    ctx,
+                    pcbdoc,
+                    placed,
+                    token,
+                    side,
+                    style,
+                    obstacles,
+                    require_model=f"ILLUSTRATION_{side.upper()}" in tokens,
                 )
             self._layers[key] = result
             self.last_cache_status = "built"
@@ -453,11 +461,22 @@ class ComponentLayerSession:
                 )
             )
         for ordinal, (part, symbol) in enumerate(placed):
+            instance_opacity = _illustration_instance_opacity(part)
             symbol_id = _surface_symbol_definition(
-                definitions, ids, aperture_ids, token, symbol
+                definitions,
+                ids,
+                aperture_ids,
+                token,
+                symbol,
+                opaque_paint=instance_opacity < 1,
             )
             aperture_symbol_id = _aperture_symbol_definition(
-                definitions, ids, aperture_ids, token, symbol
+                definitions,
+                ids,
+                aperture_ids,
+                token,
+                symbol,
+                opaque_paint=instance_opacity < 1,
             )
             entry, instance_bounds = _append_illustration_instance(
                 ctx,
@@ -470,6 +489,7 @@ class ComponentLayerSession:
                 board_mask_id,
                 aperture_mask_id,
                 ordinal,
+                instance_opacity,
             )
             entries.append(entry)
             bounds.append(instance_bounds)
@@ -497,7 +517,7 @@ class ComponentLayerSession:
 
     def _designators(
         self,
-        renderer: PcbSvgA0Renderer,
+        renderer: PcbSvgCompositeRenderer,
         ctx: PcbSvgRenderContext,
         pcbdoc: AltiumPcbDoc,
         placed: PlacedIllustrations,
@@ -505,6 +525,8 @@ class ComponentLayerSession:
         side: Side,
         style: Mapping[str, object],
         obstacles: Sequence[tuple[float, float, float, float]],
+        *,
+        require_model: bool = False,
     ) -> ComponentLayer:
         fill = _number(style, "fill_ratio", 0.8, maximum=1, positive=True)
         maximum = _number(style, "max_font_size_mm", 2.5, positive=True)
@@ -523,7 +545,11 @@ class ComponentLayerSession:
         authored_models = {body.component_index for body in pcbdoc.component_bodies}
         for index, component in enumerate(pcbdoc.components):
             designator = self._visible_designator(
-                renderer, component, index in models, side
+                renderer,
+                component,
+                index in models,
+                side,
+                require_model=require_model,
             )
             if designator is None:
                 continue
@@ -562,16 +588,21 @@ class ComponentLayerSession:
 
     def _visible_designator(
         self,
-        renderer: PcbSvgA0Renderer,
+        renderer: PcbSvgCompositeRenderer,
         component: AltiumPcbComponent,
         has_model: bool,
         side: Side,
+        *,
+        require_model: bool = False,
     ) -> str | None:
-        from .altium_cruncher_pcb_svg_a0_renderer import _component_side
+        from .altium_cruncher_pcb_svg_renderer import _component_side
 
-        # Altium can author a body's projection on the opposite side of
-        # its owner (RT's test points do this). Label the visible model.
-        if not has_model and _component_side(component) != side:
+        # A projected designator belongs to the component placement side, not
+        # to every view in which prepared/crossing model geometry exists.
+        # Region-aware preparation intentionally materializes both sides, so
+        # using ``has_model`` as a visibility override leaks labels into the
+        # opposite view for ordinary SMT and through-hole components.
+        if _component_side(component) != side or (require_model and not has_model):
             return None
         designator = str(component.designator or "")
         override = renderer.config.components.get(designator)
@@ -762,6 +793,8 @@ def _surface_symbol_definition(
     aperture_ids: Mapping[int, str],
     token: str,
     symbol: IllustrationSymbol,
+    *,
+    opaque_paint: bool,
 ) -> str | None:
     del aperture_ids  # Keep both symbol registries explicit at the call site.
     if not symbol.svg:
@@ -770,7 +803,7 @@ def _surface_symbol_definition(
     if symbol_id is None:
         symbol_id = f"{token.lower()}-symbol-{len(ids)}"
         ids[id(symbol)] = symbol_id
-        definitions.append(symbol.group(symbol_id))
+        definitions.append(symbol.group(symbol_id, opaque_paint=opaque_paint))
     return symbol_id
 
 
@@ -780,6 +813,8 @@ def _aperture_symbol_definition(
     aperture_ids: dict[int, str],
     token: str,
     symbol: IllustrationSymbol,
+    *,
+    opaque_paint: bool,
 ) -> str | None:
     del ids  # Keep both symbol registries explicit at the call site.
     if symbol.aperture is None:
@@ -789,7 +824,9 @@ def _aperture_symbol_definition(
     if symbol_id is None:
         symbol_id = f"{token.lower()}-aperture-symbol-{len(aperture_ids)}"
         aperture_ids[key] = symbol_id
-        definitions.append(symbol.aperture_group(symbol_id))
+        definitions.append(
+            symbol.aperture_group(symbol_id, opaque_paint=opaque_paint)
+        )
     return symbol_id
 
 
@@ -804,6 +841,7 @@ def _append_illustration_instance(
     board_mask_id: str,
     aperture_mask_id: str,
     ordinal: int,
+    instance_opacity: float,
 ) -> tuple[dict[str, object], tuple[float, float, float, float]]:
     x = ctx.x_to_svg(part.anchor_mm[0] / 0.0254)
     y = ctx.y_to_svg(part.anchor_mm[1] / 0.0254)
@@ -828,29 +866,53 @@ def _append_illustration_instance(
         attrs["data-geometry-source"] = ",".join(
             sorted({body["kind"] for body in part.bodies})
         )
+    if instance_opacity < 1:
+        attrs["opacity"] = f"{instance_opacity:g}"
     group = ET.SubElement(layer, f"{{{SVG}}}g", attrs)
     transform = f"translate({x:.12g} {y:.12g})"
     if aperture_symbol_id is not None:
-        ET.SubElement(
+        # Keep the visibility mask in the board coordinate system.  Applying a
+        # userSpaceOnUse mask directly to the translated <use> makes browsers
+        # evaluate the board-shaped mask in the component's local frame.  The
+        # resulting offset can expose arbitrary slices of the uncut model on
+        # the opposite board side.
+        aperture_branch = ET.SubElement(
             group,
-            f"{{{SVG}}}use",
+            f"{{{SVG}}}g",
             {
-                "href": "#" + aperture_symbol_id,
-                "transform": transform,
                 "mask": f"url(#{aperture_mask_id})",
                 "data-visibility-domain": "aperture",
             },
         )
-    if symbol_id is not None:
         ET.SubElement(
-            group,
+            aperture_branch,
             f"{{{SVG}}}use",
             {
-                "href": "#" + symbol_id,
+                "href": "#" + aperture_symbol_id,
                 "transform": transform,
-                "mask": f"url(#{board_mask_id})" if aperture_symbol_id else "none",
-                "data-visibility-domain": "board-surface",
             },
+        )
+    if symbol_id is not None:
+        surface_branch = group
+        surface_attrs = {
+            "href": "#" + symbol_id,
+            "transform": transform,
+        }
+        if aperture_symbol_id is not None:
+            surface_branch = ET.SubElement(
+                group,
+                f"{{{SVG}}}g",
+                {
+                    "mask": f"url(#{board_mask_id})",
+                    "data-visibility-domain": "board-surface",
+                },
+            )
+        else:
+            surface_attrs["data-visibility-domain"] = "board-surface"
+        ET.SubElement(
+            surface_branch,
+            f"{{{SVG}}}use",
+            surface_attrs,
         )
     low_x, low_y, _, high_x, high_y, _ = part.bounds
     left, right = x + low_x - 0.1, x + high_x + 0.1
@@ -869,8 +931,18 @@ def _append_illustration_instance(
         bounds_local_xyz_mm=part.bounds,
         bodies=part.bodies,
         paint_order=ordinal,
+        opacity=instance_opacity,
     )
     return entry, bounds
+
+
+def _illustration_instance_opacity(part: ComponentPlacement) -> float:
+    """Return one authored opacity only when the whole instance shares it."""
+
+    opacities = {float(body["opacity"]) for body in part.bodies}
+    if len(opacities) == 1:
+        return opacities.pop()
+    return 1.0
 
 
 def _select_population(

@@ -20,7 +20,10 @@ from altium_monkey.altium_record_types import PcbLayer
 from jsonschema import Draft202012Validator
 import pytest
 
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
+from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
+    ComponentLayerSession,
+)
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
@@ -30,14 +33,52 @@ from altium_cruncher.pcb_svg_render_job import PcbSvgRenderJob
 SVG = "http://www.w3.org/2000/svg"
 
 
+@pytest.mark.parametrize("component_side", ["top", "bottom"])
+@pytest.mark.parametrize("view_side", ["top", "bottom"])
+@pytest.mark.parametrize("has_model", [False, True])
+def test_projected_designator_belongs_only_to_component_placement_side(
+    component_side, view_side, has_model
+):
+    component = AltiumPcbComponent("R1", "test", component_side.upper(), "0mil", "0mil")
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
+
+    actual = ComponentLayerSession()._visible_designator(
+        renderer, component, has_model, view_side
+    )
+
+    assert actual == ("R1" if component_side == view_side else None)
+
+
+def test_toon_projected_designator_requires_a_renderable_model():
+    component = AltiumPcbComponent("R1", "test", "TOP", "0mil", "0mil")
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
+    session = ComponentLayerSession()
+
+    assert (
+        session._visible_designator(
+            renderer, component, False, "top", require_model=True
+        )
+        is None
+    )
+    assert session._visible_designator(
+        renderer, component, True, "top", require_model=True
+    ) == "R1"
+
+
 @pytest.mark.parametrize("film", [False, True])
-def test_primitive_dispatch_reuses_ordinary_methods_and_preserves_dynamic_callables(monkeypatch, film):
+def test_primitive_dispatch_reuses_ordinary_methods_and_preserves_dynamic_callables(
+    monkeypatch, film
+):
     import inspect
     from types import MethodType
     from altium_monkey.altium_pcb_svg_renderer import PcbSvgRenderer
-    from altium_cruncher.altium_cruncher_pcb_svg_soldermask_film import SoldermaskFilmRenderer
+    from altium_cruncher.altium_cruncher_pcb_svg_soldermask_film import (
+        SoldermaskFilmRenderer,
+    )
 
-    renderer = SoldermaskFilmRenderer() if film else PcbSvgA0Renderer(PcbSvgConfig.default())
+    renderer = (
+        SoldermaskFilmRenderer() if film else PcbSvgCompositeRenderer(PcbSvgConfig.default())
+    )
     original = PcbSvgRenderer._to_svg_accepts_for_layer
     calls = []
 
@@ -45,7 +86,9 @@ def test_primitive_dispatch_reuses_ordinary_methods_and_preserves_dynamic_callab
         calls.append(method)
         return original(method)
 
-    monkeypatch.setattr(PcbSvgRenderer, "_to_svg_accepts_for_layer", staticmethod(inspect_once))
+    monkeypatch.setattr(
+        PcbSvgRenderer, "_to_svg_accepts_for_layer", staticmethod(inspect_once)
+    )
 
     class Primitive:
         def to_svg(self, context, *, for_layer=None):
@@ -54,9 +97,11 @@ def test_primitive_dispatch_reuses_ordinary_methods_and_preserves_dynamic_callab
     for _ in range(10):
         assert renderer._to_svg_accepts_for_layer(Primitive().to_svg)
     assert len(calls) == 1
-    Primitive.to_svg.__signature__ = inspect.Signature([
-        inspect.Parameter("self", inspect.Parameter.POSITIONAL_OR_KEYWORD),
-    ])
+    Primitive.to_svg.__signature__ = inspect.Signature(
+        [
+            inspect.Parameter("self", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+        ]
+    )
     assert not renderer._to_svg_accepts_for_layer(Primitive().to_svg)
     del Primitive.to_svg.__signature__
     assert renderer._to_svg_accepts_for_layer(Primitive().to_svg)
@@ -132,7 +177,7 @@ def test_population_composition_matches_fresh_render_and_keeps_cached_base(side)
     ]
     job = PcbSvgRenderJob()
     job.register_board(pcb)
-    base_renderer = PcbSvgA0Renderer(config, render_job=job)
+    base_renderer = PcbSvgCompositeRenderer(config, render_job=job)
     base = draw(base_renderer, pcb, layers, mirror=side == "bottom")
     before = dict(base_renderer.component_layers.job.counts)
     variant = copy(pcb)
@@ -143,10 +188,10 @@ def test_population_composition_matches_fresh_render_and_keeps_cached_base(side)
     excluded = frozenset(
         {"U1", "U2"}
     )  # Removes first use of a shared symbol and an entire color.
-    selected = PcbSvgA0Renderer(config, render_job=job, excluded_designators=excluded)
+    selected = PcbSvgCompositeRenderer(config, render_job=job, excluded_designators=excluded)
     actual = draw(selected, variant, layers, mirror=side == "bottom")
     fresh = draw(
-        PcbSvgA0Renderer(config, excluded_designators=excluded),
+        PcbSvgCompositeRenderer(config, excluded_designators=excluded),
         variant,
         layers,
         mirror=side == "bottom",
@@ -217,7 +262,7 @@ def test_variant_mask_text_and_style_invalidate_fragments():
     pcb.texts.append(text)
     config = PcbSvgConfig.default()
     job = PcbSvgRenderJob()
-    renderer = PcbSvgA0Renderer(config, render_job=job)
+    renderer = PcbSvgCompositeRenderer(config, render_job=job)
     layers = ["BOARD_OUTLINE", "SOLDERMASK_FILM_TOP"]
     first = draw(renderer, pcb, layers, {"VariantName": "ABC", "unused": "A"})
     repeated = draw(renderer, pcb, layers, {"VariantName": "ABC", "unused": "B"})
@@ -225,12 +270,12 @@ def test_variant_mask_text_and_style_invalidate_fragments():
     assert all(e["cache"] == "hit" for e in job.events[-2:])
     second = draw(renderer, pcb, layers, {"VariantName": "XYZ"})
     assert second != first
-    assert second == draw(PcbSvgA0Renderer(config), pcb, layers, {"VariantName": "XYZ"})
+    assert second == draw(PcbSvgCompositeRenderer(config), pcb, layers, {"VariantName": "XYZ"})
     config.global_options.styles["soldermask_film"]["color"] = "#EEEEEE"
     changed = draw(renderer, pcb, layers, {"VariantName": "XYZ"})
     assert changed != second
     assert changed == draw(
-        PcbSvgA0Renderer(config), pcb, layers, {"VariantName": "XYZ"}
+        PcbSvgCompositeRenderer(config), pcb, layers, {"VariantName": "XYZ"}
     )
 
 
@@ -248,7 +293,7 @@ def test_unrelated_documents_with_shared_board_do_not_share_stack(monkeypatch):
     monkeypatch.setattr(
         PcbSvgRenderer, "_resolved_layer_stack_safe", staticmethod(resolve)
     )
-    renderer = PcbSvgA0Renderer(PcbSvgConfig.default())
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
     first = renderer._resolved_layer_stack_safe(a)
     assert renderer._resolved_layer_stack_safe(a) is first
     assert renderer._resolved_layer_stack_safe(b) is not first
@@ -313,18 +358,18 @@ def test_cutout_scopes_share_variant_artwork_but_keep_distinct_film():
     assert job.geometry_source(selected) is pcb
     assert job.components(selected) is job.components(pcb)
     config = PcbSvgConfig.default()
-    renderer = PcbSvgA0Renderer(config, render_job=job)
+    renderer = PcbSvgCompositeRenderer(config, render_job=job)
     layers = ["BOARD_OUTLINE", "SOLDERMASK_FILM_TOP"]
     all_svg = draw(renderer, pcb, layers)
     config.global_options.styles["board_cutouts"]["scope"] = "interior"
     interior_svg = draw(renderer, pcb, layers)
     assert all_svg != interior_svg
-    assert interior_svg == draw(PcbSvgA0Renderer(config), pcb, layers)
+    assert interior_svg == draw(PcbSvgCompositeRenderer(config), pcb, layers)
 
 
 def test_mixed_view_timings_and_failure_report_follow_contract(tmp_path):
     job = PcbSvgRenderJob()
-    renderer = PcbSvgA0Renderer(PcbSvgConfig.default(), render_job=job)
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default(), render_job=job)
     draw(renderer, board(), ["TOP", "BOTTOM", "BOARD_OUTLINE"])
     assert next(e for e in job.events if e["stage"] == "view")["side"] == "both"
     sides = {e["layer"]: e["side"] for e in job.events if e["stage"] == "layer"}
@@ -350,15 +395,21 @@ def test_mixed_view_timings_and_failure_report_follow_contract(tmp_path):
 
 def test_context_reuse_keeps_variant_metadata_and_parameters_independent():
     pcb = board()
-    pcb.components = [AltiumPcbComponent("U1", "test", "TOP", "0mil", "0mil", parameters={"Value": "base"})]
+    pcb.components = [
+        AltiumPcbComponent(
+            "U1", "test", "TOP", "0mil", "0mil", parameters={"Value": "base"}
+        )
+    ]
     variant = copy(pcb)
     variant.components = [replace(pcb.components[0], parameters={"Value": "variant"})]
     job = PcbSvgRenderJob()
     job.register_variant(variant, pcb)
     config = PcbSvgConfig.default()
-    renderer = PcbSvgA0Renderer(config, render_job=job)
+    renderer = PcbSvgCompositeRenderer(config, render_job=job)
     first = renderer._build_context(pcb, {"NAME": "base"})
-    renderer.options = replace(renderer.options, mirror_x=True, visible_layers=[PcbLayer.BOTTOM])
+    renderer.options = replace(
+        renderer.options, mirror_x=True, visible_layers=[PcbLayer.BOTTOM]
+    )
     second = renderer._build_context(variant, {"name": "variant"})
     assert len(job.contexts) == 1
     assert first is not second
@@ -366,7 +417,10 @@ def test_context_reuse_keeps_variant_metadata_and_parameters_independent():
     assert first.substitute_special_strings(".Name") == "base"
     assert second.substitute_special_strings(".Name") == "variant"
     assert second.component_data_by_index != first.component_data_by_index
-    assert second.component_data_by_index == PcbSvgA0Renderer(config)._build_context(variant).component_data_by_index
+    assert (
+        second.component_data_by_index
+        == PcbSvgCompositeRenderer(config)._build_context(variant).component_data_by_index
+    )
     renderer.options = replace(renderer.options, include_metadata=False)
     renderer._build_context(pcb)
     assert len(job.contexts) == 2
@@ -385,13 +439,13 @@ def test_saved_silk_designators_survive_muted_graphics_and_reuse_fragments():
         pcb.texts.append(text)
     config = PcbSvgConfig.default()
     job = PcbSvgRenderJob()
-    renderer = PcbSvgA0Renderer(config, render_job=job)
+    renderer = PcbSvgCompositeRenderer(config, render_job=job)
     full = draw(renderer, pcb, ["TOPOVERLAY"])
     for name in ("silkscreen_component_graphics", "silkscreen_board_graphics"):
         config.global_options.styles[name]["enabled"] = False
     muted = draw(renderer, pcb, ["TOPOVERLAY"])
     assert muted != full
-    assert muted == draw(PcbSvgA0Renderer(config), pcb, ["TOPOVERLAY"])
+    assert muted == draw(PcbSvgCompositeRenderer(config), pcb, ["TOPOVERLAY"])
     reused = [e for e in job.events if e["stage"] == "silk_chunk"][-1]
     assert reused["part"] == "silkscreen_designators_text" and reused["cache"] == "hit"
     config.global_options.styles["silkscreen_designators"]["enabled"] = False

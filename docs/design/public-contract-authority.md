@@ -32,7 +32,7 @@ roots in `outputs`. Each catalog entry links the exact source and JSON Schema.
 | `design_review_manifest` | `altium_cruncher_design_review` |
 | `megamaid_manifest` | `altium_cruncher_cmd_megamaid`; typed nested artifact sections |
 | `schematic_svg_manifest`, `schematic_svg_enrichment` | `altium_cruncher_cmd_sch_svg`; Design b0 links and embedded metadata |
-| `pcb_svg_manifest`, `pcb_svg_enrichment`, `pcb_svg_component_layers` | `altium_cruncher_cmd_pcb_svg`, `altium_cruncher_pcb_svg_a0_renderer`, `altium_cruncher_pcb_svg_component_layers` |
+| `pcb_svg_manifest`, `pcb_svg_enrichment`, `pcb_svg_component_layers` | `altium_cruncher_cmd_pcb_svg`, `altium_cruncher_pcb_svg_renderer`, `altium_cruncher_pcb_svg_component_layers` |
 | `pcb_svg_timings` | `pcb_svg_render_job`; nullable absent cache statistics |
 | `toon_warning_report` | `toon_diagnostics`, `altium_cruncher_cmd_toon`; deterministic nonfatal diagnostic report |
 | `notes` | `altium_cruncher_cmd_notes` |

@@ -1,0 +1,835 @@
+{
+  "schema": "altium-cruncher.toon-analytic-bodies.inventory.a0",
+  "board": {
+    "component_count": 14,
+    "body_count": 19,
+    "cutout_count": 1
+  },
+  "bodies": [
+    {
+      "body_index": 0,
+      "body_name": "rect",
+      "component_index": 0,
+      "designator": "A1",
+      "side": "top",
+      "component_anchor_mils": [
+        650.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 17.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          493.0318,
+          3845.1562
+        ],
+        [
+          894.6798,
+          3967.9523
+        ],
+        [
+          806.9682,
+          4254.8438
+        ],
+        [
+          405.3202,
+          4132.0477
+        ]
+      ],
+      "model_offset_mils": [
+        650.0,
+        4050.0
+      ],
+      "standoff_mils": 20.0,
+      "overall_height_mils": 150.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x4639E6",
+      "opacity": 1.0,
+      "intent": "surface-contained convex extrusion with nonzero component rotation"
+    },
+    {
+      "body_index": 1,
+      "body_name": "concave",
+      "component_index": 1,
+      "designator": "A2",
+      "side": "top",
+      "component_anchor_mils": [
+        1550.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 31.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          1501.2927,
+          3781.5738
+        ],
+        [
+          1929.8763,
+          4039.0929
+        ],
+        [
+          1862.9214,
+          4150.5246
+        ],
+        [
+          1700.0596,
+          4052.6674
+        ],
+        [
+          1591.9016,
+          4232.6725
+        ],
+        [
+          1326.1797,
+          4073.0107
+        ]
+      ],
+      "model_offset_mils": [
+        1628.028,
+        4056.0518
+      ],
+      "standoff_mils": 10.0,
+      "overall_height_mils": 170.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x61A2F4",
+      "opacity": 1.0,
+      "intent": "offset concave extrusion with nonzero component rotation"
+    },
+    {
+      "body_index": 2,
+      "body_name": "cylinder",
+      "component_index": 2,
+      "designator": "A3",
+      "side": "top",
+      "component_anchor_mils": [
+        2500.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 23.0,
+      "model_type": 2,
+      "kind": "cylinder",
+      "outline_mils": [
+        [
+          2513.5789,
+          3800.4692
+        ],
+        [
+          2844.9606,
+          3941.1324
+        ],
+        [
+          2704.2974,
+          4272.5142
+        ],
+        [
+          2372.9157,
+          4131.851
+        ]
+      ],
+      "model_offset_mils": [
+        2608.9382,
+        4036.4917
+      ],
+      "standoff_mils": -100.0,
+      "overall_height_mils": 220.0,
+      "cylinder_height_mils": 220.0,
+      "radius_mils": 150.0,
+      "colorref": "0x8F9D2A",
+      "opacity": 1.0,
+      "intent": "isolated offset cylinder crossing the complete board slab"
+    },
+    {
+      "body_index": 3,
+      "body_name": "sphere",
+      "component_index": 3,
+      "designator": "A4",
+      "side": "top",
+      "component_anchor_mils": [
+        3400.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 13.0,
+      "model_type": 3,
+      "kind": "sphere",
+      "outline_mils": [
+        [
+          3185.6511,
+          3867.0941
+        ],
+        [
+          3536.4243,
+          3948.0765
+        ],
+        [
+          3455.442,
+          4298.8497
+        ],
+        [
+          3104.6687,
+          4217.8674
+        ]
+      ],
+      "model_offset_mils": [
+        3320.5465,
+        4082.9719
+      ],
+      "standoff_mils": -100.0,
+      "overall_height_mils": 210.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 155.0,
+      "colorref": "0x9D7B45",
+      "opacity": 1.0,
+      "intent": "offset sphere crossing the complete board slab"
+    },
+    {
+      "body_index": 4,
+      "body_name": "through-extrusion",
+      "component_index": 4,
+      "designator": "A5",
+      "side": "top",
+      "component_anchor_mils": [
+        4350.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 19.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          4243.9847,
+          3897.1577
+        ],
+        [
+          4527.6403,
+          3994.8282
+        ],
+        [
+          4456.0153,
+          4202.8423
+        ],
+        [
+          4172.3597,
+          4105.1718
+        ]
+      ],
+      "model_offset_mils": [
+        4350.0,
+        4050.0
+      ],
+      "standoff_mils": -120.0,
+      "overall_height_mils": 120.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0xE55D9B",
+      "opacity": 1.0,
+      "intent": "staged compound: through extrusion, top-only cylinder, and lower/side sphere"
+    },
+    {
+      "body_index": 5,
+      "body_name": "top-cylinder",
+      "component_index": 4,
+      "designator": "A5",
+      "side": "top",
+      "component_anchor_mils": [
+        4350.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 19.0,
+      "model_type": 2,
+      "kind": "cylinder",
+      "outline_mils": [
+        [
+          4257.3193,
+          3827.7158
+        ],
+        [
+          4597.706,
+          3944.9203
+        ],
+        [
+          4480.5014,
+          4285.307
+        ],
+        [
+          4140.1148,
+          4168.1024
+        ]
+      ],
+      "model_offset_mils": [
+        4368.9104,
+        4056.5114
+      ],
+      "standoff_mils": -40.0,
+      "overall_height_mils": 220.0,
+      "cylinder_height_mils": 220.0,
+      "radius_mils": 70.0,
+      "colorref": "0xF9BB00",
+      "opacity": 1.0,
+      "intent": "staged compound: through extrusion, top-only cylinder, and lower/side sphere"
+    },
+    {
+      "body_index": 6,
+      "body_name": "lower-sphere",
+      "component_index": 4,
+      "designator": "A5",
+      "side": "top",
+      "component_anchor_mils": [
+        4350.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 19.0,
+      "model_type": 3,
+      "kind": "sphere",
+      "outline_mils": [
+        [
+          4077.6708,
+          3765.8578
+        ],
+        [
+          4418.0575,
+          3883.0623
+        ],
+        [
+          4300.8529,
+          4223.449
+        ],
+        [
+          3960.4662,
+          4106.2445
+        ]
+      ],
+      "model_offset_mils": [
+        4189.2618,
+        3994.6534
+      ],
+      "standoff_mils": -170.0,
+      "overall_height_mils": 50.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 110.0,
+      "colorref": "0x40E4FE",
+      "opacity": 1.0,
+      "intent": "staged compound: through extrusion, top-only cylinder, and lower/side sphere"
+    },
+    {
+      "body_index": 7,
+      "body_name": "z-low",
+      "component_index": 5,
+      "designator": "A6",
+      "side": "top",
+      "component_anchor_mils": [
+        5350.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 11.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          5223.7449,
+          3913.3997
+        ],
+        [
+          5518.2331,
+          3970.6424
+        ],
+        [
+          5476.2551,
+          4186.6003
+        ],
+        [
+          5181.7669,
+          4129.3576
+        ]
+      ],
+      "model_offset_mils": [
+        5350.0,
+        4050.0
+      ],
+      "standoff_mils": 20.0,
+      "overall_height_mils": 40.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x534626",
+      "opacity": 1.0,
+      "intent": "same-XY extrusion intervals include a gap, exact touch, and overlap"
+    },
+    {
+      "body_index": 8,
+      "body_name": "z-gap",
+      "component_index": 5,
+      "designator": "A6",
+      "side": "top",
+      "component_anchor_mils": [
+        5350.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 11.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          5223.7449,
+          3913.3997
+        ],
+        [
+          5518.2331,
+          3970.6424
+        ],
+        [
+          5476.2551,
+          4186.6003
+        ],
+        [
+          5181.7669,
+          4129.3576
+        ]
+      ],
+      "model_offset_mils": [
+        5350.0,
+        4050.0
+      ],
+      "standoff_mils": 60.0,
+      "overall_height_mils": 100.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x8F9D2A",
+      "opacity": 1.0,
+      "intent": "same-XY extrusion intervals include a gap, exact touch, and overlap"
+    },
+    {
+      "body_index": 9,
+      "body_name": "z-touch",
+      "component_index": 5,
+      "designator": "A6",
+      "side": "top",
+      "component_anchor_mils": [
+        5350.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 11.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          5223.7449,
+          3913.3997
+        ],
+        [
+          5518.2331,
+          3970.6424
+        ],
+        [
+          5476.2551,
+          4186.6003
+        ],
+        [
+          5181.7669,
+          4129.3576
+        ]
+      ],
+      "model_offset_mils": [
+        5350.0,
+        4050.0
+      ],
+      "standoff_mils": 100.0,
+      "overall_height_mils": 140.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x6AC4E9",
+      "opacity": 1.0,
+      "intent": "same-XY extrusion intervals include a gap, exact touch, and overlap"
+    },
+    {
+      "body_index": 10,
+      "body_name": "z-overlap",
+      "component_index": 5,
+      "designator": "A6",
+      "side": "top",
+      "component_anchor_mils": [
+        5350.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 11.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          5223.7449,
+          3913.3997
+        ],
+        [
+          5518.2331,
+          3970.6424
+        ],
+        [
+          5476.2551,
+          4186.6003
+        ],
+        [
+          5181.7669,
+          4129.3576
+        ]
+      ],
+      "model_offset_mils": [
+        5350.0,
+        4050.0
+      ],
+      "standoff_mils": 120.0,
+      "overall_height_mils": 175.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x516FE7",
+      "opacity": 1.0,
+      "intent": "same-XY extrusion intervals include a gap, exact touch, and overlap"
+    },
+    {
+      "body_index": 11,
+      "body_name": "partial",
+      "component_index": 6,
+      "designator": "A7",
+      "side": "top",
+      "component_anchor_mils": [
+        6250.0,
+        4050.0
+      ],
+      "component_rotation_degrees": 27.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          6130.9872,
+          3821.011
+        ],
+        [
+          6505.2099,
+          4011.687
+        ],
+        [
+          6369.0128,
+          4278.989
+        ],
+        [
+          5994.7901,
+          4088.313
+        ]
+      ],
+      "model_offset_mils": [
+        6250.0,
+        4050.0
+      ],
+      "standoff_mils": 15.0,
+      "overall_height_mils": 160.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0xAD448E",
+      "opacity": 0.55,
+      "intent": "uniform partial opacity applied once to the final component instance"
+    },
+    {
+      "body_index": 12,
+      "body_name": "rect",
+      "component_index": 7,
+      "designator": "B1",
+      "side": "bottom",
+      "component_anchor_mils": [
+        650.0,
+        850.0
+      ],
+      "component_rotation_degrees": 29.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          393.6084,
+          879.3829
+        ],
+        [
+          760.9487,
+          1083.003
+        ],
+        [
+          906.3916,
+          820.6171
+        ],
+        [
+          539.0513,
+          616.997
+        ]
+      ],
+      "model_offset_mils": [
+        650.0,
+        850.0
+      ],
+      "standoff_mils": 20.0,
+      "overall_height_mils": 150.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x4639E6",
+      "opacity": 1.0,
+      "intent": "bottom-authored counterpart of the surface extrusion"
+    },
+    {
+      "body_index": 13,
+      "body_name": "cylinder",
+      "component_index": 8,
+      "designator": "B2",
+      "side": "bottom",
+      "component_anchor_mils": [
+        1550.0,
+        850.0
+      ],
+      "component_rotation_degrees": 37.0,
+      "model_type": 2,
+      "kind": "cylinder",
+      "outline_mils": [
+        [
+          1334.7281,
+          969.5115
+        ],
+        [
+          1622.2369,
+          1186.1649
+        ],
+        [
+          1838.8903,
+          898.6561
+        ],
+        [
+          1551.3815,
+          682.0027
+        ]
+      ],
+      "model_offset_mils": [
+        1586.8092,
+        934.0838
+      ],
+      "standoff_mils": 15.0,
+      "overall_height_mils": 180.0,
+      "cylinder_height_mils": 180.0,
+      "radius_mils": 150.0,
+      "colorref": "0x8F9D2A",
+      "opacity": 1.0,
+      "intent": "bottom-authored offset surface cylinder"
+    },
+    {
+      "body_index": 14,
+      "body_name": "sphere",
+      "component_index": 9,
+      "designator": "B3",
+      "side": "bottom",
+      "component_anchor_mils": [
+        2500.0,
+        850.0
+      ],
+      "component_rotation_degrees": 41.0,
+      "model_type": 3,
+      "kind": "sphere",
+      "outline_mils": [
+        [
+          2222.7546,
+          787.871
+        ],
+        [
+          2494.4501,
+          1024.0523
+        ],
+        [
+          2730.6313,
+          752.3568
+        ],
+        [
+          2458.9359,
+          516.1756
+        ]
+      ],
+      "model_offset_mils": [
+        2476.693,
+        770.1139
+      ],
+      "standoff_mils": 12.0,
+      "overall_height_mils": 322.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 155.0,
+      "colorref": "0x9D7B45",
+      "opacity": 1.0,
+      "intent": "bottom-authored offset surface sphere"
+    },
+    {
+      "body_index": 15,
+      "body_name": "through",
+      "component_index": 10,
+      "designator": "B4",
+      "side": "bottom",
+      "component_anchor_mils": [
+        3400.0,
+        850.0
+      ],
+      "component_rotation_degrees": 33.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          3142.1833,
+          861.4264
+        ],
+        [
+          3494.425,
+          1090.1748
+        ],
+        [
+          3657.8167,
+          838.5736
+        ],
+        [
+          3305.575,
+          609.8252
+        ]
+      ],
+      "model_offset_mils": [
+        3400.0,
+        850.0
+      ],
+      "standoff_mils": -100.0,
+      "overall_height_mils": 120.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0xE55D9B",
+      "opacity": 1.0,
+      "intent": "bottom-authored extrusion crossing the complete board slab"
+    },
+    {
+      "body_index": 16,
+      "body_name": "edge",
+      "component_index": 11,
+      "designator": "B5",
+      "side": "bottom",
+      "component_anchor_mils": [
+        100.0,
+        2450.0
+      ],
+      "component_rotation_degrees": 21.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          -322.8505,
+          2491.2005
+        ],
+        [
+          386.6707,
+          2763.5601
+        ],
+        [
+          522.8505,
+          2408.7995
+        ],
+        [
+          -186.6707,
+          2136.4399
+        ]
+      ],
+      "model_offset_mils": [
+        100.0,
+        2450.0
+      ],
+      "standoff_mils": 10.0,
+      "overall_height_mils": 150.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x6B6BFF",
+      "opacity": 1.0,
+      "intent": "bottom-authored body extending beyond the left board edge"
+    },
+    {
+      "body_index": 17,
+      "body_name": "cutout",
+      "component_index": 12,
+      "designator": "A8",
+      "side": "top",
+      "component_anchor_mils": [
+        5550.0,
+        2250.0
+      ],
+      "component_rotation_degrees": 16.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          5141.1042,
+          1789.4522
+        ],
+        [
+          6140.8164,
+          2076.1151
+        ],
+        [
+          5958.8958,
+          2710.5478
+        ],
+        [
+          4959.1836,
+          2423.8849
+        ]
+      ],
+      "model_offset_mils": [
+        5550.0,
+        2250.0
+      ],
+      "standoff_mils": 10.0,
+      "overall_height_mils": 150.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0xF0C94C",
+      "opacity": 1.0,
+      "intent": "top-authored body spanning the routed interior cutout"
+    },
+    {
+      "body_index": 18,
+      "body_name": "hidden",
+      "component_index": 13,
+      "designator": "A9",
+      "side": "top",
+      "component_anchor_mils": [
+        6550.0,
+        2250.0
+      ],
+      "component_rotation_degrees": 12.0,
+      "model_type": 0,
+      "kind": "extrusion",
+      "outline_mils": [
+        [
+          6375.7758,
+          2059.6164
+        ],
+        [
+          6786.5977,
+          2146.9393
+        ],
+        [
+          6724.2242,
+          2440.3836
+        ],
+        [
+          6313.4023,
+          2353.0607
+        ]
+      ],
+      "model_offset_mils": [
+        6550.0,
+        2250.0
+      ],
+      "standoff_mils": 10.0,
+      "overall_height_mils": 150.0,
+      "cylinder_height_mils": 0.0,
+      "radius_mils": 0.0,
+      "colorref": "0x000000",
+      "opacity": 0.0,
+      "intent": "zero-opacity body must be omitted before geometry and occlusion"
+    }
+  ]
+}

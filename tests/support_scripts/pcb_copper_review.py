@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 
 from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
 from pcb_review_page import OUTPUT, write_review_page
 
@@ -31,7 +31,7 @@ def main() -> None:
     config = PcbSvgConfig.from_dict(
         json.loads((ROOT / "examples/pcb-svg/copper-preview.config.json").read_text())
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     for view in config.views:
         surface = ET.fromstring(
             renderer.render_view_svg(

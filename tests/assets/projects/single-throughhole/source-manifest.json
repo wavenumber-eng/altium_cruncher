@@ -1,0 +1,19 @@
+{
+  "source_corpus": "user-authored projection_test/single-throughhole",
+  "imported": "2026-09-20",
+  "import_authorization": "Repository owner explicitly approved copying these focused test boards into Altium Cruncher on 2026-09-20.",
+  "scope": "PcbDoc-only fixture. Project and schematic files are intentionally excluded.",
+  "fixture_purpose": "Paired top- and bottom-mounted through-hole connector boards for board-thickness clipping, opposite-side pin projection, and SVG aperture-mask regression coverage.",
+  "files": [
+    {
+      "path": "single-though-hole-bottom.PcbDoc",
+      "bytes": 1367040,
+      "sha256": "600848e605a8bff35cb4dcbbe0875ecb9619fa326e98301c54078a16c3a8c77a"
+    },
+    {
+      "path": "single-though-hole-top.PcbDoc",
+      "bytes": 1367040,
+      "sha256": "0074a0771b626dcf2ee461f00e60dfcfa0c7518a979aaa63c39a233f8abf7085"
+    }
+  ]
+}

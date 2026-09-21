@@ -17,7 +17,7 @@ from altium_monkey.altium_record_types import PcbLayer
 
 from altium_cruncher import pcb_svg_primitive_index as indexing
 from altium_cruncher.altium_cruncher_pcb_svg_soldermask_film import SoldermaskFilmRenderer
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
 from altium_cruncher.pcb_svg_render_job import PcbSvgRenderJob
 
@@ -152,8 +152,8 @@ def test_v7_collection_dispatch_matches_native_renderer():
 
 def test_index_is_shared_by_job_and_isolated_between_jobs():
     job = PcbSvgRenderJob()
-    first = PcbSvgA0Renderer(PcbSvgConfig.default(), render_job=job)
-    second = PcbSvgA0Renderer(PcbSvgConfig.default(), render_job=job)
+    first = PcbSvgCompositeRenderer(PcbSvgConfig.default(), render_job=job)
+    second = PcbSvgCompositeRenderer(PcbSvgConfig.default(), render_job=job)
     film = SoldermaskFilmRenderer(primitive_index=job.primitive_index)
     assert first._primitive_index is second._primitive_index is film._primitive_index
     assert PcbSvgRenderJob().primitive_index is not job.primitive_index

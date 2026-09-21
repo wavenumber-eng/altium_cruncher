@@ -35,6 +35,9 @@ if TYPE_CHECKING:
     from altium_cruncher.altium_cruncher_pcb_svg_component_layers import (
         ComponentLayerSession,
     )
+    from altium_cruncher.pcb_board_region_envelope_index import (
+        BoardRegionEnvelopeIndex,
+    )
 
 from profile_pcb_svg import output_inventory, source_fingerprint
 
@@ -133,8 +136,16 @@ class WorkerProbe:
             side: Side,
             line_width: float,
             illustrate: bool,
+            region_index: BoardRegionEnvelopeIndex | None = None,
         ) -> PlacedIllustrations:
-            result = materialize(session, pcbdoc, side, line_width, illustrate)
+            result = materialize(
+                session,
+                pcbdoc,
+                side,
+                line_width,
+                illustrate,
+                region_index,
+            )
             if session.job is not None:
                 self.jobs.append(
                     dict(

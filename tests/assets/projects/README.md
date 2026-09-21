@@ -32,12 +32,23 @@ contains only the Altium example PcbDoc needed to distinguish its two 32.1455
 mil rigid regions from its 3.3267 mil flex region. Its end-to-end Toon use is
 opt-in; focused semantic region queries may use it directly.
 
+`Kame_IMU` is the second PcbDoc-only rigid-flex Toon fixture. It contributes two
+34.1479 mil rigid regions, one 6.3391 mil flex region, 51 components, and an
+independent real-world check of regional material, coverlay, bend-line, and
+multi-region placement behavior. Its source manifest records the repository
+owner's explicit import authorization.
+
 `projection-test` and `usb-edge` are focused component-visibility fixtures.
 The first contains purpose-built edge, cutout, straddle, and through-board
 placements. The second provides real-world straddle-mount USB-C and
 reverse-mount LED cases from a sanitized, PcbDoc-only source. Their source
 manifests record the repository owner's explicit import authorization;
 generated SVG reviews remain transient output.
+
+`toon-analytic-bodies` is the generator-owned rigid-board fixture for Toon
+Gate 6. Its component-owned extrusion, cylinder, and sphere inventory is
+recorded in `toon-analytic-bodies/semantic-inventory.json`; regenerate it with
+`tests/support_scripts/generate_toon_analytic_bodies.py`.
 
 Generated test or review artifacts should go under each project fixture's
 `output/` folder, organized by command, variant, and output kind when needed,

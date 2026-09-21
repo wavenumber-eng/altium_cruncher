@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2026.9.19
+## 2026.9.20
 
 - Consume `altium-monkey==2026.9.19` and `wn-geometer==2026.9.19`, including
   Geometer's B0 post-transform half-space clipping and projected-fragment
@@ -21,6 +21,10 @@
   templates and examples use A1. Explicit substrate/film colors remain global
   overrides, and open style records leave room for later material and per-bend
   policies.
+- Treat IPC-4761 plugged, filled, and capped via bores as mechanically opaque,
+  compare board regions in Cruncher's normalized physical slab, transform mesh
+  normals correctly under nonuniform STEP root scale, and include all clipping
+  tolerances and cap policy in illustration cache identity.
 
 ## 2026.9.18
 

@@ -73,7 +73,6 @@ class _Resolved:
         )
 
 
-
 @dataclass
 class _Document:
     board_regions: tuple[AltiumStackRegion, ...]
@@ -120,6 +119,49 @@ def test_equal_envelope_boundary_selects_canonical_region_not_source_order():
     assert {item.name for item in result.matches} == {"A", "B"}
     assert "canonical" in result.detail
     assert result.fully_covered is True
+
+
+def test_equal_normalized_slabs_ignore_different_source_z_conventions():
+    left = _region("Left", "left", ((0, 0), (5, 0), (5, 5), (0, 5)))
+    right = _region("Right", "right", ((5, 0), (10, 0), (10, 5), (5, 5)))
+    envelopes = {
+        "left": ResolvedStackEnvelope(
+            source_stackup_ref="left",
+            substack_name="left",
+            is_flex=False,
+            z_zero="substack_midplane",
+            total_thickness_mils=32.0,
+            top_z_mils=16.0,
+            bottom_z_mils=-16.0,
+        ),
+        "right": ResolvedStackEnvelope(
+            source_stackup_ref="right",
+            substack_name="right",
+            is_flex=False,
+            z_zero="top_surface",
+            total_thickness_mils=32.0,
+            top_z_mils=0.0,
+            bottom_z_mils=-32.0,
+        ),
+    }
+
+    class Resolver:
+        def stack_envelope_for_board_region(self, region):
+            return envelopes[region.layerstack_id]
+
+        def substack_for_board_region(self, region):
+            return SimpleNamespace(name=region.layerstack_id, is_flex=False)
+
+    index = BoardRegionEnvelopeIndex.from_layer_stack_document(
+        _Document(board_regions=(left, right)), Resolver()
+    )
+
+    assert index.query_point(5, 2).status is BoardRegionQueryStatus.RESOLVED
+    spanning = index.query_bounds(4, 1, 6, 4)
+    assert spanning.status is BoardRegionQueryStatus.RESOLVED
+    assert spanning.region is not None
+    assert spanning.region.top_surface_z_mils == 0.0
+    assert spanning.region.bottom_surface_z_mils == -32.0
 
 
 def test_different_envelopes_are_ambiguous_for_point_and_spanning_bounds():

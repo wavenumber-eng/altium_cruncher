@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from altium_cruncher.altium_cruncher_pcb_workflow import CruncherPcbRenderInput
     from altium_cruncher.pcb_illustration_variants import IllustrationVariant
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgViewConfig
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
 from altium_cruncher.altium_cruncher_pcb_workflow import (
     iter_pcb_render_inputs,
@@ -193,7 +193,7 @@ def _render_variant(
     output.mkdir(parents=True, exist_ok=True)
     pcb = variant.board(saved_pcb)
     project_parameters = variant.project_parameters
-    renderer = PcbSvgA0Renderer(
+    renderer = PcbSvgCompositeRenderer(
         config, excluded_designators=variant.excluded_designators, render_job=render_job
     )
     renderer.render_job.register_variant(pcb, saved_pcb)
@@ -244,7 +244,7 @@ def _render_variant(
 
 
 def _side_report(
-    renderer: PcbSvgA0Renderer,
+    renderer: PcbSvgCompositeRenderer,
     pcb: AltiumPcbDoc,
     side: str,
     excluded: frozenset[str],
@@ -269,7 +269,7 @@ def _side_report(
 
 
 def _mask_text_report(
-    renderer: PcbSvgA0Renderer,
+    renderer: PcbSvgCompositeRenderer,
     pcb: AltiumPcbDoc,
     project_parameters: dict[str, str],
 ) -> list[dict[str, object]]:
@@ -287,7 +287,7 @@ def _mask_text_report(
 
 
 def _render_review_views(
-    renderer: PcbSvgA0Renderer,
+    renderer: PcbSvgCompositeRenderer,
     pcb: AltiumPcbDoc,
     config: PcbSvgConfig,
     view: PcbSvgViewConfig,

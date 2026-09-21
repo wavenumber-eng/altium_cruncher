@@ -54,7 +54,7 @@ for exact arguments/defaults; this table records where the behavior is owned.
 | `notes` | altium_cruncher_notes.py | Document/project selection; typed text/note records and output paths | Monkey supplies schematic records; Cruncher classifies notes and builds its envelope | test_notes_and_design_review.py |
 | `outjob` | altium_cruncher_cmd_outjob.py | run or implicit run; project/job selection, temporary normalization and result reporting | Monkey OutJob runner and installed Altium perform export; Windows only | L0_public_cli/test_L0_001_cli_entrypoint.py |
 | `pcb-layer-step` | altium_cruncher_pcb_layer_step.py; pcb_layer_step_options.py | Config resolves immutable options; collect board/copper/hole geometry, emit STEP and manifest | Monkey supplies PCB geometry; Geometer owns STEP/boolean operations | test_pcb_layer_step.py |
-| `pcb-svg` | altium_cruncher_pcb_svg_a0_renderer.py; pcb_svg_render_job.py; pcb_svg_artifacts.py | Project/board context; per-layer outputs and explicit views; durable SVG group updates | Monkey owns primitives/text; Cruncher owns composition, virtual layers, styles and caches; Geometer owns projection | test_pcb_svg_view_selection.py; test_pcb_svg_render_job.py |
+| `pcb-svg` | altium_cruncher_pcb_svg_renderer.py; pcb_svg_render_job.py; pcb_svg_artifacts.py | Project/board context; per-layer outputs and explicit views; durable SVG group updates | Monkey owns primitives/text; Cruncher owns composition, virtual layers, styles and caches; Geometer owns projection | test_pcb_svg_view_selection.py; test_pcb_svg_render_job.py |
 | `pcbdoc` | project_creation.py; altium_cruncher_cmd_pcbdoc.py | create; config/CLI to pcbdoc.create, stack/mechanical profile, overwrite/dry-run policy | Monkey builds and saves the document | test_document_create_commands.py |
 | `pcblib` | altium_cruncher_cmd_pcblib.py | create; initial footprint identity and output policy | Monkey builds and saves the library | test_document_create_commands.py |
 | `pnp` | pnp_artifacts.py; bom_pnp_model.py | PrjPcb selection (other input suffixes rejected), coordinates/units, variant/no-BOM filters, sorting and output snapshot | Monkey supplies placements; Cruncher owns normalization and artifact formats | test_pnp_outputs.py; test_bom_pnp_model.py |
@@ -100,14 +100,16 @@ for exact arguments/defaults; this table records where the behavior is owned.
 7. `ComponentLayerSession` composes shared SVG symbols and source metadata,
    orders top surfaces by high Z and bottom surfaces by low Z, then filters each
    population. Model-less components get no invented illustration. Assembly
-   labels use model outlines; only components with no authored model use the
-   electrical-pad envelope, with locating-hole fallback if no eligible pads exist.
-   An unavailable attached model does not silently become a pad-derived model.
+   labels use model outlines. Ordinary designator-only PCB SVG views can use an
+   electrical-pad envelope, with locating-hole fallback if no eligible pads
+   exist; a view co-composed with component illustration, including Toon, omits
+   the model-less projected label. An unavailable attached model never silently
+   becomes a pad-derived model.
 8. The designator fitter retains autodoc's sizing/rotation/clearance rules.
    Coordinates for fitting use source Y-down millimeters; bottom-view text is
    counter-reflected for readability. Label style and SVG emission are separate
    from geometry selection and fitting. Preserve J1's electrical-pad centering.
-9. The A0 compositor prepares component bounds, constructs the SVG viewBox, then
+9. The PCB SVG compositor prepares component bounds, constructs the SVG viewBox, then
    commits physical and virtual layers in the established order. Film subtracts
    authored mask primitives/text, custom pad openings, extended primitive mask
    expansions and cutouts from the board domain. NPTH bores remain open; tenting,

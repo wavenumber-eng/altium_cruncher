@@ -34,7 +34,7 @@
     "assembly": {
       "anyOf": [
         {
-          "$ref": "#/$defs/AssemblyOptions"
+          "$ref": "#/$defs/AssemblyOptionsA1"
         },
         {
           "type": "null"
@@ -334,7 +334,7 @@
         ]
       }
     },
-    "AssemblyOptions": {
+    "AssemblyOptionsA1": {
       "type": "object",
       "properties": {
         "default_projection": {
@@ -502,6 +502,27 @@
           ],
           "description": "Text color for DNP component designators.",
           "default": "#FF0000"
+        },
+        "hide_silkscreen_designators": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"
+            }
+          ],
+          "description": "Hide authored physical silkscreen designators when projected assembly designators are requested. Defaults to false so --assembly preserves the board as authored.",
+          "default": false,
+          "x-acr-input": "boolean",
+          "x-acr-nullable": true
         }
       },
       "unevaluatedProperties": {

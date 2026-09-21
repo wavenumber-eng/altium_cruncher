@@ -18,7 +18,7 @@ from pcb_review_page import write_review_page
 from altium_monkey.altium_record_pcb__pad import AltiumPcbPad
 from altium_monkey.altium_record_types import PcbLayer
 
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
@@ -71,7 +71,7 @@ def render_surface(
         styles={"soldermask_film": {"color": color}},
     )
     return ET.fromstring(
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             pcb,
             view,
             project_parameters=None,

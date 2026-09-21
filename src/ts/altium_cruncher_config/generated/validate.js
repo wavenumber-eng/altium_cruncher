@@ -8282,7 +8282,7 @@ function validate21(data, { instancePath = "", parentData, parentDataProperty, r
   return errors === 0;
 }
 validate21.evaluated = { "props": true, "dynamicProps": false, "dynamicItems": false };
-var pattern85 = new RegExp("^\\s*(?:[tT][oO][pP]|[bB][oO][tT][tT][oO][mM]|[tT][oO][pP][lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM][lL][aA][yY][eE][rR]|[tT][oO][pP]_[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]_[lL][aA][yY][eE][rR]|[tT][oO][pP]-[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]-[lL][aA][yY][eE][rR])\\s*$", "u");
+var pattern86 = new RegExp("^\\s*(?:[tT][oO][pP]|[bB][oO][tT][tT][oO][mM]|[tT][oO][pP][lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM][lL][aA][yY][eE][rR]|[tT][oO][pP]_[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]_[lL][aA][yY][eE][rR]|[tT][oO][pP]-[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]-[lL][aA][yY][eE][rR])\\s*$", "u");
 var pattern77 = new RegExp("^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$", "u");
 function validate71(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
@@ -8516,7 +8516,7 @@ function validate71(data, { instancePath = "", parentData, parentDataProperty, r
       valid1 = valid1 || _valid0;
       const _errs25 = errors;
       if (typeof data0 === "string") {
-        if (!pattern85.test(data0)) {
+        if (!pattern86.test(data0)) {
           const err19 = { instancePath: instancePath + "/side", schemaPath: "#/properties/side/anyOf/2/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:[tT][oO][pP]|[bB][oO][tT][tT][oO][mM]|[tT][oO][pP][lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM][lL][aA][yY][eE][rR]|[tT][oO][pP]_[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]_[lL][aA][yY][eE][rR]|[tT][oO][pP]-[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]-[lL][aA][yY][eE][rR])\\s*$" }, message: 'must match pattern "^\\s*(?:[tT][oO][pP]|[bB][oO][tT][tT][oO][mM]|[tT][oO][pP][lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM][lL][aA][yY][eE][rR]|[tT][oO][pP]_[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]_[lL][aA][yY][eE][rR]|[tT][oO][pP]-[lL][aA][yY][eE][rR]|[bB][oO][tT][tT][oO][mM]-[lL][aA][yY][eE][rR])\\s*$"' };
           if (vErrors === null) {
             vErrors = [err19];
@@ -9574,7 +9574,7 @@ function validate70(data, { instancePath = "", parentData, parentDataProperty, r
   return errors === 0;
 }
 validate70.evaluated = { "props": true, "dynamicProps": false, "dynamicItems": false };
-var pattern92 = new RegExp("^\\s*(?:[aA][uU][tT][oO]|[aA][uU][tT][oO])\\s*$", "u");
+var pattern93 = new RegExp("^\\s*(?:[aA][uU][tT][oO]|[aA][uU][tT][oO])\\s*$", "u");
 function validate75(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -9785,7 +9785,7 @@ function validate75(data, { instancePath = "", parentData, parentDataProperty, r
       valid4 = valid4 || _valid1;
       const _errs29 = errors;
       if (typeof data1 === "string") {
-        if (!pattern92.test(data1)) {
+        if (!pattern93.test(data1)) {
           const err15 = { instancePath: instancePath + "/layers", schemaPath: "#/properties/layers/anyOf/2/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:[aA][uU][tT][oO]|[aA][uU][tT][oO])\\s*$" }, message: 'must match pattern "^\\s*(?:[aA][uU][tT][oO]|[aA][uU][tT][oO])\\s*$"' };
           if (vErrors === null) {
             vErrors = [err15];
@@ -10347,7 +10347,7 @@ function validate75(data, { instancePath = "", parentData, parentDataProperty, r
 }
 validate75.evaluated = { "props": true, "dynamicProps": false, "dynamicItems": false };
 var func1 = require_ucs2length().default;
-var pattern95 = new RegExp("^(?:[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[dD][eE][tT][aA][iI][lL]|[dD][eE][tT][aA][iI][lL][eE][dD]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[oO][fF][fF])$", "u");
+var pattern96 = new RegExp("^(?:[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[dD][eE][tT][aA][iI][lL]|[dD][eE][tT][aA][iI][lL][eE][dD]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[oO][fF][fF])$", "u");
 function validate77(data, { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}) {
   let vErrors = null;
   let errors = 0;
@@ -11034,7 +11034,7 @@ function validate77(data, { instancePath = "", parentData, parentDataProperty, r
       valid9 = valid9 || _valid6;
       const _errs77 = errors;
       if (typeof data7 === "string") {
-        if (!pattern95.test(data7)) {
+        if (!pattern96.test(data7)) {
           const err53 = { instancePath: instancePath + "/assembly_hlr_mode", schemaPath: "#/properties/assembly_hlr_mode/anyOf/2/pattern", keyword: "pattern", params: { pattern: "^(?:[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[dD][eE][tT][aA][iI][lL]|[dD][eE][tT][aA][iI][lL][eE][dD]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[oO][fF][fF])$" }, message: 'must match pattern "^(?:[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[dD][eE][tT][aA][iI][lL]|[dD][eE][tT][aA][iI][lL][eE][dD]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[oO][fF][fF])$"' };
           if (vErrors === null) {
             vErrors = [err53];
@@ -11342,7 +11342,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           let valid9 = false;
           const _errs28 = errors;
           if (typeof data3 !== "string") {
-            const err9 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err9 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err9];
             } else {
@@ -11351,7 +11351,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("detail" !== data3) {
-            const err10 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/0/const", keyword: "const", params: { allowedValue: "detail" }, message: "must be equal to constant" };
+            const err10 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/0/const", keyword: "const", params: { allowedValue: "detail" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err10];
             } else {
@@ -11363,7 +11363,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs30 = errors;
           if (typeof data3 !== "string") {
-            const err11 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err11 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err11];
             } else {
@@ -11372,7 +11372,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("outline" !== data3) {
-            const err12 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/1/const", keyword: "const", params: { allowedValue: "outline" }, message: "must be equal to constant" };
+            const err12 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/1/const", keyword: "const", params: { allowedValue: "outline" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err12];
             } else {
@@ -11384,7 +11384,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs32 = errors;
           if (typeof data3 !== "string") {
-            const err13 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err13 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err13];
             } else {
@@ -11393,7 +11393,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("simple" !== data3) {
-            const err14 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/2/const", keyword: "const", params: { allowedValue: "simple" }, message: "must be equal to constant" };
+            const err14 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/2/const", keyword: "const", params: { allowedValue: "simple" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err14];
             } else {
@@ -11405,7 +11405,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs34 = errors;
           if (typeof data3 !== "string") {
-            const err15 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err15 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err15];
             } else {
@@ -11414,7 +11414,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bounding_box" !== data3) {
-            const err16 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/3/const", keyword: "const", params: { allowedValue: "bounding_box" }, message: "must be equal to constant" };
+            const err16 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/3/const", keyword: "const", params: { allowedValue: "bounding_box" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err16];
             } else {
@@ -11426,7 +11426,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs36 = errors;
           if (typeof data3 !== "string") {
-            const err17 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/4/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err17 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/4/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err17];
             } else {
@@ -11435,7 +11435,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("none" !== data3) {
-            const err18 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/4/const", keyword: "const", params: { allowedValue: "none" }, message: "must be equal to constant" };
+            const err18 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/4/const", keyword: "const", params: { allowedValue: "none" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err18];
             } else {
@@ -11447,7 +11447,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs38 = errors;
           if (typeof data3 !== "string") {
-            const err19 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/5/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err19 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/5/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err19];
             } else {
@@ -11456,7 +11456,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("silhouette" !== data3) {
-            const err20 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/5/const", keyword: "const", params: { allowedValue: "silhouette" }, message: "must be equal to constant" };
+            const err20 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/5/const", keyword: "const", params: { allowedValue: "silhouette" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err20];
             } else {
@@ -11468,7 +11468,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs40 = errors;
           if (typeof data3 !== "string") {
-            const err21 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/6/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err21 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/6/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err21];
             } else {
@@ -11477,7 +11477,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("profile" !== data3) {
-            const err22 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/6/const", keyword: "const", params: { allowedValue: "profile" }, message: "must be equal to constant" };
+            const err22 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/6/const", keyword: "const", params: { allowedValue: "profile" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err22];
             } else {
@@ -11489,7 +11489,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs42 = errors;
           if (typeof data3 !== "string") {
-            const err23 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/7/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err23 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/7/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err23];
             } else {
@@ -11498,7 +11498,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bounding-box" !== data3) {
-            const err24 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/7/const", keyword: "const", params: { allowedValue: "bounding-box" }, message: "must be equal to constant" };
+            const err24 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/7/const", keyword: "const", params: { allowedValue: "bounding-box" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err24];
             } else {
@@ -11510,7 +11510,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs44 = errors;
           if (typeof data3 !== "string") {
-            const err25 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/8/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err25 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/8/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err25];
             } else {
@@ -11519,7 +11519,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bbox" !== data3) {
-            const err26 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/8/const", keyword: "const", params: { allowedValue: "bbox" }, message: "must be equal to constant" };
+            const err26 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/8/const", keyword: "const", params: { allowedValue: "bbox" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err26];
             } else {
@@ -11531,7 +11531,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs46 = errors;
           if (typeof data3 !== "string") {
-            const err27 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/9/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err27 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/9/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err27];
             } else {
@@ -11540,7 +11540,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("box" !== data3) {
-            const err28 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/9/const", keyword: "const", params: { allowedValue: "box" }, message: "must be equal to constant" };
+            const err28 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/9/const", keyword: "const", params: { allowedValue: "box" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err28];
             } else {
@@ -11552,7 +11552,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs48 = errors;
           if (typeof data3 !== "string") {
-            const err29 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/10/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err29 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/10/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err29];
             } else {
@@ -11561,7 +11561,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bounds" !== data3) {
-            const err30 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/10/const", keyword: "const", params: { allowedValue: "bounds" }, message: "must be equal to constant" };
+            const err30 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/10/const", keyword: "const", params: { allowedValue: "bounds" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err30];
             } else {
@@ -11573,7 +11573,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs50 = errors;
           if (typeof data3 !== "string") {
-            const err31 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/11/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err31 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/11/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err31];
             } else {
@@ -11582,7 +11582,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("off" !== data3) {
-            const err32 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/11/const", keyword: "const", params: { allowedValue: "off" }, message: "must be equal to constant" };
+            const err32 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/11/const", keyword: "const", params: { allowedValue: "off" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err32];
             } else {
@@ -11594,7 +11594,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid9 = valid9 || _valid4;
           const _errs52 = errors;
           if (typeof data3 !== "string") {
-            const err33 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/12/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err33 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/12/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err33];
             } else {
@@ -11603,7 +11603,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("disabled" !== data3) {
-            const err34 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf/12/const", keyword: "const", params: { allowedValue: "disabled" }, message: "must be equal to constant" };
+            const err34 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf/12/const", keyword: "const", params: { allowedValue: "disabled" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err34];
             } else {
@@ -11614,7 +11614,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid4 = _errs52 === errors;
           valid9 = valid9 || _valid4;
           if (!valid9) {
-            const err35 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/0/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err35 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/0/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err35];
             } else {
@@ -11635,7 +11635,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid8 = valid8 || _valid3;
           const _errs54 = errors;
           if (data3 !== null) {
-            const err36 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err36 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err36];
             } else {
@@ -11648,7 +11648,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           const _errs56 = errors;
           if (typeof data3 === "string") {
             if (!pattern77.test(data3)) {
-              const err37 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/2/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$" }, message: 'must match pattern "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$"' };
+              const err37 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/2/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$" }, message: 'must match pattern "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$"' };
               if (vErrors === null) {
                 vErrors = [err37];
               } else {
@@ -11657,7 +11657,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
               errors++;
             }
           } else {
-            const err38 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err38 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err38];
             } else {
@@ -11668,7 +11668,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid3 = _errs56 === errors;
           valid8 = valid8 || _valid3;
           if (!valid8) {
-            const err39 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptions/properties/default_projection/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err39 = { instancePath: instancePath + "/assembly/default_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/default_projection/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err39];
             } else {
@@ -11695,7 +11695,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           let valid11 = false;
           const _errs62 = errors;
           if (typeof data4 !== "string") {
-            const err40 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err40 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err40];
             } else {
@@ -11704,7 +11704,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("detail" !== data4) {
-            const err41 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/0/const", keyword: "const", params: { allowedValue: "detail" }, message: "must be equal to constant" };
+            const err41 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/0/const", keyword: "const", params: { allowedValue: "detail" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err41];
             } else {
@@ -11716,7 +11716,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs64 = errors;
           if (typeof data4 !== "string") {
-            const err42 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err42 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/1/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err42];
             } else {
@@ -11725,7 +11725,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("outline" !== data4) {
-            const err43 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/1/const", keyword: "const", params: { allowedValue: "outline" }, message: "must be equal to constant" };
+            const err43 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/1/const", keyword: "const", params: { allowedValue: "outline" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err43];
             } else {
@@ -11737,7 +11737,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs66 = errors;
           if (typeof data4 !== "string") {
-            const err44 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err44 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err44];
             } else {
@@ -11746,7 +11746,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("simple" !== data4) {
-            const err45 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/2/const", keyword: "const", params: { allowedValue: "simple" }, message: "must be equal to constant" };
+            const err45 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/2/const", keyword: "const", params: { allowedValue: "simple" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err45];
             } else {
@@ -11758,7 +11758,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs68 = errors;
           if (typeof data4 !== "string") {
-            const err46 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err46 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err46];
             } else {
@@ -11767,7 +11767,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bounding_box" !== data4) {
-            const err47 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/3/const", keyword: "const", params: { allowedValue: "bounding_box" }, message: "must be equal to constant" };
+            const err47 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/3/const", keyword: "const", params: { allowedValue: "bounding_box" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err47];
             } else {
@@ -11779,7 +11779,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs70 = errors;
           if (typeof data4 !== "string") {
-            const err48 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/4/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err48 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/4/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err48];
             } else {
@@ -11788,7 +11788,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("none" !== data4) {
-            const err49 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/4/const", keyword: "const", params: { allowedValue: "none" }, message: "must be equal to constant" };
+            const err49 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/4/const", keyword: "const", params: { allowedValue: "none" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err49];
             } else {
@@ -11800,7 +11800,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs72 = errors;
           if (typeof data4 !== "string") {
-            const err50 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/5/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err50 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/5/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err50];
             } else {
@@ -11809,7 +11809,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("silhouette" !== data4) {
-            const err51 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/5/const", keyword: "const", params: { allowedValue: "silhouette" }, message: "must be equal to constant" };
+            const err51 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/5/const", keyword: "const", params: { allowedValue: "silhouette" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err51];
             } else {
@@ -11821,7 +11821,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs74 = errors;
           if (typeof data4 !== "string") {
-            const err52 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/6/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err52 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/6/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err52];
             } else {
@@ -11830,7 +11830,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("profile" !== data4) {
-            const err53 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/6/const", keyword: "const", params: { allowedValue: "profile" }, message: "must be equal to constant" };
+            const err53 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/6/const", keyword: "const", params: { allowedValue: "profile" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err53];
             } else {
@@ -11842,7 +11842,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs76 = errors;
           if (typeof data4 !== "string") {
-            const err54 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/7/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err54 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/7/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err54];
             } else {
@@ -11851,7 +11851,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bounding-box" !== data4) {
-            const err55 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/7/const", keyword: "const", params: { allowedValue: "bounding-box" }, message: "must be equal to constant" };
+            const err55 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/7/const", keyword: "const", params: { allowedValue: "bounding-box" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err55];
             } else {
@@ -11863,7 +11863,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs78 = errors;
           if (typeof data4 !== "string") {
-            const err56 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/8/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err56 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/8/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err56];
             } else {
@@ -11872,7 +11872,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bbox" !== data4) {
-            const err57 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/8/const", keyword: "const", params: { allowedValue: "bbox" }, message: "must be equal to constant" };
+            const err57 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/8/const", keyword: "const", params: { allowedValue: "bbox" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err57];
             } else {
@@ -11884,7 +11884,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs80 = errors;
           if (typeof data4 !== "string") {
-            const err58 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/9/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err58 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/9/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err58];
             } else {
@@ -11893,7 +11893,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("box" !== data4) {
-            const err59 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/9/const", keyword: "const", params: { allowedValue: "box" }, message: "must be equal to constant" };
+            const err59 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/9/const", keyword: "const", params: { allowedValue: "box" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err59];
             } else {
@@ -11905,7 +11905,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs82 = errors;
           if (typeof data4 !== "string") {
-            const err60 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/10/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err60 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/10/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err60];
             } else {
@@ -11914,7 +11914,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("bounds" !== data4) {
-            const err61 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/10/const", keyword: "const", params: { allowedValue: "bounds" }, message: "must be equal to constant" };
+            const err61 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/10/const", keyword: "const", params: { allowedValue: "bounds" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err61];
             } else {
@@ -11926,7 +11926,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs84 = errors;
           if (typeof data4 !== "string") {
-            const err62 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/11/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err62 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/11/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err62];
             } else {
@@ -11935,7 +11935,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("off" !== data4) {
-            const err63 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/11/const", keyword: "const", params: { allowedValue: "off" }, message: "must be equal to constant" };
+            const err63 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/11/const", keyword: "const", params: { allowedValue: "off" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err63];
             } else {
@@ -11947,7 +11947,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid11 = valid11 || _valid6;
           const _errs86 = errors;
           if (typeof data4 !== "string") {
-            const err64 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/12/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err64 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/12/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err64];
             } else {
@@ -11956,7 +11956,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             errors++;
           }
           if ("disabled" !== data4) {
-            const err65 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf/12/const", keyword: "const", params: { allowedValue: "disabled" }, message: "must be equal to constant" };
+            const err65 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf/12/const", keyword: "const", params: { allowedValue: "disabled" }, message: "must be equal to constant" };
             if (vErrors === null) {
               vErrors = [err65];
             } else {
@@ -11967,7 +11967,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid6 = _errs86 === errors;
           valid11 = valid11 || _valid6;
           if (!valid11) {
-            const err66 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/0/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err66 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/0/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err66];
             } else {
@@ -11988,7 +11988,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid10 = valid10 || _valid5;
           const _errs88 = errors;
           if (data4 !== null) {
-            const err67 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err67 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err67];
             } else {
@@ -12001,7 +12001,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           const _errs90 = errors;
           if (typeof data4 === "string") {
             if (!pattern77.test(data4)) {
-              const err68 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/2/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$" }, message: 'must match pattern "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$"' };
+              const err68 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/2/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$" }, message: 'must match pattern "^\\s*(?:[dD][eE][tT][aA][iI][lL]|[oO][uU][tT][lL][iI][nN][eE]|[sS][iI][mM][pP][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]_[bB][oO][xX]|[nN][oO][nN][eE]|[sS][iI][lL][hH][oO][uU][eE][tT][tT][eE]|[pP][rR][oO][fF][iI][lL][eE]|[bB][oO][uU][nN][dD][iI][nN][gG]-[bB][oO][xX]|[bB][bB][oO][xX]|[bB][oO][xX]|[bB][oO][uU][nN][dD][sS]|[oO][fF][fF]|[dD][iI][sS][aA][bB][lL][eE][dD])\\s*$"' };
               if (vErrors === null) {
                 vErrors = [err68];
               } else {
@@ -12010,7 +12010,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
               errors++;
             }
           } else {
-            const err69 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err69 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf/2/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err69];
             } else {
@@ -12021,7 +12021,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid5 = _errs90 === errors;
           valid10 = valid10 || _valid5;
           if (!valid10) {
-            const err70 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_projection/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err70 = { instancePath: instancePath + "/assembly/dnp_projection", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_projection/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err70];
             } else {
@@ -12045,7 +12045,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           let valid12 = false;
           const _errs94 = errors;
           if (typeof data5 !== "string") {
-            const err71 = { instancePath: instancePath + "/assembly/designator_color", schemaPath: "#/$defs/AssemblyOptions/properties/designator_color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err71 = { instancePath: instancePath + "/assembly/designator_color", schemaPath: "#/$defs/AssemblyOptionsA1/properties/designator_color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err71];
             } else {
@@ -12057,7 +12057,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid12 = valid12 || _valid7;
           const _errs96 = errors;
           if (data5 !== null) {
-            const err72 = { instancePath: instancePath + "/assembly/designator_color", schemaPath: "#/$defs/AssemblyOptions/properties/designator_color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err72 = { instancePath: instancePath + "/assembly/designator_color", schemaPath: "#/$defs/AssemblyOptionsA1/properties/designator_color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err72];
             } else {
@@ -12068,7 +12068,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid7 = _errs96 === errors;
           valid12 = valid12 || _valid7;
           if (!valid12) {
-            const err73 = { instancePath: instancePath + "/assembly/designator_color", schemaPath: "#/$defs/AssemblyOptions/properties/designator_color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err73 = { instancePath: instancePath + "/assembly/designator_color", schemaPath: "#/$defs/AssemblyOptionsA1/properties/designator_color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err73];
             } else {
@@ -12092,7 +12092,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           let valid13 = false;
           const _errs100 = errors;
           if (typeof data6 !== "string") {
-            const err74 = { instancePath: instancePath + "/assembly/dnp_designator_color", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_designator_color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err74 = { instancePath: instancePath + "/assembly/dnp_designator_color", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_designator_color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err74];
             } else {
@@ -12104,7 +12104,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid13 = valid13 || _valid8;
           const _errs102 = errors;
           if (data6 !== null) {
-            const err75 = { instancePath: instancePath + "/assembly/dnp_designator_color", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_designator_color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err75 = { instancePath: instancePath + "/assembly/dnp_designator_color", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_designator_color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err75];
             } else {
@@ -12115,7 +12115,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid8 = _errs102 === errors;
           valid13 = valid13 || _valid8;
           if (!valid13) {
-            const err76 = { instancePath: instancePath + "/assembly/dnp_designator_color", schemaPath: "#/$defs/AssemblyOptions/properties/dnp_designator_color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err76 = { instancePath: instancePath + "/assembly/dnp_designator_color", schemaPath: "#/$defs/AssemblyOptionsA1/properties/dnp_designator_color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err76];
             } else {
@@ -12133,9 +12133,13 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
           }
         }
-        for (const key1 in data2) {
-          if (key1 !== "default_projection" && key1 !== "dnp_projection" && key1 !== "designator_color" && key1 !== "dnp_designator_color") {
-            const err77 = { instancePath: instancePath + "/assembly/" + key1.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/AssemblyOptions/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
+        if (data2.hide_silkscreen_designators !== void 0) {
+          let data7 = data2.hide_silkscreen_designators;
+          const _errs105 = errors;
+          let valid14 = false;
+          const _errs106 = errors;
+          if (typeof data7 !== "boolean") {
+            const err77 = { instancePath: instancePath + "/assembly/hide_silkscreen_designators", schemaPath: "#/$defs/AssemblyOptionsA1/properties/hide_silkscreen_designators/anyOf/0/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
             if (vErrors === null) {
               vErrors = [err77];
             } else {
@@ -12143,36 +12147,113 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           }
+          var _valid9 = _errs106 === errors;
+          valid14 = valid14 || _valid9;
+          const _errs108 = errors;
+          if (data7 !== null) {
+            const err78 = { instancePath: instancePath + "/assembly/hide_silkscreen_designators", schemaPath: "#/$defs/AssemblyOptionsA1/properties/hide_silkscreen_designators/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            if (vErrors === null) {
+              vErrors = [err78];
+            } else {
+              vErrors.push(err78);
+            }
+            errors++;
+          }
+          var _valid9 = _errs108 === errors;
+          valid14 = valid14 || _valid9;
+          const _errs110 = errors;
+          if (!(typeof data7 == "number")) {
+            const err79 = { instancePath: instancePath + "/assembly/hide_silkscreen_designators", schemaPath: "#/$defs/AssemblyOptionsA1/properties/hide_silkscreen_designators/anyOf/2/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+            if (vErrors === null) {
+              vErrors = [err79];
+            } else {
+              vErrors.push(err79);
+            }
+            errors++;
+          }
+          var _valid9 = _errs110 === errors;
+          valid14 = valid14 || _valid9;
+          const _errs112 = errors;
+          if (typeof data7 === "string") {
+            if (!pattern6.test(data7)) {
+              const err80 = { instancePath: instancePath + "/assembly/hide_silkscreen_designators", schemaPath: "#/$defs/AssemblyOptionsA1/properties/hide_silkscreen_designators/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$" }, message: 'must match pattern "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"' };
+              if (vErrors === null) {
+                vErrors = [err80];
+              } else {
+                vErrors.push(err80);
+              }
+              errors++;
+            }
+          } else {
+            const err81 = { instancePath: instancePath + "/assembly/hide_silkscreen_designators", schemaPath: "#/$defs/AssemblyOptionsA1/properties/hide_silkscreen_designators/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            if (vErrors === null) {
+              vErrors = [err81];
+            } else {
+              vErrors.push(err81);
+            }
+            errors++;
+          }
+          var _valid9 = _errs112 === errors;
+          valid14 = valid14 || _valid9;
+          if (!valid14) {
+            const err82 = { instancePath: instancePath + "/assembly/hide_silkscreen_designators", schemaPath: "#/$defs/AssemblyOptionsA1/properties/hide_silkscreen_designators/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            if (vErrors === null) {
+              vErrors = [err82];
+            } else {
+              vErrors.push(err82);
+            }
+            errors++;
+          } else {
+            errors = _errs105;
+            if (vErrors !== null) {
+              if (_errs105) {
+                vErrors.length = _errs105;
+              } else {
+                vErrors = null;
+              }
+            }
+          }
+        }
+        for (const key1 in data2) {
+          if (key1 !== "default_projection" && key1 !== "dnp_projection" && key1 !== "designator_color" && key1 !== "dnp_designator_color" && key1 !== "hide_silkscreen_designators") {
+            const err83 = { instancePath: instancePath + "/assembly/" + key1.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/AssemblyOptionsA1/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
+            if (vErrors === null) {
+              vErrors = [err83];
+            } else {
+              vErrors.push(err83);
+            }
+            errors++;
+          }
         }
       } else {
-        const err78 = { instancePath: instancePath + "/assembly", schemaPath: "#/$defs/AssemblyOptions/type", keyword: "type", params: { type: "object" }, message: "must be object" };
+        const err84 = { instancePath: instancePath + "/assembly", schemaPath: "#/$defs/AssemblyOptionsA1/type", keyword: "type", params: { type: "object" }, message: "must be object" };
         if (vErrors === null) {
-          vErrors = [err78];
+          vErrors = [err84];
         } else {
-          vErrors.push(err78);
+          vErrors.push(err84);
         }
         errors++;
       }
       var _valid2 = _errs21 === errors;
       valid5 = valid5 || _valid2;
-      const _errs107 = errors;
+      const _errs117 = errors;
       if (data2 !== null) {
-        const err79 = { instancePath: instancePath + "/assembly", schemaPath: "#/properties/assembly/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+        const err85 = { instancePath: instancePath + "/assembly", schemaPath: "#/properties/assembly/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
         if (vErrors === null) {
-          vErrors = [err79];
+          vErrors = [err85];
         } else {
-          vErrors.push(err79);
+          vErrors.push(err85);
         }
         errors++;
       }
-      var _valid2 = _errs107 === errors;
+      var _valid2 = _errs117 === errors;
       valid5 = valid5 || _valid2;
       if (!valid5) {
-        const err80 = { instancePath: instancePath + "/assembly", schemaPath: "#/properties/assembly/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+        const err86 = { instancePath: instancePath + "/assembly", schemaPath: "#/properties/assembly/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
         if (vErrors === null) {
-          vErrors = [err80];
+          vErrors = [err86];
         } else {
-          vErrors.push(err80);
+          vErrors.push(err86);
         }
         errors++;
       } else {
@@ -12187,111 +12268,30 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
       }
     }
     if (data.dnp !== void 0) {
-      let data8 = data.dnp;
-      const _errs110 = errors;
-      let valid15 = false;
-      const _errs111 = errors;
-      if (data8 && typeof data8 == "object" && !Array.isArray(data8)) {
-        if (data8.color !== void 0) {
-          let data9 = data8.color;
-          const _errs115 = errors;
-          let valid18 = false;
-          const _errs116 = errors;
-          if (typeof data9 !== "string") {
-            const err81 = { instancePath: instancePath + "/dnp/color", schemaPath: "#/$defs/DnpOptions/properties/color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
-            if (vErrors === null) {
-              vErrors = [err81];
-            } else {
-              vErrors.push(err81);
-            }
-            errors++;
-          }
-          var _valid10 = _errs116 === errors;
-          valid18 = valid18 || _valid10;
-          const _errs118 = errors;
-          if (data9 !== null) {
-            const err82 = { instancePath: instancePath + "/dnp/color", schemaPath: "#/$defs/DnpOptions/properties/color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-            if (vErrors === null) {
-              vErrors = [err82];
-            } else {
-              vErrors.push(err82);
-            }
-            errors++;
-          }
-          var _valid10 = _errs118 === errors;
-          valid18 = valid18 || _valid10;
-          if (!valid18) {
-            const err83 = { instancePath: instancePath + "/dnp/color", schemaPath: "#/$defs/DnpOptions/properties/color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-            if (vErrors === null) {
-              vErrors = [err83];
-            } else {
-              vErrors.push(err83);
-            }
-            errors++;
-          } else {
-            errors = _errs115;
-            if (vErrors !== null) {
-              if (_errs115) {
-                vErrors.length = _errs115;
-              } else {
-                vErrors = null;
-              }
-            }
-          }
-        }
-        if (data8.hatch !== void 0) {
-          let data10 = data8.hatch;
-          const _errs121 = errors;
+      let data9 = data.dnp;
+      const _errs120 = errors;
+      let valid16 = false;
+      const _errs121 = errors;
+      if (data9 && typeof data9 == "object" && !Array.isArray(data9)) {
+        if (data9.color !== void 0) {
+          let data10 = data9.color;
+          const _errs125 = errors;
           let valid19 = false;
-          const _errs122 = errors;
-          if (typeof data10 !== "boolean") {
-            const err84 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/0/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
-            if (vErrors === null) {
-              vErrors = [err84];
-            } else {
-              vErrors.push(err84);
-            }
-            errors++;
-          }
-          var _valid11 = _errs122 === errors;
-          valid19 = valid19 || _valid11;
-          const _errs124 = errors;
-          if (data10 !== null) {
-            const err85 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-            if (vErrors === null) {
-              vErrors = [err85];
-            } else {
-              vErrors.push(err85);
-            }
-            errors++;
-          }
-          var _valid11 = _errs124 === errors;
-          valid19 = valid19 || _valid11;
           const _errs126 = errors;
-          if (!(typeof data10 == "number")) {
-            const err86 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/2/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+          if (typeof data10 !== "string") {
+            const err87 = { instancePath: instancePath + "/dnp/color", schemaPath: "#/$defs/DnpOptions/properties/color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
-              vErrors = [err86];
+              vErrors = [err87];
             } else {
-              vErrors.push(err86);
+              vErrors.push(err87);
             }
             errors++;
           }
           var _valid11 = _errs126 === errors;
           valid19 = valid19 || _valid11;
           const _errs128 = errors;
-          if (typeof data10 === "string") {
-            if (!pattern6.test(data10)) {
-              const err87 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$" }, message: 'must match pattern "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"' };
-              if (vErrors === null) {
-                vErrors = [err87];
-              } else {
-                vErrors.push(err87);
-              }
-              errors++;
-            }
-          } else {
-            const err88 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+          if (data10 !== null) {
+            const err88 = { instancePath: instancePath + "/dnp/color", schemaPath: "#/$defs/DnpOptions/properties/color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err88];
             } else {
@@ -12302,7 +12302,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid11 = _errs128 === errors;
           valid19 = valid19 || _valid11;
           if (!valid19) {
-            const err89 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err89 = { instancePath: instancePath + "/dnp/color", schemaPath: "#/$defs/DnpOptions/properties/color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err89];
             } else {
@@ -12310,37 +12310,27 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           } else {
-            errors = _errs121;
+            errors = _errs125;
             if (vErrors !== null) {
-              if (_errs121) {
-                vErrors.length = _errs121;
+              if (_errs125) {
+                vErrors.length = _errs125;
               } else {
                 vErrors = null;
               }
             }
           }
         }
-        if (data8.hatch_spacing_mm !== void 0) {
-          let data11 = data8.hatch_spacing_mm;
+        if (data9.hatch !== void 0) {
+          let data11 = data9.hatch;
           const _errs131 = errors;
           let valid20 = false;
           const _errs132 = errors;
-          if (typeof data11 == "number") {
-            if (data11 <= 0 || isNaN(data11)) {
-              const err90 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/0/exclusiveMinimum", keyword: "exclusiveMinimum", params: { comparison: ">", limit: 0 }, message: "must be > 0" };
-              if (vErrors === null) {
-                vErrors = [err90];
-              } else {
-                vErrors.push(err90);
-              }
-              errors++;
-            }
-          } else {
-            const err91 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/0/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+          if (typeof data11 !== "boolean") {
+            const err90 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/0/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
             if (vErrors === null) {
-              vErrors = [err91];
+              vErrors = [err90];
             } else {
-              vErrors.push(err91);
+              vErrors.push(err90);
             }
             errors++;
           }
@@ -12348,7 +12338,19 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid20 = valid20 || _valid12;
           const _errs134 = errors;
           if (data11 !== null) {
-            const err92 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err91 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            if (vErrors === null) {
+              vErrors = [err91];
+            } else {
+              vErrors.push(err91);
+            }
+            errors++;
+          }
+          var _valid12 = _errs134 === errors;
+          valid20 = valid20 || _valid12;
+          const _errs136 = errors;
+          if (!(typeof data11 == "number")) {
+            const err92 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/2/type", keyword: "type", params: { type: "number" }, message: "must be number" };
             if (vErrors === null) {
               vErrors = [err92];
             } else {
@@ -12356,48 +12358,36 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           }
-          var _valid12 = _errs134 === errors;
-          valid20 = valid20 || _valid12;
-          const _errs136 = errors;
-          if (typeof data11 !== "boolean") {
-            const err93 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/2/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
-            if (vErrors === null) {
-              vErrors = [err93];
-            } else {
-              vErrors.push(err93);
-            }
-            errors++;
-          }
           var _valid12 = _errs136 === errors;
           valid20 = valid20 || _valid12;
           const _errs138 = errors;
           if (typeof data11 === "string") {
-            if (!pattern5.test(data11)) {
-              const err94 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$" }, message: 'must match pattern "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"' };
+            if (!pattern6.test(data11)) {
+              const err93 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$" }, message: 'must match pattern "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"' };
               if (vErrors === null) {
-                vErrors = [err94];
+                vErrors = [err93];
               } else {
-                vErrors.push(err94);
+                vErrors.push(err93);
               }
               errors++;
             }
           } else {
-            const err95 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err94 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
-              vErrors = [err95];
+              vErrors = [err94];
             } else {
-              vErrors.push(err95);
+              vErrors.push(err94);
             }
             errors++;
           }
           var _valid12 = _errs138 === errors;
           valid20 = valid20 || _valid12;
           if (!valid20) {
-            const err96 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err95 = { instancePath: instancePath + "/dnp/hatch", schemaPath: "#/$defs/DnpOptions/properties/hatch/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
-              vErrors = [err96];
+              vErrors = [err95];
             } else {
-              vErrors.push(err96);
+              vErrors.push(err95);
             }
             errors++;
           } else {
@@ -12410,38 +12400,28 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
               }
             }
           }
-          if (typeof data11 === "string" || typeof data11 === "boolean") {
-            if (!Number.isFinite(Number(data11))) {
-              const err97 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
-              if (vErrors === null) {
-                vErrors = [err97];
-              } else {
-                vErrors.push(err97);
-              }
-              errors++;
-            }
-            if (Number(data11) <= 0) {
-              const err98 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
-              if (vErrors === null) {
-                vErrors = [err98];
-              } else {
-                vErrors.push(err98);
-              }
-              errors++;
-            }
-          }
         }
-        if (data8.hatch_angle_deg !== void 0) {
-          let data12 = data8.hatch_angle_deg;
+        if (data9.hatch_spacing_mm !== void 0) {
+          let data12 = data9.hatch_spacing_mm;
           const _errs141 = errors;
           let valid21 = false;
           const _errs142 = errors;
-          if (!(typeof data12 == "number")) {
-            const err99 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/0/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+          if (typeof data12 == "number") {
+            if (data12 <= 0 || isNaN(data12)) {
+              const err96 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/0/exclusiveMinimum", keyword: "exclusiveMinimum", params: { comparison: ">", limit: 0 }, message: "must be > 0" };
+              if (vErrors === null) {
+                vErrors = [err96];
+              } else {
+                vErrors.push(err96);
+              }
+              errors++;
+            }
+          } else {
+            const err97 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/0/type", keyword: "type", params: { type: "number" }, message: "must be number" };
             if (vErrors === null) {
-              vErrors = [err99];
+              vErrors = [err97];
             } else {
-              vErrors.push(err99);
+              vErrors.push(err97);
             }
             errors++;
           }
@@ -12449,11 +12429,11 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid21 = valid21 || _valid13;
           const _errs144 = errors;
           if (data12 !== null) {
-            const err100 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err98 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
-              vErrors = [err100];
+              vErrors = [err98];
             } else {
-              vErrors.push(err100);
+              vErrors.push(err98);
             }
             errors++;
           }
@@ -12461,11 +12441,11 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid21 = valid21 || _valid13;
           const _errs146 = errors;
           if (typeof data12 !== "boolean") {
-            const err101 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/2/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
+            const err99 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/2/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
             if (vErrors === null) {
-              vErrors = [err101];
+              vErrors = [err99];
             } else {
-              vErrors.push(err101);
+              vErrors.push(err99);
             }
             errors++;
           }
@@ -12474,31 +12454,31 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           const _errs148 = errors;
           if (typeof data12 === "string") {
             if (!pattern5.test(data12)) {
-              const err102 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$" }, message: 'must match pattern "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"' };
+              const err100 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$" }, message: 'must match pattern "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"' };
               if (vErrors === null) {
-                vErrors = [err102];
+                vErrors = [err100];
               } else {
-                vErrors.push(err102);
+                vErrors.push(err100);
               }
               errors++;
             }
           } else {
-            const err103 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err101 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
-              vErrors = [err103];
+              vErrors = [err101];
             } else {
-              vErrors.push(err103);
+              vErrors.push(err101);
             }
             errors++;
           }
           var _valid13 = _errs148 === errors;
           valid21 = valid21 || _valid13;
           if (!valid21) {
-            const err104 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err102 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
-              vErrors = [err104];
+              vErrors = [err102];
             } else {
-              vErrors.push(err104);
+              vErrors.push(err102);
             }
             errors++;
           } else {
@@ -12513,37 +12493,36 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           }
           if (typeof data12 === "string" || typeof data12 === "boolean") {
             if (!Number.isFinite(Number(data12))) {
-              const err105 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
+              const err103 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
               if (vErrors === null) {
-                vErrors = [err105];
+                vErrors = [err103];
               } else {
-                vErrors.push(err105);
+                vErrors.push(err103);
+              }
+              errors++;
+            }
+            if (Number(data12) <= 0) {
+              const err104 = { instancePath: instancePath + "/dnp/hatch_spacing_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_spacing_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
+              if (vErrors === null) {
+                vErrors = [err104];
+              } else {
+                vErrors.push(err104);
               }
               errors++;
             }
           }
         }
-        if (data8.hatch_line_width_mm !== void 0) {
-          let data13 = data8.hatch_line_width_mm;
+        if (data9.hatch_angle_deg !== void 0) {
+          let data13 = data9.hatch_angle_deg;
           const _errs151 = errors;
           let valid22 = false;
           const _errs152 = errors;
-          if (typeof data13 == "number") {
-            if (data13 <= 0 || isNaN(data13)) {
-              const err106 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/0/exclusiveMinimum", keyword: "exclusiveMinimum", params: { comparison: ">", limit: 0 }, message: "must be > 0" };
-              if (vErrors === null) {
-                vErrors = [err106];
-              } else {
-                vErrors.push(err106);
-              }
-              errors++;
-            }
-          } else {
-            const err107 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/0/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+          if (!(typeof data13 == "number")) {
+            const err105 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/0/type", keyword: "type", params: { type: "number" }, message: "must be number" };
             if (vErrors === null) {
-              vErrors = [err107];
+              vErrors = [err105];
             } else {
-              vErrors.push(err107);
+              vErrors.push(err105);
             }
             errors++;
           }
@@ -12551,11 +12530,11 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid22 = valid22 || _valid14;
           const _errs154 = errors;
           if (data13 !== null) {
-            const err108 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err106 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
-              vErrors = [err108];
+              vErrors = [err106];
             } else {
-              vErrors.push(err108);
+              vErrors.push(err106);
             }
             errors++;
           }
@@ -12563,11 +12542,11 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid22 = valid22 || _valid14;
           const _errs156 = errors;
           if (typeof data13 !== "boolean") {
-            const err109 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/2/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
+            const err107 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/2/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
             if (vErrors === null) {
-              vErrors = [err109];
+              vErrors = [err107];
             } else {
-              vErrors.push(err109);
+              vErrors.push(err107);
             }
             errors++;
           }
@@ -12576,31 +12555,31 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           const _errs158 = errors;
           if (typeof data13 === "string") {
             if (!pattern5.test(data13)) {
-              const err110 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$" }, message: 'must match pattern "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"' };
+              const err108 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$" }, message: 'must match pattern "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"' };
               if (vErrors === null) {
-                vErrors = [err110];
+                vErrors = [err108];
               } else {
-                vErrors.push(err110);
+                vErrors.push(err108);
               }
               errors++;
             }
           } else {
-            const err111 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err109 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
-              vErrors = [err111];
+              vErrors = [err109];
             } else {
-              vErrors.push(err111);
+              vErrors.push(err109);
             }
             errors++;
           }
           var _valid14 = _errs158 === errors;
           valid22 = valid22 || _valid14;
           if (!valid22) {
-            const err112 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err110 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
-              vErrors = [err112];
+              vErrors = [err110];
             } else {
-              vErrors.push(err112);
+              vErrors.push(err110);
             }
             errors++;
           } else {
@@ -12615,28 +12594,57 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           }
           if (typeof data13 === "string" || typeof data13 === "boolean") {
             if (!Number.isFinite(Number(data13))) {
-              const err113 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
+              const err111 = { instancePath: instancePath + "/dnp/hatch_angle_deg", schemaPath: "#/$defs/DnpOptions/properties/hatch_angle_deg/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
               if (vErrors === null) {
-                vErrors = [err113];
+                vErrors = [err111];
               } else {
-                vErrors.push(err113);
-              }
-              errors++;
-            }
-            if (Number(data13) <= 0) {
-              const err114 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
-              if (vErrors === null) {
-                vErrors = [err114];
-              } else {
-                vErrors.push(err114);
+                vErrors.push(err111);
               }
               errors++;
             }
           }
         }
-        for (const key2 in data8) {
-          if (key2 !== "color" && key2 !== "hatch" && key2 !== "hatch_spacing_mm" && key2 !== "hatch_angle_deg" && key2 !== "hatch_line_width_mm") {
-            const err115 = { instancePath: instancePath + "/dnp/" + key2.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/DnpOptions/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
+        if (data9.hatch_line_width_mm !== void 0) {
+          let data14 = data9.hatch_line_width_mm;
+          const _errs161 = errors;
+          let valid23 = false;
+          const _errs162 = errors;
+          if (typeof data14 == "number") {
+            if (data14 <= 0 || isNaN(data14)) {
+              const err112 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/0/exclusiveMinimum", keyword: "exclusiveMinimum", params: { comparison: ">", limit: 0 }, message: "must be > 0" };
+              if (vErrors === null) {
+                vErrors = [err112];
+              } else {
+                vErrors.push(err112);
+              }
+              errors++;
+            }
+          } else {
+            const err113 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/0/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+            if (vErrors === null) {
+              vErrors = [err113];
+            } else {
+              vErrors.push(err113);
+            }
+            errors++;
+          }
+          var _valid15 = _errs162 === errors;
+          valid23 = valid23 || _valid15;
+          const _errs164 = errors;
+          if (data14 !== null) {
+            const err114 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            if (vErrors === null) {
+              vErrors = [err114];
+            } else {
+              vErrors.push(err114);
+            }
+            errors++;
+          }
+          var _valid15 = _errs164 === errors;
+          valid23 = valid23 || _valid15;
+          const _errs166 = errors;
+          if (typeof data14 !== "boolean") {
+            const err115 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/2/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
             if (vErrors === null) {
               vErrors = [err115];
             } else {
@@ -12644,86 +12652,72 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           }
-        }
-      } else {
-        const err116 = { instancePath: instancePath + "/dnp", schemaPath: "#/$defs/DnpOptions/type", keyword: "type", params: { type: "object" }, message: "must be object" };
-        if (vErrors === null) {
-          vErrors = [err116];
-        } else {
-          vErrors.push(err116);
-        }
-        errors++;
-      }
-      var _valid9 = _errs111 === errors;
-      valid15 = valid15 || _valid9;
-      const _errs163 = errors;
-      if (data8 !== null) {
-        const err117 = { instancePath: instancePath + "/dnp", schemaPath: "#/properties/dnp/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-        if (vErrors === null) {
-          vErrors = [err117];
-        } else {
-          vErrors.push(err117);
-        }
-        errors++;
-      }
-      var _valid9 = _errs163 === errors;
-      valid15 = valid15 || _valid9;
-      if (!valid15) {
-        const err118 = { instancePath: instancePath + "/dnp", schemaPath: "#/properties/dnp/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-        if (vErrors === null) {
-          vErrors = [err118];
-        } else {
-          vErrors.push(err118);
-        }
-        errors++;
-      } else {
-        errors = _errs110;
-        if (vErrors !== null) {
-          if (_errs110) {
-            vErrors.length = _errs110;
+          var _valid15 = _errs166 === errors;
+          valid23 = valid23 || _valid15;
+          const _errs168 = errors;
+          if (typeof data14 === "string") {
+            if (!pattern5.test(data14)) {
+              const err116 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$" }, message: 'must match pattern "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?\\s*$"' };
+              if (vErrors === null) {
+                vErrors = [err116];
+              } else {
+                vErrors.push(err116);
+              }
+              errors++;
+            }
           } else {
-            vErrors = null;
+            const err117 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            if (vErrors === null) {
+              vErrors = [err117];
+            } else {
+              vErrors.push(err117);
+            }
+            errors++;
+          }
+          var _valid15 = _errs168 === errors;
+          valid23 = valid23 || _valid15;
+          if (!valid23) {
+            const err118 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            if (vErrors === null) {
+              vErrors = [err118];
+            } else {
+              vErrors.push(err118);
+            }
+            errors++;
+          } else {
+            errors = _errs161;
+            if (vErrors !== null) {
+              if (_errs161) {
+                vErrors.length = _errs161;
+              } else {
+                vErrors = null;
+              }
+            }
+          }
+          if (typeof data14 === "string" || typeof data14 === "boolean") {
+            if (!Number.isFinite(Number(data14))) {
+              const err119 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
+              if (vErrors === null) {
+                vErrors = [err119];
+              } else {
+                vErrors.push(err119);
+              }
+              errors++;
+            }
+            if (Number(data14) <= 0) {
+              const err120 = { instancePath: instancePath + "/dnp/hatch_line_width_mm", schemaPath: "#/$defs/DnpOptions/properties/hatch_line_width_mm/x-acr-input", keyword: "x-acr-input", params: {}, message: 'must pass "x-acr-input" keyword validation' };
+              if (vErrors === null) {
+                vErrors = [err120];
+              } else {
+                vErrors.push(err120);
+              }
+              errors++;
+            }
           }
         }
-      }
-    }
-    if (data.diodes !== void 0) {
-      let data15 = data.diodes;
-      const _errs166 = errors;
-      let valid24 = false;
-      const _errs167 = errors;
-      if (data15 && typeof data15 == "object" && !Array.isArray(data15)) {
-        if (data15.enabled !== void 0) {
-          let data16 = data15.enabled;
-          const _errs171 = errors;
-          let valid27 = false;
-          const _errs172 = errors;
-          if (typeof data16 !== "boolean") {
-            const err119 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/0/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
-            if (vErrors === null) {
-              vErrors = [err119];
-            } else {
-              vErrors.push(err119);
-            }
-            errors++;
-          }
-          var _valid16 = _errs172 === errors;
-          valid27 = valid27 || _valid16;
-          const _errs174 = errors;
-          if (data16 !== null) {
-            const err120 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-            if (vErrors === null) {
-              vErrors = [err120];
-            } else {
-              vErrors.push(err120);
-            }
-            errors++;
-          }
-          var _valid16 = _errs174 === errors;
-          valid27 = valid27 || _valid16;
-          const _errs176 = errors;
-          if (!(typeof data16 == "number")) {
-            const err121 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/2/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+        for (const key2 in data9) {
+          if (key2 !== "color" && key2 !== "hatch" && key2 !== "hatch_spacing_mm" && key2 !== "hatch_angle_deg" && key2 !== "hatch_line_width_mm") {
+            const err121 = { instancePath: instancePath + "/dnp/" + key2.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/DnpOptions/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
             if (vErrors === null) {
               vErrors = [err121];
             } else {
@@ -12731,56 +12725,62 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           }
-          var _valid16 = _errs176 === errors;
-          valid27 = valid27 || _valid16;
-          const _errs178 = errors;
-          if (typeof data16 === "string") {
-            if (!pattern6.test(data16)) {
-              const err122 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$" }, message: 'must match pattern "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"' };
-              if (vErrors === null) {
-                vErrors = [err122];
-              } else {
-                vErrors.push(err122);
-              }
-              errors++;
-            }
+        }
+      } else {
+        const err122 = { instancePath: instancePath + "/dnp", schemaPath: "#/$defs/DnpOptions/type", keyword: "type", params: { type: "object" }, message: "must be object" };
+        if (vErrors === null) {
+          vErrors = [err122];
+        } else {
+          vErrors.push(err122);
+        }
+        errors++;
+      }
+      var _valid10 = _errs121 === errors;
+      valid16 = valid16 || _valid10;
+      const _errs173 = errors;
+      if (data9 !== null) {
+        const err123 = { instancePath: instancePath + "/dnp", schemaPath: "#/properties/dnp/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+        if (vErrors === null) {
+          vErrors = [err123];
+        } else {
+          vErrors.push(err123);
+        }
+        errors++;
+      }
+      var _valid10 = _errs173 === errors;
+      valid16 = valid16 || _valid10;
+      if (!valid16) {
+        const err124 = { instancePath: instancePath + "/dnp", schemaPath: "#/properties/dnp/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+        if (vErrors === null) {
+          vErrors = [err124];
+        } else {
+          vErrors.push(err124);
+        }
+        errors++;
+      } else {
+        errors = _errs120;
+        if (vErrors !== null) {
+          if (_errs120) {
+            vErrors.length = _errs120;
           } else {
-            const err123 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
-            if (vErrors === null) {
-              vErrors = [err123];
-            } else {
-              vErrors.push(err123);
-            }
-            errors++;
-          }
-          var _valid16 = _errs178 === errors;
-          valid27 = valid27 || _valid16;
-          if (!valid27) {
-            const err124 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-            if (vErrors === null) {
-              vErrors = [err124];
-            } else {
-              vErrors.push(err124);
-            }
-            errors++;
-          } else {
-            errors = _errs171;
-            if (vErrors !== null) {
-              if (_errs171) {
-                vErrors.length = _errs171;
-              } else {
-                vErrors = null;
-              }
-            }
+            vErrors = null;
           }
         }
-        if (data15.line_art !== void 0) {
-          let data17 = data15.line_art;
+      }
+    }
+    if (data.diodes !== void 0) {
+      let data16 = data.diodes;
+      const _errs176 = errors;
+      let valid25 = false;
+      const _errs177 = errors;
+      if (data16 && typeof data16 == "object" && !Array.isArray(data16)) {
+        if (data16.enabled !== void 0) {
+          let data17 = data16.enabled;
           const _errs181 = errors;
           let valid28 = false;
           const _errs182 = errors;
           if (typeof data17 !== "boolean") {
-            const err125 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/0/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
+            const err125 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/0/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
             if (vErrors === null) {
               vErrors = [err125];
             } else {
@@ -12792,7 +12792,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid28 = valid28 || _valid17;
           const _errs184 = errors;
           if (data17 !== null) {
-            const err126 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err126 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err126];
             } else {
@@ -12804,7 +12804,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid28 = valid28 || _valid17;
           const _errs186 = errors;
           if (!(typeof data17 == "number")) {
-            const err127 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/2/type", keyword: "type", params: { type: "number" }, message: "must be number" };
+            const err127 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/2/type", keyword: "type", params: { type: "number" }, message: "must be number" };
             if (vErrors === null) {
               vErrors = [err127];
             } else {
@@ -12817,7 +12817,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           const _errs188 = errors;
           if (typeof data17 === "string") {
             if (!pattern6.test(data17)) {
-              const err128 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$" }, message: 'must match pattern "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"' };
+              const err128 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$" }, message: 'must match pattern "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"' };
               if (vErrors === null) {
                 vErrors = [err128];
               } else {
@@ -12826,7 +12826,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
               errors++;
             }
           } else {
-            const err129 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err129 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err129];
             } else {
@@ -12837,7 +12837,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           var _valid17 = _errs188 === errors;
           valid28 = valid28 || _valid17;
           if (!valid28) {
-            const err130 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            const err130 = { instancePath: instancePath + "/diodes/enabled", schemaPath: "#/$defs/DiodeOptions/properties/enabled/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err130];
             } else {
@@ -12855,13 +12855,13 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
           }
         }
-        if (data15.marker_color !== void 0) {
-          let data18 = data15.marker_color;
+        if (data16.line_art !== void 0) {
+          let data18 = data16.line_art;
           const _errs191 = errors;
           let valid29 = false;
           const _errs192 = errors;
-          if (typeof data18 !== "string") {
-            const err131 = { instancePath: instancePath + "/diodes/marker_color", schemaPath: "#/$defs/DiodeOptions/properties/marker_color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+          if (typeof data18 !== "boolean") {
+            const err131 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/0/type", keyword: "type", params: { type: "boolean" }, message: "must be boolean" };
             if (vErrors === null) {
               vErrors = [err131];
             } else {
@@ -12873,7 +12873,7 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           valid29 = valid29 || _valid18;
           const _errs194 = errors;
           if (data18 !== null) {
-            const err132 = { instancePath: instancePath + "/diodes/marker_color", schemaPath: "#/$defs/DiodeOptions/properties/marker_color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            const err132 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err132];
             } else {
@@ -12883,12 +12883,46 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
           }
           var _valid18 = _errs194 === errors;
           valid29 = valid29 || _valid18;
-          if (!valid29) {
-            const err133 = { instancePath: instancePath + "/diodes/marker_color", schemaPath: "#/$defs/DiodeOptions/properties/marker_color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+          const _errs196 = errors;
+          if (!(typeof data18 == "number")) {
+            const err133 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/2/type", keyword: "type", params: { type: "number" }, message: "must be number" };
             if (vErrors === null) {
               vErrors = [err133];
             } else {
               vErrors.push(err133);
+            }
+            errors++;
+          }
+          var _valid18 = _errs196 === errors;
+          valid29 = valid29 || _valid18;
+          const _errs198 = errors;
+          if (typeof data18 === "string") {
+            if (!pattern6.test(data18)) {
+              const err134 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/3/pattern", keyword: "pattern", params: { pattern: "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$" }, message: 'must match pattern "^\\s*(?:1|0|[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]|[yY][eE][sS]|[nN][oO]|[oO][nN]|[oO][fF][fF])\\s*$"' };
+              if (vErrors === null) {
+                vErrors = [err134];
+              } else {
+                vErrors.push(err134);
+              }
+              errors++;
+            }
+          } else {
+            const err135 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf/3/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            if (vErrors === null) {
+              vErrors = [err135];
+            } else {
+              vErrors.push(err135);
+            }
+            errors++;
+          }
+          var _valid18 = _errs198 === errors;
+          valid29 = valid29 || _valid18;
+          if (!valid29) {
+            const err136 = { instancePath: instancePath + "/diodes/line_art", schemaPath: "#/$defs/DiodeOptions/properties/line_art/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            if (vErrors === null) {
+              vErrors = [err136];
+            } else {
+              vErrors.push(err136);
             }
             errors++;
           } else {
@@ -12902,73 +12936,25 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
           }
         }
-        if (data15.numeric_cathode_pad !== void 0) {
-          let data19 = data15.numeric_cathode_pad;
-          const _errs197 = errors;
+        if (data16.marker_color !== void 0) {
+          let data19 = data16.marker_color;
+          const _errs201 = errors;
           let valid30 = false;
-          const _errs198 = errors;
+          const _errs202 = errors;
           if (typeof data19 !== "string") {
-            const err134 = { instancePath: instancePath + "/diodes/numeric_cathode_pad", schemaPath: "#/$defs/DiodeOptions/properties/numeric_cathode_pad/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+            const err137 = { instancePath: instancePath + "/diodes/marker_color", schemaPath: "#/$defs/DiodeOptions/properties/marker_color/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
-              vErrors = [err134];
+              vErrors = [err137];
             } else {
-              vErrors.push(err134);
+              vErrors.push(err137);
             }
             errors++;
           }
-          var _valid19 = _errs198 === errors;
+          var _valid19 = _errs202 === errors;
           valid30 = valid30 || _valid19;
-          const _errs200 = errors;
-          if (data19 !== null) {
-            const err135 = { instancePath: instancePath + "/diodes/numeric_cathode_pad", schemaPath: "#/$defs/DiodeOptions/properties/numeric_cathode_pad/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-            if (vErrors === null) {
-              vErrors = [err135];
-            } else {
-              vErrors.push(err135);
-            }
-            errors++;
-          }
-          var _valid19 = _errs200 === errors;
-          valid30 = valid30 || _valid19;
-          if (!valid30) {
-            const err136 = { instancePath: instancePath + "/diodes/numeric_cathode_pad", schemaPath: "#/$defs/DiodeOptions/properties/numeric_cathode_pad/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-            if (vErrors === null) {
-              vErrors = [err136];
-            } else {
-              vErrors.push(err136);
-            }
-            errors++;
-          } else {
-            errors = _errs197;
-            if (vErrors !== null) {
-              if (_errs197) {
-                vErrors.length = _errs197;
-              } else {
-                vErrors = null;
-              }
-            }
-          }
-        }
-        if (data15.cathode_pad_names !== void 0) {
-          let data20 = data15.cathode_pad_names;
-          const _errs203 = errors;
-          let valid31 = false;
           const _errs204 = errors;
-          if (Array.isArray(data20)) {
-            const len0 = data20.length;
-            for (let i0 = 0; i0 < len0; i0++) {
-              if (typeof data20[i0] !== "string") {
-                const err137 = { instancePath: instancePath + "/diodes/cathode_pad_names/" + i0, schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
-                if (vErrors === null) {
-                  vErrors = [err137];
-                } else {
-                  vErrors.push(err137);
-                }
-                errors++;
-              }
-            }
-          } else {
-            const err138 = { instancePath: instancePath + "/diodes/cathode_pad_names", schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+          if (data19 !== null) {
+            const err138 = { instancePath: instancePath + "/diodes/marker_color", schemaPath: "#/$defs/DiodeOptions/properties/marker_color/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err138];
             } else {
@@ -12976,162 +12962,166 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           }
-          var _valid20 = _errs204 === errors;
-          valid31 = valid31 || _valid20;
-          const _errs208 = errors;
-          if (data20 !== null) {
-            const err139 = { instancePath: instancePath + "/diodes/cathode_pad_names", schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+          var _valid19 = _errs204 === errors;
+          valid30 = valid30 || _valid19;
+          if (!valid30) {
+            const err139 = { instancePath: instancePath + "/diodes/marker_color", schemaPath: "#/$defs/DiodeOptions/properties/marker_color/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err139];
             } else {
               vErrors.push(err139);
             }
             errors++;
+          } else {
+            errors = _errs201;
+            if (vErrors !== null) {
+              if (_errs201) {
+                vErrors.length = _errs201;
+              } else {
+                vErrors = null;
+              }
+            }
           }
-          var _valid20 = _errs208 === errors;
-          valid31 = valid31 || _valid20;
-          if (!valid31) {
-            const err140 = { instancePath: instancePath + "/diodes/cathode_pad_names", schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+        }
+        if (data16.numeric_cathode_pad !== void 0) {
+          let data20 = data16.numeric_cathode_pad;
+          const _errs207 = errors;
+          let valid31 = false;
+          const _errs208 = errors;
+          if (typeof data20 !== "string") {
+            const err140 = { instancePath: instancePath + "/diodes/numeric_cathode_pad", schemaPath: "#/$defs/DiodeOptions/properties/numeric_cathode_pad/anyOf/0/type", keyword: "type", params: { type: "string" }, message: "must be string" };
             if (vErrors === null) {
               vErrors = [err140];
             } else {
               vErrors.push(err140);
             }
             errors++;
-          } else {
-            errors = _errs203;
-            if (vErrors !== null) {
-              if (_errs203) {
-                vErrors.length = _errs203;
-              } else {
-                vErrors = null;
-              }
-            }
           }
-        }
-        if (data15.designator_prefixes !== void 0) {
-          let data22 = data15.designator_prefixes;
-          const _errs211 = errors;
-          let valid34 = false;
-          const _errs212 = errors;
-          if (Array.isArray(data22)) {
-            const len1 = data22.length;
-            for (let i1 = 0; i1 < len1; i1++) {
-              if (typeof data22[i1] !== "string") {
-                const err141 = { instancePath: instancePath + "/diodes/designator_prefixes/" + i1, schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
-                if (vErrors === null) {
-                  vErrors = [err141];
-                } else {
-                  vErrors.push(err141);
-                }
-                errors++;
-              }
+          var _valid20 = _errs208 === errors;
+          valid31 = valid31 || _valid20;
+          const _errs210 = errors;
+          if (data20 !== null) {
+            const err141 = { instancePath: instancePath + "/diodes/numeric_cathode_pad", schemaPath: "#/$defs/DiodeOptions/properties/numeric_cathode_pad/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            if (vErrors === null) {
+              vErrors = [err141];
+            } else {
+              vErrors.push(err141);
             }
-          } else {
-            const err142 = { instancePath: instancePath + "/diodes/designator_prefixes", schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+            errors++;
+          }
+          var _valid20 = _errs210 === errors;
+          valid31 = valid31 || _valid20;
+          if (!valid31) {
+            const err142 = { instancePath: instancePath + "/diodes/numeric_cathode_pad", schemaPath: "#/$defs/DiodeOptions/properties/numeric_cathode_pad/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err142];
             } else {
               vErrors.push(err142);
             }
             errors++;
-          }
-          var _valid21 = _errs212 === errors;
-          valid34 = valid34 || _valid21;
-          const _errs216 = errors;
-          if (data22 !== null) {
-            const err143 = { instancePath: instancePath + "/diodes/designator_prefixes", schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-            if (vErrors === null) {
-              vErrors = [err143];
-            } else {
-              vErrors.push(err143);
+          } else {
+            errors = _errs207;
+            if (vErrors !== null) {
+              if (_errs207) {
+                vErrors.length = _errs207;
+              } else {
+                vErrors = null;
+              }
             }
-            errors++;
           }
-          var _valid21 = _errs216 === errors;
-          valid34 = valid34 || _valid21;
-          if (!valid34) {
-            const err144 = { instancePath: instancePath + "/diodes/designator_prefixes", schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+        }
+        if (data16.cathode_pad_names !== void 0) {
+          let data21 = data16.cathode_pad_names;
+          const _errs213 = errors;
+          let valid32 = false;
+          const _errs214 = errors;
+          if (Array.isArray(data21)) {
+            const len0 = data21.length;
+            for (let i0 = 0; i0 < len0; i0++) {
+              if (typeof data21[i0] !== "string") {
+                const err143 = { instancePath: instancePath + "/diodes/cathode_pad_names/" + i0, schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+                if (vErrors === null) {
+                  vErrors = [err143];
+                } else {
+                  vErrors.push(err143);
+                }
+                errors++;
+              }
+            }
+          } else {
+            const err144 = { instancePath: instancePath + "/diodes/cathode_pad_names", schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
             if (vErrors === null) {
               vErrors = [err144];
             } else {
               vErrors.push(err144);
             }
             errors++;
-          } else {
-            errors = _errs211;
-            if (vErrors !== null) {
-              if (_errs211) {
-                vErrors.length = _errs211;
-              } else {
-                vErrors = null;
-              }
-            }
           }
-        }
-        if (data15.parameter_terms !== void 0) {
-          let data24 = data15.parameter_terms;
-          const _errs219 = errors;
-          let valid37 = false;
-          const _errs220 = errors;
-          if (Array.isArray(data24)) {
-            const len2 = data24.length;
-            for (let i2 = 0; i2 < len2; i2++) {
-              if (typeof data24[i2] !== "string") {
-                const err145 = { instancePath: instancePath + "/diodes/parameter_terms/" + i2, schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
-                if (vErrors === null) {
-                  vErrors = [err145];
-                } else {
-                  vErrors.push(err145);
-                }
-                errors++;
-              }
+          var _valid21 = _errs214 === errors;
+          valid32 = valid32 || _valid21;
+          const _errs218 = errors;
+          if (data21 !== null) {
+            const err145 = { instancePath: instancePath + "/diodes/cathode_pad_names", schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            if (vErrors === null) {
+              vErrors = [err145];
+            } else {
+              vErrors.push(err145);
             }
-          } else {
-            const err146 = { instancePath: instancePath + "/diodes/parameter_terms", schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+            errors++;
+          }
+          var _valid21 = _errs218 === errors;
+          valid32 = valid32 || _valid21;
+          if (!valid32) {
+            const err146 = { instancePath: instancePath + "/diodes/cathode_pad_names", schemaPath: "#/$defs/DiodeOptions/properties/cathode_pad_names/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err146];
             } else {
               vErrors.push(err146);
             }
             errors++;
-          }
-          var _valid22 = _errs220 === errors;
-          valid37 = valid37 || _valid22;
-          const _errs224 = errors;
-          if (data24 !== null) {
-            const err147 = { instancePath: instancePath + "/diodes/parameter_terms", schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-            if (vErrors === null) {
-              vErrors = [err147];
-            } else {
-              vErrors.push(err147);
-            }
-            errors++;
-          }
-          var _valid22 = _errs224 === errors;
-          valid37 = valid37 || _valid22;
-          if (!valid37) {
-            const err148 = { instancePath: instancePath + "/diodes/parameter_terms", schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-            if (vErrors === null) {
-              vErrors = [err148];
-            } else {
-              vErrors.push(err148);
-            }
-            errors++;
           } else {
-            errors = _errs219;
+            errors = _errs213;
             if (vErrors !== null) {
-              if (_errs219) {
-                vErrors.length = _errs219;
+              if (_errs213) {
+                vErrors.length = _errs213;
               } else {
                 vErrors = null;
               }
             }
           }
         }
-        for (const key3 in data15) {
-          if (key3 !== "enabled" && key3 !== "line_art" && key3 !== "marker_color" && key3 !== "numeric_cathode_pad" && key3 !== "cathode_pad_names" && key3 !== "designator_prefixes" && key3 !== "parameter_terms") {
-            const err149 = { instancePath: instancePath + "/diodes/" + key3.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/DiodeOptions/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
+        if (data16.designator_prefixes !== void 0) {
+          let data23 = data16.designator_prefixes;
+          const _errs221 = errors;
+          let valid35 = false;
+          const _errs222 = errors;
+          if (Array.isArray(data23)) {
+            const len1 = data23.length;
+            for (let i1 = 0; i1 < len1; i1++) {
+              if (typeof data23[i1] !== "string") {
+                const err147 = { instancePath: instancePath + "/diodes/designator_prefixes/" + i1, schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+                if (vErrors === null) {
+                  vErrors = [err147];
+                } else {
+                  vErrors.push(err147);
+                }
+                errors++;
+              }
+            }
+          } else {
+            const err148 = { instancePath: instancePath + "/diodes/designator_prefixes", schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+            if (vErrors === null) {
+              vErrors = [err148];
+            } else {
+              vErrors.push(err148);
+            }
+            errors++;
+          }
+          var _valid22 = _errs222 === errors;
+          valid35 = valid35 || _valid22;
+          const _errs226 = errors;
+          if (data23 !== null) {
+            const err149 = { instancePath: instancePath + "/diodes/designator_prefixes", schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
             if (vErrors === null) {
               vErrors = [err149];
             } else {
@@ -13139,87 +13129,90 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           }
-        }
-      } else {
-        const err150 = { instancePath: instancePath + "/diodes", schemaPath: "#/$defs/DiodeOptions/type", keyword: "type", params: { type: "object" }, message: "must be object" };
-        if (vErrors === null) {
-          vErrors = [err150];
-        } else {
-          vErrors.push(err150);
-        }
-        errors++;
-      }
-      var _valid15 = _errs167 === errors;
-      valid24 = valid24 || _valid15;
-      const _errs229 = errors;
-      if (data15 !== null) {
-        const err151 = { instancePath: instancePath + "/diodes", schemaPath: "#/properties/diodes/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-        if (vErrors === null) {
-          vErrors = [err151];
-        } else {
-          vErrors.push(err151);
-        }
-        errors++;
-      }
-      var _valid15 = _errs229 === errors;
-      valid24 = valid24 || _valid15;
-      if (!valid24) {
-        const err152 = { instancePath: instancePath + "/diodes", schemaPath: "#/properties/diodes/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-        if (vErrors === null) {
-          vErrors = [err152];
-        } else {
-          vErrors.push(err152);
-        }
-        errors++;
-      } else {
-        errors = _errs166;
-        if (vErrors !== null) {
-          if (_errs166) {
-            vErrors.length = _errs166;
+          var _valid22 = _errs226 === errors;
+          valid35 = valid35 || _valid22;
+          if (!valid35) {
+            const err150 = { instancePath: instancePath + "/diodes/designator_prefixes", schemaPath: "#/$defs/DiodeOptions/properties/designator_prefixes/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            if (vErrors === null) {
+              vErrors = [err150];
+            } else {
+              vErrors.push(err150);
+            }
+            errors++;
           } else {
-            vErrors = null;
+            errors = _errs221;
+            if (vErrors !== null) {
+              if (_errs221) {
+                vErrors.length = _errs221;
+              } else {
+                vErrors = null;
+              }
+            }
           }
         }
-      }
-    }
-    if (data.pin1 !== void 0) {
-      let data27 = data.pin1;
-      const _errs232 = errors;
-      let valid41 = false;
-      const _errs233 = errors;
-      if (data27 && typeof data27 == "object" && !Array.isArray(data27)) {
-        if (data27.exclude_designator_prefixes !== void 0) {
-          let data28 = data27.exclude_designator_prefixes;
-          const _errs237 = errors;
-          let valid44 = false;
-          const _errs238 = errors;
-          if (Array.isArray(data28)) {
-            const len3 = data28.length;
-            for (let i3 = 0; i3 < len3; i3++) {
-              if (typeof data28[i3] !== "string") {
-                const err153 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes/" + i3, schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+        if (data16.parameter_terms !== void 0) {
+          let data25 = data16.parameter_terms;
+          const _errs229 = errors;
+          let valid38 = false;
+          const _errs230 = errors;
+          if (Array.isArray(data25)) {
+            const len2 = data25.length;
+            for (let i2 = 0; i2 < len2; i2++) {
+              if (typeof data25[i2] !== "string") {
+                const err151 = { instancePath: instancePath + "/diodes/parameter_terms/" + i2, schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
                 if (vErrors === null) {
-                  vErrors = [err153];
+                  vErrors = [err151];
                 } else {
-                  vErrors.push(err153);
+                  vErrors.push(err151);
                 }
                 errors++;
               }
             }
           } else {
-            const err154 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes", schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+            const err152 = { instancePath: instancePath + "/diodes/parameter_terms", schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+            if (vErrors === null) {
+              vErrors = [err152];
+            } else {
+              vErrors.push(err152);
+            }
+            errors++;
+          }
+          var _valid23 = _errs230 === errors;
+          valid38 = valid38 || _valid23;
+          const _errs234 = errors;
+          if (data25 !== null) {
+            const err153 = { instancePath: instancePath + "/diodes/parameter_terms", schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            if (vErrors === null) {
+              vErrors = [err153];
+            } else {
+              vErrors.push(err153);
+            }
+            errors++;
+          }
+          var _valid23 = _errs234 === errors;
+          valid38 = valid38 || _valid23;
+          if (!valid38) {
+            const err154 = { instancePath: instancePath + "/diodes/parameter_terms", schemaPath: "#/$defs/DiodeOptions/properties/parameter_terms/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
             if (vErrors === null) {
               vErrors = [err154];
             } else {
               vErrors.push(err154);
             }
             errors++;
+          } else {
+            errors = _errs229;
+            if (vErrors !== null) {
+              if (_errs229) {
+                vErrors.length = _errs229;
+              } else {
+                vErrors = null;
+              }
+            }
           }
-          var _valid24 = _errs238 === errors;
-          valid44 = valid44 || _valid24;
-          const _errs242 = errors;
-          if (data28 !== null) {
-            const err155 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes", schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+        }
+        for (const key3 in data16) {
+          if (key3 !== "enabled" && key3 !== "line_art" && key3 !== "marker_color" && key3 !== "numeric_cathode_pad" && key3 !== "cathode_pad_names" && key3 !== "designator_prefixes" && key3 !== "parameter_terms") {
+            const err155 = { instancePath: instancePath + "/diodes/" + key3.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/DiodeOptions/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
             if (vErrors === null) {
               vErrors = [err155];
             } else {
@@ -13227,179 +13220,140 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
             }
             errors++;
           }
-          var _valid24 = _errs242 === errors;
-          valid44 = valid44 || _valid24;
-          if (!valid44) {
-            const err156 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes", schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-            if (vErrors === null) {
-              vErrors = [err156];
-            } else {
-              vErrors.push(err156);
-            }
-            errors++;
-          } else {
-            errors = _errs237;
-            if (vErrors !== null) {
-              if (_errs237) {
-                vErrors.length = _errs237;
-              } else {
-                vErrors = null;
-              }
-            }
-          }
-        }
-        for (const key4 in data27) {
-          if (key4 !== "exclude_designator_prefixes") {
-            const err157 = { instancePath: instancePath + "/pin1/" + key4.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/Pin1Options/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
-            if (vErrors === null) {
-              vErrors = [err157];
-            } else {
-              vErrors.push(err157);
-            }
-            errors++;
-          }
         }
       } else {
-        const err158 = { instancePath: instancePath + "/pin1", schemaPath: "#/$defs/Pin1Options/type", keyword: "type", params: { type: "object" }, message: "must be object" };
+        const err156 = { instancePath: instancePath + "/diodes", schemaPath: "#/$defs/DiodeOptions/type", keyword: "type", params: { type: "object" }, message: "must be object" };
+        if (vErrors === null) {
+          vErrors = [err156];
+        } else {
+          vErrors.push(err156);
+        }
+        errors++;
+      }
+      var _valid16 = _errs177 === errors;
+      valid25 = valid25 || _valid16;
+      const _errs239 = errors;
+      if (data16 !== null) {
+        const err157 = { instancePath: instancePath + "/diodes", schemaPath: "#/properties/diodes/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+        if (vErrors === null) {
+          vErrors = [err157];
+        } else {
+          vErrors.push(err157);
+        }
+        errors++;
+      }
+      var _valid16 = _errs239 === errors;
+      valid25 = valid25 || _valid16;
+      if (!valid25) {
+        const err158 = { instancePath: instancePath + "/diodes", schemaPath: "#/properties/diodes/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
         if (vErrors === null) {
           vErrors = [err158];
         } else {
           vErrors.push(err158);
         }
         errors++;
-      }
-      var _valid23 = _errs233 === errors;
-      valid41 = valid41 || _valid23;
-      const _errs247 = errors;
-      if (data27 !== null) {
-        const err159 = { instancePath: instancePath + "/pin1", schemaPath: "#/properties/pin1/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-        if (vErrors === null) {
-          vErrors = [err159];
-        } else {
-          vErrors.push(err159);
-        }
-        errors++;
-      }
-      var _valid23 = _errs247 === errors;
-      valid41 = valid41 || _valid23;
-      if (!valid41) {
-        const err160 = { instancePath: instancePath + "/pin1", schemaPath: "#/properties/pin1/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-        if (vErrors === null) {
-          vErrors = [err160];
-        } else {
-          vErrors.push(err160);
-        }
-        errors++;
       } else {
-        errors = _errs232;
+        errors = _errs176;
         if (vErrors !== null) {
-          if (_errs232) {
-            vErrors.length = _errs232;
+          if (_errs176) {
+            vErrors.length = _errs176;
           } else {
             vErrors = null;
           }
         }
       }
     }
-    if (data.components !== void 0) {
-      let data31 = data.components;
-      const _errs250 = errors;
-      let valid48 = false;
-      const _errs251 = errors;
-      if (!validate70(data31, { instancePath: instancePath + "/components", parentData: data, parentDataProperty: "components", rootData, dynamicAnchors })) {
-        vErrors = vErrors === null ? validate70.errors : vErrors.concat(validate70.errors);
-        errors = vErrors.length;
-      }
-      var _valid25 = _errs251 === errors;
-      valid48 = valid48 || _valid25;
-      const _errs252 = errors;
-      if (data31 !== null) {
-        const err161 = { instancePath: instancePath + "/components", schemaPath: "#/properties/components/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-        if (vErrors === null) {
-          vErrors = [err161];
-        } else {
-          vErrors.push(err161);
-        }
-        errors++;
-      }
-      var _valid25 = _errs252 === errors;
-      valid48 = valid48 || _valid25;
-      if (!valid48) {
-        const err162 = { instancePath: instancePath + "/components", schemaPath: "#/properties/components/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
-        if (vErrors === null) {
-          vErrors = [err162];
-        } else {
-          vErrors.push(err162);
-        }
-        errors++;
-      } else {
-        errors = _errs250;
-        if (vErrors !== null) {
-          if (_errs250) {
-            vErrors.length = _errs250;
+    if (data.pin1 !== void 0) {
+      let data28 = data.pin1;
+      const _errs242 = errors;
+      let valid42 = false;
+      const _errs243 = errors;
+      if (data28 && typeof data28 == "object" && !Array.isArray(data28)) {
+        if (data28.exclude_designator_prefixes !== void 0) {
+          let data29 = data28.exclude_designator_prefixes;
+          const _errs247 = errors;
+          let valid45 = false;
+          const _errs248 = errors;
+          if (Array.isArray(data29)) {
+            const len3 = data29.length;
+            for (let i3 = 0; i3 < len3; i3++) {
+              if (typeof data29[i3] !== "string") {
+                const err159 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes/" + i3, schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf/0/items/type", keyword: "type", params: { type: "string" }, message: "must be string" };
+                if (vErrors === null) {
+                  vErrors = [err159];
+                } else {
+                  vErrors.push(err159);
+                }
+                errors++;
+              }
+            }
           } else {
-            vErrors = null;
+            const err160 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes", schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+            if (vErrors === null) {
+              vErrors = [err160];
+            } else {
+              vErrors.push(err160);
+            }
+            errors++;
+          }
+          var _valid25 = _errs248 === errors;
+          valid45 = valid45 || _valid25;
+          const _errs252 = errors;
+          if (data29 !== null) {
+            const err161 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes", schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+            if (vErrors === null) {
+              vErrors = [err161];
+            } else {
+              vErrors.push(err161);
+            }
+            errors++;
+          }
+          var _valid25 = _errs252 === errors;
+          valid45 = valid45 || _valid25;
+          if (!valid45) {
+            const err162 = { instancePath: instancePath + "/pin1/exclude_designator_prefixes", schemaPath: "#/$defs/Pin1Options/properties/exclude_designator_prefixes/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+            if (vErrors === null) {
+              vErrors = [err162];
+            } else {
+              vErrors.push(err162);
+            }
+            errors++;
+          } else {
+            errors = _errs247;
+            if (vErrors !== null) {
+              if (_errs247) {
+                vErrors.length = _errs247;
+              } else {
+                vErrors = null;
+              }
+            }
           }
         }
-      }
-    }
-    if (data.layer_outputs !== void 0) {
-      let data32 = data.layer_outputs;
-      const _errs255 = errors;
-      let valid49 = false;
-      const _errs256 = errors;
-      if (!validate75(data32, { instancePath: instancePath + "/layer_outputs", parentData: data, parentDataProperty: "layer_outputs", rootData, dynamicAnchors })) {
-        vErrors = vErrors === null ? validate75.errors : vErrors.concat(validate75.errors);
-        errors = vErrors.length;
-      }
-      var _valid26 = _errs256 === errors;
-      valid49 = valid49 || _valid26;
-      const _errs257 = errors;
-      if (data32 !== null) {
-        const err163 = { instancePath: instancePath + "/layer_outputs", schemaPath: "#/properties/layer_outputs/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
-        if (vErrors === null) {
-          vErrors = [err163];
-        } else {
-          vErrors.push(err163);
+        for (const key4 in data28) {
+          if (key4 !== "exclude_designator_prefixes") {
+            const err163 = { instancePath: instancePath + "/pin1/" + key4.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/$defs/Pin1Options/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
+            if (vErrors === null) {
+              vErrors = [err163];
+            } else {
+              vErrors.push(err163);
+            }
+            errors++;
+          }
         }
-        errors++;
-      }
-      var _valid26 = _errs257 === errors;
-      valid49 = valid49 || _valid26;
-      if (!valid49) {
-        const err164 = { instancePath: instancePath + "/layer_outputs", schemaPath: "#/properties/layer_outputs/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+      } else {
+        const err164 = { instancePath: instancePath + "/pin1", schemaPath: "#/$defs/Pin1Options/type", keyword: "type", params: { type: "object" }, message: "must be object" };
         if (vErrors === null) {
           vErrors = [err164];
         } else {
           vErrors.push(err164);
         }
         errors++;
-      } else {
-        errors = _errs255;
-        if (vErrors !== null) {
-          if (_errs255) {
-            vErrors.length = _errs255;
-          } else {
-            vErrors = null;
-          }
-        }
       }
-    }
-    if (data.views !== void 0) {
-      let data33 = data.views;
-      const _errs260 = errors;
-      let valid50 = false;
-      const _errs261 = errors;
-      if (Array.isArray(data33)) {
-        const len4 = data33.length;
-        for (let i4 = 0; i4 < len4; i4++) {
-          if (!validate77(data33[i4], { instancePath: instancePath + "/views/" + i4, parentData: data33, parentDataProperty: i4, rootData, dynamicAnchors })) {
-            vErrors = vErrors === null ? validate77.errors : vErrors.concat(validate77.errors);
-            errors = vErrors.length;
-          }
-        }
-      } else {
-        const err165 = { instancePath: instancePath + "/views", schemaPath: "#/properties/views/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+      var _valid24 = _errs243 === errors;
+      valid42 = valid42 || _valid24;
+      const _errs257 = errors;
+      if (data28 !== null) {
+        const err165 = { instancePath: instancePath + "/pin1", schemaPath: "#/properties/pin1/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
         if (vErrors === null) {
           vErrors = [err165];
         } else {
@@ -13407,26 +13361,56 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
         }
         errors++;
       }
-      var _valid27 = _errs261 === errors;
-      valid50 = valid50 || _valid27;
-      const _errs264 = errors;
-      if (data33 !== null) {
-        const err166 = { instancePath: instancePath + "/views", schemaPath: "#/properties/views/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+      var _valid24 = _errs257 === errors;
+      valid42 = valid42 || _valid24;
+      if (!valid42) {
+        const err166 = { instancePath: instancePath + "/pin1", schemaPath: "#/properties/pin1/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
         if (vErrors === null) {
           vErrors = [err166];
         } else {
           vErrors.push(err166);
         }
         errors++;
+      } else {
+        errors = _errs242;
+        if (vErrors !== null) {
+          if (_errs242) {
+            vErrors.length = _errs242;
+          } else {
+            vErrors = null;
+          }
+        }
       }
-      var _valid27 = _errs264 === errors;
-      valid50 = valid50 || _valid27;
-      if (!valid50) {
-        const err167 = { instancePath: instancePath + "/views", schemaPath: "#/properties/views/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+    }
+    if (data.components !== void 0) {
+      let data32 = data.components;
+      const _errs260 = errors;
+      let valid49 = false;
+      const _errs261 = errors;
+      if (!validate70(data32, { instancePath: instancePath + "/components", parentData: data, parentDataProperty: "components", rootData, dynamicAnchors })) {
+        vErrors = vErrors === null ? validate70.errors : vErrors.concat(validate70.errors);
+        errors = vErrors.length;
+      }
+      var _valid26 = _errs261 === errors;
+      valid49 = valid49 || _valid26;
+      const _errs262 = errors;
+      if (data32 !== null) {
+        const err167 = { instancePath: instancePath + "/components", schemaPath: "#/properties/components/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
         if (vErrors === null) {
           vErrors = [err167];
         } else {
           vErrors.push(err167);
+        }
+        errors++;
+      }
+      var _valid26 = _errs262 === errors;
+      valid49 = valid49 || _valid26;
+      if (!valid49) {
+        const err168 = { instancePath: instancePath + "/components", schemaPath: "#/properties/components/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+        if (vErrors === null) {
+          vErrors = [err168];
+        } else {
+          vErrors.push(err168);
         }
         errors++;
       } else {
@@ -13440,12 +13424,109 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
         }
       }
     }
+    if (data.layer_outputs !== void 0) {
+      let data33 = data.layer_outputs;
+      const _errs265 = errors;
+      let valid50 = false;
+      const _errs266 = errors;
+      if (!validate75(data33, { instancePath: instancePath + "/layer_outputs", parentData: data, parentDataProperty: "layer_outputs", rootData, dynamicAnchors })) {
+        vErrors = vErrors === null ? validate75.errors : vErrors.concat(validate75.errors);
+        errors = vErrors.length;
+      }
+      var _valid27 = _errs266 === errors;
+      valid50 = valid50 || _valid27;
+      const _errs267 = errors;
+      if (data33 !== null) {
+        const err169 = { instancePath: instancePath + "/layer_outputs", schemaPath: "#/properties/layer_outputs/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+        if (vErrors === null) {
+          vErrors = [err169];
+        } else {
+          vErrors.push(err169);
+        }
+        errors++;
+      }
+      var _valid27 = _errs267 === errors;
+      valid50 = valid50 || _valid27;
+      if (!valid50) {
+        const err170 = { instancePath: instancePath + "/layer_outputs", schemaPath: "#/properties/layer_outputs/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+        if (vErrors === null) {
+          vErrors = [err170];
+        } else {
+          vErrors.push(err170);
+        }
+        errors++;
+      } else {
+        errors = _errs265;
+        if (vErrors !== null) {
+          if (_errs265) {
+            vErrors.length = _errs265;
+          } else {
+            vErrors = null;
+          }
+        }
+      }
+    }
+    if (data.views !== void 0) {
+      let data34 = data.views;
+      const _errs270 = errors;
+      let valid51 = false;
+      const _errs271 = errors;
+      if (Array.isArray(data34)) {
+        const len4 = data34.length;
+        for (let i4 = 0; i4 < len4; i4++) {
+          if (!validate77(data34[i4], { instancePath: instancePath + "/views/" + i4, parentData: data34, parentDataProperty: i4, rootData, dynamicAnchors })) {
+            vErrors = vErrors === null ? validate77.errors : vErrors.concat(validate77.errors);
+            errors = vErrors.length;
+          }
+        }
+      } else {
+        const err171 = { instancePath: instancePath + "/views", schemaPath: "#/properties/views/anyOf/0/type", keyword: "type", params: { type: "array" }, message: "must be array" };
+        if (vErrors === null) {
+          vErrors = [err171];
+        } else {
+          vErrors.push(err171);
+        }
+        errors++;
+      }
+      var _valid28 = _errs271 === errors;
+      valid51 = valid51 || _valid28;
+      const _errs274 = errors;
+      if (data34 !== null) {
+        const err172 = { instancePath: instancePath + "/views", schemaPath: "#/properties/views/anyOf/1/type", keyword: "type", params: { type: "null" }, message: "must be null" };
+        if (vErrors === null) {
+          vErrors = [err172];
+        } else {
+          vErrors.push(err172);
+        }
+        errors++;
+      }
+      var _valid28 = _errs274 === errors;
+      valid51 = valid51 || _valid28;
+      if (!valid51) {
+        const err173 = { instancePath: instancePath + "/views", schemaPath: "#/properties/views/anyOf", keyword: "anyOf", params: {}, message: "must match a schema in anyOf" };
+        if (vErrors === null) {
+          vErrors = [err173];
+        } else {
+          vErrors.push(err173);
+        }
+        errors++;
+      } else {
+        errors = _errs270;
+        if (vErrors !== null) {
+          if (_errs270) {
+            vErrors.length = _errs270;
+          } else {
+            vErrors = null;
+          }
+        }
+      }
+    }
   } else {
-    const err168 = { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" };
+    const err174 = { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" };
     if (vErrors === null) {
-      vErrors = [err168];
+      vErrors = [err174];
     } else {
-      vErrors.push(err168);
+      vErrors.push(err174);
     }
     errors++;
   }

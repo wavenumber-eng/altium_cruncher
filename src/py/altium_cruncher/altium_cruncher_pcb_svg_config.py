@@ -1,4 +1,4 @@
-"""A1 config model for explicit PCB SVG layer/view rendering."""
+"""Versioned PCB SVG config adaptation and neutral runtime models."""
 
 from __future__ import annotations
 
@@ -7,7 +7,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import cast
 
-from .contracts.pcb_svg import config_default, config_metadata
+from .contracts.pcb_svg import (
+    config_default,
+    config_metadata,
+    decode_pcb_svg_config,
+)
 
 from altium_monkey.altium_pcb_layer_ref import PcbLayerRef
 from altium_monkey.altium_record_types import PcbLayer
@@ -193,7 +197,7 @@ def _parse_single_pcb_layer_selector(token: str) -> str:
 
 
 def parse_pcb_layer_selector(raw_layers: str | None) -> list[str] | None:
-    """Parse CLI layer selectors into canonical A0 layer tokens."""
+    """Parse CLI layer selectors into canonical renderer layer tokens."""
     if raw_layers is None:
         return None
 
@@ -210,7 +214,7 @@ def parse_pcb_layer_selector(raw_layers: str | None) -> list[str] | None:
 
 
 def pcb_svg_layer_ref_from_token(token: str) -> PcbLayerRef | None:
-    """Return a PcbLayerRef for a token, or None for A0 synthetic layers.
+    """Return a PcbLayerRef for a token, or None for synthetic layers.
 
     Raises ValueError for unknown tokens. Covers both legacy and V7 layers.
     """
@@ -221,7 +225,7 @@ def pcb_svg_layer_ref_from_token(token: str) -> PcbLayerRef | None:
 
 
 def pcb_svg_physical_layer_from_token(token: str) -> PcbLayer | None:
-    """Return a legacy physical PcbLayer for a token, or None for A0
+    """Return a legacy physical PcbLayer for a token, or None for
     synthetic layers and V7-only layers with no legacy equivalent."""
     ref = pcb_svg_layer_ref_from_token(token)
     return None if ref is None else ref.legacy_layer
@@ -236,7 +240,7 @@ def merge_pcb_svg_styles(
     base: dict[str, dict[str, object]],
     override: Mapping[str, object] | None,
 ) -> dict[str, dict[str, object]]:
-    """Merge an A0 style table while preserving default style keys."""
+    """Merge a runtime style table while preserving default style keys."""
     merged = {name: dict(base.get(name, {})) for name in _STYLE_ORDER}
     # Styles are extensible; keep every supplied group through view resolution.
     merged.update({name: dict(style) for name, style in base.items()})
@@ -309,7 +313,7 @@ class PcbSvgCanvasConfig:
 
 @dataclass(slots=True)
 class PcbSvgGlobalConfig:
-    """Global pcb-svg A0 options applied to layer outputs and views."""
+    """Global PCB SVG options applied to layer outputs and views."""
 
     pcbdoc: str | None = cast(str | None, config_default("global", "pcbdoc"))
     canvas: PcbSvgCanvasConfig = field(default_factory=PcbSvgCanvasConfig)
@@ -383,7 +387,7 @@ class PcbSvgGlobalConfig:
 
 @dataclass(slots=True)
 class PcbSvgViewConfig:
-    """One explicit A0 composed PCB SVG view."""
+    """One explicit composed PCB SVG view."""
 
     name: str
     enabled: bool = cast(bool, config_default("view", "enabled"))
@@ -489,6 +493,9 @@ class PcbSvgAssemblyConfig:
     dnp_designator_color: str = cast(
         str, config_default("assembly", "dnp_designator_color")
     )
+    hide_silkscreen_designators: bool = cast(
+        bool, config_default("assembly", "hide_silkscreen_designators")
+    )
 
     @classmethod
     def from_dict(cls, data: dict[str, object] | None) -> "PcbSvgAssemblyConfig":
@@ -516,6 +523,10 @@ class PcbSvgAssemblyConfig:
                 data.get("dnp_designator_color", default.dnp_designator_color)
                 or default.dnp_designator_color
             ),
+            hide_silkscreen_designators=_coerce_bool(
+                data.get("hide_silkscreen_designators"),
+                default.hide_silkscreen_designators,
+            ),
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -524,6 +535,7 @@ class PcbSvgAssemblyConfig:
             "dnp_projection": self.dnp_projection,
             "designator_color": self.designator_color,
             "dnp_designator_color": self.dnp_designator_color,
+            "hide_silkscreen_designators": self.hide_silkscreen_designators,
         }
 
 
@@ -844,7 +856,7 @@ def _default_pcb_svg_views() -> list[PcbSvgViewConfig]:
 
 @dataclass(slots=True)
 class PcbSvgConfig:
-    """Root pcb-svg A1 configuration model."""
+    """Neutral resolved runtime configuration for PCB SVG rendering."""
 
     schema: str = PCB_SVG_CONFIG_SCHEMA
     global_options: PcbSvgGlobalConfig = field(default_factory=PcbSvgGlobalConfig)
@@ -941,6 +953,18 @@ class PcbSvgConfig:
         return merge_pcb_svg_styles(self.global_options.styles, view.styles)
 
 
+def resolve_pcb_svg_config(value: object) -> PcbSvgConfig:
+    """Validate a versioned wire config and normalize it for runtime use.
+
+    The generated contract decoder recognizes supported schema versions while
+    preserving authored presence. Compatibility migration, defaults, coercion,
+    and semantic validation then produce the one neutral container consumed by
+    renderers and workflows.
+    """
+    authored = decode_pcb_svg_config(value)
+    return PcbSvgConfig.from_dict(dict(authored))
+
+
 def pcb_svg_config_template_payload(
     config: PcbSvgConfig | None = None,
 ) -> dict[str, object]:
@@ -966,7 +990,7 @@ def pcb_svg_config_text(config: PcbSvgConfig | None = None) -> str:
 def resolve_config_output_path(
     output_dir: Path, pattern: str, *, board: str, view: str
 ) -> Path:
-    """Resolve an A0 output pattern relative to the command output directory."""
+    """Resolve an output pattern relative to the command output directory."""
     safe_board = board.replace("/", "_").replace("\\", "_")
     safe_view = view.replace("/", "_").replace("\\", "_")
     text = pattern.format(board=safe_board, view=safe_view)
@@ -987,6 +1011,7 @@ __all__ = [
     "PCB_SVG_SPECIAL_LAYERS",
     "PcbSvgAssemblyConfig",
     "PcbSvgConfig",
+    "resolve_pcb_svg_config",
     "PcbSvgCanvasConfig",
     "PcbSvgComponentOverride",
     "PcbSvgDiodeConfig",

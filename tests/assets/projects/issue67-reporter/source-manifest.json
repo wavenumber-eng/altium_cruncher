@@ -1,0 +1,15 @@
+{
+  "source_corpus": "GitHub issue #67 reporter sample",
+  "source_issue": "https://github.com/wavenumber-eng/altium_cruncher/issues/67",
+  "imported": "2026-09-20",
+  "import_authorization": "Repository owner confirmed the reporter approved adding this board to the test cases on 2026-09-20.",
+  "scope": "PcbDoc-only fixture. Reporter attachments, screenshots, and other files are intentionally excluded.",
+  "fixture_purpose": "Real-world regression board for component affine placement, board-thickness clipping, and opposite-side SVG aperture composition.",
+  "files": [
+    {
+      "path": "sample.PcbDoc",
+      "bytes": 7526400,
+      "sha256": "dc5aa9072d4cdba05e3f4647365549467d90683784a36ee19aceac5a9490b10a"
+    }
+  ]
+}

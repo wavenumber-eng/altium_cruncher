@@ -13,6 +13,7 @@ from altium_monkey.altium_pcb_svg_renderer import (
     PcbSvgRenderContext,
     should_render_via_drill_hole,
 )
+from altium_monkey.altium_pcb_enums import PcbIpc4761ViaType
 from altium_monkey.altium_pcbdoc_builder import PcbDocNestedConfig
 from altium_monkey.altium_record_types import PcbLayer
 
@@ -28,6 +29,33 @@ if TYPE_CHECKING:
 BOARD_SUBSTRATE_LAYER_ID = 9014
 DEFAULT_SUBSTRATE_COLOR = "#B6A26B"
 DEFAULT_FLEX_SUBSTRATE_COLOR = "#D18B28"
+
+_PLUGGED_VIA_TYPES = frozenset(
+    {
+        PcbIpc4761ViaType.TYPE_3A_PLUGGING,
+        PcbIpc4761ViaType.TYPE_3B_PLUGGING,
+        PcbIpc4761ViaType.TYPE_4A_PLUGGING_AND_COVERING,
+        PcbIpc4761ViaType.TYPE_4B_PLUGGING_AND_COVERING,
+    }
+)
+
+
+def _via_bore_is_mechanically_open(via: object) -> bool:
+    """Return whether a via bore remains physical open space.
+
+    Monkey's illustration helper intentionally answers whether a drill should
+    be drawn. Cruncher's substrate/occlusion domain is stricter: an IPC-4761
+    plugged bore is not open space even though its drill may remain useful in
+    a fabrication illustration.
+    """
+
+    if not should_render_via_drill_hole(via):
+        return False
+    try:
+        via_type = PcbIpc4761ViaType(int(getattr(via, "ipc4761_via_type", 0)))
+    except TypeError, ValueError:
+        return False
+    return via_type not in _PLUGGED_VIA_TYPES
 
 
 @dataclass(frozen=True)
@@ -187,8 +215,10 @@ class BoardSubstrateRenderer(PcbSvgRenderer):
     ) -> BoardMaterialDomain:
         """Build board occlusion for opposite-side component visibility.
 
-        Unlike the substrate paint domain, this keeps tented/capped holes
-        opaque and only removes apertures open on the requested viewing side.
+        The uncut projection may pass through routed cutouts, applicable
+        through bores, and beyond the board edge. Film apertures are not
+        mechanical openings. Tented or filled bores and blind/buried vias do
+        not reveal opposite-side component geometry.
         """
 
         if side not in {"top", "bottom"}:
@@ -197,28 +227,25 @@ class BoardSubstrateRenderer(PcbSvgRenderer):
         path = self._path_from_vertices(ctx, outline.vertices) if outline else ""
         if not path:
             raise ValueError("board occlusion domain requires a board outline")
-        layer = PcbLayer.TOP if side == "top" else PcbLayer.BOTTOM
         openings = self._cutout_openings(ctx, pcbdoc)
-        openings.extend(self._occlusion_pad_openings(ctx, pcbdoc, layer, side))
-        openings.extend(self._occlusion_via_openings(ctx, pcbdoc, layer, side))
+        openings.extend(self._pad_occlusion_openings(ctx, pcbdoc, side))
+        openings.extend(self._via_occlusion_openings(ctx, pcbdoc, side))
         return BoardMaterialDomain(path, tuple(openings))
 
-    def _occlusion_pad_openings(
+    def _pad_occlusion_openings(
         self,
         ctx: PcbSvgRenderContext,
         pcbdoc: AltiumPcbDoc,
-        layer: PcbLayer,
         side: str,
     ) -> list[str]:
+        layer = PcbLayer.TOP if side == "top" else PcbLayer.BOTTOM
         openings: list[str] = []
         for pad in pcbdoc.pads:
-            if (
-                pad.hole_size <= 0
-                or self._should_skip_primitive_for_svg(pad)
-                or not pad._should_render_on_layer(layer)
-            ):
+            if pad.hole_size <= 0 or self._should_skip_primitive_for_svg(pad):
                 continue
-            if pad.is_plated and getattr(pad, f"is_tenting_{side}", False):
+            if not pad._should_render_on_layer(layer):
+                continue
+            if bool(pad.is_plated and getattr(pad, f"is_tenting_{side}", False)):
                 continue
             openings.extend(
                 pad._hole_knockout_svg_elements(
@@ -230,21 +257,23 @@ class BoardSubstrateRenderer(PcbSvgRenderer):
             )
         return openings
 
-    def _occlusion_via_openings(
+    def _via_occlusion_openings(
         self,
         ctx: PcbSvgRenderContext,
         pcbdoc: AltiumPcbDoc,
-        layer: PcbLayer,
         side: str,
     ) -> list[str]:
         openings: list[str] = []
         for via in pcbdoc.vias:
-            if (
-                self._should_skip_primitive_for_svg(via)
-                or not via._spans_layer(layer)
-                or getattr(via, f"is_tent_{side}", False)
-                or not should_render_via_drill_hole(via)
+            if self._should_skip_primitive_for_svg(via):
+                continue
+            if not _via_bore_is_mechanically_open(via):
+                continue
+            if not all(
+                via._spans_layer(layer) for layer in (PcbLayer.TOP, PcbLayer.BOTTOM)
             ):
+                continue
+            if bool(getattr(via, f"is_tent_{side}", False)):
                 continue
             radius = via.hole_size_mils * 0.0254 / 2
             if radius > 0:
@@ -303,7 +332,7 @@ class BoardSubstrateRenderer(PcbSvgRenderer):
         for via in pcbdoc.vias:
             if self._should_skip_primitive_for_svg(
                 via
-            ) or not should_render_via_drill_hole(via):
+            ) or not _via_bore_is_mechanically_open(via):
                 continue
             # A composed surface includes via mouths on that side. With no outer
             # side selected, the side-neutral substrate shows through vias only.

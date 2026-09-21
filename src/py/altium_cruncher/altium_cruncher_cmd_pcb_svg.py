@@ -11,8 +11,8 @@ from altium_cruncher.altium_cruncher_common import (
     find_pcbdocs_in_cwd,
     find_prjpcbs_in_cwd,
 )
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
-    render_pcb_svg_a0_to_output,
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+    render_pcb_svg_to_output,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PCB_DEFAULT_SVG_SCALE,
@@ -23,6 +23,7 @@ from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgViewConfig,
     parse_pcb_layer_selector,
     pcb_svg_config_text,
+    resolve_pcb_svg_config,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
     PcbSvgComponentInventory,
@@ -252,7 +253,7 @@ def _write_default_pcb_svg_config(
     input_file: Path | None = None,
     pcbdoc_selector: Path | str | None = None,
 ) -> None:
-    """Write an editable A0 pcb-svg config template."""
+    """Write an editable PCB SVG config template."""
     config_path.parent.mkdir(parents=True, exist_ok=True)
     inventories, inventory_error = _load_config_template_inventory(
         input_file,
@@ -274,9 +275,7 @@ def _load_pcb_svg_config(config_path: Path) -> PcbSvgConfig:
         raise ValueError(
             f"Failed to parse pcb-svg config '{config_path}': {exc}"
         ) from exc
-    from .contracts.pcb_svg import decode_pcb_svg_config
-
-    return PcbSvgConfig.from_dict(decode_pcb_svg_config(raw_data))
+    return resolve_pcb_svg_config(raw_data)
 
 
 def _parse_pcb_views(raw_views: str | None) -> set[str] | None:
@@ -304,7 +303,7 @@ def _apply_pcb_view_selection(
     config: PcbSvgConfig,
     raw_views: str | None,
 ) -> PcbSvgConfig:
-    """Apply CLI view filtering to an A0 config."""
+    """Apply CLI view filtering to a resolved runtime config."""
     selected = _parse_pcb_views(raw_views)
     if selected is None or "all" in selected:
         return config
@@ -333,7 +332,7 @@ def _apply_pcb_layer_selection(
     config: PcbSvgConfig,
     raw_layers: str | None,
 ) -> PcbSvgConfig:
-    """Apply CLI layer filtering to A0 layer outputs."""
+    """Apply CLI layer filtering to configured layer outputs."""
     selected_layers = parse_pcb_layer_selector(raw_layers)
     if selected_layers is not None:
         config.layer_outputs["layers"] = selected_layers
@@ -374,7 +373,7 @@ def _resolve_view_render_settings(
     default_svg_scale: float | None = None,
     default_svg_size_unit: str | None = None,
 ) -> dict[str, object]:
-    """Return the effective A0 render settings for one view."""
+    """Return the effective render settings for one view."""
     config = PcbSvgConfig(global_options=global_options, views=[view])
     styles = config.resolved_styles_for_view(view)
     _validate_view_cutout_settings(styles.get("board_cutouts", {}), view.name)
@@ -400,7 +399,7 @@ def _resolve_pcb_svg_configs(
     args: object,
     input_files: list[Path],
 ) -> tuple[dict[Path, PcbSvgConfig], list[Path]]:
-    """Resolve one A0 pcb-svg config per input file."""
+    """Resolve one runtime PCB SVG config per input file."""
     resolved_input_files = [path.resolve() for path in input_files]
     created_paths: list[Path] = []
     config_by_input: dict[Path, PcbSvgConfig] = {}
@@ -466,7 +465,7 @@ def resolve_pcb_svg_configs(
     args: object,
     input_files: list[Path],
 ) -> tuple[dict[Path, PcbSvgConfig], list[Path]]:
-    """Public wrapper for resolving A0 pcb-svg configs."""
+    """Public wrapper for resolving PCB SVG configs."""
     return _resolve_pcb_svg_configs(args, input_files)
 
 
@@ -476,8 +475,8 @@ def render_pcb_views_from_inputs(
     output_dir: Path,
     config_by_input: dict[Path, PcbSvgConfig],
 ) -> int:
-    """Render PCB SVG A0 outputs from resolved inputs/config."""
-    return render_pcb_svg_a0_to_output(args, input_files, output_dir, config_by_input)
+    """Render PCB SVG outputs from resolved inputs/config."""
+    return render_pcb_svg_to_output(args, input_files, output_dir, config_by_input)
 
 
 def cmd_pcb_svg(args: object) -> int:
@@ -590,7 +589,7 @@ def add_pcb_svg_option_arguments(
         "--pcb-clean-output",
         dest="pcb_clean_output",
         action="store_true",
-        help="reserved for A0 output cleanup; current renderer overwrites configured outputs",
+        help="reserved for output cleanup; current renderer overwrites configured outputs",
     )
     parser.add_argument(
         "--export",
@@ -598,7 +597,7 @@ def add_pcb_svg_option_arguments(
         dest="pcb_export",
         choices=["board", "layers", "bundle", "outline"],
         default="board",
-        help="legacy compatibility option; A0 output selection is config-driven",
+        help="legacy compatibility option; output selection is config-driven",
     )
 
 

@@ -22,7 +22,7 @@ from altium_cruncher.altium_cruncher_pcb_illustration import (
     IllustrationComponent,
     IllustrationJob,
 )
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
@@ -109,7 +109,7 @@ def main() -> None:
     pcb = AltiumPcbDoc.from_file(FIXTURE / "input/RT_SUPER_C1.PCBdoc")
     config = PcbSvgConfig.default()
     config.global_options.include_metadata = False
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     def assembly(name: str, layers: list[str], color: str = "#ee3366") -> str:
         view = PcbSvgViewConfig(name=name, layers=layers)

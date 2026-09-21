@@ -12,7 +12,7 @@ export type PcbSvgConfigInput = RecordUnknown & {
   /**
    * Assembly projection defaults for component virtual layers.
    */
-  assembly?: AssemblyOptions | null;
+  assembly?: AssemblyOptionsA1 | null;
   /**
    * DNP marker style.
    */
@@ -587,7 +587,7 @@ export interface RecordStyleObject {
 export interface StyleObject {
   [k: string]: unknown;
 }
-export interface AssemblyOptions {
+export interface AssemblyOptionsA1 {
   /**
    * Projection mode for fitted components. Options: bounding_box, detail, none, outline, simple.
    */
@@ -638,6 +638,10 @@ export interface AssemblyOptions {
    * Text color for DNP component designators.
    */
   dnp_designator_color?: string | null;
+  /**
+   * Hide authored physical silkscreen designators when projected assembly designators are requested. Defaults to false so --assembly preserves the board as authored.
+   */
+  hide_silkscreen_designators?: boolean | null | number | string;
 }
 export interface DnpOptions {
   /**

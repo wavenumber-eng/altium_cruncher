@@ -445,10 +445,8 @@ def _canonical_region_key(region: BoardRegionEnvelope) -> tuple[str, str, int]:
 
 
 def _envelope_signature(region: BoardRegionEnvelope) -> tuple[object, ...]:
-    envelope = region.envelope
-    return (
-        str(envelope.z_zero),
-        round(float(envelope.total_thickness_mils), _ENVELOPE_COMPARE_DIGITS),
-        round(float(envelope.top_z_mils), _ENVELOPE_COMPARE_DIGITS),
-        round(float(envelope.bottom_z_mils), _ENVELOPE_COMPARE_DIGITS),
-    )
+    # Cruncher's clipping coordinate system deliberately normalizes every
+    # region to top Z=0 and bottom Z=-thickness. Source stack Z-zero choices
+    # remain diagnostic metadata, but cannot make equal physical slabs
+    # ambiguous at a shared boundary.
+    return (round(float(region.total_thickness_mils), _ENVELOPE_COMPARE_DIGITS),)

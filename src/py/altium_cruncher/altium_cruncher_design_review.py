@@ -923,8 +923,8 @@ def _write_pcb_review_svgs(
 ) -> list[dict[str, object]]:
     if not pcbdoc_paths:
         return []
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
-        _render_a0_board_outputs,
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+        _render_board_outputs,
     )
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
     from altium_cruncher.altium_cruncher_pcb_workflow import CruncherPcbRenderInput
@@ -941,7 +941,7 @@ def _write_pcb_review_svgs(
             pcbdoc=pcbdoc,
             project_parameters=project_parameters,
         )
-        _render_a0_board_outputs(
+        _render_board_outputs(
             config,
             render_input,
             input_file=pcbdoc_path,
@@ -973,9 +973,11 @@ def _pcb_review_copper_layer_tokens(
     from altium_cruncher.altium_cruncher_pcb_layer_resolve import (
         pcb_layer_ref_sort_key,
     )
-    from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+    from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+        PcbSvgCompositeRenderer,
+    )
 
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     # _collect_visible_layers yields V7-aware render layers since
     # altium-monkey 2026.8.1; keep the refs so Mechanical17+/Mid31+ content
     # classifies correctly.

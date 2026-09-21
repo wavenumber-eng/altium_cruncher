@@ -36,7 +36,7 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | `clean_output` | No | `false` | Reserved cleanup flag for generated output directories. |
 | `styles` | No | — | Default style table for physical and synthetic layers. |
 
-## AssemblyOptions
+## AssemblyOptionsA1
 
 | Field | Required | Default annotation | Description |
 | --- | --- | --- | --- |
@@ -44,6 +44,7 @@ The CLI applies presets, config overrides and explicit command choices afterward
 | `dnp_projection` | No | `"bounding_box"` | Projection mode for DNP components. Options: bounding_box, detail, none, outline, simple. |
 | `designator_color` | No | `"#FF0000"` | Text color for fitted component designators. |
 | `dnp_designator_color` | No | `"#FF0000"` | Text color for DNP component designators. |
+| `hide_silkscreen_designators` | No | `false` | Hide authored physical silkscreen designators when projected assembly designators are requested. Defaults to false so --assembly preserves the board as authored. |
 
 ## DnpOptions
 

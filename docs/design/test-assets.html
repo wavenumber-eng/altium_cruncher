@@ -82,7 +82,7 @@
 
   <section>
     <h2>Primary Cases</h2>
-    <p><code>nxp-frdm-imx93</code> and <code>ov-tech-pimx8</code> extend the opt-in toon/SVG performance corpus with larger boards and complex embedded STEP models. Their project-referenced sources retain original relative paths, and source manifests record byte hashes. They have no Altium output oracle and are excluded from fast unit-test workloads. <code>bluetooth_sentinel_flex</code> is the focused board-region and local-stack-thickness fixture; it contains only the PcbDoc required to distinguish two rigid regions from one flex region.</p>
+    <p><code>nxp-frdm-imx93</code> and <code>ov-tech-pimx8</code> extend the opt-in toon/SVG performance corpus with larger boards and complex embedded STEP models. Their project-referenced sources retain original relative paths, and source manifests record byte hashes. They have no Altium output oracle and are excluded from fast unit-test workloads. <code>bluetooth_sentinel_flex</code> and <code>Kame_IMU</code> are focused PcbDoc-only board-region and local-stack-thickness fixtures. Together they provide two independent rigid-flex designs for flat Toon rendering, regional materials, coverlay, and bend-line review.</p>
     <table>
       <tr>
         <th>Project</th>
@@ -104,7 +104,52 @@
         <td><code>bluetooth_sentinel_flex</code></td>
         <td>Primary source-aware board-region fixture. Its two rigid regions resolve to 32.1455 mil and its flex region resolves to 3.3267 mil. Focused region-query tests may run normally; full Toon rendering remains opt-in.</td>
       </tr>
+      <tr>
+        <td><code>Kame_IMU</code></td>
+        <td>Second source-aware rigid-flex fixture. Its two rigid regions resolve to 34.1479 mil and its flex region resolves to 6.3391 mil. The PcbDoc-only fixture adds an independent 51-component Gate 5 case for regional surface materials, coverlay, bend lines, and documented multi-region placement limits.</td>
+      </tr>
+      <tr>
+        <td><code>single-throughhole</code> and <code>single-smt</code></td>
+        <td>Paired top- and bottom-placement fixtures for affine placement, board-thickness clipping, and opposite-side SVG visibility-mask regressions. Only the focused PcbDoc files are retained.</td>
+      </tr>
+      <tr>
+        <td><code>issue67-reporter</code></td>
+        <td>Reporter-authorized real-world PcbDoc from issue 67. It covers mixed component placement and projection defects without retaining reporter attachments or screenshots.</td>
+      </tr>
+      <tr>
+        <td><code>toon-analytic-bodies</code></td>
+        <td>Generator-owned Gate 6 PcbDoc for component-owned analytic 3D bodies. Its deterministic semantic inventory covers extrusions, cylinders, spheres, top/bottom placement, Z overlap, board crossing, edge/cutout overhangs, color, partial opacity, and zero-opacity omission without STEP geometry.</td>
+      </tr>
     </table>
+  </section>
+
+  <section>
+    <h2>Manual SVG Review</h2>
+    <p>
+      <code>tests/support_scripts/svg_review_gallery.py</code> builds an offline
+      review page for any ordered JSON array of titled SVG paths. Items may
+      include <code>group</code> and <code>detail</code> labels. The responsive
+      overview opens each original vector in a full-screen modal with pan,
+      wheel and toolbar zoom, fit, and previous/next navigation. The generator
+      embeds the vendored <code>svg-pan-zoom</code> implementation, so review
+      pages do not depend on a CDN or raster preview. Large manifests may set
+      <code>split_by_group_pattern</code>; the root then becomes a lightweight
+      index and each matched group partition is written as an independently
+      loaded subgallery.
+    </p>
+    <pre><code>uv run python tests/support_scripts/svg_review_gallery.py review.json --output output/svg-review</code></pre>
+  </section>
+
+  <section data-interface="SvgReviewItem" data-rack-stratum="L99_signoff" data-test-file="tests/test_svg_review_gallery.py" data-test-target="test_review_gallery_embeds_vector_modal_and_offline_pan_zoom">
+    <h2>SvgReviewItem</h2>
+    <h3>Rationale</h3>
+    <p>Durable visual qualification needs a small renderer-independent description of each SVG rather than board-specific gallery code.</p>
+    <h3>Purpose</h3>
+    <p>Associates an arbitrary local SVG path with its review title, group, and optional detail text for the offline vector gallery.</p>
+    <h3>Test Requirements</h3>
+    <p>Gallery tests verify vector-native modal embedding, vendored offline pan/zoom, safe markup validation, relative paths, and optional per-group partitioning.</p>
+    <h3>Working Definition</h3>
+    <p>Working when arbitrary titled SVGs can be inspected without rasterization or network access and large manifests can be split without changing item order or labels.</p>
   </section>
 
   <section>

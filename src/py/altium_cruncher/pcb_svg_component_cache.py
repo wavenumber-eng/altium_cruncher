@@ -19,6 +19,7 @@ import logging
 from .altium_cruncher_pcb_illustration import (
     CachedComponentPlacement,
     ComponentPlacement,
+    IllustrationComponent,
     IllustrationSymbol,
     IllustrationJob,
     BodyMetadata,
@@ -73,6 +74,7 @@ def _decode_placement(value: dict) -> CachedComponentPlacement:
         ),
         value.get("authored_side", "top"),
         _finite_vector((value.get("board_z_offset_mm", 0.0),), 1)[0],
+        value.get("illustration_label"),
     )
     if (
         not isinstance(part.designator, str)
@@ -80,6 +82,10 @@ def _decode_placement(value: dict) -> CachedComponentPlacement:
         or (
             part.component_index is not None
             and (type(part.component_index) is not int or part.component_index < 0)
+        )
+        or (
+            part.illustration_label is not None
+            and not isinstance(part.illustration_label, str)
         )
         or any(part.bounds[i] > part.bounds[i + 3] for i in range(3))
         or part.authored_side not in {"top", "bottom"}
@@ -192,9 +198,9 @@ class ComponentArtworkCache:
                 side=side,
                 illustrate=illustrate,
                 line_width_mm=job.line_width_mm,
-                clipping=job._region_clipping_identity(),
-                placement_contract="board-surface-region-thickness-v1",
-                rendering_contract="aperture-composite-v1",
+                clipping=job._component_artwork_clipping_identity(),
+                placement_contract="board-surface-region-thickness-v2-sole-rigid",
+                rendering_contract="scoped-aperture-composite-v4-diagnostic-labels",
             )
         )
         self.hit_owners = set()
@@ -402,6 +408,13 @@ class ComponentArtworkCache:
             bounds=part.bounds,
             authored_side=part.authored_side,
             board_z_offset_mm=part.board_z_offset_mm,
+            illustration_label=(
+                part.direct.label
+                if isinstance(part, IllustrationComponent) and part.direct is not None
+                else part.illustration_label
+                if isinstance(part, CachedComponentPlacement)
+                else None
+            ),
         )
         return dict(
             placement=placement,

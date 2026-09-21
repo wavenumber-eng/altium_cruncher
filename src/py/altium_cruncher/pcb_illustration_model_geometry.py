@@ -38,8 +38,8 @@ class IllustrationProjection:
     y_mm: float
     mm_per_unit: float
 
-    def group(self, symbol_id: str) -> ET.Element:
-        return _projection_group(self, symbol_id)
+    def group(self, symbol_id: str, *, opaque_paint: bool = False) -> ET.Element:
+        return _projection_group(self, symbol_id, opaque_paint=opaque_paint)
 
 
 @dataclass(frozen=True)
@@ -60,13 +60,20 @@ class IllustrationSymbol(IllustrationProjection):
     aperture: IllustrationProjection | None = None
     aperture_source_bounds_mm: Bounds3 | None = None
 
-    def aperture_group(self, symbol_id: str) -> ET.Element:
+    def aperture_group(
+        self, symbol_id: str, *, opaque_paint: bool = False
+    ) -> ET.Element:
         if self.aperture is None:
             raise ValueError("illustration has no aperture projection")
-        return self.aperture.group(symbol_id)
+        return self.aperture.group(symbol_id, opaque_paint=opaque_paint)
 
 
-def _projection_group(projection: IllustrationProjection, symbol_id: str) -> ET.Element:
+def _projection_group(
+    projection: IllustrationProjection,
+    symbol_id: str,
+    *,
+    opaque_paint: bool = False,
+) -> ET.Element:
     """Inline native CSS so multiple symbols cannot recolor one another."""
     root = ET.fromstring(projection.svg)
     styles: dict[str, dict[str, str]] = {}
@@ -82,6 +89,9 @@ def _projection_group(projection: IllustrationProjection, symbol_id: str) -> ET.
         root.remove(style)
     group = ET.Element(f"{{{_SVG}}}g", {"id": symbol_id})
     _inline_styles(root, styles)
+    if opaque_paint:
+        for element in root.iter():
+            element.attrib.pop("opacity", None)
     local = ET.SubElement(
         group,
         f"{{{_SVG}}}g",
@@ -200,12 +210,10 @@ def transform_mesh(
             for r in range(4)
         ]
 
-    def transform(values: tuple[float, ...], translate: bool) -> tuple[float, ...]:
+    def transform_positions(values: tuple[float, ...]) -> tuple[float, ...]:
         a, b, c, tx = matrix[0]
         d, e, f, ty = matrix[1]
         h, j, k, tz = matrix[2]
-        if not translate:
-            tx = ty = tz = 0
         result = []
         for i in range(0, len(values), 3):
             x, y, z = values[i : i + 3]
@@ -218,11 +226,76 @@ def transform_mesh(
             )
         return tuple(result)
 
+    def transform_normals(values: tuple[float, ...]) -> tuple[float, ...]:
+        a, b, c = matrix[0][:3]
+        d, e, f = matrix[1][:3]
+        h, j, k = matrix[2][:3]
+        determinant = a * (e * k - f * j) - b * (d * k - f * h) + c * (d * j - e * h)
+        if math.isclose(determinant, 0.0, abs_tol=1e-15):
+            raise ValueError("mesh affine transform is singular; normals are undefined")
+        # Cofactor(A) == inverse(A).T * det(A), which is the correct affine
+        # normal transform for rotation, reflection, and nonuniform scale.
+        normal_matrix = (
+            (
+                (e * k - f * j) / determinant,
+                (f * h - d * k) / determinant,
+                (d * j - e * h) / determinant,
+            ),
+            (
+                (c * j - b * k) / determinant,
+                (a * k - c * h) / determinant,
+                (b * h - a * j) / determinant,
+            ),
+            (
+                (b * f - c * e) / determinant,
+                (c * d - a * f) / determinant,
+                (a * e - b * d) / determinant,
+            ),
+        )
+        result: list[float] = []
+        for i in range(0, len(values), 3):
+            x, y, z = values[i : i + 3]
+            nx, ny, nz = (
+                sum(
+                    (
+                        normal_matrix[0][0] * x,
+                        normal_matrix[0][1] * y,
+                        normal_matrix[0][2] * z,
+                    )
+                ),
+                sum(
+                    (
+                        normal_matrix[1][0] * x,
+                        normal_matrix[1][1] * y,
+                        normal_matrix[1][2] * z,
+                    )
+                ),
+                sum(
+                    (
+                        normal_matrix[2][0] * x,
+                        normal_matrix[2][1] * y,
+                        normal_matrix[2][2] * z,
+                    )
+                ),
+            )
+            length = math.sqrt(nx * nx + ny * ny + nz * nz)
+            if math.isclose(length, 0.0, abs_tol=1e-15):
+                result.extend((0.0, 0.0, 0.0))
+            else:
+                result.extend(
+                    (
+                        round(nx / length, 10),
+                        round(ny / length, 10),
+                        round(nz / length, 10),
+                    )
+                )
+        return tuple(result)
+
     return replace(
         mesh,
         id=mesh_id,
-        positions=transform(mesh.positions, True),
-        normals=transform(mesh.normals, False) if mesh.normals else None,
+        positions=transform_positions(mesh.positions),
+        normals=transform_normals(mesh.normals) if mesh.normals else None,
         matrix=None,
     )
 

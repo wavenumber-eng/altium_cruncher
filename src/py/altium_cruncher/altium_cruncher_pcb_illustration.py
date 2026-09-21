@@ -69,6 +69,8 @@ from .pcb_board_region_envelope_index import (
     BoardRegionQueryStatus,
 )
 from .pcb_component_clipping import (
+    COMPONENT_CLIP_CAP_POLICY,
+    COMPONENT_CLIP_TOLERANCE_MM,
     ComponentVisibilityAction,
     ComponentVisibilityResolution,
     clipped_conservative_bounds as _clipped_conservative_bounds,
@@ -118,6 +120,7 @@ class CachedComponentPlacement:
     bounds: Bounds3
     authored_side: Side = "top"
     board_z_offset_mm: float = 0.0
+    illustration_label: str | None = None
 
 
 @dataclass(frozen=True)
@@ -156,6 +159,13 @@ class IllustrationComponent:
             for fn in (min, max)
             for axis in range(3)
         )  # type: ignore[return-value]
+
+
+def _illustration_label(component: ComponentPlacement) -> str | None:
+    """Return the diagnostic label retained by fresh and cached placements."""
+    if isinstance(component, CachedComponentPlacement):
+        return component.illustration_label
+    return component.direct.label if component.direct is not None else None
 
 
 def model_catalog_context(pcbdoc: AltiumPcbDoc) -> CatalogContext:
@@ -791,7 +801,20 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             part.anchor_mm[0] / _MIL_MM,
             part.anchor_mm[1] / _MIL_MM,
         )
-        if query.status is not BoardRegionQueryStatus.RESOLVED or query.region is None:
+        region = query.region
+        if (
+            query.status is BoardRegionQueryStatus.OUTSIDE
+            and len(self.region_index.regions) == 1
+            and not self.region_index.invalid_regions
+            and self.region_index.regions[0].is_flex is False
+        ):
+            region = self.region_index.regions[0]
+            log.debug(
+                "%s: using sole rigid board region %s for outside component anchor",
+                part.designator,
+                region.name,
+            )
+        if region is None:
             self.warn(
                 f"{part.designator}: bottom-side placement retained at z=0 because "
                 f"the board region at its anchor is {query.status.value}",
@@ -805,9 +828,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                 },
             )
             return part
-        return _translate_component_z(
-            part, -query.region.total_thickness_mils * _MIL_MM
-        )
+        return _translate_component_z(part, -region.total_thickness_mils * _MIL_MM)
 
     def _collect_body(
         self,
@@ -1289,7 +1310,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         ):
             key = _digest(
                 dict(
-                    renderer_contract="geometer-b0-half-space-v4-aperture-composite",
+                    renderer_contract="geometer-b0-half-space-v5-scoped-apertures",
                     source=component.direct.identity,
                     line_width_mm=self.line_width_mm,
                     side=side,
@@ -1333,7 +1354,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                 appearance.append(value)
             key = _digest(
                 dict(
-                    renderer_contract="geometer-b0-half-space-v4-aperture-composite",
+                    renderer_contract="geometer-b0-half-space-v5-scoped-apertures",
                     meshes=appearance,
                     line_width_mm=self.line_width_mm,
                     side=side,
@@ -1353,6 +1374,24 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         return {
             "anchor_mm": component.anchor_mm,
             "authored_side": component.authored_side,
+            "policy": self._clipping_policy_identity(),
+            "partition": self._region_clipping_identity(),
+        }
+
+    @staticmethod
+    def _clipping_policy_identity() -> object:
+        """Return policy inputs shared by every clipping-aware cache layer."""
+        return {
+            "clip_tolerance_mm": COMPONENT_CLIP_TOLERANCE_MM,
+            "cap_policy": COMPONENT_CLIP_CAP_POLICY,
+        }
+
+    def _component_artwork_clipping_identity(self) -> object:
+        """Return clipping inputs for the early whole-component artwork cache."""
+        if self.region_index is None:
+            return None
+        return {
+            "policy": self._clipping_policy_identity(),
             "partition": self._region_clipping_identity(),
         }
 
@@ -1360,6 +1399,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
         if self.region_index is None:
             return None
         return {
+            "query_tolerance_mils": self.region_index.tolerance_mils,
             "regions": [
                 {
                     "source_index": region.source_index,
@@ -1475,12 +1515,10 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
     ) -> None:
         if not symbol.warnings:
             return
-        direct = (
-            component.direct if isinstance(component, IllustrationComponent) else None
-        )
+        label = _illustration_label(component)
         context = (
-            f"{component.designator} / {direct.label} ({side})"
-            if direct is not None
+            f"{component.designator} / {label} ({side})"
+            if label is not None
             else f"{component.designator} ({side})"
         )
         body_index = (
@@ -1493,14 +1531,14 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
                 producer="geometer",
                 component_designator=component.designator,
                 body_index=body_index,
-                model_identity=direct.label if direct is not None else None,
+                model_identity=label,
                 detail={"side": side, "upstream_message": warning},
             )
             self._record_diagnostic(
                 f"{context}: {warning}",
                 metadata,
             )
-        if self.emit_warnings and direct is not None:
+        if self.emit_warnings and label is not None:
             log.warning("%s: %s", context, symbol.warnings[0])
             for warning in symbol.warnings[1:]:
                 log.debug("%s: %s", context, warning)
@@ -1795,6 +1833,7 @@ class IllustrationJob(IllustrationDiagnosticsMixin):
             bounds_local_mm=bounds,
             authored_side=component.authored_side,
             requested_side=side,
+            tolerance_mm=COMPONENT_CLIP_TOLERANCE_MM,
         )
 
     def _warn_unsafe_opposite_visibility(

@@ -27,7 +27,7 @@ from altium_monkey.altium_record_pcb__track import AltiumPcbTrack
 from altium_monkey.altium_record_pcb__via import AltiumPcbVia
 from altium_monkey.altium_record_types import PcbLayer
 
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import PcbSvgA0Renderer
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import PcbSvgCompositeRenderer
 from altium_cruncher.altium_cruncher_pcb_svg_config import (
     PcbSvgConfig,
     PcbSvgViewConfig,
@@ -77,7 +77,7 @@ def _render(
         styles={"soldermask_film": style or {}},
     )
     return ET.fromstring(
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             pcb,
             view,
             project_parameters=None,
@@ -98,7 +98,7 @@ def _render_silk(pcb: AltiumPcbDoc, clip_mode: str) -> ET.Element:
         styles={"silkscreen_surface": {"clip_mode": clip_mode}},
     )
     return ET.fromstring(
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             pcb,
             view,
             project_parameters=None,
@@ -117,7 +117,7 @@ def _silk_alpha(
 ) -> list[int]:
     from PIL import Image
 
-    ctx = PcbSvgA0Renderer(PcbSvgConfig.default())._build_context(
+    ctx = PcbSvgCompositeRenderer(PcbSvgConfig.default())._build_context(
         pcb,
         project_parameters=None,
     )
@@ -293,7 +293,7 @@ def test_cutout_scope_agrees_in_copper_clip_film_and_artwork(scope, expected) ->
         styles={"board_cutouts": {"scope": scope, "hatch": False}},
     )
     root = ET.fromstring(
-        PcbSvgA0Renderer(config).render_view_svg(
+        PcbSvgCompositeRenderer(config).render_view_svg(
             pcb, view, project_parameters=None, layers=view.layers,
             group_id="scope", mirror=False,
             styles=config.resolved_styles_for_view(view),
@@ -507,7 +507,7 @@ def _film_alpha(pcb, root, points):
     """Independently rasterize the SVG film for interior-point assertions."""
     from PIL import Image
 
-    ctx = PcbSvgA0Renderer(PcbSvgConfig.default())._build_context(
+    ctx = PcbSvgCompositeRenderer(PcbSvgConfig.default())._build_context(
         pcb, project_parameters=None,
     )
     coords = [(ctx.x_to_svg(x), ctx.y_to_svg(y)) for x, y in points]

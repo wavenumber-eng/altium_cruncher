@@ -4,7 +4,7 @@ from typing import Any, cast
 
 import pytest
 
-import altium_cruncher.altium_cruncher_pcb_svg_a0_renderer as pcb_svg_a0_renderer
+import altium_cruncher.altium_cruncher_pcb_svg_renderer as pcb_svg_renderer
 from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     PCB_SVG_CONFIG_FILENAME,
     PCB_SVG_CONFIG_SCHEMA,
@@ -17,8 +17,8 @@ from altium_cruncher.altium_cruncher_cmd_pcb_svg import (
     _resolve_view_render_settings,
     resolve_pcb_svg_configs,
 )
-from altium_cruncher.altium_cruncher_pcb_svg_a0_renderer import (
-    PcbSvgA0Renderer,
+from altium_cruncher.altium_cruncher_pcb_svg_renderer import (
+    PcbSvgCompositeRenderer,
     write_or_update_view_svg,
 )
 from altium_cruncher.altium_cruncher_pcb_svg_inventory import (
@@ -59,7 +59,7 @@ def test_copper_view_renders_goomba_embedded_truetype_artwork() -> None:
     view = PcbSvgViewConfig(name="bottom_copper", layers=["BOTTOM"])
     styles = config.resolved_styles_for_view(view)
     styles["copper_traces"]["color"] = "#123456"
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     def copper_texts():
         svg = renderer.render_view_svg(
@@ -77,7 +77,7 @@ def test_copper_view_renders_goomba_embedded_truetype_artwork() -> None:
     assert copper_texts() == []
 
 
-def test_pcb_svg_default_config_uses_a0_schema_and_explicit_views() -> None:
+def test_pcb_svg_default_config_uses_current_schema_and_explicit_views() -> None:
     config = PcbSvgConfig.default()
     payload = config.to_dict()
     global_options = cast(dict[str, object], payload["global"])
@@ -152,7 +152,7 @@ def test_pcb_svg_default_canvas_uses_board_outline_bounds() -> None:
 
 def test_pcb_svg_board_outline_canvas_ignores_off_board_geometry() -> None:
     config = PcbSvgConfig.default()
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     outline = SimpleNamespace(
         vertices=[object()],
         bounding_box=(1000.0, 2000.0, 2000.0, 3000.0),
@@ -174,7 +174,7 @@ def test_pcb_svg_board_outline_canvas_ignores_off_board_geometry() -> None:
 
 def test_pcb_svg_board_outline_canvas_includes_valid_region_partition() -> None:
     config = PcbSvgConfig.default()
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     outline = SimpleNamespace(
         vertices=[object()],
         bounding_box=(1000.0, 2000.0, 2000.0, 3000.0),
@@ -487,7 +487,7 @@ def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(
             raise AssertionError("HLR renderer should not be constructed")
 
     monkeypatch.setattr(
-        pcb_svg_a0_renderer,
+        pcb_svg_renderer,
         "CruncherPcbAssemblySvgRenderer",
         FailingHlrRenderer,
     )
@@ -500,7 +500,7 @@ def test_pcb_svg_without_hlr_tokens_does_not_construct_hlr_renderer(
         layers=["BOARD_OUTLINE", "TOP", "DRILLS", "SLOTS"],
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -615,7 +615,7 @@ def test_pcb_svg_pin1_layer_renders_smd_dot_a1_pad_and_through_hole() -> None:
         layers=["BOARD_OUTLINE", "PIN1_TOP"],
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -677,7 +677,7 @@ def test_pcb_svg_pin1_view_renders_non_plated_zero_annulus_holes() -> None:
         layers=["BOARD_OUTLINE", "TOP", "DRILLS", "PIN1_TOP"],
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -726,7 +726,7 @@ def test_pcb_svg_pin1_layer_honors_disabled_component_override() -> None:
         layers=["BOARD_OUTLINE", "PIN1_TOP"],
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -780,7 +780,7 @@ def test_pcb_svg_pin1_layer_excludes_global_prefixes_with_component_enable_overr
         layers=["BOARD_OUTLINE", "PIN1_TOP"],
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -828,7 +828,7 @@ def test_pcb_svg_pin1_layer_renders_bga_lga_grid_candidate_and_override() -> Non
         layers=["BOARD_OUTLINE", "PIN1_TOP"],
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(PcbSvgConfig.default())
+    renderer = PcbSvgCompositeRenderer(PcbSvgConfig.default())
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -850,7 +850,7 @@ def test_pcb_svg_pin1_layer_renders_bga_lga_grid_candidate_and_override() -> Non
             "components": {"U5": {"pin1_pad": "A10"}},
         }
     )
-    renderer = PcbSvgA0Renderer(override_config)
+    renderer = PcbSvgCompositeRenderer(override_config)
     override_svg = renderer.render_view_svg(
         pcbdoc,
         view,
@@ -873,7 +873,7 @@ def test_pcb_svg_hlr_bounding_box_mode_does_not_construct_hlr_renderer(
             raise AssertionError("HLR renderer should not be constructed")
 
     monkeypatch.setattr(
-        pcb_svg_a0_renderer,
+        pcb_svg_renderer,
         "CruncherPcbAssemblySvgRenderer",
         FailingHlrRenderer,
     )
@@ -902,7 +902,7 @@ def test_pcb_svg_hlr_bounding_box_mode_does_not_construct_hlr_renderer(
         assembly_hlr_mode="bounding_box",
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -927,7 +927,7 @@ def test_pcb_svg_hlr_bounding_box_mode_honors_component_none_override(
             raise AssertionError("HLR renderer should not be constructed")
 
     monkeypatch.setattr(
-        pcb_svg_a0_renderer,
+        pcb_svg_renderer,
         "CruncherPcbAssemblySvgRenderer",
         FailingHlrRenderer,
     )
@@ -962,7 +962,7 @@ def test_pcb_svg_hlr_bounding_box_mode_honors_component_none_override(
         assembly_hlr_mode="bounding_box",
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -1025,7 +1025,7 @@ def test_pcb_svg_hlr_bounding_box_mode_honors_component_style_override() -> None
         assembly_hlr_mode="bounding_box",
         mirror=False,
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
 
     svg = renderer.render_view_svg(
         pcbdoc,
@@ -1074,7 +1074,7 @@ def test_pcb_svg_hlr_component_style_override_builds_projection_options() -> Non
             },
         }
     )
-    renderer = PcbSvgA0Renderer(config)
+    renderer = PcbSvgCompositeRenderer(config)
     styles = config.resolved_styles_for_view(
         PcbSvgViewConfig(
             name="top_hlr",
