@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2026.9.25
+
+- Consume `altium-monkey==2026.9.22` with `wn-geometer==2026.9.19`.
+  This aligns the standalone CLI with the current public parser and geometry
+  packages.
+
 ## 2026.9.20
 
 - Consume `altium-monkey==2026.9.19` and `wn-geometer==2026.9.19`, including
