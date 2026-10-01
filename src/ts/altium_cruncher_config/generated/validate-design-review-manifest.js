@@ -975,23 +975,45 @@ function validate30(data, { instancePath = "", parentData, parentDataProperty, r
         errors++;
       }
     }
-    for (const key0 in data) {
-      if (key0 !== "manifest" && key0 !== "board" && key0 !== "layer_outputs" && key0 !== "views") {
-        const err11 = { instancePath: instancePath + "/" + key0.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
+    if (data.design_rules_and_classes !== void 0) {
+      let data6 = data.design_rules_and_classes;
+      if (typeof data6 === "string") {
+        if (func1(data6) < 1) {
+          const err11 = { instancePath: instancePath + "/design_rules_and_classes", schemaPath: "#/$defs/Path/minLength", keyword: "minLength", params: { limit: 1 }, message: "must NOT have fewer than 1 characters" };
+          if (vErrors === null) {
+            vErrors = [err11];
+          } else {
+            vErrors.push(err11);
+          }
+          errors++;
+        }
+      } else {
+        const err12 = { instancePath: instancePath + "/design_rules_and_classes", schemaPath: "#/$defs/Path/type", keyword: "type", params: { type: "string" }, message: "must be string" };
         if (vErrors === null) {
-          vErrors = [err11];
+          vErrors = [err12];
         } else {
-          vErrors.push(err11);
+          vErrors.push(err12);
+        }
+        errors++;
+      }
+    }
+    for (const key0 in data) {
+      if (key0 !== "manifest" && key0 !== "board" && key0 !== "layer_outputs" && key0 !== "views" && key0 !== "design_rules_and_classes") {
+        const err13 = { instancePath: instancePath + "/" + key0.replace(/~/g, "~0").replace(/\//g, "~1"), schemaPath: "#/unevaluatedProperties/not", keyword: "not", params: {}, message: "must NOT be valid" };
+        if (vErrors === null) {
+          vErrors = [err13];
+        } else {
+          vErrors.push(err13);
         }
         errors++;
       }
     }
   } else {
-    const err12 = { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" };
+    const err14 = { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" };
     if (vErrors === null) {
-      vErrors = [err12];
+      vErrors = [err14];
     } else {
-      vErrors.push(err12);
+      vErrors.push(err14);
     }
     errors++;
   }
@@ -1103,8 +1125,8 @@ function validate20(data, { instancePath = "", parentData, parentDataProperty, r
         }
         errors++;
       }
-      if ("altium_cruncher.design_review_manifest.b0" !== data0) {
-        const err10 = { instancePath: instancePath + "/schema", schemaPath: "#/properties/schema/const", keyword: "const", params: { allowedValue: "altium_cruncher.design_review_manifest.b0" }, message: "must be equal to constant" };
+      if ("altium_cruncher.design_review_manifest.b1" !== data0) {
+        const err10 = { instancePath: instancePath + "/schema", schemaPath: "#/properties/schema/const", keyword: "const", params: { allowedValue: "altium_cruncher.design_review_manifest.b1" }, message: "must be equal to constant" };
         if (vErrors === null) {
           vErrors = [err10];
         } else {

@@ -97,7 +97,10 @@
     "model": "DesignReviewManifest",
     "kind": "output",
     "source": "src/tsp/altium_cruncher/outputs/design-review-manifest.tsp",
-    "schema": "docs/contracts/design_review_manifest.b0.schema.json",
+    "schema": "docs/contracts/design_review_manifest.b1.schema.json",
+    "compatibility_schemas": [
+      "docs/contracts/design_review_manifest.b0.schema.json"
+    ],
     "validator": "validate-design-review-manifest",
     "slug": "design-review-manifest"
   },
@@ -361,6 +364,15 @@
     "schema": "docs/contracts/pcb_layer_step.a0.schema.json",
     "validator": "validate-pcb-layer-step-output",
     "slug": "pcb-layer-step-output"
+  },
+  {
+    "stem": "pcb_routing_context",
+    "model": "PcbRoutingContext",
+    "kind": "output",
+    "source": "src/tsp/altium_cruncher/outputs/pcb-routing-context.tsp",
+    "schema": "docs/contracts/pcb_routing_context.a0.schema.json",
+    "validator": "validate-pcb-routing-context",
+    "slug": "pcb-routing-context"
   },
   {
     "stem": "pcb_svg_enrichment",

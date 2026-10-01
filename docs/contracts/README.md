@@ -22,8 +22,15 @@ Current contracts:
 
 - `command_manifest.a0.json`: public CLI command inventory.
 - `interface_design_manifest.a0.json`: major non-dataclass interface inventory.
-- `design_review_manifest.b0.schema.json`: breaking Design b0 review-bundle
-  artifact manifest with canonical page-occurrence references.
+- `design_review_manifest.b1.schema.json`: current additive Design Review
+  artifact manifest with canonical page-occurrence references and optional PCB
+  design-rules-and-classes links that every new producer supplies.
+- `design_review_manifest.b0.schema.json`: frozen predecessor for archived
+  review bundles without PCB design-rules-and-classes links.
+- `pcb_routing_context.a0.schema.json`: compact per-board authored net classes,
+  differential pairs/classes, and design rules, including conservative literal
+  class references extracted from rule scopes. It explicitly contains no DRC
+  result, complete query evaluation, or evaluated rule applicability.
 - `megamaid_manifest.b0.schema.json`: MegaMaid artifact manifest, including
   the authoritative Design b0 graph output and graph-count summary.
 - `schematic_svg_enrichment.b0.schema.json`: embedded metadata for compiled

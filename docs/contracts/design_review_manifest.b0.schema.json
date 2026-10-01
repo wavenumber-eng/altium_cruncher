@@ -16,7 +16,7 @@
     "document_jsons": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/DocumentArtifact"
+        "$ref": "#/$defs/DocumentArtifactB0"
       }
     },
     "notes_json": {
@@ -25,19 +25,19 @@
     "schematic_svgs": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/DesignReviewManifestSchematicSvgsItem"
+        "$ref": "#/$defs/DesignReviewManifestSchematicSvgsItemB0"
       }
     },
     "schematic_irs": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/CompiledSchematicArtifact"
+        "$ref": "#/$defs/CompiledSchematicArtifactB0"
       }
     },
     "pcb_svgs": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/PcbArtifact"
+        "$ref": "#/$defs/PcbArtifactB0"
       }
     },
     "readme": {
@@ -64,7 +64,7 @@
       "type": "string",
       "minLength": 1
     },
-    "DocumentArtifact": {
+    "DocumentArtifactB0": {
       "type": "object",
       "properties": {
         "file": {
@@ -95,17 +95,17 @@
         "not": {}
       }
     },
-    "DesignReviewManifestSchematicSvgsItem": {
+    "DesignReviewManifestSchematicSvgsItemB0": {
       "oneOf": [
         {
-          "$ref": "#/$defs/LogicalSchematicArtifact"
+          "$ref": "#/$defs/LogicalSchematicArtifactB0"
         },
         {
-          "$ref": "#/$defs/CompiledSchematicArtifact"
+          "$ref": "#/$defs/CompiledSchematicArtifactB0"
         }
       ]
     },
-    "CompiledSchematicArtifact": {
+    "CompiledSchematicArtifactB0": {
       "type": "object",
       "properties": {
         "file": {
@@ -145,7 +145,7 @@
         "not": {}
       }
     },
-    "PcbArtifact": {
+    "PcbArtifactB0": {
       "type": "object",
       "properties": {
         "manifest": {
@@ -164,13 +164,13 @@
         "layer_outputs": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PcbOutput"
+            "$ref": "#/$defs/PcbOutputB0"
           }
         },
         "views": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PcbOutput"
+            "$ref": "#/$defs/PcbOutputB0"
           }
         }
       },
@@ -184,7 +184,7 @@
         "not": {}
       }
     },
-    "LogicalSchematicArtifact": {
+    "LogicalSchematicArtifactB0": {
       "type": "object",
       "properties": {
         "file": {
@@ -214,7 +214,7 @@
       "type": "integer",
       "minimum": 1
     },
-    "PcbOutput": {
+    "PcbOutputB0": {
       "type": "object",
       "properties": {
         "name": {
@@ -241,5 +241,5 @@
       }
     }
   },
-  "$comment": "Generated from src/tsp/altium_cruncher/outputs/design-review-manifest.tsp. Do not edit."
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/design-review-manifest.tsp (frozen B0 compatibility model). Do not edit."
 }

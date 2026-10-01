@@ -1,4 +1,4 @@
-"""Breaking output-contract signoff for Design b0 downstream artifacts."""
+"""Breaking and additive output-contract signoff for downstream artifacts."""
 
 from __future__ import annotations
 
@@ -54,6 +54,52 @@ def test_design_review_manifest_b0_rejects_retired_compiled_page_id() -> None:
     retired_artifact = retired["schematic_svgs"][0]
     retired_artifact["compiled_page_id"] = retired_artifact.pop("page_occurrence_ref")
     _assert_invalid(validator, retired)
+
+    b1_field = deepcopy(payload)
+    b1_field["pcb_svgs"] = [
+        {
+            "manifest": "pcb/board__views.json",
+            "board": "board",
+            "layer_outputs": [],
+            "views": [],
+            "design_rules_and_classes": "pcb/board__design-rules-and-classes.json",
+        }
+    ]
+    _assert_invalid(validator, b1_field)
+
+
+def test_design_review_manifest_b1_indexes_optional_design_rules_and_classes() -> None:
+    validator = _validator("design_review_manifest.b1.schema.json")
+    payload = {
+        "schema": "altium_cruncher.design_review_manifest.b1",
+        "input": "Project.PrjPcb",
+        "design_json": "design/Project_design.json",
+        "document_jsons": [],
+        "notes_json": "notes/Project_notes.jsonc",
+        "schematic_svgs": [],
+        "schematic_irs": [],
+        "pcb_svgs": [
+            {
+                "manifest": "pcb/board__views.json",
+                "board": "board",
+                "layer_outputs": [],
+                "views": [],
+                "design_rules_and_classes": (
+                    "pcb/board__design-rules-and-classes.json"
+                ),
+            }
+        ],
+        "readme": "README.md",
+    }
+    _assert_valid(validator, payload)
+
+    additive_predecessor_shape = deepcopy(payload)
+    additive_predecessor_shape["pcb_svgs"][0].pop("design_rules_and_classes")
+    _assert_valid(validator, additive_predecessor_shape)
+
+    wrong_revision = deepcopy(payload)
+    wrong_revision["schema"] = "altium_cruncher.design_review_manifest.b0"
+    _assert_invalid(validator, wrong_revision)
 
 
 def test_compiled_svg_enrichment_b0_rejects_retired_embedded_design() -> None:

@@ -25,10 +25,13 @@ from altium_monkey.altium_schdoc import AltiumSchDoc
 
 from altium_cruncher.altium_cruncher_notes import build_notes_payload
 from altium_cruncher.altium_cruncher_design_review import (
+    _collect_pcb_svg_manifests,
     _compiled_schematic_pages,
     _enrich_schematic_svg,
     _pcb_layer_ref_from_value,
+    _pcb_review_board_keys,
     _pcb_review_primitive_copper_layers,
+    _write_pcb_review_svgs,
     _write_project_schematic_artifacts,
 )
 
@@ -116,6 +119,7 @@ def _write_annotation_schdoc(path: Path) -> None:
 def _write_annotation_schdoc_with_template_text(path: Path) -> None:
     doc = AltiumSchDoc()
     from altium_monkey.altium_record_sch__template import AltiumSchTemplate
+
     template = AltiumSchTemplate()
     doc.add_object(template)
     doc.add_object(
@@ -282,7 +286,9 @@ def test_notes_payload_suppresses_sheet_template_text_by_default(
 
 
 @pytest.mark.parametrize("include_indexes", [True, False])
-def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path, include_indexes: bool) -> None:
+def test_design_review_bundle_writes_agent_artifacts(
+    tmp_path: Path, include_indexes: bool
+) -> None:
     """Verify design/dr output contains design, notes, SVG, document JSON, and README."""
     repo_root = Path(__file__).resolve().parents[1]
     schdoc_path = tmp_path / "annotated.SchDoc"
@@ -296,16 +302,25 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path, include_ind
     manifest = json.loads(
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
     )
-    assert manifest["schema"] == "altium_cruncher.design_review_manifest.b0"
-    _assert_contract(manifest, "design_review_manifest.b0.schema.json")
+    assert manifest["schema"] == "altium_cruncher.design_review_manifest.b1"
+    _assert_contract(manifest, "design_review_manifest.b1.schema.json")
     assert manifest["input"] == "annotated.SchDoc"
     assert str(manifest["design_json"]).startswith("design/")
     assert (output_dir / manifest["design_json"]).exists()
-    design_payload = json.loads((output_dir / manifest["design_json"]).read_text(encoding="utf-8"))
-    from altium_monkey.sch_compiled_design.generated.codecs import GeneratedStructuralCodec
+    design_payload = json.loads(
+        (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
+    )
+    from altium_monkey.sch_compiled_design.generated.codecs import (
+        GeneratedStructuralCodec,
+    )
 
-    GeneratedStructuralCodec().convert("urn:altium-monkey:schema:design_b0", design_payload)
-    assert design_payload["compile"]["schema"] == "altium_monkey.sch.compiled_design_model.b0"
+    GeneratedStructuralCodec().convert(
+        "urn:altium-monkey:schema:design_b0", design_payload
+    )
+    assert (
+        design_payload["compile"]["schema"]
+        == "altium_monkey.sch.compiled_design_model.b0"
+    )
     assert isinstance(design_payload["diagnostics"], list)
     assert ("indexes" in design_payload) == include_indexes
     assert (output_dir / manifest["notes_json"]).exists()
@@ -365,7 +380,8 @@ def test_design_review_bundle_writes_agent_artifacts(tmp_path: Path, include_ind
 
 
 def test_design_review_preserves_compiler_warnings_without_failing(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from altium_monkey.altium_design import AltiumDesign
     from altium_cruncher.altium_cruncher_design_review import write_design_review_bundle
@@ -374,8 +390,10 @@ def test_design_review_preserves_compiler_warnings_without_failing(
     _write_annotation_schdoc(source)
     original = AltiumDesign.to_json
     upstream_diagnostic = {
-        "code": "missing_component_source_identity", "severity": "warning",
-        "message": "Source identity is unavailable", "owner_kind": "component",
+        "code": "missing_component_source_identity",
+        "severity": "warning",
+        "message": "Source identity is unavailable",
+        "owner_kind": "component",
         "owner_id": "opaque-compiler-component",
     }
 
@@ -392,7 +410,10 @@ def test_design_review_preserves_compiler_warnings_without_failing(
     saved = json.loads((output / manifest["design_json"]).read_text(encoding="utf-8"))
     assert saved["diagnostics"] == [upstream_diagnostic]
     assert saved["compile"]["summary"]["has_warnings"] is True
-    assert saved["compiled_schematic_graph"]["schema"] == "altium_monkey.compiled_schematic_graph.a0"
+    assert (
+        saved["compiled_schematic_graph"]["schema"]
+        == "altium_monkey.compiled_schematic_graph.a0"
+    )
     assert (output / manifest["readme"]).exists()
 
 
@@ -512,7 +533,12 @@ def test_design_review_project_schematic_artifacts_are_compiled_outputs(
                 document_id=page_id,
                 canvas={"width_px": 100, "height_px": 100},
                 coordinate_space={"units_per_px": 64},
-                extras={"physical_page": {"page_occurrence_ref": bridge_page, "id": "RAW-PDOC1"}},
+                extras={
+                    "physical_page": {
+                        "page_occurrence_ref": bridge_page,
+                        "id": "RAW-PDOC1",
+                    }
+                },
             )
 
     design_payload: dict[str, object] = {
@@ -658,7 +684,7 @@ def test_design_review_node_test_array_uses_compiled_graph_pages(
     manifest = json.loads(
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
     )
-    _assert_contract(manifest, "design_review_manifest.b0.schema.json")
+    _assert_contract(manifest, "design_review_manifest.b1.schema.json")
     design_payload = json.loads(
         (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
     )
@@ -787,6 +813,22 @@ def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:
     )
     assert len(manifest["pcb_svgs"]) == 1
     pcb_entry = manifest["pcb_svgs"][0]
+    assert pcb_entry["design_rules_and_classes"] == (
+        "pcb/fixture__design-rules-and-classes.json"
+    )
+    design_rules_and_classes_path = output_dir / pcb_entry["design_rules_and_classes"]
+    assert design_rules_and_classes_path.exists()
+    design_rules_and_classes = json.loads(
+        design_rules_and_classes_path.read_text(encoding="utf-8")
+    )
+    _assert_contract(design_rules_and_classes, "pcb_routing_context.a0.schema.json")
+    assert design_rules_and_classes["evidence"] == {
+        "authored_rules": "included",
+        "class_membership": "stored_members_only",
+        "rule_applicability": "not_evaluated_by_cruncher",
+        "drc_run_by_cruncher": False,
+        "drc_violations": "not_included",
+    }
     assert pcb_entry["views"] == []
     layers = {entry["name"]: entry for entry in pcb_entry["layer_outputs"]}
     assert set(layers) == {"TOP", "MID1", "BOTTOM"}
@@ -803,6 +845,113 @@ def test_design_review_pcb_svgs_are_copper_layer_only(tmp_path: Path) -> None:
             "SLOTS",
         }
         assert (output_dir / entry["file"]).exists()
+
+    readme = (output_dir / manifest["readme"]).read_text(encoding="utf-8")
+    assert "`design_rules_and_classes`" in readme
+    assert "`pcb/<board>__design-rules-and-classes.json`" in readme
+    assert "`layer_outputs[].file`" in readme
+    assert "Authored rules are" in readme
+    assert "`_P`" in readme
+    assert "`_N`" in readme
+    assert "Cruncher did not" in readme
+    assert "run DRC" in readme
+    assert "data-net-classes" in readme
+
+
+def test_design_review_board_keys_are_safe_and_collision_free() -> None:
+    paths = [
+        Path("first/Controller.PcbDoc"),
+        Path("second/controller.PcbDoc"),
+        Path("third/Controller__2.PcbDoc"),
+    ]
+
+    assert _pcb_review_board_keys(paths) == [
+        "Controller",
+        "controller__2",
+        "Controller__2__2",
+    ]
+
+
+def test_design_review_collects_only_current_pcb_manifests(tmp_path: Path) -> None:
+    pcb_dir = tmp_path / "pcb"
+    pcb_dir.mkdir()
+    current = pcb_dir / "current__views.json"
+    stale = pcb_dir / "stale__views.json"
+    routing = pcb_dir / "current__design-rules-and-classes.json"
+    payload = {
+        "board": "current",
+        "layer_outputs": {},
+        "views": {},
+    }
+    current.write_text(json.dumps(payload), encoding="utf-8")
+    stale.write_text(json.dumps({**payload, "board": "stale"}), encoding="utf-8")
+
+    artifacts = _collect_pcb_svg_manifests(
+        [(current, routing)],
+        pcb_dir,
+        tmp_path,
+    )
+
+    assert [entry["board"] for entry in artifacts] == ["current"]
+    assert artifacts[0]["design_rules_and_classes"] == (
+        "pcb/current__design-rules-and-classes.json"
+    )
+
+
+def test_design_review_rules_and_classes_match_svg_net_class_metadata(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from altium_monkey import AltiumPcbDoc, AltiumPcbNetClass, PcbLayer
+    from altium_monkey.altium_pcb_enums import PcbNetClassKind
+
+    pcbdoc = AltiumPcbDoc()
+    pcbdoc.set_outline_rectangle_mils(0, 0, 1000, 700)
+    pcbdoc.set_layer_stack_template("2-layer")
+    pcbdoc.add_track(
+        (100, 100),
+        (900, 100),
+        width_mils=10,
+        layer=PcbLayer.TOP,
+        net="USB_D_P",
+    )
+    pcbdoc.net_classes = [
+        AltiumPcbNetClass(
+            name="USB",
+            kind=PcbNetClassKind.NET,
+            member_count=1,
+            members=["USB_D_P"],
+            enabled=True,
+            unique_id="CLASS-USB",
+        )
+    ]
+    monkeypatch.setattr(
+        AltiumPcbDoc,
+        "from_file",
+        staticmethod(lambda _path: pcbdoc),
+    )
+    pcbdoc_path = tmp_path / "Controller.PcbDoc"
+    output_dir = tmp_path / "review"
+
+    artifacts = _write_pcb_review_svgs(
+        tmp_path / "Controller.PrjPcb",
+        output_dir,
+        SimpleNamespace(project=None),
+        [pcbdoc_path],
+    )
+
+    routing = json.loads(
+        (output_dir / artifacts[0]["design_rules_and_classes"]).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert routing["net_classes"][0]["resolved_nets"] == ["USB_D_P"]
+    top = next(
+        entry for entry in artifacts[0]["layer_outputs"] if entry["name"] == "TOP"
+    )
+    svg = (output_dir / top["file"]).read_text(encoding="utf-8")
+    assert 'data-net="USB_D_P"' in svg
+    assert 'data-net-classes="USB"' in svg
 
 
 def _stub_pcbdoc_with_layers(**collections: list[object]) -> SimpleNamespace:

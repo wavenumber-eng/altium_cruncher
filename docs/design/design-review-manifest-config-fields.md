@@ -48,6 +48,7 @@ See the contract authority inventory for producer locations and delegated upstre
 | `board` | Yes | — |  |
 | `layer_outputs` | Yes | — |  |
 | `views` | Yes | — |  |
+| `design_rules_and_classes` | No | — | Path to pcb/<board>__design-rules-and-classes.json, containing compact authored net classes, differential pairs/classes, and design rules for this board. New B1 producers always emit it; it is optional for additive schema compatibility. |
 
 ## LogicalSchematicArtifact
 
