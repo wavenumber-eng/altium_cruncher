@@ -1,9 +1,9 @@
 # Toon qualification and performance reference
 
-Implementation and cleanup completed on 2026-09-12. This records the qualified
+Implementation and cleanup completed on 2026-09-12. The subsequent performance
+regression closeout and full release requalification shipped in
+[Cruncher 2026.9.20](../releases/2026-09-20.md). This records the qualified
 behavior and measurement method for future maintenance and the Rust port.
-Publication is a separate release action; this closeout did not publish a
-Cruncher package or tag.
 
 ## Durable implementation references
 
