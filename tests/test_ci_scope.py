@@ -229,6 +229,14 @@ class CiScopeTests(unittest.TestCase):
         self.assertIn("if: always()", workflow)
         self.assertIn("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24", workflow)
         self.assertIn("cancel-in-progress: true", workflow)
+        self.assertIn(
+            "uvx --from wn-dev-std==2026.9.27 dev-std audit .",
+            workflow,
+        )
+        self.assertNotIn(
+            "git+https://github.com/wavenumber-eng/wn-dev-std.git",
+            workflow,
+        )
 
     def test_publish_workflow_tests_the_artifacts_it_publishes(self):
         root = Path(__file__).resolve().parents[1]
