@@ -41,6 +41,7 @@ from .mco_operations import McoOperations
 from .notes import Notes
 from .outjob_run import OutjobRun
 from .pcb_layer_step import PcbLayerStepManifest
+from .pcb_routing_context import PcbRoutingContext
 from .pcb_svg_enrichment import PcbSvgEnrichment
 from .pcb_svg_manifest import PcbSvgManifest
 from .pnp import Pnp
@@ -169,6 +170,9 @@ def decode_contract(name: Literal["outjob_run"], value: object) -> OutjobRun: ..
 def decode_contract(name: Literal["pcb_layer_step"], value: object) -> PcbLayerStepManifest: ...
 
 @overload
+def decode_contract(name: Literal["pcb_routing_context"], value: object) -> PcbRoutingContext: ...
+
+@overload
 def decode_contract(name: Literal["pcb_svg_enrichment"], value: object) -> PcbSvgEnrichment: ...
 
 @overload
@@ -188,6 +192,6 @@ def decode_contract(name: Literal["variants_list"], value: object) -> VariantsLi
 
 def decode_contract(name: str, value: object) -> object:
     """Validate and copy authored JSON without applying defaults."""
-    if name not in ["pcb_svg_config","schdoc_create_config","pcbdoc_create_config","project_skeleton_config","mco_input","mco_envelope","bom_pnp_config","clean_config","mate_config","pcb_layer_step_config","design_review_manifest","megamaid_manifest","schematic_svg_enrichment","schematic_svg_manifest","pcb_svg_component_layers","pcb_svg_timings","toon_warning_report","bom_array","bom_grouped","bom_legacy","bom_normalized","easyeda_footprint_report","easyeda_models","easyeda_symbol_report","installs","interface_design_manifest","intlib_extract","json_dump","json_dump_manifest","launch","libraries_scan","mate_inspection","mate_parts_input","mate_parts_manifest","mco_builtin_result","mco_execution","mco_operations","notes","outjob_run","pcb_layer_step","pcb_svg_enrichment","pcb_svg_manifest","pnp","profiles","profiles_clean","variants_list"]:
+    if name not in ["pcb_svg_config","schdoc_create_config","pcbdoc_create_config","project_skeleton_config","mco_input","mco_envelope","bom_pnp_config","clean_config","mate_config","pcb_layer_step_config","design_review_manifest","megamaid_manifest","schematic_svg_enrichment","schematic_svg_manifest","pcb_svg_component_layers","pcb_svg_timings","toon_warning_report","bom_array","bom_grouped","bom_legacy","bom_normalized","easyeda_footprint_report","easyeda_models","easyeda_symbol_report","installs","interface_design_manifest","intlib_extract","json_dump","json_dump_manifest","launch","libraries_scan","mate_inspection","mate_parts_input","mate_parts_manifest","mco_builtin_result","mco_execution","mco_operations","notes","outjob_run","pcb_layer_step","pcb_routing_context","pcb_svg_enrichment","pcb_svg_manifest","pnp","profiles","profiles_clean","variants_list"]:
         raise ValueError(f"Unknown contract: {name}")
     return decode_config(value, name, name)

@@ -6,6 +6,7 @@ import "./clean-config.tsp";
 import "./mate-config.tsp";
 import "./pcb-layer-step-config.tsp";
 import "../outputs/design-review-manifest.tsp";
+import "../outputs/pcb-routing-context.tsp";
 import "../outputs/megamaid-manifest.tsp";
 import "../outputs/schematic-svg-enrichment.tsp";
 import "../outputs/schematic-svg-manifest.tsp";

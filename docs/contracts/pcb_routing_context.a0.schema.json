@@ -1,0 +1,663 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "altium_cruncher.pcb_routing_context.a0",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "altium_cruncher.pcb_routing_context.a0"
+    },
+    "source": {
+      "$ref": "#/$defs/Path"
+    },
+    "board": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence": {
+      "$ref": "#/$defs/RoutingContextEvidence"
+    },
+    "summary": {
+      "$ref": "#/$defs/RoutingContextSummary"
+    },
+    "net_classes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NetClass"
+      }
+    },
+    "differential_pairs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DifferentialPair"
+      }
+    },
+    "differential_pair_classes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DifferentialPairClass"
+      }
+    },
+    "net_memberships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NetMembership"
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DesignRule"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RoutingContextDiagnostic"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "board",
+    "evidence",
+    "summary",
+    "net_classes",
+    "differential_pairs",
+    "differential_pair_classes",
+    "net_memberships",
+    "rules",
+    "diagnostics"
+  ],
+  "unevaluatedProperties": {
+    "not": {}
+  },
+  "description": "Compact authored PCB classes, differential pairs, and design rules for review agents. It contains no DRC result.",
+  "$defs": {
+    "Path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "RoutingContextEvidence": {
+      "type": "object",
+      "properties": {
+        "authored_rules": {
+          "type": "string",
+          "const": "included",
+          "description": "Authored PcbDoc design-rule definitions are included; this is not a compliance result."
+        },
+        "class_membership": {
+          "type": "string",
+          "const": "stored_members_only",
+          "description": "Only members stored in Classes6 are projected; display names do not imply dynamic membership."
+        },
+        "rule_applicability": {
+          "type": "string",
+          "const": "not_evaluated_by_cruncher",
+          "description": "Cruncher preserved rule scopes but did not evaluate Altium's query language or choose effective rules."
+        },
+        "drc_run_by_cruncher": {
+          "type": "boolean",
+          "const": false,
+          "description": "False means this export operation did not run DRC; it does not describe the board's prior history."
+        },
+        "drc_violations": {
+          "type": "string",
+          "const": "not_included",
+          "description": "No DRC pass/fail or violation rows are included in this artifact."
+        }
+      },
+      "required": [
+        "authored_rules",
+        "class_membership",
+        "rule_applicability",
+        "drc_run_by_cruncher",
+        "drc_violations"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RoutingContextSummary": {
+      "type": "object",
+      "properties": {
+        "net_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "net_class_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "differential_pair_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "differential_pair_class_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "rule_count": {
+          "$ref": "#/$defs/Count"
+        },
+        "enabled_rule_count": {
+          "$ref": "#/$defs/Count",
+          "description": "Rules whose parsed enabled field is explicitly true; null is not counted as enabled."
+        },
+        "rules_by_kind": {
+          "$ref": "#/$defs/RecordCount"
+        }
+      },
+      "required": [
+        "net_count",
+        "net_class_count",
+        "differential_pair_count",
+        "differential_pair_class_count",
+        "rule_count",
+        "enabled_rule_count",
+        "rules_by_kind"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "NetClass": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "stored_members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Exact class members stored in the PcbDoc, without name-based expansion."
+        },
+        "resolved_nets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Stored members that resolve uniquely to a PcbDoc net, preserving the net object's spelling."
+        },
+        "unresolved_members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Stored members that do not resolve uniquely; diagnostics distinguish missing from ambiguous names."
+        }
+      },
+      "required": [
+        "name",
+        "unique_id",
+        "enabled",
+        "stored_members",
+        "resolved_nets",
+        "unresolved_members"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "DifferentialPair": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "positive_net": {
+          "type": "string",
+          "description": "Authored positive net reference. Polarity is never inferred from a _P suffix."
+        },
+        "negative_net": {
+          "type": "string",
+          "description": "Authored negative net reference. Polarity is never inferred from a _N suffix."
+        },
+        "stored_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Differential-pair classes that explicitly store this pair as a member."
+        }
+      },
+      "required": [
+        "name",
+        "unique_id",
+        "positive_net",
+        "negative_net",
+        "stored_classes"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "DifferentialPairClass": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "stored_members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resolved_pairs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resolved_nets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unresolved_members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "unique_id",
+        "enabled",
+        "stored_members",
+        "resolved_pairs",
+        "resolved_nets",
+        "unresolved_members"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "NetMembership": {
+      "type": "object",
+      "properties": {
+        "net": {
+          "type": "string"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "net_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "differential_pairs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DifferentialPairMembership"
+          },
+          "description": "Every authored pair reference to this net; multiple rows remain visible instead of choosing one."
+        },
+        "differential_pair_classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "net",
+        "unique_id",
+        "net_classes",
+        "differential_pairs",
+        "differential_pair_classes"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "DesignRule": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "$ref": "#/$defs/Count"
+        },
+        "unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "comment": {
+          "type": "string"
+        },
+        "defined_by_logical_document": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "$ref": "#/$defs/RuleScope"
+        },
+        "constraints": {
+          "$ref": "#/$defs/RecordUnknown",
+          "description": "Public typed rule-specific values from Altium Monkey. Values are recursively checked for finite JSON compatibility by the producer."
+        },
+        "unmodeled_fields": {
+          "$ref": "#/$defs/RecordUnknown",
+          "description": "Unconsumed source fields retained by Altium Monkey's typed rule parser."
+        }
+      },
+      "required": [
+        "index",
+        "unique_id",
+        "name",
+        "kind",
+        "enabled",
+        "priority",
+        "comment",
+        "defined_by_logical_document",
+        "scope",
+        "constraints",
+        "unmodeled_fields"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RoutingContextDiagnostic": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "const": "warning"
+        },
+        "message": {
+          "type": "string"
+        },
+        "source_collection": {
+          "type": "string"
+        },
+        "source_index": {
+          "$ref": "#/$defs/Count"
+        },
+        "identity": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "message",
+        "source_collection"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "RecordCount": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {
+        "$ref": "#/$defs/Count"
+      }
+    },
+    "DifferentialPairMembership": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "polarity": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "positive"
+            },
+            {
+              "type": "string",
+              "const": "negative"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "polarity"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RuleScope": {
+      "type": "object",
+      "properties": {
+        "first": {
+          "type": "string"
+        },
+        "second": {
+          "type": "string"
+        },
+        "net_relation": {
+          "type": "string"
+        },
+        "layer_relation": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuleScopeReference"
+          },
+          "description": "Conservatively extracted literal InNetClass and InDifferentialPairClass calls, in expression order. Unsupported query functions remain only in the exact expressions above."
+        },
+        "applicability": {
+          "type": "string",
+          "const": "not_evaluated_by_cruncher"
+        }
+      },
+      "required": [
+        "first",
+        "second",
+        "net_relation",
+        "layer_relation",
+        "references",
+        "applicability"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    },
+    "RecordUnknown": {
+      "type": "object",
+      "properties": {},
+      "unevaluatedProperties": {}
+    },
+    "RuleScopeReference": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "first"
+            },
+            {
+              "type": "string",
+              "const": "second"
+            }
+          ],
+          "description": "Which authored binary-rule expression contains the literal reference."
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "InNetClass"
+            },
+            {
+              "type": "string",
+              "const": "InDifferentialPairClass"
+            }
+          ],
+          "description": "Recognized Altium query function. This is a lexical reference, not an evaluated query result."
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "net_class"
+            },
+            {
+              "type": "string",
+              "const": "differential_pair_class"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "resolved"
+            },
+            {
+              "type": "string",
+              "const": "missing"
+            },
+            {
+              "type": "string",
+              "const": "ambiguous"
+            }
+          ],
+          "description": "Whether the literal name resolves uniquely in the corresponding exported class table."
+        },
+        "matched_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matched_unique_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "expression",
+        "function",
+        "kind",
+        "name",
+        "resolution",
+        "matched_name",
+        "matched_unique_id"
+      ],
+      "unevaluatedProperties": {
+        "not": {}
+      }
+    }
+  },
+  "$comment": "Generated from src/tsp/altium_cruncher/outputs/pcb-routing-context.tsp. Do not edit."
+}

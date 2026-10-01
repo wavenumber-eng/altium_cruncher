@@ -80,6 +80,8 @@ import type { OutjobRun } from "./outjob-run.js";
 import OutjobRunValidator from "./validate-outjob-run.js";
 import type { PcbLayerStepManifest } from "./pcb-layer-step-output.js";
 import PcbLayerStepManifestValidator from "./validate-pcb-layer-step-output.js";
+import type { PcbRoutingContext } from "./pcb-routing-context.js";
+import PcbRoutingContextValidator from "./validate-pcb-routing-context.js";
 import type { PcbSvgEnrichment } from "./pcb-svg-enrichment.js";
 import PcbSvgEnrichmentValidator from "./validate-pcb-svg-enrichment.js";
 import type { PcbSvgManifest } from "./pcb-svg-manifest.js";
@@ -133,6 +135,7 @@ export interface ContractTypes {
   "notes": Notes;
   "outjob_run": OutjobRun;
   "pcb_layer_step": PcbLayerStepManifest;
+  "pcb_routing_context": PcbRoutingContext;
   "pcb_svg_enrichment": PcbSvgEnrichment;
   "pcb_svg_manifest": PcbSvgManifest;
   "pnp": Pnp;
@@ -181,6 +184,7 @@ const validators = {
   "notes": NotesValidator,
   "outjob_run": OutjobRunValidator,
   "pcb_layer_step": PcbLayerStepManifestValidator,
+  "pcb_routing_context": PcbRoutingContextValidator,
   "pcb_svg_enrichment": PcbSvgEnrichmentValidator,
   "pcb_svg_manifest": PcbSvgManifestValidator,
   "pnp": PnpValidator,

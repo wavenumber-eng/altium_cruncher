@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from altium_monkey.altium_pcb_layer_ref import PcbLayerRef
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
-DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.b0"
+DESIGN_REVIEW_MANIFEST_SCHEMA = "altium_cruncher.design_review_manifest.b1"
 SCHEMATIC_SVG_ENRICHMENT_SCHEMA = "altium_monkey.schematic.svg.enrichment.a0"
 SCHEMATIC_SVG_ENRICHMENT_METADATA_ID = "schematic-enrichment-a0"
 COMPILED_SCHEMATIC_SVG_ENRICHMENT_SCHEMA = "altium_cruncher.schematic.svg.enrichment.b0"
@@ -366,7 +366,9 @@ def _write_project_schematic_artifacts(
             design_payload=design_payload,
             schematic_page={
                 **page,
-                "physical_document_id": _rendered_physical_document_id(ir_document, page_id),
+                "physical_document_id": _rendered_physical_document_id(
+                    ir_document, page_id
+                ),
             },
             source_base=source_base,
         )
@@ -707,7 +709,10 @@ def _design_components_by_source(
         return {}
     candidates: dict[str, list[dict[str, object]]] = {}
     for row in value:
-        if not isinstance(row, dict) or row.get("physical_sheet_id") != physical_document_id:
+        if (
+            not isinstance(row, dict)
+            or row.get("physical_sheet_id") != physical_document_id
+        ):
             continue
         source_uid = str(row.get("source_unique_id") or "")
         if source_uid:
@@ -766,7 +771,9 @@ def _component_graphical_link_attrs(
         return {}
     component_ref = str(link.get("target_ref") or "")
     component = components.get(component_ref)
-    if component is None or component.get("page_occurrence_ref") != link.get("page_occurrence_ref"):
+    if component is None or component.get("page_occurrence_ref") != link.get(
+        "page_occurrence_ref"
+    ):
         return {}
     physical_designator = str(
         component.get("physical_designator")
@@ -776,13 +783,15 @@ def _component_graphical_link_attrs(
     source_identity = component.get("source_identity")
     source_uid = (
         str(source_identity.get("sch.source_key.source_uuid") or "")
-        if isinstance(source_identity, dict) else ""
+        if isinstance(source_identity, dict)
+        else ""
     )
     # Multipart bodies can lack a matching aggregate row in Design b0. Preserve
     # their graph identity and label without guessing shared attributes by name.
     enriched = design_components.get(source_uid, {})
     attrs = _schematic_component_group_attrs(
-        {**enriched, "designator": physical_designator}, element_id,
+        {**enriched, "designator": physical_designator},
+        element_id,
     )
     attrs["data-component-occurrence-ref"] = component_ref
     return attrs
@@ -928,15 +937,20 @@ def _write_pcb_review_svgs(
     )
     from altium_cruncher.altium_cruncher_pcb_svg_config import PcbSvgConfig
     from altium_cruncher.altium_cruncher_pcb_workflow import CruncherPcbRenderInput
+    from altium_cruncher.altium_cruncher_pcb_routing_context import (
+        build_pcb_routing_context_payload,
+    )
     from altium_monkey.altium_pcbdoc import AltiumPcbDoc
 
     pcb_dir = output_dir / "pcb"
     project_parameters = _project_parameters(design)
-    for pcbdoc_path in pcbdoc_paths:
+    board_keys = _pcb_review_board_keys(pcbdoc_paths)
+    produced_artifacts: list[tuple[Path, Path]] = []
+    for pcbdoc_path, board_key in zip(pcbdoc_paths, board_keys, strict=True):
         pcbdoc = AltiumPcbDoc.from_file(pcbdoc_path)
         config = _pcb_review_svg_config(pcbdoc, PcbSvgConfig.default())
         render_input = CruncherPcbRenderInput(
-            board_key=pcbdoc_path.stem,
+            board_key=board_key,
             pcb_path=pcbdoc_path,
             pcbdoc=pcbdoc,
             project_parameters=project_parameters,
@@ -947,12 +961,44 @@ def _write_pcb_review_svgs(
             input_file=pcbdoc_path,
             output_dir=pcb_dir,
         )
+        svg_manifest_path = pcb_dir / f"{board_key}__views.json"
         _log_pcb_svg_manifest_outputs(
-            pcb_dir / f"{pcbdoc_path.stem}__views.json",
+            svg_manifest_path,
             pcb_dir=pcb_dir,
             output_dir=output_dir,
         )
-    return _collect_pcb_svg_manifests(pcb_dir, output_dir)
+        design_rules_and_classes_path = (
+            pcb_dir / f"{board_key}__design-rules-and-classes.json"
+        )
+        _write_json(
+            design_rules_and_classes_path,
+            build_pcb_routing_context_payload(
+                pcbdoc,
+                source=_source_path(pcbdoc_path, input_file.resolve().parent),
+                board=board_key,
+            ),
+        )
+        log.info(
+            "PCB design rules and classes: %s",
+            _relpath(design_rules_and_classes_path, output_dir),
+        )
+        produced_artifacts.append((svg_manifest_path, design_rules_and_classes_path))
+    return _collect_pcb_svg_manifests(produced_artifacts, pcb_dir, output_dir)
+
+
+def _pcb_review_board_keys(pcbdoc_paths: list[Path]) -> list[str]:
+    used: set[str] = set()
+    keys: list[str] = []
+    for path in pcbdoc_paths:
+        base = _safe_artifact_stem(path.stem)
+        candidate = base
+        suffix = 2
+        while candidate.casefold() in used:
+            candidate = f"{base}__{suffix}"
+            suffix += 1
+        used.add(candidate.casefold())
+        keys.append(candidate)
+    return keys
 
 
 def _pcb_review_svg_config(
@@ -1070,11 +1116,12 @@ def _log_pcb_svg_manifest_outputs(
 
 
 def _collect_pcb_svg_manifests(
+    produced_artifacts: list[tuple[Path, Path]],
     pcb_dir: Path,
     output_dir: Path,
 ) -> list[dict[str, object]]:
     artifacts: list[dict[str, object]] = []
-    for manifest_path in sorted(pcb_dir.glob("*__views.json")):
+    for manifest_path, design_rules_and_classes_path in produced_artifacts:
         payload = json.loads(manifest_path.read_text(encoding="utf-8"))
         artifacts.append(
             {
@@ -1088,6 +1135,10 @@ def _collect_pcb_svg_manifests(
                 "views": _manifest_output_files(
                     payload.get("views", {}),
                     pcb_dir,
+                    output_dir,
+                ),
+                "design_rules_and_classes": _relpath(
+                    design_rules_and_classes_path,
                     output_dir,
                 ),
             }
@@ -1147,12 +1198,27 @@ def _readme_text(
     output_dir: Path,
     manifest: dict[str, object],
 ) -> str:
-    schematic_count = len(manifest.get("schematic_svgs", []))
-    schematic_ir_count = len(manifest.get("schematic_irs", []))
+    raw_schematic_svgs = manifest.get("schematic_svgs", [])
+    raw_schematic_irs = manifest.get("schematic_irs", [])
+    raw_pcb_artifacts = manifest.get("pcb_svgs", [])
+    schematic_count = (
+        len(raw_schematic_svgs) if isinstance(raw_schematic_svgs, list) else 0
+    )
+    schematic_ir_count = (
+        len(raw_schematic_irs) if isinstance(raw_schematic_irs, list) else 0
+    )
+    pcb_artifact_rows = (
+        [item for item in raw_pcb_artifacts if isinstance(item, dict)]
+        if isinstance(raw_pcb_artifacts, list)
+        else []
+    )
     pcb_count = sum(
         len(item.get("layer_outputs", []))
-        for item in manifest.get("pcb_svgs", [])
-        if isinstance(item, dict)
+        for item in pcb_artifact_rows
+        if isinstance(item.get("layer_outputs", []), list)
+    )
+    design_rules_and_classes_count = sum(
+        bool(item.get("design_rules_and_classes")) for item in pcb_artifact_rows
     )
     return f"""# Altium Design Review Bundle
 
@@ -1168,10 +1234,25 @@ visual schematic and PCB context.
    folder.
 2. Read `{manifest["design_json"]}` for the project-level design model.
 3. Open `sch/*.svg` for schematic context. SchDoc and PrjPcb inputs both emit
-   compiled, resolved schematic pages. Open `pcb/layers/*.svg` for PCB context. The SVGs
-   carry in-band metadata that links drawn objects back to the JSON model.
-4. Use `json/schdoc/` and `json/pcbdoc/` only when you need raw Altium document
+   compiled, resolved schematic pages. Open `pcb/layers/*.svg` for PCB context.
+   The SVGs carry in-band metadata that links drawn objects back to JSON.
+4. For each `pcb_svgs[]` manifest entry, read its `design_rules_and_classes`
+   file before analyzing routing. It is the compact index of authored classes,
+   differential pairs, and design rules for that board.
+5. Use `json/schdoc/` and `json/pcbdoc/` only when you need raw Altium document
    details that are not summarized in the design JSON or SVG metadata.
+
+## PCB Artifact Layout
+
+Each board has one `pcb_svgs[]` entry in `design_review_manifest.json`. For a
+board key named `<board>`, that entry indexes:
+
+- `manifest`: `pcb/<board>__views.json`
+- `design_rules_and_classes`: `pcb/<board>__design-rules-and-classes.json`
+- `layer_outputs[].file`: `pcb/layers/<board>__<layer>.svg`
+
+Use the exact relative paths in the manifest. The `<board>` forms above explain
+the layout; they are not instructions to discover artifacts by guessing names.
 
 ## Instructions for Review Agents
 
@@ -1206,6 +1287,32 @@ visual schematic and PCB context.
   replacement from a similar designator or net name.
 - Use raw SchDoc/PcbDoc JSON to inspect source records and properties, not as a
   competing compiled connectivity model.
+- Before making PCB-routing claims, inspect the routing context's `evidence`
+  object. It states that rule applicability was not evaluated, Cruncher did not
+  run DRC during export, and no DRC violations are included. Authored rules are
+  design intent, not proof that the board passes or fails them.
+- Use stored class memberships and authored differential-pair records. `_P` and
+  `_N` are common naming conventions, but never infer pair membership or
+  polarity from suffixes. A net may legitimately belong to multiple classes or
+  be referenced by unusual source data from multiple pair records.
+- Preserve both exact scope expressions and nullable rule fields. Compare rule
+  priorities only within the same rule type, and do not declare a rule
+  applicable merely because its scope text mentions a net or class.
+- Use `scope.references` for conservative literal `InNetClass` and
+  `InDifferentialPairClass` joins. `resolved` means only that the named class
+  exists uniquely in the exported class table; it does not mean that Cruncher
+  evaluated the complete query or found the rule applicable. Unsupported query
+  functions remain available only in the exact scope expressions.
+- For differential-pair spacing, inspect both Differential Pairs Routing and
+  Clearance rules. Pair-routing gap settings guide routing but do not replace
+  Altium's applicable Clearance rule during DRC.
+- Join routing-context nets to PCB SVG primitives with exact `data-net` or
+  `data-net-uid`. `data-net-class` and `data-net-classes` are useful
+  corroboration when present, but the renderer's class lookup is exact-case
+  while the sidecar resolves source references case-insensitively.
+- Do not report a DRC pass/fail result or violation count from this bundle. Use
+  a provenance-bearing native batch DRC report when compliance evidence is
+  required.
 
 ## Artifact Map
 
@@ -1228,6 +1335,12 @@ visual schematic and PCB context.
   `altium_monkey.schdoc.interop.a0` and `altium_monkey.schlib.interop.a0`
   interop formats; PcbDoc payloads use the
   `altium_monkey.pcbdoc.structural.a0` document format.
+- `pcb/<board>__design-rules-and-classes.json`: one
+  `altium_cruncher.pcb_routing_context.a0` sidecar per board. The matching
+  Design Review B1 `pcb_svgs[]` entry names its exact
+  `design_rules_and_classes` path. These compact files duplicate authored net
+  classes, differential pairs/classes, and design rules without claiming
+  evaluated rule applicability or DRC results.
 - `sch/`: schematic SVGs. For SchDoc and PrjPcb inputs these are compiled schematic
   pages with resolved channel/repeated-sheet designators. Each SVG root has
   `data-enrichment-schema="altium_cruncher.schematic.svg.enrichment.b0"` and a
@@ -1356,18 +1469,22 @@ PCB layer SVGs are generated from the same A0 renderer used by `pcb-svg`. The
 root metadata includes board, canvas, layer, component, and net maps. Individual
 drawn primitives include attributes such as `data-primitive`,
 `data-layer-name`, `data-layer-role`, `data-net`, `data-net-index`,
-`data-net-uid`, `data-component`, and `data-element-key` when known.
+`data-net-uid`, `data-net-class`, `data-net-classes`, `data-component`, and
+`data-element-key` when known.
 
 For a PCB review, start with the copper layer that matters, then use the
-primitive `data-net`/`data-component` attributes to join graphical geometry back
-to the design JSON. Use `json/pcbdoc/` if you need raw Altium fields for a
-specific primitive or document-level board data.
+primitive `data-net`/`data-net-uid` attributes to join graphical geometry to the
+matching routing-context net. Class attributes can corroborate that join when
+present. Use `data-component` to join placement context and `json/pcbdoc/` when
+you need raw Altium fields for a specific primitive or document-level board
+data.
 
 ## Counts
 
 - Schematic SVGs: {schematic_count}
 - Schematic IRs: {schematic_ir_count}
 - PCB layer SVGs: {pcb_count}
+- PCB design-rules-and-classes sidecars: {design_rules_and_classes_count}
 
 Generated artifact paths in `design_review_manifest.json` are relative to this
 bundle. Source paths are relative to the input project or document directory.

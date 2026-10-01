@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 2026.10.1
+
+- Add a compact per-board PCB routing-context sidecar to `design` /
+  `design-review` / `dr` bundles. It indexes authored net classes,
+  differential pairs/classes, and typed design rules for agents while stating
+  explicitly that Cruncher did not evaluate rule applicability or run DRC.
+  Emit it as `pcb/<board>__design-rules-and-classes.json` and discover it
+  through each Design Review manifest PCB entry's `design_rules_and_classes`
+  field.
+  Conservatively extract literal net-class and differential-pair-class scope
+  references, resolve them against exported class tables, and warn when a
+  supported reference is missing or ambiguous without evaluating the query.
+  Advance the additive Design Review manifest to B1 and retain the frozen B0
+  schema for archived bundles.
+
 ## 2026.9.25
 
 - Consume `altium-monkey==2026.9.22` with `wn-geometer==2026.9.19`.

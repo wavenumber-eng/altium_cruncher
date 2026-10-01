@@ -6,7 +6,7 @@ from typing import Literal, Never, NotRequired
 from typing_extensions import TypedDict
 
 DesignReviewManifest = TypedDict("DesignReviewManifest", {
-    "schema": "Literal[\"altium_cruncher.design_review_manifest.b0\"]",
+    "schema": "Literal[\"altium_cruncher.design_review_manifest.b1\"]",
     "input": "Path",
     "design_json": "Path",
     "document_jsons": "list[DocumentArtifact]",
@@ -38,6 +38,7 @@ PcbArtifact = TypedDict("PcbArtifact", {
     "board": "str | None",
     "layer_outputs": "list[PcbOutput]",
     "views": "list[PcbOutput]",
+    "design_rules_and_classes": NotRequired["Path"],
 }, closed=True)
 
 LogicalSchematicArtifact = TypedDict("LogicalSchematicArtifact", {

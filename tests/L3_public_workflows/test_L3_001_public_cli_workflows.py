@@ -308,7 +308,7 @@ def test_design_review_bundle_uses_compiled_graph_for_multichannel_project(
     manifest = json.loads(
         (output_dir / "design_review_manifest.json").read_text(encoding="utf-8")
     )
-    assert manifest["schema"] == "altium_cruncher.design_review_manifest.b0"
+    assert manifest["schema"] == "altium_cruncher.design_review_manifest.b1"
     design_payload = json.loads(
         (output_dir / manifest["design_json"]).read_text(encoding="utf-8")
     )

@@ -7,9 +7,10 @@ reports and the existing unversioned array outputs. Wire tags, paths and output
 shapes are preserved. The Python CLI does not require Node.
 
 The generated [catalog](../../src/ts/altium_cruncher_config/generated/catalog.json)
-lists all 46 roots, their authored sources, current schemas, compatibility
-schemas and validators. The PCB SVG root declares both its current A1 schema
-and its frozen A0 predecessor without creating a second runtime codec. Generation
+lists all 47 roots, their authored sources, current schemas, compatibility
+schemas and validators. The PCB SVG and Design Review manifest roots declare
+their current schemas and frozen additive predecessors without creating second
+runtime codecs. Generation
 rejects duplicate names and any public `docs/contracts/*.schema.json` that lacks
 a TypeSpec source. All published references are bundled locally; validation
 does not fetch schemas from the network.
@@ -29,7 +30,7 @@ roots in `outputs`. Each catalog entry links the exact source and JSON Schema.
 | `pcb_layer_step_config` | `altium_cruncher_pcb_layer_step`; shared export settings also used by Mate |
 | `mate_config`, `mate_parts_input` | `altium_cruncher_mate`, `altium_cruncher_mate_parts`; current and legacy authored inputs |
 | `mco_input`, `mco_envelope` | `altium_cruncher_mco`, `altium_cruncher_mco_cad_ops`; authored arguments and deferred execution envelope |
-| `design_review_manifest` | `altium_cruncher_design_review` |
+| `design_review_manifest`, `pcb_routing_context` | `altium_cruncher_design_review`, `altium_cruncher_pcb_routing_context` |
 | `megamaid_manifest` | `altium_cruncher_cmd_megamaid`; typed nested artifact sections |
 | `schematic_svg_manifest`, `schematic_svg_enrichment` | `altium_cruncher_cmd_sch_svg`; Design b0 links and embedded metadata |
 | `pcb_svg_manifest`, `pcb_svg_enrichment`, `pcb_svg_component_layers` | `altium_cruncher_cmd_pcb_svg`, `altium_cruncher_pcb_svg_renderer`, `altium_cruncher_pcb_svg_component_layers` |
@@ -64,6 +65,12 @@ roots in `outputs`. Each catalog entry links the exact source and JSON Schema.
   be consumed against the installed Monkey API, not a guessed Cruncher DTO.
 - PCB SVG enrichment models Cruncher's canvas and virtual-component extension
   fields. The surrounding native SVG metadata remains Monkey-owned.
+- PCB routing context is a Cruncher-owned compact projection of Monkey's public
+  PcbDoc class, pair, net, and typed-rule APIs. Its stable envelope and joins
+  are typed here; rule-specific `constraints` and `unmodeled_fields` remain
+  intentionally open delegated semantic maps. The producer enforces finite
+  JSON values. Scope applicability and DRC execution/results are explicitly
+  absent, so this artifact is authored intent rather than compliance evidence.
 - Generic MCO execution accepts custom output dictionaries, including handlers
   that replace built-in names. `mco_builtin_result` provides separate, typed
   default-registry validation, covering success, dry-run and failure shapes.

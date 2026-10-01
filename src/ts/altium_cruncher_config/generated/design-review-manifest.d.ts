@@ -5,7 +5,7 @@ export type DesignReviewManifestSchematicSvgsItem = LogicalSchematicArtifact | C
 export type PositiveInteger = number;
 
 export interface DesignReviewManifest {
-  schema: "altium_cruncher.design_review_manifest.b0";
+  schema: "altium_cruncher.design_review_manifest.b1";
   input: Path;
   design_json: Path;
   document_jsons: DocumentArtifact[];
@@ -40,6 +40,10 @@ export interface PcbArtifact {
   board: string | null;
   layer_outputs: PcbOutput[];
   views: PcbOutput[];
+  /**
+   * Path to pcb/<board>__design-rules-and-classes.json, containing compact authored net classes, differential pairs/classes, and design rules for this board. New B1 producers always emit it; it is optional for additive schema compatibility.
+   */
+  design_rules_and_classes?: string;
 }
 export interface PcbOutput {
   name: string;

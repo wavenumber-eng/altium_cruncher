@@ -1,0 +1,9 @@
+{
+  "contract": {
+    "stem": "pcb_routing_context",
+    "title": "PCB routing context",
+    "source": "../outputs/pcb-routing-context",
+    "kind": "output"
+  },
+  "schema": "altium_cruncher.pcb_routing_context.a0"
+}

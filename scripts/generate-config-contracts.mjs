@@ -16,7 +16,8 @@ const tempBase = resolve(tmpdir());
 const temp = mkdtempSync(join(tempBase, "acr-contracts-"));
 const outputs = new Map();
 const families = [
-  {stem: "pcb_svg_config", version: "a1", slug: "pcb-svg", model: "PcbSvgConfigInput", source: "pcb-svg", title: "PCB SVG / Toon", validator: "validate"},
+  {stem: "pcb_svg_config", version: "a1", slug: "pcb-svg", model: "PcbSvgConfigInput", source: "pcb-svg", title: "PCB SVG / Toon", validator: "validate",
+    compatibility: [{version: "a0", id: "pcb_svg_config.a0.schema.json", model: "PcbSvgConfigA0Input"}]},
   {stem: "schdoc_create_config", slug: "schdoc-create", model: "SchdocCreateConfigInput", source: "creation", title: "SchDoc creation"},
   {stem: "pcbdoc_create_config", slug: "pcbdoc-create", model: "PcbdocCreateConfigInput", source: "creation", title: "PcbDoc creation"},
   {stem: "project_skeleton_config", slug: "project-skeleton", model: "ProjectSkeletonConfigInput", source: "creation", title: "Project skeleton"},
@@ -26,8 +27,10 @@ const families = [
   {stem: "clean_config", slug: "clean", model: "CleanConfigInput", source: "clean-config", title: "Clean"},
   {stem: "mate_config", slug: "mate", model: "MateConfigInput", source: "mate-config", title: "Mate"},
   {stem: "pcb_layer_step_config", slug: "pcb-layer-step", model: "PcbLayerStepConfigInput", source: "pcb-layer-step-config", title: "PCB layer STEP"},
+  {stem: "design_review_manifest", version: "b1", slug: "design-review-manifest", model: "DesignReviewManifest",
+    source: "../outputs/design-review-manifest", title: "DesignReviewManifest", output: true,
+    compatibility: [{version: "b0", id: "https://github.com/wavenumber-eng/altium_cruncher/docs/contracts/design_review_manifest.b0.schema.json", model: "DesignReviewManifestB0"}]},
   ...[
-    ["design_review_manifest", "b0", "DesignReviewManifest"],
     ["megamaid_manifest", "b0", "MegamaidManifest"],
     ["schematic_svg_enrichment", "b0", "SchematicSvgEnrichment"],
     ["schematic_svg_manifest", "b0", "SchematicSvgManifest"],
@@ -101,16 +104,19 @@ try {
   }
   schema.$comment = banner;
   outputs.set(`docs/contracts/${stem}.${family.version || "a0"}.schema.json`, json(schema));
-  if (slug === "pcb-svg") {
-    // Generate the frozen additive predecessor from its dedicated TypeSpec
-    // model. Runtime bindings target A1, while A0 keeps its durable schema path.
-    const legacyEmitted = emittedSchemas.get("pcb_svg_config.a0.schema.json");
-    if (!legacyEmitted) throw new Error("Missing PcbSvgConfigA0Input schema");
+  for (const predecessor of family.compatibility || []) {
+    // Runtime bindings target the current schema. Each predecessor keeps its
+    // durable public path and a separately authored frozen TypeSpec model.
+    const legacyEmitted = emittedSchemas.get(predecessor.id);
+    if (!legacyEmitted) throw new Error(`Missing compatibility schema ${predecessor.id}`);
+    if (legacyEmitted.model !== predecessor.model) {
+      throw new Error(`Compatibility schema ${predecessor.id} emitted from ${legacyEmitted.model}, expected ${predecessor.model}`);
+    }
     const legacySchema = structuredClone(legacyEmitted.schema);
     bundleReferences(legacySchema, emittedSchemas);
     lowerInputAnnotations(legacySchema);
-    legacySchema.$comment = "Generated from src/tsp/altium_cruncher/config/pcb-svg.tsp (frozen A0 compatibility model). Do not edit.";
-    outputs.set("docs/contracts/pcb_svg_config.a0.schema.json", json(legacySchema));
+    legacySchema.$comment = `Generated from ${posix.normalize(`src/tsp/altium_cruncher/config/${source}.tsp`)} (frozen ${predecessor.version.toUpperCase()} compatibility model). Do not edit.`;
+    outputs.set(`docs/contracts/${stem}.${predecessor.version}.schema.json`, json(legacySchema));
   }
   outputs.set(`src/py/altium_cruncher/contracts/generated/${stem}.schema.json`, json(schema));
   outputs.set(`src/py/altium_cruncher/contracts/generated/${stem}.metadata.json`, json(metadata));
@@ -179,7 +185,8 @@ export default validate;
   const catalog = families.map((family) => ({stem: family.stem, model: family.model,
     kind: family.output ? "output" : "config", source: posix.normalize(`src/tsp/altium_cruncher/config/${family.source}.tsp`),
     schema: `docs/contracts/${family.stem}.${family.version || "a0"}.schema.json`,
-    ...(family.slug === "pcb-svg" ? {compatibility_schemas: ["docs/contracts/pcb_svg_config.a0.schema.json"]} : {}),
+    ...(family.compatibility?.length ? {compatibility_schemas: family.compatibility.map(
+      (predecessor) => `docs/contracts/${family.stem}.${predecessor.version}.schema.json`)} : {}),
     validator: family.validator || `validate-${family.slug}`, slug: family.slug}));
   outputs.set("src/py/altium_cruncher/contracts/generated/catalog.json", json(catalog));
   outputs.set("src/ts/altium_cruncher_config/generated/catalog.json", json(catalog));
