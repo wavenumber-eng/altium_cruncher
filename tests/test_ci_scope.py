@@ -230,7 +230,7 @@ class CiScopeTests(unittest.TestCase):
         self.assertIn("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24", workflow)
         self.assertIn("cancel-in-progress: true", workflow)
         self.assertIn(
-            "uvx --from wn-dev-std==2026.9.27 dev-std audit .",
+            "uvx --from wn-dev-std==2026.10.1 dev-std audit .",
             workflow,
         )
         self.assertNotIn(
