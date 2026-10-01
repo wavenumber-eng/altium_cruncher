@@ -37,7 +37,7 @@ jobs:
         if: steps.scope.outputs.docs_only != 'true'
       - name: Check Wavenumber development standard
         if: steps.scope.outputs.docs_only != 'true'
-        run: uvx --from wn-dev-std==2026.9.27 dev-std audit . --format text
+        run: uvx --from wn-dev-std==2026.10.1 dev-std audit . --format text
 
   contracts:
     name: Generated public contracts

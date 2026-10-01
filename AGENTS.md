@@ -68,7 +68,7 @@ uv run --extra test twine check dist/*
 uv run --extra test python tests/support_scripts/install_test.py
 ```
 
-Run `uvx --from wn-dev-std==2026.9.27 dev-std audit . --format json` when
+Run `uvx --from wn-dev-std==2026.10.1 dev-std audit . --format json` when
 checking alignment with the Wavenumber development standard. Keep the package
 pin aligned with the reviewed `wn-dev-std` release instead of running against
 its moving default branch.
